@@ -42,6 +42,8 @@ fi
 mkdir -p "$KICAD_V01/library"
 rm -rf "$DST_LIB"
 cp -a "$SRC_LIB" "$DST_LIB"
+python3 "$REPO/scripts/retr01_verify_trs_footprint.py" \
+    "$DST_LIB/Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical.kicad_mod"
 SRC_3D="$DIR/library/Retr01_Lib.3dshapes"
 DST_3D="$KICAD_V01/library/Retr01_Lib.3dshapes"
 if [[ -d "$SRC_3D" ]]; then
@@ -56,6 +58,7 @@ if [[ -d "$DIR/library/3dmodels" ]]; then
 fi
 PCB="$KICAD_V01/v_01.kicad_pcb"
 if [[ -f "$PCB" ]]; then
+    python3 "$REPO/scripts/retr01_sync_pcb_footprint_pads.py" "$PCB" --library "$DST_LIB" --full || true
     python3 "$REPO/scripts/retr01_sync_pcb_3d_models.py" "$PCB" --force || true
 else
     echo "note: no $PCB — import netlist in KiCad, then re-run export or retr01_sync_pcb_3d_models.py" >&2

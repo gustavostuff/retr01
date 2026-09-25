@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "Switchcraft 35RAPC2BVN4 vertical 3.5mm TRS. VN4 CD only: 5x oval PTH slots 0.90x2.00mm (flat terminal tabs ~0.30mm; datasheet round hole is 2.00mm dia - pill slots give clearance between pads 3+4). Pad1 at origin; X from hole-1 centers per VN4 CD; row stagger 2.00mm (sleeve row y=0, tip/ring row y=+2.00). Tip=4 Ring=2 Sleeve=1. Pads 3+5 NC/mechanical on 2BVN4. Same holes fit 3BVN4/4BVN4 mechanically. NOT a dual footprint for inline-3 or unrelated 2+1 jacks. https://www.mouser.com/datasheet/2/144/35rapc_vn4_cd-1311116.pdf")
+	(descr "Switchcraft 35RAPC2BVN4 vertical 3.5mm TRS (VN4 CD). Component-side view: pad1 (sleeve) at origin; ΔX/ΔY from pad1 (pin2 +2.45/-2.15, pin3 +6.15/0, pin4 +8.05/-2.15, pin5 +11.80/0). 5x oval PTH 0.90x2.00mm drill. Tip=4 Ring=2 Sleeve=1; pads 3+5 NC on 2BVN4. Stagger row toward -Y (+1mm vs VN4 CD 1.15). https://www.switchcraft.com/assets/1/24/35rapc__vn4_cd.pdf")
 	(tags "TRS audio jack stereo vertical Switchcraft 35RAPC2BVN4 VN4")
 	(property "Reference" "REF**"
 		(at 5.9 -5.2 0)
@@ -17,7 +17,7 @@
 		)
 	)
 	(property "Value" "Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical"
-		(at 5.9 6.2 0)
+		(at 5.9 5.2 0)
 		(layer "F.SilkS")
 		(uuid "6f9445f7-f54f-4b89-956d-657ae3eb814d")
 		(effects
@@ -27,7 +27,7 @@
 			)
 		)
 	)
-	(property "Datasheet" "https://www.mouser.com/datasheet/2/144/35rapc_vn4_cd-1311116.pdf"
+	(property "Datasheet" "https://www.switchcraft.com/assets/1/24/35rapc__vn4_cd.pdf"
 		(at 0 0 0)
 		(unlocked yes)
 		(layer "F.Fab")
@@ -40,7 +40,7 @@
 			)
 		)
 	)
-	(property "Description" "35RAPC2BVN4; Tip=pad4 Ring=pad2 Sleeve=pad1; pads3+5 NC"
+	(property "Description" "35RAPC2BVN4; Tip=pad4 Ring=pad2 Sleeve=pad1; pads3+5 NC; F.Cu component side"
 		(at 0 0 0)
 		(unlocked yes)
 		(layer "F.Fab")
@@ -53,11 +53,37 @@
 			)
 		)
 	)
+	(property "Retr01_fp_rev" "4"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b2c3d4e5-f6a7-8901-bcde-f23456789012")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Retr01_pin1_to_pin5_mm" "11.80"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
 	(attr through_hole)
 	(duplicate_pad_numbers_are_jumpers no)
 	(fp_line
-		(start -4 -2.6)
-		(end -4 4.6)
+		(start -4 -3.8)
+		(end -4 2.6)
 		(stroke
 			(width 0.12)
 			(type solid)
@@ -66,8 +92,8 @@
 		(uuid "c99d95a9-b606-405c-be9d-21614712d07b")
 	)
 	(fp_line
-		(start -4 4.6)
-		(end 14 4.6)
+		(start -4 2.6)
+		(end 12.8 2.6)
 		(stroke
 			(width 0.12)
 			(type solid)
@@ -76,8 +102,8 @@
 		(uuid "a5fd0ce7-9465-4a94-aacd-8c59c003979b")
 	)
 	(fp_line
-		(start 14 4.6)
-		(end 14 -2.6)
+		(start 12.8 2.6)
+		(end 12.8 -3.8)
 		(stroke
 			(width 0.12)
 			(type solid)
@@ -86,8 +112,8 @@
 		(uuid "ffdce612-1222-4cb7-afbb-ed3f44ce7da2")
 	)
 	(fp_line
-		(start 14 -2.6)
-		(end -4 -2.6)
+		(start 12.8 -3.8)
+		(end -4 -3.8)
 		(stroke
 			(width 0.12)
 			(type solid)
@@ -96,8 +122,8 @@
 		(uuid "3192ec4b-e047-4acd-9541-b74502aa05e6")
 	)
 	(fp_circle
-		(center -4 1)
-		(end -1 1)
+		(center -4 -0.5)
+		(end -1 -0.5)
 		(stroke
 			(width 0.12)
 			(type solid)
@@ -107,8 +133,8 @@
 		(uuid "e2e2e693-aaaa-48a1-a069-b0e2fc53b2bd")
 	)
 	(fp_line
-		(start -4 -2.6)
-		(end -4 4.6)
+		(start -4 -3.8)
+		(end -4 2.6)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -117,8 +143,8 @@
 		(uuid "1813c5c6-7386-4190-b730-ea1ef241394a")
 	)
 	(fp_line
-		(start -4 4.6)
-		(end 14 4.6)
+		(start -4 2.6)
+		(end 12.8 2.6)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -127,8 +153,8 @@
 		(uuid "905c6a8a-f6a3-4f4d-a92c-2f0baa2db67d")
 	)
 	(fp_line
-		(start 14 4.6)
-		(end 14 -2.6)
+		(start 12.8 2.6)
+		(end 12.8 -3.8)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -137,8 +163,8 @@
 		(uuid "32f1996c-7386-4dc4-ab1e-d10d9626f4aa")
 	)
 	(fp_line
-		(start 14 -2.6)
-		(end -4 -2.6)
+		(start 12.8 -3.8)
+		(end -4 -3.8)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -147,8 +173,8 @@
 		(uuid "982e93ca-9c93-4b29-9c4e-21b0a80f9476")
 	)
 	(fp_line
-		(start -4.5 -3.1)
-		(end -4.5 5.1)
+		(start -4.5 -4.3)
+		(end -4.5 3.1)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -157,8 +183,8 @@
 		(uuid "47400ca9-ff05-472b-a119-edbe1b683463")
 	)
 	(fp_line
-		(start -4.5 5.1)
-		(end 14.5 5.1)
+		(start -4.5 3.1)
+		(end 13.3 3.1)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -167,8 +193,8 @@
 		(uuid "08e65f64-e697-446b-90cc-117c3fdf1b42")
 	)
 	(fp_line
-		(start 14.5 5.1)
-		(end 14.5 -3.1)
+		(start 13.3 3.1)
+		(end 13.3 -4.3)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -177,8 +203,8 @@
 		(uuid "3d57e530-ea04-4563-9c70-3910bdbe0f01")
 	)
 	(fp_line
-		(start 14.5 -3.1)
-		(end -4.5 -3.1)
+		(start 13.3 -4.3)
+		(end -4.5 -4.3)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -195,7 +221,7 @@
 		(uuid "ce1f2134-34f7-4cc7-a169-663ec7403f64")
 	)
 	(pad "2" thru_hole oval
-		(at 3.65 2)
+		(at 2.45 -2.15)
 		(size 1.4 2.3)
 		(drill oval 0.9 2)
 		(layers "*.Cu" "*.Mask")
@@ -203,7 +229,7 @@
 		(uuid "47e49947-cddc-4f24-b7e2-781fda237c0f")
 	)
 	(pad "3" thru_hole oval
-		(at 7.35 0)
+		(at 6.15 0)
 		(size 1.4 2.3)
 		(drill oval 0.9 2)
 		(layers "*.Cu" "*.Mask")
@@ -211,7 +237,7 @@
 		(uuid "2c2b4ec9-0e0c-47ac-a933-89d0a2ca4580")
 	)
 	(pad "4" thru_hole oval
-		(at 9.25 2)
+		(at 8.05 -2.15)
 		(size 1.4 2.3)
 		(drill oval 0.9 2)
 		(layers "*.Cu" "*.Mask")
@@ -219,7 +245,7 @@
 		(uuid "da36af9d-7e3c-4318-a018-e469171aebbb")
 	)
 	(pad "5" thru_hole oval
-		(at 13 0)
+		(at 11.8 0)
 		(size 1.4 2.3)
 		(drill oval 0.9 2)
 		(layers "*.Cu" "*.Mask")
@@ -229,13 +255,14 @@
 	(embedded_fonts no)
 	(model "${KIPRJMOD}/library/Retr01_Lib.3dshapes/Switchcraft_35RAPC4BVN4.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz 12.75 1 7)
 		)
 		(scale
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 0)
+			(xyz 180 0 180)
 		)
 	)
+
 )

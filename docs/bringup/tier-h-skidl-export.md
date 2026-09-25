@@ -78,9 +78,43 @@ KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual e
 
 **J36** uses footprint **`EDAC_395_MoboSocket_2x18_2.54x5.08mm`** in **`Retr01_Lib.pretty`**. Open the board from **`v_01/`** so `${KIPRJMOD}` resolves.
 
+#### TRS (J3/J4) footprint geometry
+
+**Source of truth:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty/Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical.kicad_mod` (pad 1 at origin, pad 5 at **X = 11.8 mm**, stagger **1.15 mm** per Switchcraft VN4 CD). The KiCad project gets a **copy** under `v_01/library/Retr01_Lib.pretty/` via `export_netlist.sh` or:
+
+```bash
+scripts/retr01_refresh_kicad_footprint_lib.sh
+```
+
+**Do not rely on Tools → Update Footprints from Library** for **J3/J4**: KiCad often applies a **stale in-memory** copy of `Retr01_Lib` (pads snap back to **13 mm** even when the `.kicad_mod` on disk is correct). After changing the library, **fully quit KiCad**, run `scripts/retr01_refresh_kicad_footprint_lib.sh`, then push geometry onto the board with KiCad still closed:
+
+```bash
+python3 scripts/retr01_sync_pcb_footprint_pads.py \
+  apps/sim/tier-h/kicad/main-pcb/v_01/v_01.kicad_pcb --full \
+  --library apps/sim/tier-h/kicad/main-pcb/v_01/library/Retr01_Lib.pretty
+```
+
+Reopen the PCB and reload from disk if prompted. Sanity check in Footprint Editor: pad 5 **X = 11.8**, **`Retr01_fp_rev` = 2**. Remove duplicate global **`Retr01_Lib`** entries in *Preferences → Manage Footprint Libraries* if the nickname appears twice; keep only **`${KIPRJMOD}/library/Retr01_Lib.pretty`**.
+
+To fix **only** embedded board pads without trusting KiCad’s library refresh:
+
+```bash
+python3 scripts/retr01_sync_pcb_footprint_pads.py \
+  apps/sim/tier-h/kicad/main-pcb/v_01/v_01.kicad_pcb \
+  --library apps/sim/tier-h/kicad/main-pcb/v_01/library/Retr01_Lib.pretty
+```
+
+(KiCad must be **closed**, or a save will overwrite the file again.)
+
+Oval TRS pads on a **rotated** footprint (e.g. J3/J4 at **90°**) need the same **per-pad `(at … 90)`** KiCad writes on *Update from library*; ``retr01_sync_pcb_footprint_pads.py --full`` stamps that automatically. Without it, slots look rotated 90° wrong in the editor even when positions are correct.
+
 #### TRS (J3/J4) 3D
 
-Footprint **`Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical`** uses **`Switchcraft_35RAPC4BVN4.wrl`** (matte black; STEP alone stays gray in the viewer). **`CUI_RCJ-014`** / **`CUI_RCJ-014_Audio`** use **`CUI_RCJ-014.wrl`** (yellow ring, composite **J9**) and **`CUI_RCJ-014_audio.wrl`** (white ring, audio **J8**). Regenerate from supplier STEP:
+Footprint **`Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical`** uses **`Switchcraft_35RAPC4BVN4.wrl`** (matte black; STEP alone stays gray in the viewer). Offset/rotation live in ``footprint_3d.py`` (currently offset **12.75, 1, 7** mm, rotate **180, 0, 180**). One-shot board + library sync (KiCad **closed**):
+
+```bash
+scripts/retr01_sync_trs_footprint_3d.sh
+``` **`CUI_RCJ-014`** / **`CUI_RCJ-014_Audio`** use **`CUI_RCJ-014.wrl`** (yellow ring, composite **J9**) and **`CUI_RCJ-014_audio.wrl`** (white ring, audio **J8**). Regenerate from supplier STEP:
 
 ```bash
 python3 -m venv .venv-wrl && .venv-wrl/bin/pip install cascadio numpy
@@ -103,7 +137,14 @@ python3 scripts/retr01_sync_pcb_3d_models.py apps/sim/tier-h/kicad/main-pcb/v_01
 
 #### RCA (J8/J9) 3D
 
-KiCad **10 stock libraries have no 3D model** for **CUI/Same Sky RCJ-01** edge-mount jacks (footprint **`CUI_RCJ-014`** is custom from GameTank). Free official source: [Same Sky RCJ-014 product page](https://www.sameskydevices.com/product/interconnect/connectors/rca-connectors/rcj-014) → **3D Model** / [CAD Model Library](https://www.sameskydevices.com/resources/cad-model-library). Same Sky **STEP** remains in **`Retr01_Lib.3dshapes/_step_source/`** for regeneration; footprints point at colored **WRL** (see TRS section above). Tune offset/rotation in Footprint Editor if needed.
+KiCad **10 stock libraries have no 3D model** for **CUI/Same Sky RCJ-01** edge-mount jacks. Two footprints, two WRLs (ring color only):
+
+| Ref | Footprint | WRL |
+| --- | --- | --- |
+| **J9** composite | `CUI_RCJ-014` | `CUI_RCJ-014.wrl` (yellow ring) |
+| **J8** audio | `CUI_RCJ-014_Audio` | `CUI_RCJ-014_audio.wrl` (white ring) |
+
+Shared offset/rotation live in ``footprint_3d.py`` (same mechanical align; only the model file differs). Regenerate WRL from STEP (TRS section above). After tuning in KiCad, ``retr01_pull_3d_from_pcb.py J9 …`` can refresh ``footprint_3d.py`` if needed.
 
 #### Retr01 3D model transforms (Skidl export)
 

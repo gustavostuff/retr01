@@ -85,9 +85,16 @@
     (solder_mask_margin 0.1016) (tstamp 59219d7c-dfdc-4510-a5c3-ed781a907a47))
   (pad "2" thru_hole circle (at 5.95 0) (size 2.55 2.55) (drill 1.7) (layers "*.Cu" "*.Mask")
     (solder_mask_margin 0.1016) (tstamp d8f609bc-72d0-4aca-a5d8-43cbec7b0e60))
-  (model "${KIPRJMOD}/library/Retr01_Lib.3dshapes/CUI_RCJ-014.wrl"
-    (offset (xyz 0 0 0))
-    (scale (xyz 1 1 1))
-    (rotate (xyz 0 0 0))
-  )
+  	(model "${KIPRJMOD}/library/Retr01_Lib.3dshapes/CUI_RCJ-014.wrl"
+		(offset
+			(xyz 7.5 0 6.5)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 90 180 0)
+		)
+	)
+
 )

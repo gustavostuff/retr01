@@ -32,9 +32,32 @@ _J36_EDAC = FootprintModel3D(
     rotate_deg=(90.0, 180.0, 90.0),
 )
 
+# J9 composite (yellow ring WRL) and J8 audio (white ring WRL); same mechanical align.
+_RCA_XFORM = ((7.5, 0.0, 6.5), (90.0, 180.0, 0.0))
+_RCA_COMPOSITE = FootprintModel3D(
+    path="${KIPRJMOD}/library/Retr01_Lib.3dshapes/CUI_RCJ-014.wrl",
+    offset_mm=_RCA_XFORM[0],
+    rotate_deg=_RCA_XFORM[1],
+)
+_RCA_AUDIO = FootprintModel3D(
+    path="${KIPRJMOD}/library/Retr01_Lib.3dshapes/CUI_RCJ-014_audio.wrl",
+    offset_mm=_RCA_XFORM[0],
+    rotate_deg=_RCA_XFORM[1],
+)
+
+# J3/J4 Switchcraft vertical TRS (same WRL for 2BVN4/4BVN4 mechanical body).
+_TRS_JACK = FootprintModel3D(
+    path="${KIPRJMOD}/library/Retr01_Lib.3dshapes/Switchcraft_35RAPC4BVN4.wrl",
+    offset_mm=(12.75, 1.0, 7.0),
+    rotate_deg=(180.0, 0.0, 180.0),
+)
+
 # Key = footprint name in Retr01_Lib.pretty (``Retr01_Lib:Name`` on the board).
 FOOTPRINT_3D: dict[str, FootprintModel3D] = {
     "EDAC_395_MoboSocket_2x18_2.54x5.08mm": _J36_EDAC,
+    "CUI_RCJ-014": _RCA_COMPOSITE,
+    "CUI_RCJ-014_Audio": _RCA_AUDIO,
+    "Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical": _TRS_JACK,
 }
 
 # Older boards / netlists may still embed the previous library name.

@@ -81,7 +81,9 @@ apps/sim/tier-h/kicad/main-pcb/v_01/3dmodels/
 apps/sim/tier-h/skidl/library/3dmodels/
 
 # KiCad (local editor / cache; not project source)
+# Local History plugin nests its own .git — never track as a submodule (git rm --cached if it appears).
 **/.history/
+**/.history/**
 **/*~
 **/*.lck
 **/*-backups/
