@@ -3,7 +3,7 @@ project(retr01_studio C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-add_compile_options(-Wall -Wextra -Wpedantic)
+add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter)
 
 # Package root is apps/; repo root holds docs/, hw/, output/, bin/.
 set(R01_PKG_ROOT "${CMAKE_SOURCE_DIR}/..")

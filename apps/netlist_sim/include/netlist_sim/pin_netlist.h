@@ -31,7 +31,7 @@ int ns_pin_netlist_find_slot(const NsPinNetlist *nl, const NsEntity *e, int pin_
 int ns_pin_netlist_add_slot(NsPinNetlist *nl, NsEntity *e, int pin_index);
 int ns_pin_netlist_slot_for_name(NsPinNetlist *nl, NsEntity *e, const char *name);
 
-int ns_pin_netlist_root(NsPinNetlist *nl, int slot);
+int ns_pin_netlist_root(const NsPinNetlist *nl, int slot);
 void ns_pin_netlist_union(NsPinNetlist *nl, int a, int b);
 
 void ns_pin_netlist_link(NsPinNetlist *nl, NsEntity *ea, const char *an, NsEntity *eb, const char *bn);

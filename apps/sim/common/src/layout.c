@@ -158,7 +158,8 @@ static void ensure_part(R01aBoard *board, const char *id, const char *kind, cons
     if (kind && strcmp(kind, "BB") == 0) {
         NsBreadboard *bb = r01a_board_add_breadboard(board, x, y);
         if (bb) {
-            snprintf(bb->refdes_buf, sizeof(bb->refdes_buf), "%s", id);
+            strncpy(bb->refdes_buf, id, sizeof(bb->refdes_buf) - 1);
+            bb->refdes_buf[sizeof(bb->refdes_buf) - 1] = '\0';
             bb->base.refdes = bb->refdes_buf;
         }
         return;
@@ -167,7 +168,8 @@ static void ensure_part(R01aBoard *board, const char *id, const char *kind, cons
     if (pk >= 0) {
         NsPassive *p = r01a_board_add_passive(board, pk, value, x, y);
         if (p) {
-            snprintf(p->refdes_buf, sizeof(p->refdes_buf), "%s", id);
+            strncpy(p->refdes_buf, id, sizeof(p->refdes_buf) - 1);
+            p->refdes_buf[sizeof(p->refdes_buf) - 1] = '\0';
             p->base.refdes = p->refdes_buf;
         }
     }

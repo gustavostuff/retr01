@@ -59,7 +59,7 @@ int ns_pin_netlist_slot_for_name(NsPinNetlist *nl, NsEntity *e, const char *name
     return ns_pin_netlist_add_slot(nl, e, pin_index);
 }
 
-int ns_pin_netlist_root(NsPinNetlist *nl, int slot) {
+int ns_pin_netlist_root(const NsPinNetlist *nl, int slot) {
     int p;
     if (!nl || slot < 0 || slot >= nl->slot_count) {
         return -1;
@@ -67,11 +67,6 @@ int ns_pin_netlist_root(NsPinNetlist *nl, int slot) {
     p = nl->parent[slot];
     while (p != nl->parent[p]) {
         p = nl->parent[p];
-    }
-    while (nl->parent[slot] != p) {
-        int next = nl->parent[slot];
-        nl->parent[slot] = p;
-        slot = next;
     }
     return p;
 }
@@ -89,7 +84,7 @@ void ns_pin_netlist_union(NsPinNetlist *nl, int a, int b) {
     }
     nl->parent[rb] = ra;
     if (nl->net_name[ra][0] == '\0' && nl->net_name[rb][0] != '\0') {
-        snprintf(nl->net_name[ra], NS_NET_NAME_LEN, "%s", nl->net_name[rb]);
+        memcpy(nl->net_name[ra], nl->net_name[rb], sizeof(nl->net_name[ra]));
     }
 }
 

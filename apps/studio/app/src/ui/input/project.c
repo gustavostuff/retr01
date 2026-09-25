@@ -209,7 +209,7 @@ void ui_export(UiState *ui) {
 }
 
 void ui_export_step(UiState *ui) {
-    char path[R01_PATH_MAX];
+    char path[R01_PATH_MAX + 32];
     char err[128];
     char toast[R01_PATH_MAX + 32];
     const char *stem;

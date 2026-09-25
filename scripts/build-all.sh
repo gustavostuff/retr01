@@ -39,7 +39,7 @@ build_one() {
     echo "stale CMake cache in $proj/build -- removing"
     rm -rf "$proj/build"
   fi
-  cmake -S "$proj" -B "$proj/build" -DCMAKE_BUILD_TYPE=Release
+  cmake -S "$proj" -B "$proj/build" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   cmake --build "$proj/build" --target "$target" -j"$(nproc)"
   install -Dm755 "$proj/build/$target" "$BIN/$out_name"
 }
@@ -65,6 +65,7 @@ build_one "$SIM_B" retr01_sim_tier_b sim-tier-b
 
 echo "== sim tier-h =="
 build_one "$SIM_H" retr01_sim sim-tier-h
+
 
 echo "binaries:"
 ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a "$BIN"/sim-tier-b "$BIN"/sim-tier-h
