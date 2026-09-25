@@ -13,7 +13,6 @@ CONNECTOR_REFDES = (
     "J3",
     "J4",
     "J5",
-    "J6",
     "J7",
     "J8",
     "J9",
@@ -86,10 +85,10 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         for ref, pin in (
             ("J3", P.TRS_SLEEVE),
             ("J4", P.TRS_SLEEVE),
-            ("J5", "9"),
-            ("J5", "10"),
-            ("J6", "9"),
-            ("J6", "10"),
+            ("J5", "17"),
+            ("J5", "19"),
+            ("J5", "18"),
+            ("J5", "20"),
             ("J7", "2"),
             ("J7", "4"),
             ("J1", "2"),
@@ -140,4 +139,4 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             pin_connect(parts["J2"], "", 5, gnd)
             pin_connect(parts["J2"], "", 6, gnd)
 
-    # Arcade headers: sim has no GPIO net names yet; GND on pins 9–10 only (see wire above).
+    # Arcade J5 2x10: sim has no GPIO net names yet; GND on P1/P2 footer pins (see wire above).

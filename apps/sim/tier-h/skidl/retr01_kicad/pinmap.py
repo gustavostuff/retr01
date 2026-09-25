@@ -283,8 +283,7 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     # 35RAPC2BVN4: VN4 5-pad layout. Tip=4 Ring=2 Sleeve=1; 3+5 NC (no switch).
     "TRS_P1": _nums(5),
     "TRS_P2": _nums(5),
-    "ARCADE_P1": _nums(10),
-    "ARCADE_P2": _nums(10),
+    "ARCADE_2x10": _nums(20),
     "CAB_PWR_RST": _nums(4),
     "SCALE_SW": _nums(2),
     "AUDIO_OUT": _nums(2),  # RCJ: 1=center, 2=shell
