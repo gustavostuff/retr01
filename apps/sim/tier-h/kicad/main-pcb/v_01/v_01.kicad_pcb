@@ -16545,7 +16545,7 @@
 		(descr "EDAC 395-036-520-201 motherboard socket (J36). 2x18 THT, 2.54mm pitch along row, 5.08mm between row centers (pads 1/3/5.. at X=0, 2/4/6.. at X=-5.08). Pad1 rect at origin.")
 		(tags "EDAC 395-036-520-201 mobo socket J36 2x18 2.54mm 5.08mm row Retr01")
 		(property "Reference" "J36"
-			(at -2.54 -7.41 90)
+			(at -2.54 -8 90)
 			(layer "F.SilkS")
 			(uuid "2c877e94-93b3-40f5-b681-18e74b26e795")
 			(effects
@@ -16710,8 +16710,8 @@
 			(uuid "bb85c348-77b3-4be6-9014-b51e4649d0b2")
 		)
 		(fp_rect
-			(start -11 -6)
-			(end 6 49)
+			(start -11 -7)
+			(end 6 50)
 			(stroke
 				(width 0.05)
 				(type default)
@@ -16761,8 +16761,8 @@
 			(uuid "d0c78464-5a39-48a3-b29e-3e9e8ef49fde")
 		)
 		(fp_rect
-			(start -11 -6)
-			(end 6 49)
+			(start -11 -7)
+			(end 6 50)
 			(stroke
 				(width 0.05)
 				(type default)
@@ -25714,6 +25714,17 @@
 				(xyz 0 0 0)
 			)
 		)
+	)
+	(gr_rect
+		(start 71 59)
+		(end 128 76)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "f20435c7-3e81-4a2f-a923-901ac9e71bd9")
 	)
 	(gr_rect
 		(start 20 20)
