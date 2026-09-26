@@ -19,8 +19,8 @@ const char *ns_level_name(NsLevel level);
 
 /*
  * Merge two drivers onto one net.
- * Z is transparent; H+L (or any hard clash) => fatal bus fight (default) or X if
- * fatal conflicts are disabled (tests only).
+ * Z is transparent; H+L (or any hard clash) => X on the net. With fatal conflicts
+ * enabled, the process exits after printing a report (for strict harnesses).
  */
 NsLevel ns_level_merge(NsLevel a, NsLevel b);
 NsLevel ns_level_merge_at(NsLevel a, NsLevel b, const char *net,
@@ -29,7 +29,7 @@ NsLevel ns_level_merge_at(NsLevel a, NsLevel b, const char *net,
 /* Pull-up model: undriven (Z) reads as H. X stays X. */
 NsLevel ns_level_pulled(NsLevel level);
 
-/* Fatal on fight is ON by default. Disable only in harnesses that assert on X. */
+/* Fatal on fight is OFF by default so interactive simulators keep running. */
 void ns_bus_set_fatal_conflicts(int enable);
 int ns_bus_fatal_conflicts(void);
 
@@ -39,7 +39,7 @@ void ns_bus_clear_conflicts(void);
 /*
  * Drive/sense a numbered bus: prefix "A" + width 16 => A0..A15.
  * write: sets pin levels from value (bit0 = *0).
- * read:  H=>1; Z pulled high (=>1); L=>0; X is a bus fight (fatal by default).
+ * read:  H=>1; Z pulled high (=>1); L=>0; X stays X (optional fatal exit).
  * hiz:   all bits to Z.
  */
 void ns_bus_write(NsEntity *e, const char *prefix, int width, uint32_t value);

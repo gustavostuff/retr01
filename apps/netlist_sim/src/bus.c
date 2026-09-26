@@ -7,7 +7,7 @@
 #include <string.h>
 
 static unsigned g_bus_conflicts;
-static int g_fatal_conflicts = 1;
+static int g_fatal_conflicts = 0;
 
 void ns_bus_set_fatal_conflicts(int enable) {
     g_fatal_conflicts = enable ? 1 : 0;
@@ -52,7 +52,7 @@ static void bus_fight_abort(const char *net, const char *driver_a, NsLevel a, co
                             NsLevel b, const char *why) {
     g_bus_conflicts++;
     fprintf(stderr, "\n");
-    fprintf(stderr, "board_sim: BUS FIGHT -- simulation aborted\n");
+    fprintf(stderr, "board_sim: BUS FIGHT -- aborting (fatal conflicts enabled)\n");
     fprintf(stderr, "  net:      %s\n", net ? net : "(unknown)");
     if (driver_a) {
         fprintf(stderr, "  driver A: %s = %s\n", driver_a, ns_level_name(a));

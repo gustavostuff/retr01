@@ -524,6 +524,9 @@ int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out) {
             if (pin_root(i) == pin_root(j)) {
                 continue;
             }
+            if (board->wire_mode == R01A_WIRE_MANUAL && g_slots[i].e == g_slots[j].e) {
+                continue;
+            }
             ki = auto_kind(i);
             kj = auto_kind(j);
             if (ki == kj && ki != R01A_NET_KIND_DATA && ki != R01A_NET_KIND_CLK) {

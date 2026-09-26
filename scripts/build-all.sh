@@ -10,6 +10,7 @@ STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
 SIM_A="$ROOT/apps/sim/tier-a"
 SIM_B="$ROOT/apps/sim/tier-b"
+SIM_C="$ROOT/apps/sim/tier-c"
 SIM_H="$ROOT/apps/sim/tier-h"
 CLEAN=0
 
@@ -63,9 +64,12 @@ build_one "$SIM_A" retr01_sim_tier_a sim-tier-a
 echo "== sim tier-b =="
 build_one "$SIM_B" retr01_sim_tier_b sim-tier-b
 
+echo "== sim tier-c =="
+build_one "$SIM_C" retr01_sim_tier_c sim-tier-c
+
 echo "== sim tier-h =="
 build_one "$SIM_H" retr01_sim sim-tier-h
 
 
 echo "binaries:"
-ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a "$BIN"/sim-tier-b "$BIN"/sim-tier-h
+ls -lh "$BIN"/studio "$BIN"/emu "$BIN"/sim-tier-a "$BIN"/sim-tier-b "$BIN"/sim-tier-c "$BIN"/sim-tier-h

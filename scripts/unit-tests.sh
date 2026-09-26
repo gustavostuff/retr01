@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Configure, build, and run unit tests for studio, emu, sdk C, and tier-a/tier-b/tier-h sim.
+# Configure, build, and run unit tests for studio, emu, sdk C, and tier-a/b/c/h sim.
 # Tier-a ctest also runs nested netlist_sim tests. Emu registers test_boot/test_play
 # against example_01/example_01.retr01 when that cart is present, and test_sdk_prg
 # when llvm-mos is in tools/llvm-mos or $LLVM_MOS.
@@ -11,6 +11,7 @@ STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
 SIM_A="$ROOT/apps/sim/tier-a"
 SIM_B="$ROOT/apps/sim/tier-b"
+SIM_C="$ROOT/apps/sim/tier-c"
 SIM_H="$ROOT/apps/sim/tier-h"
 
 build_and_test() {
@@ -37,6 +38,9 @@ build_and_test "$SIM_A"
 
 echo "== sim tier-b =="
 build_and_test "$SIM_B"
+
+echo "== sim tier-c =="
+build_and_test "$SIM_C"
 
 echo "== sim tier-h =="
 build_and_test "$SIM_H"

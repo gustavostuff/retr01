@@ -21,6 +21,21 @@ typedef struct NlSlot {
 static NlSlot g_slots[R01A_NL_SLOTS];
 static int g_parent[R01A_NL_SLOTS];
 static int g_nslot;
+static int g_short_slot[R01A_NL_SLOTS];
+static int g_short_n;
+
+static void mark_short(int slot) {
+    int i;
+    if (slot < 0 || slot >= g_nslot || g_short_n >= R01A_NL_SLOTS) {
+        return;
+    }
+    for (i = 0; i < g_short_n; i++) {
+        if (g_short_slot[i] == slot) {
+            return;
+        }
+    }
+    g_short_slot[g_short_n++] = slot;
+}
 
 static int pin_find(NsEntity *e, int pi) {
     int i;
@@ -97,13 +112,14 @@ static void build_auto(R01aBoard *b) {
     NsEntity *y3 = ent(b, "Y3");
     NsEntity *bx = ent(b, "UPLDX");
     NsEntity *by = ent(b, "UPLDY");
+    NsEntity *comp = ent(b, "UPLDC");
     NsEntity *u24 = ent(b, "U24");
     NsEntity *enc = ent(b, "UENC");
     int i;
     char iname[8];
     char aname[4];
     g_nslot = 0;
-    if (!y2 || !y3 || !bx || !by || !u24 || !enc) {
+    if (!y2 || !y3 || !bx || !by || !comp || !u24 || !enc) {
         return;
     }
     link_n(y2, "VDD", y2, "OE#");
@@ -111,12 +127,15 @@ static void build_auto(R01aBoard *b) {
     link_n(y2, "VDD", y3, "OE#");
     link_n(y2, "VDD", bx, "VCC");
     link_n(y2, "VDD", by, "VCC");
+    link_n(y2, "VDD", comp, "VCC");
     link_n(y2, "VDD", u24, "VCC");
     link_n(y2, "VDD", u24, "VPP");
     link_n(y2, "VDD", enc, "APOS");
     link_n(y2, "VDD", enc, "DPOS");
     link_n(y2, "VDD", bx, "RES#");
     link_n(y2, "VDD", by, "RES#");
+    link_n(y2, "VDD", comp, "RES#");
+    link_n(y2, "VDD", comp, "RWB");
     link_n(y2, "VDD", u24, "PGM#");
     link_n(y2, "VDD", enc, "ENCD");
     link_n(y2, "VDD", enc, "STND");
@@ -124,6 +143,8 @@ static void build_auto(R01aBoard *b) {
     link_n(y2, "GND", y3, "GND");
     link_n(y2, "GND", bx, "GND");
     link_n(y2, "GND", by, "GND");
+    link_n(y2, "GND", comp, "GND");
+    link_n(y2, "GND", comp, "PHI2");
     link_n(y2, "GND", u24, "GND");
     link_n(y2, "GND", enc, "AGND");
     link_n(y2, "GND", enc, "DGND");
@@ -132,14 +153,23 @@ static void build_auto(R01aBoard *b) {
     link_n(y2, "GND", u24, "OE#");
     link_n(y2, "DOT", ent(b, "R12"), "1");
     link_n(ent(b, "R12"), "2", bx, "CLK");
+    link_n(ent(b, "R12"), "2", comp, "CLK");
     link_n(y3, "FSC", ent(b, "R13"), "1");
     link_n(ent(b, "R13"), "2", enc, "FIN");
     link_n(bx, "HWRAP", by, "CLK");
     link_n(bx, "CSYNC", enc, "HSYNC");
+    link_n(bx, "HBLANK", comp, "HBLANK");
+    link_n(bx, "X5", comp, "X5");
+    link_n(bx, "X6", comp, "X6");
+    link_n(bx, "X7", comp, "X7");
+    link_n(by, "VBLANK", comp, "VBLANK");
+    link_n(by, "Y5", comp, "Y5");
+    link_n(by, "Y6", comp, "Y6");
+    link_n(by, "Y7", comp, "Y7");
     for (i = 0; i < 6; i++) {
         snprintf(iname, sizeof(iname), "INDEX%d", i);
         snprintf(aname, sizeof(aname), "A%d", i);
-        link_n(bx, iname, u24, aname);
+        link_n(comp, iname, u24, aname);
     }
     for (i = 6; i <= 13; i++) {
         snprintf(aname, sizeof(aname), "A%d", i);
@@ -167,6 +197,45 @@ static void build_auto(R01aBoard *b) {
     link_n(ent(b, "R10"), "2", y2, "GND");
     link_n(enc, "BIN", ent(b, "R11"), "1");
     link_n(ent(b, "R11"), "2", y2, "GND");
+
+    {
+        NsEntity *s1 = ent(b, "US1");
+        NsEntity *u573 = ent(b, "U573");
+        NsEntity *u41 = ent(b, "U41");
+        char s1ad[8];
+        char dn[4];
+        char qn[4];
+        char an[4];
+        if (s1 && u573 && u41) {
+            link_n(y2, "VDD", s1, "VCC");
+            link_n(y2, "GND", s1, "GND");
+            link_n(y2, "VDD", u573, "VCC");
+            link_n(y2, "GND", u573, "GND");
+            link_n(y2, "VDD", u573, "OE#");
+            link_n(y2, "VDD", u41, "VCC");
+            link_n(y2, "GND", u41, "VSS");
+            link_n(y2, "GND", u41, "CE#");
+            link_n(y2, "GND", u41, "OE#");
+            link_n(by, "VBLANK", s1, "VBL");
+            link_n(s1, "ALE", u573, "LE");
+            link_n(s1, "/WE", u41, "WE#");
+            for (i = 0; i < 8; i++) {
+                snprintf(s1ad, sizeof(s1ad), "AD%d", i);
+                snprintf(dn, sizeof(dn), "D%d", i);
+                snprintf(qn, sizeof(qn), "Q%d", i);
+                snprintf(an, sizeof(an), "A%d", i);
+                link_n(s1, s1ad, u573, dn);
+                link_n(u573, qn, u41, an);
+            }
+            link_n(s1, "A8", u41, "A8");
+            link_n(s1, "A9", u41, "A9");
+            link_n(s1, "A10", u41, "A10");
+            link_n(s1, "A11", u41, "A11");
+            link_n(s1, "A12", u41, "A12");
+            link_n(s1, "A13", u41, "A13");
+            link_n(s1, "A14", u41, "A14");
+        }
+    }
 }
 
 static int name_gnd(const char *n) {
@@ -421,6 +490,7 @@ const char *r01a_netlist_kind_label(int kind) {
 
 int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out) {
     NsIsland *island;
+    g_short_n = 0;
     NsBreadboard *bbs[R01A_NL_BB_MAX];
     int parent[R01A_NL_GNET];
     int pin_g[R01A_NL_SLOTS];
@@ -493,6 +563,8 @@ int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out) {
             if (pin_root(i) == pin_root(j)) {
                 continue;
             }
+            /* One IC cannot tie its own pins through the breadboard mesh; conflicts
+             * between Auto nets on the same chip are placement/jumper artifacts. */
             if (board->wire_mode == R01A_WIRE_MANUAL && g_slots[i].e == g_slots[j].e) {
                 continue;
             }
@@ -512,6 +584,8 @@ int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out) {
             pin_label(j, lb, sizeof(lb));
             snprintf(line, sizeof(line), "%s: %s %s", r01a_netlist_kind_label(sk), la, lb);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
+            mark_short(j);
         }
     }
     for (i = 0; i < g_nslot; i++) {
@@ -534,36 +608,42 @@ int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out) {
             pin_label(i, la, sizeof(la));
             snprintf(line, sizeof(line), "%s: %s on BB1 GND", r01a_netlist_kind_label(sk), la);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
         }
         if (k == R01A_NET_KIND_GND && on_pwr) {
             sk = R01A_NET_SHORT_PWR_GND;
             pin_label(i, la, sizeof(la));
             snprintf(line, sizeof(line), "%s: %s on BB1 5V", r01a_netlist_kind_label(sk), la);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
         }
         if (k == R01A_NET_KIND_DATA && on_gnd) {
             sk = R01A_NET_SHORT_DATA_GND;
             pin_label(i, la, sizeof(la));
             snprintf(line, sizeof(line), "%s: %s on BB1 GND", r01a_netlist_kind_label(sk), la);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
         }
         if (k == R01A_NET_KIND_DATA && on_pwr) {
             sk = R01A_NET_SHORT_DATA_PWR;
             pin_label(i, la, sizeof(la));
             snprintf(line, sizeof(line), "%s: %s on BB1 5V", r01a_netlist_kind_label(sk), la);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
         }
         if (k == R01A_NET_KIND_CLK && on_gnd) {
             sk = R01A_NET_SHORT_CLK_GND;
             pin_label(i, la, sizeof(la));
             snprintf(line, sizeof(line), "%s: %s on BB1 GND", r01a_netlist_kind_label(sk), la);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
         }
         if (k == R01A_NET_KIND_CLK && on_pwr) {
             sk = R01A_NET_SHORT_CLK_PWR;
             pin_label(i, la, sizeof(la));
             snprintf(line, sizeof(line), "%s: %s on BB1 5V", r01a_netlist_kind_label(sk), la);
             add_issue(out, max_out, &nout, sk, line);
+            mark_short(i);
         }
     }
 
@@ -682,4 +762,15 @@ int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out) {
         }
     }
     return nout;
+}
+
+int r01a_netlist_pin_shorted(const NsEntity *e, int pin_index) {
+    int i;
+    for (i = 0; i < g_short_n; i++) {
+        int slot = g_short_slot[i];
+        if (g_slots[slot].e == e && g_slots[slot].pi == pin_index) {
+            return 1;
+        }
+    }
+    return 0;
 }
