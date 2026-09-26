@@ -20,7 +20,7 @@ Known **gaps** (same as [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h
 - **74HC14** optional block not seated
 - Cart **edge** vs **U40** module (OE#/WE# stubs)
 - **Y1/Y2** refdes shared between BOM crystals and canned osc chips in sim
-- Skidl export is **motherboard-only**: 17 counted ICs (includes **U725 / AD724** placeholder), **3× ATF22V10** (UPLDX/Y/V), connectors **J1–J9 + J36**; sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
+- Skidl export is **motherboard-only**: 17 counted ICs (includes **U725 / AD724** placeholder), **3x ATF22V10** (UPLDX/Y/V), connectors **J1-J9 + J36**. Sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
 
 The JSON embeds `"fabrication_ready": false` and `"purpose": "preliminary_pcb_illustrative_only"`.
 
@@ -65,9 +65,9 @@ Script behavior:
 
 - Refuses export if JSON claims `fabrication_ready: true`
 - Maps passives to generic `Device` R/C symbols (electrolytics use `C`, not polarized CP)
-- Maps oscillators **Y1–Y3** to DIP-8 cans; other parts use **DIP / THT footprints** from `retr01_kicad/` (ported from legacy `schematic_generator`)
-- **J3/J4** Switchcraft TRS, **J8/J9** RCA (**RCJ-012** / **RCJ-014**, footprint **`Retr01_Lib:CUI_RCJ-014`** from GameTank `avboard_tht2`), **J5/J6** arcade 1×10, **J2** 1×6 RGB/sync header, **J36** **`Retr01_Lib:EDAC_395_MoboSocket_2x18_2.54x5.08mm`** (2×18 THT + **`${KIPRJMOD}/library/Retr01_Lib.3dshapes/EDAC_395-036-520-201.wrl`**), **J1** barrel — see `retr01_kicad/tier_h_map.py` and `connectors.py`
-- **J2** wiring (preliminary): pins 1–3 = PROM DAC guns after **R9–R11**; pin 4 = **CSYNC** with **UPLDV** EQ (pin 14); pins 5–6 = **GND** (RGBS default per [`hardware.md`](../general/hardware.md); RGBHV uses a mode jumper on pin 5 for **VSYNC** later). **U725 / AD724** stays on **`NC`** only (no video nets).
+- Maps oscillators **Y1-Y3** to DIP-8 cans. Other parts use **DIP / THT footprints** from `retr01_kicad/` (ported from legacy `schematic_generator`)
+- **J3/J4** Switchcraft TRS, **J8/J9** RCA (**RCJ-012** / **RCJ-014**, footprint **`Retr01_Lib:CUI_RCJ-014`** from GameTank `avboard_tht2`), **J5/J6** arcade 1x10, **J2** 1x6 RGB/sync header, **J36** **`Retr01_Lib:EDAC_395_MoboSocket_2x18_2.54x5.08mm`** (2x18 THT + **`${KIPRJMOD}/library/Retr01_Lib.3dshapes/EDAC_395-036-520-201.wrl`**), **J1** barrel (see `retr01_kicad/tier_h_map.py` and `connectors.py`)
+- **J2** wiring (preliminary): pins 1-3 = PROM DAC guns after **R9-R11**. Pin 4 = **CSYNC** with **UPLDV** EQ (pin 14). Pins 5-6 = **GND** (RGBS default per [`hardware.md`](../general/hardware.md). RGBHV uses a mode jumper on pin 5 for **VSYNC** later). **U725 / AD724** stays on **`NC`** only (no video nets).
 - Custom footprints live in-repo at `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty`. **`export_netlist.sh` copies** that tree into `apps/sim/tier-h/kicad/main-pcb/v_01/library/Retr01_Lib.pretty` (no symlinks). The board **`fp-lib-table`** uses `${KIPRJMOD}/library/Retr01_Lib.pretty`. Re-import the netlist from **`v_01`** after export or KiCad may substitute stock footprints and drop **J3/J4** TRS / the second RCA.
 - Skips **SCR1** (sim LCD sink); **PS1** sim PMIC pins remap to **J1**
 - Unused footprint pads (arcade headers, **U725**, TRS NC pads, osc NC pins, etc.) tie to net **`NC`** so Pcbnew netlist import does not warn on missing symbol pins
@@ -76,9 +76,9 @@ KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual e
 
 ### KiCad custom library and board
 
-- **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/` (3D offset/rotation live in each `.kicad_mod` `(model …)` block).
+- **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/` (3D offset/rotation live in each `.kicad_mod` `(model ...)` block).
 - **Board:** `apps/sim/tier-h/kicad/main-pcb/v_01/v_01.kicad_pcb` and `v_01.kicad_pro`. Open the project from **`v_01/`** so `${KIPRJMOD}` resolves.
-- **Export copy:** `export_netlist.sh` copies the library tree into `v_01/library/` for KiCad (`fp-lib-table` → `${KIPRJMOD}/library/Retr01_Lib.pretty`).
+- **Export copy:** `export_netlist.sh` copies the library tree into `v_01/library/` for KiCad (`fp-lib-table` -> `${KIPRJMOD}/library/Retr01_Lib.pretty`).
 
 Notable custom footprints: **J36** `EDAC_395_MoboSocket_2x18_2.54x5.08mm` (5.08 mm row spacing), **J3/J4** Switchcraft TRS jack, **J8/J9** `CUI_RCJ-014` / `CUI_RCJ-014_Audio`. Supplier STEP sources for WRL regeneration are under `Retr01_Lib.3dshapes/_step_source/`; colored WRLs use `scripts/step_colored_to_wrl.py` when needed.
 
@@ -108,6 +108,7 @@ Until those criteria are met, Tier H Skidl output remains draft illustration onl
 
 ## Related
 
+- [`docs/misc/kicad-schematic-tier-h.md`](../misc/kicad-schematic-tier-h.md): manual KiCad schematic capture (symbols, passives, wiring)  
 - [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md): link tables in sim  
 - [`passive_bom.md`](../passive_bom.md): passive counts  
 - [`apps/sim/tier-h/README.md`](../../apps/sim/tier-h/README.md): sim overview  

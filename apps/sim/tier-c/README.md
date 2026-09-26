@@ -16,18 +16,18 @@ Engine: [`apps/netlist_sim/`](../../netlist_sim/). Shared assets: [`apps/sim/com
 | Auto netlist: S1 ↔ latch ↔ field, **VBL** from Beam Y | `src/netlist.c` |
 | Tests `test_tier_c_field`, `test_tier_c_priority` | `tests/` |
 
-## Wiring delta (you on the breadboard)
+## Wiring delta (breadboard)
 
-Everything from Tier B stays. New jumpers (see bring-up doc §8):
+Everything from Tier B stays. New jumpers (see bring-up doc section 8):
 
-- **US1** `AD0`–`AD7` → **U573** `D0`–`D7` → **U41** `A0`–`A7`
-- **US1** `A8`–`A14` → **U41** `A8`–`A14`
-- **US1** `ALE` → **U573** `LE`; **US1** `/WE` → **U41** `WE#`
+- **US1** `AD0`-`AD7` -> **U573** `D0`-`D7` -> **U41** `A0`-`A7`
+- **US1** `A8`-`A14` -> **U41** `A8`-`A14`
+- **US1** `ALE` -> **U573** `LE`; **US1** `/WE` -> **U41** `WE#`
 - **U41** `CE#` low, beam **`OE#`** vs S1 **`/WE`** mutually exclusive (same as product)
-- **Beam Y** `VBLANK` → **US1** `VBL` (optional debug / RUN)
+- **Beam Y** `VBLANK` -> **US1** `VBL` (optional debug / RUN)
 - **C8** on **US1** VCC; decoupling on **U41** / **U573** as in BOM
 
-**Auto** mode includes these links so the LCD demo runs without extra jumpers. **Manual** mode expects you to wire them on the protoboards; the sim still runs the lab fill into **U41** memory each VBlank (firmware behavior), while encode only locks when the routed netlist matches Auto.
+**Auto** mode includes these links so the LCD demo runs without extra jumpers. **Manual** mode requires the same routes on the protoboards. The sim still runs the lab fill into **U41** memory each VBlank (firmware behavior), while encode only locks when the routed netlist matches Auto.
 
 First launch loads Tier B’s saved layout if Tier C has no `ui_layout.json` yet. Place **US1**, **U573**, and **U41** beside the Compositor cluster.
 

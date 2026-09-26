@@ -71,4 +71,4 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 
 When AD724 and optional HC14 land in sim, extend `board_schematic.c` rather than duplicating links in UI code.
 
-**Skidl / KiCad (preliminary only):** [`tier-h-skidl-export.md`](tier-h-skidl-export.md). Not fabrication-ready.
+**KiCad schematic (manual):** [`docs/misc/kicad-schematic-tier-h.md`](../misc/kicad-schematic-tier-h.md). **Skidl export (preliminary):** [`tier-h-skidl-export.md`](tier-h-skidl-export.md).
