@@ -37,7 +37,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U7A**, **U7B**, **U7C** | SN74HC157 | `74xx_74LS157` (same DIP pinout) | DIP-16 |
 | **U573** | SN74HC573 | `74xx_74LS573` | DIP-20 |
 | **U574** | SN74HC574 | `74xx_74LS574` | DIP-20 |
-| **U725** | AD724 | SOIC-16 on adapter or project symbol | DIP-16 adapter |
+| **U725** | AD724 | Project symbol or Analog Devices pin names | **SOIC-16** `Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm` |
 | **Y1**, **Y2**, **Y3** | Crystals / osc cans | `Device:Crystal` or canned osc symbol | DIP-8 can per `tier_h_map.py` |
 | **J1** | Barrel 5 V | `Connector:Barrel_Jack` | CUI PJ-063AH class |
 | **J2** | RGB + sync 1x6 | Connector symbol | 1x6 header |

@@ -120,7 +120,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-13 | Color path | AT27C256R master colors. |
 | 2026-09-13 | Composite | **AD724** frozen (CSYNC or H/V). |
 | 2026-09-14 | IC budget | AD724 counted on motherboard. 17 mobo + 2 cart = 19. |
-| 2026-09-14 | AD724 mount | SOIC-16 on SOIC-to-DIP adapter. Main PCB 100% THT. |
+| 2026-09-14 | AD724 mount | **SOIC-16** on motherboard (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). No DIP adapter. |
 | 2026-09-14 | 74HC14 | Optional. Skip if canned PHI2/DOT + simple reset. Add if soft edges or reset chatter. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). |
 | 2026-09-17 | Other screens | Cap **8** (ids 0..7). |

@@ -10,6 +10,7 @@ DIP40 = f"{_R}:DIP-40_W15.24mm"
 DIP24 = f"{_R}:DIP-24_W7.62mm"
 DIP20 = f"{_R}:DIP-20_W7.62mm"
 DIP16 = f"{_R}:DIP-16_W7.62mm"
+SOIC16 = f"{_R}:SOIC-16_3.9x9.9mm_P1.27mm"
 DIP14 = f"{_R}:DIP-14_W7.62mm"
 DIP8 = f"{_R}:DIP-8_W7.62mm"
 

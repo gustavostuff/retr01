@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Board outline **170 x 120 mm** (locked for the initial design). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
 
-**Packages (initial THT DIY board):** The motherboard is **100% through-hole** at the board level. Counted BOM ICs use DIP / SPDIP / PDIP footprints. **AD724** only exists as **SOIC-16**, so it mounts on a **SOIC-16 to DIP-16 adapter** that plugs into a DIP-16 socket (or soldered DIP pads) on the motherboard. Cart and pad stay THT. A later commercial spin can place AD724 (and other SMD parts) directly.
+**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. **AD724** is the exception: Analog only sells **SOIC-16**, so **U725** uses a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). Cart and pad stay THT.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -65,9 +65,9 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | AD724 | RGB to NTSC/PAL composite encoder | DIP-16 via **SOIC-16 to DIP adapter** | Native SOIC-16 (direct later) |
+| 1 | AD724 | RGB to NTSC/PAL composite encoder | **SOIC-16** SMD on motherboard | Same (only package Analog sells) |
 
-**Still outside the count:** crystals (common THT). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC. The SOIC-to-DIP adapter is a mechanical carrier, not an extra counted IC.
+**Still outside the count:** crystals (common THT). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
 
 ### Optional: 74HC14 (hex Schmitt inverter)
 
@@ -99,7 +99,7 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is on the motherboard BOM (one of the **17**). Analog only sells it as **SOIC-16**. For the initial DIY board, mount it on a **SOIC-16 to DIP-16 adapter** so the motherboard footprint stays **DIP-16** (socket recommended). That keeps the main PCB **100% THT**. Direct SOIC footprint is fine on a later SMD commercial spin.
+**AD724** is on the motherboard BOM (one of the **17**). Solder the **SOIC-16** part on **U725** with local bypass (**C18**) and the datasheet coupling network when the composite path is populated. Hand-solder or reflow is fine for a single narrow SOIC.
 
 It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 

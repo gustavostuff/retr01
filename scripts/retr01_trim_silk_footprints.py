@@ -25,6 +25,7 @@ STOCK: list[tuple[str, str]] = [
     ("Package_DIP.pretty", "DIP-8_W7.62mm.kicad_mod"),
     ("Package_DIP.pretty", "DIP-14_W7.62mm.kicad_mod"),
     ("Package_DIP.pretty", "DIP-16_W7.62mm.kicad_mod"),
+    ("Package_SO.pretty", "SOIC-16_3.9x9.9mm_P1.27mm.kicad_mod"),
     ("Package_DIP.pretty", "DIP-20_W7.62mm.kicad_mod"),
     ("Package_DIP.pretty", "DIP-24_W7.62mm.kicad_mod"),
     ("Package_DIP.pretty", "DIP-28_W7.62mm.kicad_mod"),
