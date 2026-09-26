@@ -3,7 +3,9 @@
 #include "retr01_emu/play.h"
 #include "retr01_emu/types.h"
 #include "retr01_emu/video.h"
+#include "r01_cart_caps.h"
 #include "r01_play_camera.h"
+#include "r01_play_sys.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -160,8 +162,15 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (!r01e_cart_is_c_prg(&m.cart) || !m.ram[0x02E8]) {
+    if (!r01e_cart_is_c_prg(&m.cart) || !m.ram[R01_SYS_READY]) {
         fprintf(stderr, "FAIL C PRG sys ready\n");
+        r01e_machine_shutdown(&m);
+        return 1;
+    }
+    m.ram[R01_SYS_VID_FLAGS] = R01_CART_WHDR_FLAG_BG0_CLIP_BG1;
+    r01e_play_tick(&m);
+    if (!m.video.bg0_clip_bg1) {
+        fprintf(stderr, "FAIL sys vid flags clip\n");
         r01e_machine_shutdown(&m);
         return 1;
     }

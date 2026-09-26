@@ -3,12 +3,7 @@
 #include "r01_cart_caps.h"
 #include "r01_play_camera.h"
 #include "r01_play_physics.h"
-
-#define R01_SYS_PLAYER_X 0x02E0u
-#define R01_SYS_PLAYER_Y 0x02E2u
-#define R01_SYS_CAM_X 0x02E4u
-#define R01_SYS_CAM_Y 0x02E6u
-#define R01_SYS_READY 0x02E8u
+#include "r01_play_sys.h"
 #define R01_PLAY_SPAWN_CELL 0x20u
 #define R01_PLAY_INST_COUNT 0xC0u
 #define R01_PLAY_INST_TABLE 0xC1u
@@ -213,6 +208,8 @@ void r01_sys_publish(const R01GameCtx *ctx) {
     put_u16_ram(R01_SYS_CAM_X, ctx->cam_x);
     put_u16_ram(R01_SYS_CAM_Y, ctx->cam_y);
     R01_CPU8(R01_SYS_READY) = 1;
+    R01_CPU8(R01_SYS_VID_FLAGS) =
+        r01_sys_vid_flags_pack(ctx->bg0_wrap_x, ctx->bg0_wrap_y, ctx->bg0_clip_bg1);
     r01_scroll_publish(ctx);
 }
 

@@ -4,8 +4,23 @@
 #include "retr01_emu/machine.h"
 #include "retr01_emu/video.h"
 #include "r01_play_camera.h"
+#include "r01_play_sys.h"
 
 #include <string.h>
+
+static void play_apply_vid_flags(R01eMachine *m) {
+    R01eVideo *vid;
+    uint8_t f;
+
+    if (!m || !m->ram[R01_SYS_READY]) {
+        return;
+    }
+    vid = &m->video;
+    f = m->ram[R01_SYS_VID_FLAGS];
+    vid->bg0_wrap_x = (f & R01E_CART_WHDR_FLAG_BG0_WRAP_X) != 0;
+    vid->bg0_wrap_y = (f & R01E_CART_WHDR_FLAG_BG0_WRAP_Y) != 0;
+    vid->bg0_clip_bg1 = (f & R01E_CART_WHDR_FLAG_BG0_CLIP_BG1) != 0;
+}
 
 static void play_follow_c_sys(R01eMachine *m) {
     if (!m || !m->ram[0x02E8]) {
@@ -85,8 +100,9 @@ int r01e_play_start(R01eMachine *m) {
         return 0;
     }
     m->play.enabled = 1;
-    if (m->ram[0x02E8]) {
+    if (m->ram[R01_SYS_READY]) {
         play_follow_c_sys(m);
+        play_apply_vid_flags(m);
         r01e_play_sync_video(m);
         (void)r01e_video_sync_camera(m);
     }
@@ -100,8 +116,9 @@ void r01e_play_tick(R01eMachine *m) {
     if (!r01e_cart_is_c_prg(&m->cart)) {
         return;
     }
-    if (m->ram[0x02E8]) {
+    if (m->ram[R01_SYS_READY]) {
         play_follow_c_sys(m);
+        play_apply_vid_flags(m);
         r01e_play_sync_video(m);
     }
 }

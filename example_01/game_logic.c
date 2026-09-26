@@ -15,6 +15,7 @@ static uint16_t s_rng = 0xACE1u;
 static void init_camera_and_bg0(R01GameCtx *ctx) {
     r01_bg0_set_wrap(ctx, R01_BG0_WRAP_ON, R01_BG0_WRAP_ON);
     r01_camera_set_deadzone(ctx, 32, 70);
+    r01_bg0_set_clip_to_bg1(ctx, R01_BG0_CLIP_ON);
 }
 
 static void init_platformer(R01GameCtx *ctx) {

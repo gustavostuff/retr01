@@ -42,7 +42,7 @@ typedef struct R01eEvent {
     int arg1;
 } R01eEvent;
 
-/* Mirror of PRG sys block $02E0 (player / camera). Packed PRG is gameplay. */
+/* Mirror of PRG sys block $02E0 (player / camera / vid flags). Packed PRG is gameplay. */
 typedef struct R01ePlay {
     int enabled;
     int player_x;
