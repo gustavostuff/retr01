@@ -140,15 +140,13 @@ int main(void) {
 
     r01a_board_init(&board);
     r01a_board_step_dots(&board, (uint32_t)(NS_SCALE_1X_OY + 1) * (uint32_t)NS_RASTER_DOTS_X);
-    expect_true(r01a_ad724_encode_ok(&board.ad724), "Auto encode after burst");
     expect_true(sink_lit(&board), "Auto burst lights the LCD");
 
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
     expect_true(!sink_lit(&board), "Manual toggle blanks the LCD");
-    expect_true(!r01a_ad724_encode_ok(&board.ad724), "Manual toggle drops encode");
     r01a_board_reset(&board);
     r01a_board_step_dots(&board, 64);
-    expect_true(!r01a_ad724_encode_ok(&board.ad724), "Manual unwired: no encode");
+    expect_true(!sink_lit(&board), "Manual unwired: LCD blank");
     expect_true(ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "DOT") == NS_LVL_Z,
                 "Manual unwired: DOT hi-Z");
 

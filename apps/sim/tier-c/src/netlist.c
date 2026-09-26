@@ -1,4 +1,5 @@
 #include "r01a_netlist.h"
+#include "r01a_rgb_netlist.h"
 
 #include "discrete_ic/breadboard.h"
 #include "discrete_ic/entity.h"
@@ -109,55 +110,43 @@ static NsEntity *ent(R01aBoard *b, const char *ref) {
 
 static void build_auto(R01aBoard *b) {
     NsEntity *y2 = ent(b, "Y2");
-    NsEntity *y3 = ent(b, "Y3");
     NsEntity *bx = ent(b, "UPLDX");
     NsEntity *by = ent(b, "UPLDY");
     NsEntity *comp = ent(b, "UPLDC");
     NsEntity *u24 = ent(b, "U24");
-    NsEntity *enc = ent(b, "UENC");
+    NsEntity *j2 = ent(b, "J2");
     int i;
     char iname[8];
     char aname[4];
     g_nslot = 0;
-    if (!y2 || !y3 || !bx || !by || !comp || !u24 || !enc) {
+    if (!y2 || !bx || !by || !comp || !u24 || !j2) {
         return;
     }
     link_n(y2, "VDD", y2, "OE#");
-    link_n(y2, "VDD", y3, "VDD");
-    link_n(y2, "VDD", y3, "OE#");
     link_n(y2, "VDD", bx, "VCC");
     link_n(y2, "VDD", by, "VCC");
     link_n(y2, "VDD", comp, "VCC");
     link_n(y2, "VDD", u24, "VCC");
     link_n(y2, "VDD", u24, "VPP");
-    link_n(y2, "VDD", enc, "APOS");
-    link_n(y2, "VDD", enc, "DPOS");
     link_n(y2, "VDD", bx, "RES#");
     link_n(y2, "VDD", by, "RES#");
     link_n(y2, "VDD", comp, "RES#");
     link_n(y2, "VDD", comp, "RWB");
     link_n(y2, "VDD", u24, "PGM#");
-    link_n(y2, "VDD", enc, "ENCD");
-    link_n(y2, "VDD", enc, "STND");
-    link_n(y2, "VDD", enc, "VSYNC");
-    link_n(y2, "GND", y3, "GND");
     link_n(y2, "GND", bx, "GND");
     link_n(y2, "GND", by, "GND");
     link_n(y2, "GND", comp, "GND");
     link_n(y2, "GND", comp, "PHI2");
     link_n(y2, "GND", u24, "GND");
-    link_n(y2, "GND", enc, "AGND");
-    link_n(y2, "GND", enc, "DGND");
-    link_n(y2, "GND", enc, "SELECT");
     link_n(y2, "GND", u24, "CE#");
     link_n(y2, "GND", u24, "OE#");
+    link_n(y2, "GND", j2, "GND");
+    link_n(y2, "GND", j2, "GND2");
     link_n(y2, "DOT", ent(b, "R12"), "1");
     link_n(ent(b, "R12"), "2", bx, "CLK");
     link_n(ent(b, "R12"), "2", comp, "CLK");
-    link_n(y3, "FSC", ent(b, "R13"), "1");
-    link_n(ent(b, "R13"), "2", enc, "FIN");
     link_n(bx, "HWRAP", by, "CLK");
-    link_n(bx, "CSYNC", enc, "HSYNC");
+    link_n(bx, "CSYNC", j2, "CSYNC");
     link_n(bx, "HBLANK", comp, "HBLANK");
     link_n(bx, "X5", comp, "X5");
     link_n(bx, "X6", comp, "X6");
@@ -175,28 +164,10 @@ static void build_auto(R01aBoard *b) {
         snprintf(aname, sizeof(aname), "A%d", i);
         link_n(y2, "GND", u24, aname);
     }
-    link_n(u24, "O7", ent(b, "R1"), "1");
-    link_n(ent(b, "R1"), "2", enc, "RIN");
-    link_n(u24, "O6", ent(b, "R2"), "1");
-    link_n(ent(b, "R2"), "2", enc, "RIN");
-    link_n(u24, "O5", ent(b, "R3"), "1");
-    link_n(ent(b, "R3"), "2", enc, "RIN");
-    link_n(u24, "O4", ent(b, "R4"), "1");
-    link_n(ent(b, "R4"), "2", enc, "GIN");
-    link_n(u24, "O3", ent(b, "R5"), "1");
-    link_n(ent(b, "R5"), "2", enc, "GIN");
-    link_n(u24, "O2", ent(b, "R6"), "1");
-    link_n(ent(b, "R6"), "2", enc, "GIN");
-    link_n(u24, "O1", ent(b, "R7"), "1");
-    link_n(ent(b, "R7"), "2", enc, "BIN");
-    link_n(u24, "O0", ent(b, "R8"), "1");
-    link_n(ent(b, "R8"), "2", enc, "BIN");
-    link_n(enc, "RIN", ent(b, "R9"), "1");
-    link_n(ent(b, "R9"), "2", y2, "GND");
-    link_n(enc, "GIN", ent(b, "R10"), "1");
-    link_n(ent(b, "R10"), "2", y2, "GND");
-    link_n(enc, "BIN", ent(b, "R11"), "1");
-    link_n(ent(b, "R11"), "2", y2, "GND");
+    r01a_netlist_link_dac_rgbs((R01aNetLinkFn)link_n, y2, u24, j2, ent(b, "R1"), ent(b, "R2"),
+                                 ent(b, "R3"), ent(b, "R4"), ent(b, "R5"), ent(b, "R6"),
+                                 ent(b, "R7"), ent(b, "R8"), ent(b, "R9"), ent(b, "R10"),
+                                 ent(b, "R11"));
 
     {
         NsEntity *s1 = ent(b, "US1");
@@ -248,9 +219,8 @@ static int name_vdd(const char *n) {
 }
 
 static int name_clk(const char *n) {
-    return n && (strcmp(n, "DOT") == 0 || strcmp(n, "FSC") == 0 || strcmp(n, "CLK") == 0 ||
-                 strcmp(n, "HSYNC") == 0 || strcmp(n, "CSYNC") == 0 || strcmp(n, "HWRAP") == 0 ||
-                 strcmp(n, "FIN") == 0);
+    return n && (strcmp(n, "DOT") == 0 || strcmp(n, "CLK") == 0 || strcmp(n, "CSYNC") == 0 ||
+                 strcmp(n, "HWRAP") == 0);
 }
 
 static int auto_kind(int slot) {

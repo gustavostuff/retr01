@@ -35,7 +35,6 @@ int main(void) {
     expect_true(lw == NS_VIDEO_W && lh == NS_VIDEO_H, "LCD glyph is CRT field");
 
     r01a_board_step_dots(&board, (uint32_t)R01A_BEAM_DOTS_X * (uint32_t)R01A_BEAM_DOTS_Y);
-    expect_true(r01a_ad724_encode_ok(&board.ad724), "AD724 encoding after a field");
     rgb = ns_video_sink_rgb(&board.sink);
     expect_true(rgb != NULL, "sink rgb");
     expect_true(rgb_black(pix_at(rgb, 0, 0)), "1x top-left overscan");

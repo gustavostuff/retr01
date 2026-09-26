@@ -24,7 +24,6 @@ int main(void) {
     r01a_board_init(&board);
     ns_video_sink_set_scale_2x(&board.sink, 1);
     r01a_board_step_dots(&board, (uint32_t)R01A_BEAM_DOTS_X * (uint32_t)R01A_BEAM_DOTS_Y);
-    expect_true(r01a_ad724_encode_ok(&board.ad724), "AD724 encoding after a field");
     rgb = ns_video_sink_rgb(&board.sink);
     expect_true(rgb != NULL, "sink rgb");
     expect_true(rgb_match(pix_at(rgb, 16, 10), R01A_BAR_INDEX[0]), "BG1 bar");

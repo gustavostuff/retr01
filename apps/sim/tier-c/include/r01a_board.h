@@ -1,13 +1,12 @@
 #ifndef R01A_BOARD_H
 #define R01A_BOARD_H
 
-#include "ad724.h"
 #include "as6c62256.h"
 #include "at27c256r.h"
 #include "atf22v10.h"
 #include "avr128db28_s1.h"
 #include "osc_dot.h"
-#include "osc_fsc.h"
+#include "rgbs_hdr.h"
 #include "sn74hc573.h"
 
 #include "discrete_ic/breadboard.h"
@@ -43,7 +42,6 @@ typedef struct R01aJumper {
 
 typedef struct R01aBoard {
     R01aOscDot osc_dot;
-    R01aOscFsc osc_fsc;
     R01aAtf22v10 beam_x;
     R01aAtf22v10 beam_y;
     R01aAtf22v10 compositor;
@@ -51,7 +49,7 @@ typedef struct R01aBoard {
     R01aSn74hc573 field_latch;
     R01aAs6c62256 field_sram;
     R01aAt27c256r prom;
-    R01aAd724 ad724;
+    R01aRgbsHdr rgbs;
     NsVideoSink sink;
     NsBreadboard breadboard;
     NsBreadboard extra_bb[R01A_BB_EXTRA_MAX];

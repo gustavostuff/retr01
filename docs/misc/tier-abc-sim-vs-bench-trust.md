@@ -14,7 +14,7 @@ The Tier A/B/C apps are one **VIDEO LAB** island built on `tools/discrete_ic/`:
 | --- | --- | --- |
 | **Connectivity** | Named pins, H/L/Z/X levels, breadboard strips, jumpers, resistors as series ties | Parasitic C/L, trace length, ground bounce, analog settling to ns |
 | **Raster / video math** | C counters for Beam X/Y, Compositor priority in C (`atf22v10.c`, `r01a_raster.h`) | Fuse maps inside real ATF22V10s |
-| **Color path** | AT27C256R kit image, R3G3B2 resistor network, AD724 lock heuristic | Real ~0.7 Vpp analog, chroma lock quality, temperature drift |
+| **Color path** | AT27C256R kit image, R3G3B2 resistor network, **J2** RGBS header, LCD RGBS sink | Real ~0.7 Vpp analog into **75 Ω** on **RGBS**; no composite encoder on A-C |
 | **Tier C field** | AS6C62256 array in RAM, Compositor reads kit indices by beam address | Beam-driven `/OE` on field SRAM, AVR firmware timing on AD/ALE/`/WE` |
 
 Auto mode applies a **reference netlist** (virtual wires). Manual mode routes only through seated pins, jumpers, and resistors on protoboards. Manual mode still uses the same reference netlist for **open/short/missing** checks against the intended lab wiring.
@@ -51,22 +51,20 @@ Tier D (OAM SPI), E (VRAM), F (6502 soft I/O), G (cart), and H (full integration
 
 ## 3. Reference netlist fidelity (Auto mode)
 
-The following tables compare **Auto** links in sim to **bring-up docs**. Refdes names match the sim (`Y2` DOT osc, `Y3` FSC, `UPLDX`/`UPLDY`/`UPLDC`, `U24` PROM, `UENC` AD724).
+The following tables compare **Auto** links in sim to **bring-up docs**. Refdes names match the sim (`Y2` DOT osc, `J2` RGBS header, `UPLDX`/`UPLDY`/`UPLDC`, `U24` PROM).
 
 ### Tier A (video only)
 
 | Connection | Sim Auto netlist | Bring-up / hardware | Trust |
 | --- | --- | --- | --- |
 | DOT -> Beam X CLK, series R | Y2 DOT -> R12 -> UPLDX CLK | Same intent | **High** for topology |
-| FSC -> AD724 FIN, series R | Y3 FSC -> R13 -> UENC FIN | Same | **High** |
 | Beam X HWRAP -> Beam Y CLK | Linked | Line tick from X | **High** |
-| Beam X CSYNC -> AD724 HSYNC | Linked | CSYNC mode recipe | **Med** (real AD724 needs valid FSC edges and levels) |
+| Beam X CSYNC -> J2 CSYNC | Linked | **J2 pin 4** CSYNC (RGBS) | **High** for sync topology |
 | Beam X INDEX[5:0] -> PROM A[5:0] | Linked | Tier A Method B in bring-up | **High** for lab Method B |
 | PROM A[13:6] -> GND | Linked via Y2 GND | Required | **High** |
 | PROM CE#, OE# -> GND | Linked | Lab hard-enable | **High** |
-| PROM O[7:0] -> R1..R8 -> AD724 R/G/B | Linked | R3G3B2 + 75 ohm loads | **Med** (sim checks encode lock, not volts) |
+| PROM O[7:0] -> R1..R8 -> J2 R/G/B | Linked | R3G3B2 + 75 ohm loads -> **J2 pins 1-3** | **Med** (sim LCD, not volts) |
 | Oscillator OE# -> VDD | Linked | May float on bench if osc has OE# | **Low-Med** (check canned osc datasheet) |
-| AD724 VSYNC -> VDD | Linked | Inactive VSYNC in CSYNC mode | **Med** (matches AD724 doc intent) |
 
 Tier A sim **does not** run CUPL/JEDEC. Beam equations live in C. A working bench **must** still burn PLDs; the sim only proves the **intended** counter/sync/index relationships for Method B bars.
 
@@ -134,15 +132,15 @@ SN74HC573 and AS6C62256 sim packages use standard datasheet pin numbering with n
 | Timing | One DOT step per sim tick pair | Propagation and pin-to-pin skew |
 | Trust for breadboard | **High** for "what should be connected to whom" | **Low** until JEDEC matches sim counters |
 
-### AT27C256R + DAC + AD724
+### AT27C256R + DAC + RGBS
 
-| Aspect | Sim | Real chip |
+| Aspect | Sim | Real bench (A-C) |
 | --- | --- | --- |
 | PROM | Shared kit binary with emu | OTP burn |
-| DAC | Threshold on digital levels into AD724 | Resistor ratios, 0.7 Vpp |
-| AD724 | `encode_ok` after FSC edge + control pins high | Analog composite lock |
+| DAC | Threshold on digital levels; LCD RGBS | Resistor ratios, ~0.7 Vpp into 75 Ω |
+| Output | LCD field and **J2** CSYNC/R/G/B nets | **RGBS header** to monitor |
 
-Tier A pass on bench: stable sync and recognizable colors. Tier sim pass: `test_ad724`, priority tests.
+Tier A pass on bench: stable sync and recognizable colors on **RGBS**. Tier sim pass: bar tests and netlist match on the RGBS path.
 
 ### AVR128DB28 (US1) in Tier C
 

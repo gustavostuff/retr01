@@ -20,7 +20,7 @@ int main(void) {
     NsLevel prev;
 
     r01a_board_init(&board);
-    expect_true(board.passives.count == 21, "passive BOM size");
+    expect_true(board.passives.count == 18, "passive BOM size");
     r = NULL;
     for (i = 0; i < board.passives.count; i++) {
         if (board.passives.parts[i].kind == NS_PASSIVE_R &&

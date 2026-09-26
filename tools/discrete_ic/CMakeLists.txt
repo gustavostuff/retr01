@@ -18,6 +18,7 @@ add_library(discrete_ic
   src/timing.c
   src/pin_netlist.c
   src/chip.c
+  src/pin_header.c
   src/ns_island.c
   chips/breadboard.c
   chips/passive.c

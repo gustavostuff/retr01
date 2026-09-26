@@ -23,13 +23,13 @@ get_filename_component(R01C_EXAMPLE01_CHR
 
 add_library(retr01_sim_tier_c_core
   ${SIM_COMMON}/chips/osc_dot.c
-  ${SIM_COMMON}/chips/osc_fsc.c
+  ${SIM_COMMON}/chips/rgbs_hdr.c
+  ${SIM_COMMON}/src/r01a_rgb_netlist.c
   chips/atf22v10.c
   chips/as6c62256.c
   chips/sn74hc573.c
   chips/avr128db28_s1.c
   ${SIM_COMMON}/chips/at27c256r.c
-  ${SIM_COMMON}/chips/ad724.c
   src/board.c
   src/s1_lab.c
   ${SIM_COMMON}/src/layout.c
@@ -94,7 +94,6 @@ r01a_unit_test(test_osc_dot ${SIM_COMMON}/tests/test_osc_dot.c)
 r01a_unit_test(test_beam_x tests/test_beam_x.c)
 r01a_unit_test(test_beam_y ${SIM_COMMON}/tests/test_beam_y.c)
 r01a_unit_test(test_at27c256r ${SIM_COMMON}/tests/test_at27c256r.c)
-r01a_unit_test(test_ad724 ${SIM_COMMON}/tests/test_ad724.c)
 r01a_unit_test(test_compositor tests/test_compositor.c)
 r01a_unit_test(test_tier_c_priority tests/test_tier_c_priority.c)
 r01a_unit_test(test_tier_c_field tests/test_tier_c_field.c)

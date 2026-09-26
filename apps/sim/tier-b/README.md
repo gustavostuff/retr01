@@ -1,6 +1,6 @@
 # Retr01 Tier B sim
 
-Isolated hardware lab for [docs/bringup/tier-b-video-lab.md](../../../docs/bringup/tier-b-video-lab.md). The board recipe and netlist stay in this folder. Clocks, PROM, AD724, the layout loader, the font, and the PNG chrome come from [`apps/sim/common/`](../common/). Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/).
+Isolated hardware lab for [docs/bringup/tier-b-video-lab.md](../../../docs/bringup/tier-b-video-lab.md). The board recipe and netlist stay in this folder. Clocks, PROM, the layout loader, the font, and the PNG chrome come from [`apps/sim/common/`](../common/). Bench and sim are **RGBS-only** (no AD724/FSC composite path). Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/).
 
 Auto mode runs the priority picture with no jumpers. Manual mode inherits the Tier A breadboard layout (`apps/sim/tier-a/ui_layout.json`) on first launch: same part positions and the same jumpers. Tier B's own `ui_layout.json` is written on quit and used after that. The Compositor is the only part that layout does not already place. In Manual, the LCD stays blank while the netlist check reports any open or short, and pins named in a short pulse red and black.
 
@@ -27,7 +27,7 @@ Sprite box is X cells 3-4 and Y cells 2-3 (32-dot cells). That is X 96-159, Y 64
 | Default code cluster is one empty breadboard | Same default cluster. A saved Tier A layout supplies BB2, BB3, positions, and jumpers |
 | Window title "Retr01 Tier A" | "Retr01 Tier B" |
 
-Unchanged from Tier A: DOT and FSC, Beam X/Y raster and sync, PROM kit image, resistor DAC, AD724, LCD, Auto/Manual routing, jumper editing. Sync still does not go through the Compositor.
+Unchanged from Tier A: DOT, Beam X/Y raster and sync, PROM kit image, resistor DAC, LCD (RGBS sink), Auto/Manual routing, jumper editing. Sync still does not go through the Compositor.
 
 ## Additional wiring
 

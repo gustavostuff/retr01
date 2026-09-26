@@ -485,11 +485,9 @@ static void board_float_external(R01aBoard *b) {
 
 static void board_eval_chips(R01aBoard *b) {
     ns_entity_eval(r01a_osc_dot_entity(&b->osc_dot));
-    ns_entity_eval(r01a_osc_fsc_entity(&b->osc_fsc));
     ns_entity_eval(r01a_atf22v10_entity(&b->beam_x));
     ns_entity_eval(r01a_atf22v10_entity(&b->beam_y));
     ns_entity_eval(r01a_at27c256r_entity(&b->prom));
-    ns_entity_eval(r01a_ad724_entity(&b->ad724));
 }
 
 static void board_bind_rails(R01aBoard *b) {
@@ -497,8 +495,6 @@ static void board_bind_rails(R01aBoard *b) {
 
     drive_vdd(r01a_osc_dot_entity(&b->osc_dot), "VDD", vdd);
     drive_vdd(r01a_osc_dot_entity(&b->osc_dot), "OE#", NS_LVL_H);
-    drive_vdd(r01a_osc_fsc_entity(&b->osc_fsc), "VDD", vdd);
-    drive_vdd(r01a_osc_fsc_entity(&b->osc_fsc), "OE#", NS_LVL_H);
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "VCC", vdd);
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "RES#", NS_LVL_H);
     drive_vdd(r01a_atf22v10_entity(&b->beam_y), "VCC", vdd);
@@ -506,12 +502,6 @@ static void board_bind_rails(R01aBoard *b) {
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VCC", vdd);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VPP", vdd);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "PGM#", NS_LVL_H);
-    drive_vdd(r01a_ad724_entity(&b->ad724), "APOS", vdd);
-    drive_vdd(r01a_ad724_entity(&b->ad724), "DPOS", vdd);
-    drive_vdd(r01a_ad724_entity(&b->ad724), "ENCD", NS_LVL_H);
-    drive_vdd(r01a_ad724_entity(&b->ad724), "STND", NS_LVL_H);
-    drive_vdd(r01a_ad724_entity(&b->ad724), "SELECT", NS_LVL_L);
-    drive_vdd(r01a_ad724_entity(&b->ad724), "VSYNC", NS_LVL_H);
 }
 
 static void board_tie_prom_unused_a(R01aBoard *b) {
@@ -556,9 +546,6 @@ static void board_plot(R01aBoard *b) {
     if (!ns_rgbs_beam_to_logical(ns_video_sink_scale_2x(&b->sink), x, y, NULL, NULL)) {
         return;
     }
-    if (!r01a_ad724_encode_ok(&b->ad724)) {
-        return;
-    }
     if (ns_entity_sense(r01a_osc_dot_entity(&b->osc_dot), "DOT") != NS_LVL_H) {
         return;
     }
@@ -579,8 +566,6 @@ static void board_settle(R01aBoard *b) {
     board_bind_rails(b);
     board_tie_prom_unused_a(b);
     board_wire_index(b);
-    drive_copy(r01a_ad724_entity(&b->ad724), "FIN", r01a_osc_fsc_entity(&b->osc_fsc), "FSC");
-    drive_copy(r01a_ad724_entity(&b->ad724), "HSYNC", r01a_atf22v10_entity(&b->beam_x), "CSYNC");
     for (p = 0; p < R01A_SETTLE_PASSES; p++) {
         board_eval_chips(b);
     }
@@ -594,7 +579,6 @@ void r01a_board_step(R01aBoard *board) {
         board_float_external(board);
         board_bb_route(board);
         ns_entity_tick(r01a_osc_dot_entity(&board->osc_dot));
-        ns_entity_tick(r01a_osc_fsc_entity(&board->osc_fsc));
         board_bb_route(board);
         ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
         board_bb_route(board);
@@ -605,7 +589,6 @@ void r01a_board_step(R01aBoard *board) {
     }
     board_bind_rails(board);
     ns_entity_tick(r01a_osc_dot_entity(&board->osc_dot));
-    ns_entity_tick(r01a_osc_fsc_entity(&board->osc_fsc));
     drive_copy(r01a_atf22v10_entity(&board->beam_x), "CLK", r01a_osc_dot_entity(&board->osc_dot), "DOT");
     ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
     drive_copy(r01a_atf22v10_entity(&board->beam_y), "CLK", r01a_atf22v10_entity(&board->beam_x), "HWRAP");
@@ -628,21 +611,19 @@ static void island_video_init(NsIsland *island) {
     R01aBoard *b = (R01aBoard *)island->impl;
     int i;
     r01a_osc_dot_init(&b->osc_dot, "Y2");
-    r01a_osc_fsc_init(&b->osc_fsc, "Y3");
     r01a_atf22v10_init(&b->beam_x, "UPLDX", R01A_PLD_BEAM_X);
     r01a_atf22v10_init(&b->beam_y, "UPLDY", R01A_PLD_BEAM_Y);
     r01a_at27c256r_init(&b->prom, "U24");
-    r01a_ad724_init(&b->ad724, "UENC");
+    r01a_rgbs_hdr_init(&b->rgbs, "J2");
     ns_breadboard_init(&b->breadboard, "BB1");
     ns_video_sink_init(&b->sink, "SCR1");
     ns_video_sink_set_palette(&b->sink, kit_palette);
     ns_island_add_entity(island, ns_breadboard_entity(&b->breadboard));
     ns_island_add_entity(island, r01a_osc_dot_entity(&b->osc_dot));
-    ns_island_add_entity(island, r01a_osc_fsc_entity(&b->osc_fsc));
     ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_x));
     ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_y));
     ns_island_add_entity(island, r01a_at27c256r_entity(&b->prom));
-    ns_island_add_entity(island, r01a_ad724_entity(&b->ad724));
+    ns_island_add_entity(island, r01a_rgbs_hdr_entity(&b->rgbs));
     ns_island_add_entity(island, ns_video_sink_entity(&b->sink));
     spawn_tier_a_passives(b);
     for (i = 0; i < b->passives.count; i++) {
@@ -655,11 +636,10 @@ static const NsIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NU
 static void group_reset(NsIslandGroup *group) {
     R01aBoard *b = (R01aBoard *)group->impl;
     ns_entity_reset(r01a_osc_dot_entity(&b->osc_dot));
-    ns_entity_reset(r01a_osc_fsc_entity(&b->osc_fsc));
     ns_entity_reset(r01a_atf22v10_entity(&b->beam_x));
     ns_entity_reset(r01a_atf22v10_entity(&b->beam_y));
     ns_entity_reset(r01a_at27c256r_entity(&b->prom));
-    ns_entity_reset(r01a_ad724_entity(&b->ad724));
+    ns_entity_reset(r01a_rgbs_hdr_entity(&b->rgbs));
     ns_entity_reset(ns_video_sink_entity(&b->sink));
     ns_video_sink_clear(&b->sink);
     b->prev_y = 0;
@@ -676,10 +656,9 @@ static void group_eval_idle(NsIslandGroup *group) {
 
 static void group_status(NsIslandGroup *group, char *buf, size_t buf_len) {
     R01aBoard *b = (R01aBoard *)group->impl;
-    snprintf(buf, buf_len, "X=%d Y=%d HB=%d VB=%d enc=%d idx=%u", r01a_atf22v10_x(&b->beam_x),
+    snprintf(buf, buf_len, "X=%d Y=%d HB=%d VB=%d idx=%u", r01a_atf22v10_x(&b->beam_x),
              r01a_atf22v10_y(&b->beam_y), r01a_atf22v10_hblank(&b->beam_x),
-             r01a_atf22v10_vblank(&b->beam_y), r01a_ad724_encode_ok(&b->ad724),
-             (unsigned)r01a_atf22v10_index(&b->beam_x));
+             r01a_atf22v10_vblank(&b->beam_y), (unsigned)r01a_atf22v10_index(&b->beam_x));
 }
 
 static const NsIslandGroupVTable BOARD_GROUP_VT = {
@@ -700,9 +679,9 @@ static void spawn_tier_a_passives(R01aBoard *b) {
     int e_seq = 1;
     int r_seq = 1;
     ns_passive_bank_clear(&b->passives);
-    add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 7);
+    add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 5);
     add_passives(&b->passives, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);
-    /* DAC R then G then B, then 75 ohm loads, then DOT/FSC series. */
+    /* DAC R then G then B, then 75 ohm loads, then DOT series. */
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "4.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
@@ -712,7 +691,7 @@ static void spawn_tier_a_passives(R01aBoard *b) {
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "75.0", 3);
-    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "33", 2);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "33", 1);
 }
 
 static int place_along(NsEntity *e, int *x, int y, int gap) {
@@ -744,10 +723,6 @@ static void board_place_free(R01aBoard *board) {
     if (bottom - y > row0_h) {
         row0_h = bottom - y;
     }
-    bottom = place_along(r01a_osc_fsc_entity(&board->osc_fsc), &x, y, gap);
-    if (bottom - y > row0_h) {
-        row0_h = bottom - y;
-    }
     row0_right = x - gap;
 
     x = origin_x;
@@ -755,7 +730,7 @@ static void board_place_free(R01aBoard *board) {
     (void)place_along(r01a_atf22v10_entity(&board->beam_x), &x, y, gap);
     (void)place_along(r01a_atf22v10_entity(&board->beam_y), &x, y, gap);
     (void)place_along(r01a_at27c256r_entity(&board->prom), &x, y, gap);
-    (void)place_along(r01a_ad724_entity(&board->ad724), &x, y, gap);
+    (void)place_along(r01a_rgbs_hdr_entity(&board->rgbs), &x, y, gap);
     row1_right = x - gap;
     cluster_right = row0_right > row1_right ? row0_right : row1_right;
     ns_entity_place(ns_video_sink_entity(&board->sink), cluster_right + 28, origin_y);
@@ -781,11 +756,10 @@ void r01a_board_init(R01aBoard *board) {
     }
     ns_island_builder_mount(b, ns_breadboard_entity(&board->breadboard), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_osc_dot_entity(&board->osc_dot), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_osc_fsc_entity(&board->osc_fsc), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_x), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_y), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_at27c256r_entity(&board->prom), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_ad724_entity(&board->ad724), R01A_ISLAND_VIDEO, 0, 0);
+    ns_island_builder_mount(b, r01a_rgbs_hdr_entity(&board->rgbs), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, ns_video_sink_entity(&board->sink), R01A_ISLAND_VIDEO, 0, 0);
     {
         int i;

@@ -1,7 +1,7 @@
 # Retr01 Tier B - Beam + Compositor video lab
 
-**Prerequisite:** Tier A working (stable sync, PROM + DAC + AD724, solid color or bars). 
-**Scope:** What changes for Tier B only. Clocks, DAC, AD724, color kit, and "omit cart/CPU/AVR" rules stay as in [tier-a-video-lab.md](tier-a-video-lab.md).
+**Prerequisite:** Tier A working (stable sync, PROM + DAC + **RGBS**, solid color or bars). 
+**Scope:** What changes for Tier B only. Clocks, DAC, **RGBS output**, color kit, and "omit cart/CPU/AVR" rules stay as in [tier-a-video-lab.md](tier-a-video-lab.md).
 
 **Goal:** Add the third ATF22V10 as **Compositor** so the 6-bit kit index is produced the way the real design intends (priority -> PROM address), still with **no cart, CPU, AVRs, or SRAMs**.
 
@@ -118,8 +118,8 @@ If macrocells allow, register `INDEX` on **DOT** so PROM address is stable for a
 - All three PLDs are programmed before power-up. Beam X/Y JEDECs that already worked in Tier A stay.
 - Index generation moves into the Compositor only. Sync is not rewritten from scratch unless needed.
 - Priority is proven with a **visible** test (sprite-colored box over bars, BG1 holes at index 0 showing BG0 bands).
-- `INDEX[5:0]` (or PROM A pins) is scoped while patterns change, confirming the Compositor, not only the TV.
-- Analog path (PROM -> DAC -> AD724) stays unchanged from Tier A.
+- `INDEX[5:0]` (or PROM A pins) is scoped while patterns change, confirming the Compositor, not only the monitor.
+- Analog path (PROM -> DAC -> **RGBS header**) stays unchanged from Tier A.
 
 ### Forbidden
 
@@ -137,7 +137,7 @@ If macrocells allow, register `INDEX` on **DOT** so PROM address is stable for a
 2. **Compositor solid:** equations force `INDEX = 48` (or any bright kit entry) -> full screen that color.
 3. **Bars via Compositor:** BG1_TEST from X, priority = BG1 only -> same bars as Tier A, but path is PLD3 -> PROM.
 4. **Priority:** opaque test sprite rectangle over bars. Outside rectangle, bars. BG1 index 0 regions show BG0/DIP.
-5. **Blanking:** if implemented, index 0 (or hold) during H/V blank - composite should stay stable.
+5. **Blanking:** if implemented, index 0 (or hold) during H/V blank - picture should stay stable on RGBS.
 
 ### Failure hints
 
@@ -153,8 +153,8 @@ If macrocells allow, register `INDEX` on **DOT** so PROM address is stable for a
 ## 7. Wiring delta (from Tier A)
 
 ```text
-Beam X -- raster / CSYNC ---> (as Tier A) ---> AD724
-Beam Y -- VSYNC -----------> (as Tier A) ---> AD724
+Beam X -- raster / CSYNC ---> (as Tier A) ---> RGBS header pin 4
+Beam Y -- VSYNC -----------> (as Tier A) ---> RGBS header pin 5 (RGBHV only)
 
 Beam X,Y counts / blank ---> Compositor
 Test patterns (X bars, Y bands, DIP, box) ---> Compositor
@@ -162,7 +162,7 @@ Test patterns (X bars, Y bands, DIP, box) ---> Compositor
 Compositor INDEX[5:0] ---> PROM A[5:0]
          (CPU/MAP/SEL stubs tied safe)
 
-PROM -> DAC -> AD724 -> RCA (unchanged)
+PROM -> DAC -> R/G/B + sync -> monitor (unchanged from Tier A)
 ```
 
 ---

@@ -35,6 +35,7 @@ typedef enum NsEntityVisual {
     NS_ENTITY_VIS_DISPLAY,
     NS_ENTITY_VIS_BUTTON,
     NS_ENTITY_VIS_PANEL, /* labeled connector / host block (not LCD) */
+    NS_ENTITY_VIS_PIN_HDR, /* male pin header (NxM), procedural draw */
     NS_ENTITY_VIS_BREADBOARD,
     NS_ENTITY_VIS_PASSIVE, /* R / CCAP / ECAP / OSC / D sprites */
     NS_ENTITY_VIS_NONE,

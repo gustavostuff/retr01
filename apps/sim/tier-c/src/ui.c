@@ -4,6 +4,7 @@
 #include "r01a_board.h"
 #include "r01a_layout.h"
 #include "r01a_netlist.h"
+#include "r01a_rgb_netlist.h"
 
 #include "discrete_ic/board_layout.h"
 #include "discrete_ic/breadboard.h"
@@ -12,6 +13,7 @@
 #include "discrete_ic/island_group.h"
 #include "discrete_ic/outline.h"
 #include "discrete_ic/passive.h"
+#include "discrete_ic/pin_header.h"
 #include "discrete_ic/types.h"
 #include "discrete_ic/ui_assets.h"
 #include "discrete_ic/video_sink.h"
@@ -1002,6 +1004,9 @@ static int entity_pin_hi(const NsEntity *e) {
     if (e->visual == NS_ENTITY_VIS_PASSIVE) {
         return e->pin_count;
     }
+    if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
+        return e->pin_count;
+    }
     if (e->visual != NS_ENTITY_VIS_OSC) {
         return 0;
     }
@@ -1320,6 +1325,11 @@ static int hit_chip_body(const R01aUi *ui, const NsEntity *e, int lx, int ly) {
     if (e->visual == NS_ENTITY_VIS_OSC) {
         return ns_osc4legs_hit(e, bx, by);
     }
+    if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
+        int pin = NS_UI_PIN_H;
+        return bx >= e->board_x && bx < e->board_x + e->body_w && by >= e->board_y - pin &&
+               by < e->board_y + e->body_h + pin;
+    }
     if (e->visual == NS_ENTITY_VIS_IC) {
         return hit_ic_body(e, bx, by);
     }
@@ -1368,6 +1378,13 @@ static int rotate_selected(R01aUi *ui) {
         }
         if (e->visual == NS_ENTITY_VIS_OSC) {
             ns_osc4legs_set_orient(e, ns_orient_next_cw(e->orient));
+            clamp_chip(e);
+            snap_chip_to_breadboard(ui, i);
+            n++;
+            continue;
+        }
+        if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
+            ns_entity_set_orient(e, ns_orient_next_cw(e->orient));
             clamp_chip(e);
             snap_chip_to_breadboard(ui, i);
             n++;
@@ -1767,55 +1784,50 @@ static NsEntity *ui_ent(const R01aUi *ui, const char *ref) {
     return NULL;
 }
 
+static void pin_net_link_fn(NsEntity *a, const char *an, NsEntity *b, const char *bn) {
+    pin_net_link(a, an, b, bn);
+}
+
 static void pin_net_build(R01aUi *ui) {
     NsEntity *y2 = ui_ent(ui, "Y2");
-    NsEntity *y3 = ui_ent(ui, "Y3");
     NsEntity *bx = ui_ent(ui, "UPLDX");
     NsEntity *by = ui_ent(ui, "UPLDY");
     NsEntity *comp = ui_ent(ui, "UPLDC");
     NsEntity *u24 = ui_ent(ui, "U24");
-    NsEntity *enc = ui_ent(ui, "UENC");
+    NsEntity *j2 = ui_ent(ui, "J2");
     int i;
     char iname[8];
     char aname[4];
 
     g_pin_slot_count = 0;
+    if (!y2 || !bx || !by || !comp || !u24 || !j2) {
+        return;
+    }
     pin_net_link(y2, "VDD", y2, "OE#");
-    pin_net_link(y2, "VDD", y3, "VDD");
-    pin_net_link(y2, "VDD", y3, "OE#");
     pin_net_link(y2, "VDD", bx, "VCC");
     pin_net_link(y2, "VDD", by, "VCC");
     pin_net_link(y2, "VDD", comp, "VCC");
     pin_net_link(y2, "VDD", u24, "VCC");
     pin_net_link(y2, "VDD", u24, "VPP");
-    pin_net_link(y2, "VDD", enc, "APOS");
-    pin_net_link(y2, "VDD", enc, "DPOS");
     pin_net_link(y2, "VDD", bx, "RES#");
     pin_net_link(y2, "VDD", by, "RES#");
     pin_net_link(y2, "VDD", comp, "RES#");
     pin_net_link(y2, "VDD", comp, "RWB");
     pin_net_link(y2, "VDD", u24, "PGM#");
-    pin_net_link(y2, "VDD", enc, "ENCD");
-    pin_net_link(y2, "VDD", enc, "STND");
-    pin_net_link(y2, "VDD", enc, "VSYNC");
-    pin_net_link(y2, "GND", y3, "GND");
     pin_net_link(y2, "GND", bx, "GND");
     pin_net_link(y2, "GND", by, "GND");
     pin_net_link(y2, "GND", comp, "GND");
     pin_net_link(y2, "GND", comp, "PHI2");
     pin_net_link(y2, "GND", u24, "GND");
-    pin_net_link(y2, "GND", enc, "AGND");
-    pin_net_link(y2, "GND", enc, "DGND");
-    pin_net_link(y2, "GND", enc, "SELECT");
     pin_net_link(y2, "GND", u24, "CE#");
     pin_net_link(y2, "GND", u24, "OE#");
+    pin_net_link(y2, "GND", j2, "GND");
+    pin_net_link(y2, "GND", j2, "GND2");
     pin_net_link(y2, "DOT", ui_ent(ui, "R12"), "1");
     pin_net_link(ui_ent(ui, "R12"), "2", bx, "CLK");
     pin_net_link(ui_ent(ui, "R12"), "2", comp, "CLK");
-    pin_net_link(y3, "FSC", ui_ent(ui, "R13"), "1");
-    pin_net_link(ui_ent(ui, "R13"), "2", enc, "FIN");
     pin_net_link(bx, "HWRAP", by, "CLK");
-    pin_net_link(bx, "CSYNC", enc, "HSYNC");
+    pin_net_link(bx, "CSYNC", j2, "CSYNC");
     pin_net_link(bx, "HBLANK", comp, "HBLANK");
     pin_net_link(bx, "X5", comp, "X5");
     pin_net_link(bx, "X6", comp, "X6");
@@ -1833,28 +1845,10 @@ static void pin_net_build(R01aUi *ui) {
         snprintf(aname, sizeof(aname), "A%d", i);
         pin_net_link(y2, "GND", u24, aname);
     }
-    pin_net_link(u24, "O7", ui_ent(ui, "R1"), "1");
-    pin_net_link(ui_ent(ui, "R1"), "2", enc, "RIN");
-    pin_net_link(u24, "O6", ui_ent(ui, "R2"), "1");
-    pin_net_link(ui_ent(ui, "R2"), "2", enc, "RIN");
-    pin_net_link(u24, "O5", ui_ent(ui, "R3"), "1");
-    pin_net_link(ui_ent(ui, "R3"), "2", enc, "RIN");
-    pin_net_link(u24, "O4", ui_ent(ui, "R4"), "1");
-    pin_net_link(ui_ent(ui, "R4"), "2", enc, "GIN");
-    pin_net_link(u24, "O3", ui_ent(ui, "R5"), "1");
-    pin_net_link(ui_ent(ui, "R5"), "2", enc, "GIN");
-    pin_net_link(u24, "O2", ui_ent(ui, "R6"), "1");
-    pin_net_link(ui_ent(ui, "R6"), "2", enc, "GIN");
-    pin_net_link(u24, "O1", ui_ent(ui, "R7"), "1");
-    pin_net_link(ui_ent(ui, "R7"), "2", enc, "BIN");
-    pin_net_link(u24, "O0", ui_ent(ui, "R8"), "1");
-    pin_net_link(ui_ent(ui, "R8"), "2", enc, "BIN");
-    pin_net_link(enc, "RIN", ui_ent(ui, "R9"), "1");
-    pin_net_link(ui_ent(ui, "R9"), "2", y2, "GND");
-    pin_net_link(enc, "GIN", ui_ent(ui, "R10"), "1");
-    pin_net_link(ui_ent(ui, "R10"), "2", y2, "GND");
-    pin_net_link(enc, "BIN", ui_ent(ui, "R11"), "1");
-    pin_net_link(ui_ent(ui, "R11"), "2", y2, "GND");
+    r01a_netlist_link_dac_rgbs(pin_net_link_fn, y2, u24, j2, ui_ent(ui, "R1"), ui_ent(ui, "R2"),
+                               ui_ent(ui, "R3"), ui_ent(ui, "R4"), ui_ent(ui, "R5"), ui_ent(ui, "R6"),
+                               ui_ent(ui, "R7"), ui_ent(ui, "R8"), ui_ent(ui, "R9"), ui_ent(ui, "R10"),
+                               ui_ent(ui, "R11"));
 
     {
         NsEntity *s1 = ui_ent(ui, "US1");
@@ -2102,9 +2096,8 @@ static int pin_on_vdd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
 }
 
 static int pin_name_is_clk(const char *name) {
-    return name && (strcmp(name, "DOT") == 0 || strcmp(name, "FSC") == 0 || strcmp(name, "CLK") == 0 ||
-                    strcmp(name, "HSYNC") == 0 || strcmp(name, "CSYNC") == 0 || strcmp(name, "HWRAP") == 0 ||
-                    strcmp(name, "FIN") == 0);
+    return name && (strcmp(name, "DOT") == 0 || strcmp(name, "CLK") == 0 || strcmp(name, "CSYNC") == 0 ||
+                    strcmp(name, "HWRAP") == 0);
 }
 
 static int pin_on_clk_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
@@ -3644,6 +3637,9 @@ static void draw_entity(SDL_Renderer *r, R01aUi *ui, R01aBoard *board, NsEntity 
         ns_passive_draw(r, p, board_sx(ui, p->pivot_x), board_sy(ui, p->pivot_y), selected);
         break;
     }
+    case NS_ENTITY_VIS_PIN_HDR:
+        ns_pin_header_draw(r, e, board_sx(ui, e->board_x), board_sy(ui, e->board_y), selected);
+        break;
     case NS_ENTITY_VIS_IC:
     default:
         draw_ic(r, ui, e, selected);
@@ -3744,16 +3740,15 @@ enum {
     R01A_CTX_R = 0,
     R01A_CTX_CCAP,
     R01A_CTX_ECAP,
-    R01A_CTX_OSC,
     R01A_CTX_D,
     R01A_CTX_BB,
     R01A_CTX_COUNT
 };
 
 static const char *k_ctx_label[R01A_CTX_COUNT] = {
-    "Add resistor", "Add ceramic cap", "Add electrolytic", "Add oscillator", "Add diode", "Add breadboard"};
+    "Add resistor", "Add ceramic cap", "Add electrolytic", "Add diode", "Add breadboard"};
 
-static const char *k_ctx_value[R01A_CTX_COUNT] = {"33", "100nF", "220uF", "8.000MHz", "", ""};
+static const char *k_ctx_value[R01A_CTX_COUNT] = {"33", "100nF", "220uF", "", ""};
 
 static int ctx_item_h(void) {
     return r01a_font_line_h() + 4;
@@ -3896,8 +3891,6 @@ static void ctx_apply(R01aUi *ui, R01aBoard *board, int item) {
             kind = NS_PASSIVE_CCAP;
         } else if (item == R01A_CTX_ECAP) {
             kind = NS_PASSIVE_ECAP;
-        } else if (item == R01A_CTX_OSC) {
-            kind = NS_PASSIVE_OSC4LEGS;
         } else if (item == R01A_CTX_D) {
             kind = NS_PASSIVE_D;
         }

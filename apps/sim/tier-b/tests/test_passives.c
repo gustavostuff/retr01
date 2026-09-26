@@ -43,7 +43,7 @@ int main(void) {
 
     r01a_board_init(&board);
     r01a_test_unseat(&board);
-    expect_true(board.passives.count == 21, "passive BOM size");
+    expect_true(board.passives.count == 19, "passive BOM size");
     r = NULL;
     for (i = 0; i < board.passives.count; i++) {
         if (board.passives.parts[i].kind == NS_PASSIVE_R &&

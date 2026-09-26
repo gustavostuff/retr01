@@ -1,7 +1,7 @@
 # Retr01 Tier C - S1 field fill video lab
 
-**Prerequisite:** Tier B working (Beam X/Y + Compositor -> PROM -> DAC -> AD724, priority demo OK). 
-**Scope:** Tier C deltas only. Clocks, PLD roles, color kit, AD724, and "no cart / no 6502 / no MCU-M/S2" stay as in A/B.
+**Prerequisite:** Tier B working (Beam X/Y + Compositor -> PROM -> DAC -> **RGBS**, priority demo OK). 
+**Scope:** Tier C deltas only. Clocks, PLD roles, color kit, **RGBS output**, and "no cart / no 6502 / no MCU-M/S2" stay as in A/B.
 
 **Goal:** MCU-S1 writes the **sprite field** in VBlank (and optionally **BG0** lines in HBlank) so the picture includes simple backgrounds plus a couple of small sprites - still a video-only lab.
 
@@ -167,7 +167,7 @@ Beam / Compositor -- read field during active display (PLD /OE)
 S1 -- fill field during VBlank only
 S1 -- optional BG0 next-line fill during HBlank only
 
-PROM / DAC / AD724 / Beam X,Y -- unchanged
+PROM / DAC / RGBS / Beam X,Y -- unchanged
 ```
 
 ---
@@ -176,5 +176,5 @@ PROM / DAC / AD724 / Beam X,Y -- unchanged
 
 **Next:** [tier-d-oam-spi.md](tier-d-oam-spi.md) - MCU-M owns OAM over SPI. S1 stops synthesizing the motion table itself.
 
-PHI2/VRAM (E), 6502 soft I/O (F), cart (G), and S2 (H) wait until a static + simple animated sprite from S1 is reliable on composite.
+PHI2/VRAM (E), 6502 soft I/O (F), cart (G), and S2 (H) wait until a static + simple animated sprite from S1 is reliable on **RGBS**.
 

@@ -20,7 +20,7 @@ int main(void) {
     NsPbHole b = {12, NS_PB_LANE_A};
 
     r01a_board_init(&board);
-    expect_true(board.passives.count == 21, "Tier B passive count");
+    expect_true(board.passives.count == 19, "Tier B passive count");
     osc = r01a_osc_dot_entity(&board.osc_dot);
     ns_entity_place(osc, 120, 80);
     ns_entity_set_orient(osc, NS_ORIENT_0);
@@ -85,7 +85,7 @@ int main(void) {
     expect_true(loaded.extra_bb_count == 1, "extra bb count");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2") != NULL, "BB2 restored");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2")->board_x == 40, "BB2 x");
-    expect_true(loaded.passives.count == 22, "extra passive count");
+    expect_true(loaded.passives.count == 20, "extra passive count");
     expect_true(loaded.jumpers[0].r == 220 && loaded.jumpers[0].g == 160 && loaded.jumpers[0].bcol == 40,
                 "jumper color restored");
     {

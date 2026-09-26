@@ -1,4 +1,5 @@
 #include "discrete_ic/entity.h"
+#include "discrete_ic/pin_header.h"
 
 #include <stdio.h>
 
@@ -34,6 +35,20 @@ int main(void) {
     ns_entity_add_pin(&e, 1, "A", NS_PIN_IN);
     expect_true(ns_entity_pin(&e, 1) != NULL, "pin 1");
     expect_true(ns_entity_pin(&e, 99) == NULL, "missing pin");
+
+    ns_entity_init(&e, &vt, "HDR", "J2");
+    ns_entity_set_pin_header(&e, 6, 1);
+    expect_true(e.visual == NS_ENTITY_VIS_PIN_HDR, "pin header visual");
+    expect_true(e.body_w == 6 * NS_PIN_HDR_CELL_PX && e.body_h == NS_PIN_HDR_CELL_PX, "1x6 body px");
+    ns_entity_add_pin(&e, 1, "R", NS_PIN_IN);
+    ns_entity_place(&e, 10, 20);
+    {
+        int tx;
+        int ty;
+        expect_true(ns_entity_pin_tip_board(&e, 1, &tx, &ty), "pin 1 tip");
+        expect_true(tx == 10 + NS_PIN_HDR_CELL_PX / 2, "pin 1 tip x");
+        expect_true(ty == 20 + NS_PIN_HDR_CELL_PX + 2, "pin 1 tip y");
+    }
 
     if (g_fail) {
         fprintf(stderr, "test_ns_entity: FAILED\n");

@@ -1,6 +1,6 @@
 # Retr01 Tier D - MCU-M OAM SPI path
 
-**Prerequisite:** Tier C working (S1 fills field SRAM in VBlank, at least one clear sprite on composite). 
+**Prerequisite:** Tier C working (S1 fills field SRAM in VBlank, at least one clear sprite on RGBS). 
 **Goal:** Separate "who decides sprites" (MCU-M) from "who paints the field" (MCU-S1), matching the final SPI mailbox architecture, still **without** a 6502 or cart.
 
 **SoT:** `docs/general/hardware.md` (SPI mailbox rules), `docs/general/ic-comms-risks.md` (sec  OAM / VBlank), `docs/ic_behavior/AVR128DB28.md`.

@@ -19,10 +19,10 @@ set(SIM_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/../common")
 
 add_library(retr01_sim_tier_b_core
   ${SIM_COMMON}/chips/osc_dot.c
-  ${SIM_COMMON}/chips/osc_fsc.c
+  ${SIM_COMMON}/chips/rgbs_hdr.c
   chips/atf22v10.c
   ${SIM_COMMON}/chips/at27c256r.c
-  ${SIM_COMMON}/chips/ad724.c
+  ${SIM_COMMON}/src/r01a_rgb_netlist.c
   src/board.c
   ${SIM_COMMON}/src/layout.c
   src/netlist.c
@@ -32,6 +32,7 @@ target_include_directories(retr01_sim_tier_b_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
   ${SIM_COMMON}/include
+  ${SIM_COMMON}/chips
   ${SIM_COMMON}/chips
   ${R01_COMMON_DIR}
 )
@@ -81,7 +82,6 @@ r01a_unit_test(test_osc_dot ${SIM_COMMON}/tests/test_osc_dot.c)
 r01a_unit_test(test_beam_x tests/test_beam_x.c)
 r01a_unit_test(test_beam_y ${SIM_COMMON}/tests/test_beam_y.c)
 r01a_unit_test(test_at27c256r ${SIM_COMMON}/tests/test_at27c256r.c)
-r01a_unit_test(test_ad724 ${SIM_COMMON}/tests/test_ad724.c)
 r01a_unit_test(test_compositor tests/test_compositor.c)
 r01a_unit_test(test_tier_b_priority tests/test_tier_b_priority.c)
 r01a_unit_test(test_tier_b_seat tests/test_tier_b_seat.c)

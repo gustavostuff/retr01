@@ -37,6 +37,7 @@ tools/llvm-mos-linux.tar.xz
 temp/
 apps/sim/tier-a/ui_layout.json
 apps/sim/tier-b/ui_layout.json
+apps/sim/tier-c/ui_layout.json
 apps/sim/tier-h/ui_layout.json
 apps/sdk/r01_c/build/
 apps/sdk/r01_c/host-build/

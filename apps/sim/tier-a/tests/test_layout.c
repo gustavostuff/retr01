@@ -2,9 +2,11 @@
 #include "r01a_layout.h"
 
 #include "discrete_ic/entity.h"
+#include "discrete_ic/island.h"
 #include "discrete_ic/passive.h"
 #include "test_common.h"
 
+#include <stdio.h>
 #include <string.h>
 
 int main(void) {
@@ -20,7 +22,7 @@ int main(void) {
     NsPbHole b = {12, NS_PB_LANE_A};
 
     r01a_board_init(&board);
-    expect_true(board.passives.count == 21, "Tier A passive count");
+    expect_true(board.passives.count == 18, "Tier A passive count");
     osc = r01a_osc_dot_entity(&board.osc_dot);
     ns_entity_place(osc, 120, 80);
     ns_entity_set_orient(osc, NS_ORIENT_0);
@@ -85,7 +87,7 @@ int main(void) {
     expect_true(loaded.extra_bb_count == 1, "extra bb count");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2") != NULL, "BB2 restored");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2")->board_x == 40, "BB2 x");
-    expect_true(loaded.passives.count == 22, "extra passive count");
+    expect_true(loaded.passives.count == 19, "extra passive count");
     expect_true(loaded.jumpers[0].r == 220 && loaded.jumpers[0].g == 160 && loaded.jumpers[0].bcol == 40,
                 "jumper color restored");
     {
@@ -114,6 +116,39 @@ int main(void) {
         expect_true(r01a_board_entity_by_refdes(&loaded, "BB1") == NULL, "BB1 gone");
         expect_true(r01a_board_add_breadboard(&loaded, 10, 10) == &loaded.breadboard, "restore BB1");
         expect_true(r01a_board_entity_by_refdes(&loaded, "BB1") != NULL, "BB1 back");
+    }
+
+    {
+        char legacy_path[] = "test_layout_legacy.json";
+        FILE *lf = fopen(legacy_path, "w");
+        R01aBoard legacy;
+        if (lf) {
+            fprintf(lf,
+                    "{\"version\":1,\"parts\":["
+                    "{\"id\":\"Y2\",\"kind\":\"\",\"value\":\"\",\"x\":10,\"y\":10,\"orient\":\"0\",\"px\":0,\"py\":0},"
+                    "{\"id\":\"Y3\",\"kind\":\"OSC4LEGS\",\"value\":\"3.579MHz\",\"x\":20,\"y\":10,\"orient\":\"0\","
+                    "\"px\":0,\"py\":0,\"l1\":0,\"l2\":0},"
+                    "{\"id\":\"UENC\",\"kind\":\"\",\"value\":\"\",\"x\":30,\"y\":10,\"orient\":\"0\",\"px\":0,\"py\":0}"
+                    "],\"jumpers\":[]}\n");
+            fclose(lf);
+        }
+        r01a_board_init(&legacy);
+        expect_true(r01a_layout_load(legacy_path, &legacy, NULL, NULL, NULL, NULL) == 0, "legacy layout load");
+        expect_true(r01a_board_entity_by_refdes(&legacy, "Y3") == NULL, "legacy Y3 dropped");
+        expect_true(r01a_board_entity_by_refdes(&legacy, "UENC") == NULL, "legacy UENC dropped");
+        expect_true(r01a_osc_dot_entity(&legacy.osc_dot)->board_x == 10, "Y2 position kept");
+        {
+            const NsIsland *island = ns_island_group_at(r01a_board_group(&legacy), 0);
+            int i;
+            int osc_n = 0;
+            for (i = 0; island && i < island->entity_count; i++) {
+                if (island->entities[i] && island->entities[i]->visual == NS_ENTITY_VIS_OSC) {
+                    osc_n++;
+                }
+            }
+            expect_true(osc_n == 1, "single DOT oscillator after legacy layout");
+        }
+        r01a_board_shutdown(&legacy);
     }
 
     r01a_board_shutdown(&board);

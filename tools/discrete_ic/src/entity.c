@@ -1,5 +1,6 @@
 #include "discrete_ic/entity.h"
 #include "discrete_ic/passive.h"
+#include "discrete_ic/pin_header.h"
 
 #include <string.h>
 
@@ -209,6 +210,8 @@ void ns_entity_set_orient(NsEntity *e, NsPkgOrient orient) {
     e->orient = orient;
     if (e->visual == NS_ENTITY_VIS_IC && e->dip_pins > 0) {
         ns_entity_refresh_body(e);
+    } else if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
+        ns_pin_header_refresh_body(e);
     }
 }
 
@@ -404,6 +407,9 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
     }
     if (e->visual == NS_ENTITY_VIS_OSC) {
         return ns_osc4legs_chip_tip(e, pin_num, tbx, tby);
+    }
+    if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
+        return ns_pin_header_pin_tip_board(e, pin_num, tbx, tby);
     }
     if (e->visual == NS_ENTITY_VIS_PWR) {
         return glyph_pin_tip_board(e, pin_num, tbx, tby);

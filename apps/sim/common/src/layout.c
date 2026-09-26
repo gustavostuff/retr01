@@ -150,6 +150,11 @@ static NsPassiveKind kind_parse(const char *s) {
     return (NsPassiveKind)-1;
 }
 
+/* Composite-era parts removed from Tier A/B/C sim; ignore stale layout entries. */
+static int layout_skip_legacy_part(const char *id) {
+    return id && (strcmp(id, "Y3") == 0 || strcmp(id, "UENC") == 0);
+}
+
 static void ensure_part(R01aBoard *board, const char *id, const char *kind, const char *value, int x, int y) {
     NsPassiveKind pk;
     if (!board || !id || r01a_board_entity_by_refdes(board, id)) {
@@ -358,6 +363,10 @@ int r01a_layout_load(const char *path, R01aBoard *board, int *pan_x, int *pan_y,
         memcpy(objbuf, p, nobj);
         objbuf[nobj] = '\0';
         if (!json_str(objbuf, "id", id, sizeof(id))) {
+            p = end + 1;
+            continue;
+        }
+        if (layout_skip_legacy_part(id)) {
             p = end + 1;
             continue;
         }
