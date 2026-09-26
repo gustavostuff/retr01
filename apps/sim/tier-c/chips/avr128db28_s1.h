@@ -1,7 +1,7 @@
 #ifndef R01A_AVR128DB28_S1_H
 #define R01A_AVR128DB28_S1_H
 
-#include "netlist_sim/entity.h"
+#include "discrete_ic/entity.h"
 
 #include <stdint.h>
 

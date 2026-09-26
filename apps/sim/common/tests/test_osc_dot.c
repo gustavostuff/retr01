@@ -1,6 +1,6 @@
 #include "osc_dot.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 #include "test_common.h"
 
 int main(void) {

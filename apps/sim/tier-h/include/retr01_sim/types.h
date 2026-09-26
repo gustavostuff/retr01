@@ -1,13 +1,13 @@
 #ifndef RETR01_SIM_TYPES_H
 #define RETR01_SIM_TYPES_H
 
-#include "netlist_sim/types.h"
+#include "discrete_ic/types.h"
 #include "r01_cart_caps.h"
 
 #include <stddef.h>
 #include <stdint.h>
 
-/* Engine levels/dirs come from netlist_sim (see ns_compat.h for R01s* aliases). */
+/* Engine levels/dirs come from discrete_ic (see ns_compat.h for R01s* aliases). */
 
 /* Cart image caps follow docs/general/memory.md via r01_cart_caps.h. */
 #define R01S_CART_FORMAT_VER R01_CART_FORMAT_VER

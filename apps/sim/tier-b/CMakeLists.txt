@@ -9,9 +9,9 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 
-set(NETLIST_SIM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../netlist_sim")
-if(NOT TARGET netlist_sim)
-  add_subdirectory("${NETLIST_SIM_DIR}" "${CMAKE_BINARY_DIR}/netlist_sim")
+set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/discrete_ic")
+if(NOT TARGET discrete_ic)
+  add_subdirectory("${DISCRETE_IC_DIR}" "${CMAKE_BINARY_DIR}/discrete_ic")
 endif()
 
 set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
@@ -35,7 +35,7 @@ target_include_directories(retr01_sim_tier_b_core PUBLIC
   ${SIM_COMMON}/chips
   ${R01_COMMON_DIR}
 )
-target_link_libraries(retr01_sim_tier_b_core PUBLIC netlist_sim)
+target_link_libraries(retr01_sim_tier_b_core PUBLIC discrete_ic)
 
 add_library(retr01_sim_tier_b_app
   src/ui.c

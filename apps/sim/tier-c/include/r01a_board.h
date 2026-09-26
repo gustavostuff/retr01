@@ -10,10 +10,10 @@
 #include "osc_fsc.h"
 #include "sn74hc573.h"
 
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/island_builder.h"
-#include "netlist_sim/passive.h"
-#include "netlist_sim/video_sink.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/island_builder.h"
+#include "discrete_ic/passive.h"
+#include "discrete_ic/video_sink.h"
 
 #include <stdint.h>
 

@@ -1,8 +1,8 @@
 #include "r01a_board.h"
 
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/bus.h"
-#include "netlist_sim/passive.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/bus.h"
+#include "discrete_ic/passive.h"
 #include "test_common.h"
 
 #include <string.h>

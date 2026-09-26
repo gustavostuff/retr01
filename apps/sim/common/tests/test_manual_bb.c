@@ -1,8 +1,8 @@
 #include "r01a_board.h"
 
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/bus.h"
-#include "netlist_sim/video_sink.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/bus.h"
+#include "discrete_ic/video_sink.h"
 #include "test_common.h"
 
 static int sink_lit(const R01aBoard *board) {

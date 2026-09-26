@@ -25,7 +25,7 @@ apps/emu/build/
 apps/sim/tier-a/build/
 apps/sim/tier-b/build/
 apps/sim/tier-h/build/
-apps/netlist_sim/build/
+tools/discrete_ic/build/
 bin/
 output/
 temp/

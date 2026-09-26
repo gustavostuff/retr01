@@ -1,10 +1,10 @@
 #include "r01a_netlist.h"
 
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/entity.h"
-#include "netlist_sim/island.h"
-#include "netlist_sim/island_group.h"
-#include "netlist_sim/passive.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/entity.h"
+#include "discrete_ic/island.h"
+#include "discrete_ic/island_group.h"
+#include "discrete_ic/passive.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -1,11 +1,11 @@
 #include "r01a_board.h"
 #include "s1_lab.h"
 
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/bus.h"
-#include "netlist_sim/entity.h"
-#include "netlist_sim/island.h"
-#include "netlist_sim/passive.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/bus.h"
+#include "discrete_ic/entity.h"
+#include "discrete_ic/island.h"
+#include "discrete_ic/passive.h"
 #include "r01_kit_palette.h"
 #include "r01a_raster.h"
 

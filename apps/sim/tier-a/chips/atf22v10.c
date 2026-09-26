@@ -1,7 +1,7 @@
 #include "atf22v10.h"
 
-#include "netlist_sim/bus.h"
-#include "netlist_sim/health.h"
+#include "discrete_ic/bus.h"
+#include "discrete_ic/health.h"
 #include "r01a_raster.h"
 
 #include <string.h>

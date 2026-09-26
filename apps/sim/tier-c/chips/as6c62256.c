@@ -1,6 +1,6 @@
 #include "as6c62256.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 
 #include <stdlib.h>
 #include <string.h>

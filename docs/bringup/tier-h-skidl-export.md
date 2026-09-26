@@ -42,7 +42,7 @@ One-shot (JSON + netlist into `apps/sim/tier-h/skidl/`):
 apps/sim/tier-h/skidl/export_netlist.sh -q
 ```
 
-API: `ns_pin_netlist_write_json()` in `apps/netlist_sim` (Tier H alias `r01s_pin_netlist_write_json`).
+API: `ns_pin_netlist_write_json()` in `tools/discrete_ic` (Tier H alias `r01s_pin_netlist_write_json`).
 
 Unit test: `test_export_netlist`.
 

@@ -1,8 +1,8 @@
 #include "r01a_board.h"
 #include "r01a_layout.h"
 
-#include "netlist_sim/entity.h"
-#include "netlist_sim/passive.h"
+#include "discrete_ic/entity.h"
+#include "discrete_ic/passive.h"
 #include "test_common.h"
 
 #include <string.h>

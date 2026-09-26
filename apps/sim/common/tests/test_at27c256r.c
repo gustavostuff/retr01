@@ -1,6 +1,6 @@
 #include "at27c256r.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 #include "r01_kit_palette.h"
 #include "test_common.h"
 

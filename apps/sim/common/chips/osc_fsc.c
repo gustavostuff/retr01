@@ -1,7 +1,7 @@
 #include "osc_fsc.h"
 
-#include "netlist_sim/bus.h"
-#include "netlist_sim/passive.h"
+#include "discrete_ic/bus.h"
+#include "discrete_ic/passive.h"
 
 #include <string.h>
 

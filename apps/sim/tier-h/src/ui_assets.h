@@ -1,7 +1,7 @@
 #ifndef RETR01_SIM_UI_ASSETS_SHIM_H
 #define RETR01_SIM_UI_ASSETS_SHIM_H
-#include "netlist_sim/ui_assets.h"
-#include "netlist_sim/ui_passive_assets.h"
+#include "discrete_ic/ui_assets.h"
+#include "discrete_ic/ui_passive_assets.h"
 #define R01S_UI_PASSIVE_CCAP_SPAN_PX NS_UI_PASSIVE_CCAP_SPAN_PX
 #define R01S_UI_PASSIVE_ECAP_SPAN_PX NS_UI_PASSIVE_ECAP_SPAN_PX
 #define R01S_UI_PASSIVE_OSC_SPAN_PX NS_UI_PASSIVE_OSC_SPAN_PX

@@ -9,7 +9,7 @@
 | Sim (Tier C) | `apps/sim/tier-c` | `cmake -S apps/sim/tier-c -B apps/sim/tier-c/build && cmake --build apps/sim/tier-c/build -j` |
 | Sim (Tier H) | `apps/sim/tier-h` | `cmake -S apps/sim/tier-h -B apps/sim/tier-h/build && cmake --build apps/sim/tier-h/build -j` |
 | Shared | `apps/common` | Linked by Studio / Emu / Sim |
-| Netlist engine | `apps/netlist_sim` | Linked by Sim |
+| Discrete IC engine | `tools/discrete_ic` | Linked by Sim |
 
 Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, `./scripts/sim-tier-a.sh`, `./scripts/sim-tier-b.sh`, `./scripts/sim-tier-c.sh`, and `./scripts/sim-tier-h.sh`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
 

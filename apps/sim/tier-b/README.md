@@ -1,6 +1,6 @@
 # Retr01 Tier B sim
 
-Isolated hardware lab for [docs/bringup/tier-b-video-lab.md](../../../docs/bringup/tier-b-video-lab.md). The board recipe and netlist stay in this folder. Clocks, PROM, AD724, the layout loader, the font, and the PNG chrome come from [`apps/sim/common/`](../common/). Engine: [`apps/netlist_sim/`](../../netlist_sim/).
+Isolated hardware lab for [docs/bringup/tier-b-video-lab.md](../../../docs/bringup/tier-b-video-lab.md). The board recipe and netlist stay in this folder. Clocks, PROM, AD724, the layout loader, the font, and the PNG chrome come from [`apps/sim/common/`](../common/). Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/).
 
 Auto mode runs the priority picture with no jumpers. Manual mode inherits the Tier A breadboard layout (`apps/sim/tier-a/ui_layout.json`) on first launch: same part positions and the same jumpers. Tier B's own `ui_layout.json` is written on quit and used after that. The Compositor is the only part that layout does not already place. In Manual, the LCD stays blank while the netlist check reports any open or short, and pins named in a short pulse red and black.
 

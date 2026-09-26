@@ -1,7 +1,7 @@
 #ifndef R01A_AS6C62256_H
 #define R01A_AS6C62256_H
 
-#include "netlist_sim/entity.h"
+#include "discrete_ic/entity.h"
 
 #include <stdint.h>
 

@@ -3,7 +3,7 @@
 #include "r01_kit_palette.h"
 #include "test_common.h"
 
-#include "netlist_sim/video_sink.h"
+#include "discrete_ic/video_sink.h"
 
 static int rgb_match(const uint8_t *pix, uint8_t idx) {
     uint8_t r;

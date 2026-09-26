@@ -1,6 +1,6 @@
 #include "avr128db28_s1.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 
 #include <string.h>
 

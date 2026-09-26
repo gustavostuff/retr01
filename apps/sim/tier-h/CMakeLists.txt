@@ -10,10 +10,10 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 
 # apps/sim/tier-h. Engine and shared sources are this repo's.
-set(NETLIST_SIM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../netlist_sim")
+set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/discrete_ic")
 
-if(NOT TARGET netlist_sim)
-  add_subdirectory("${NETLIST_SIM_DIR}" "${CMAKE_BINARY_DIR}/netlist_sim")
+if(NOT TARGET discrete_ic)
+  add_subdirectory("${DISCRETE_IC_DIR}" "${CMAKE_BINARY_DIR}/discrete_ic")
 endif()
 
 add_library(retr01_sim_core
@@ -80,7 +80,7 @@ target_include_directories(retr01_sim_core PUBLIC
   ${R01_COMMON_DIR}
   ${R01_FW_COMMON_DIR}
 )
-target_link_libraries(retr01_sim_core PUBLIC r01_play_common netlist_sim)
+target_link_libraries(retr01_sim_core PUBLIC r01_play_common discrete_ic)
 
 set(R01_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../example_01")
 set(R01_EXAMPLE_CART "${R01_OUTPUT_DIR}/example_01.retr01")

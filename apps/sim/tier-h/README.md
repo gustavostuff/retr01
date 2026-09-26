@@ -1,6 +1,6 @@
 # Retr01 Tier H sim (imported)
 
-Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `apps/netlist_sim`, `apps/common`, and `apps/sim/common/assets`.
+Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
 
 Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, the color PROM is the AT27C256R, and the 74HC14 is not seated (canned PHI2). Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. The AD724 is not in this tree yet, so the mounted IC count is still 16 motherboard parts plus the two cart memories.
 
@@ -8,7 +8,7 @@ Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-saf
 
 IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../../hw/md/). BOM and islands: [`docs/general/hardware.md`](../../../docs/general/hardware.md).
 
-**Engine:** discrete IC / island / bus core lives in drop-in [`netlist_sim/`](../../netlist_sim/) (`Ns` / `ns_` API). This tree is the Retr01 board recipe, chips, Host Play, and SDL host. Temporary `R01s*` shims: [`include/retr01_sim/ns_compat.h`](include/retr01_sim/ns_compat.h).
+**Engine:** discrete IC / island / bus core lives in drop-in [`discrete_ic/`](../../../tools/discrete_ic/) (`Ns` / `ns_` API). This tree is the Retr01 board recipe, chips, Host Play, and SDL host. Temporary `R01s*` shims: [`include/retr01_sim/ns_compat.h`](include/retr01_sim/ns_compat.h).
 
 **Goal:** simulate the Retr01 motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
@@ -16,13 +16,13 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 **Netlist / bring-up:** 9 canvas islands (O first) + wired-only E/I/P sprite glue. Soft `$7Fxx` via **MCU-M** on L. Cart image from argv (default `example_01/example_01.retr01`). The console has no USB. Cart programming is the MCU-M bridge.
 
-**UI chrome:** Compact board view only. LIVE / MANUAL, ARCADE / PADS, and SAVE layout controls are **removed** for now (revisit with breadboard electrical later). Bottom-right gamepad overlays remain. IC bodies use health-colored 1px outlines from `netlist_sim` (`ns_outline_rgb`).
+**UI chrome:** Compact board view only. LIVE / MANUAL, ARCADE / PADS, and SAVE layout controls are **removed** for now (revisit with breadboard electrical later). Bottom-right gamepad overlays remain. IC bodies use health-colored 1px outlines from `discrete_ic` (`ns_outline_rgb`).
 
 ### Breadboard proto
 
 | Feature | State |
 |---------|--------|
-| Layout | Nano-style 830-point class, pitch **5** (matches DIP tip lattice). Implementation in `netlist_sim` |
+| Layout | Nano-style 830-point class, pitch **5** (matches DIP tip lattice). Implementation in `discrete_ic` |
 | Interact | Drag, rotate, hole-rail hover highlight |
 | IC snap | Tips snap to holes **while dragging** and on rotate / drop |
 | Electrical | Soft air wires (LIVE). MANUAL mode UI removed for now |

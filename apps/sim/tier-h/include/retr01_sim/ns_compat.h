@@ -2,25 +2,25 @@
 #define RETR01_SIM_NS_COMPAT_H
 
 /*
- * Temporary Retr01 shims mapping legacy R01s* names onto netlist_sim.
- * Lives only under app/sim/. Never ship inside netlist_sim/.
+ * Temporary Retr01 shims mapping legacy R01s* names onto discrete_ic.
+ * Lives only under app/sim/. Never ship inside discrete_ic/.
  */
 
-#include "netlist_sim/board_layout.h"
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/bus.h"
-#include "netlist_sim/entity.h"
-#include "netlist_sim/health.h"
-#include "netlist_sim/island.h"
-#include "netlist_sim/island_builder.h"
-#include "netlist_sim/island_group.h"
-#include "netlist_sim/outline.h"
-#include "netlist_sim/passive.h"
-#include "netlist_sim/pin_netlist.h"
-#include "netlist_sim/pin.h"
-#include "netlist_sim/timing.h"
-#include "netlist_sim/types.h"
-#include "netlist_sim/video_sink.h"
+#include "discrete_ic/board_layout.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/bus.h"
+#include "discrete_ic/entity.h"
+#include "discrete_ic/health.h"
+#include "discrete_ic/island.h"
+#include "discrete_ic/island_builder.h"
+#include "discrete_ic/island_group.h"
+#include "discrete_ic/outline.h"
+#include "discrete_ic/passive.h"
+#include "discrete_ic/pin_netlist.h"
+#include "discrete_ic/pin.h"
+#include "discrete_ic/timing.h"
+#include "discrete_ic/types.h"
+#include "discrete_ic/video_sink.h"
 
 typedef NsLevel R01sLevel;
 typedef NsPinDir R01sPinDir;

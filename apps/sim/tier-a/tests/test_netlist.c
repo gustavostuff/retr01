@@ -1,8 +1,8 @@
 #include "r01a_board.h"
 #include "r01a_netlist.h"
 
-#include "netlist_sim/breadboard.h"
-#include "netlist_sim/entity.h"
+#include "discrete_ic/breadboard.h"
+#include "discrete_ic/entity.h"
 #include "test_common.h"
 
 #include <string.h>

@@ -1243,7 +1243,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     }
     SDL_RenderSetClipRect(r, NULL);
 
-    /* Floating LIVE/MANUAL, ARCADE/PADS, SAVE controls removed (netlist_sim migration). */
+    /* Floating LIVE/MANUAL, ARCADE/PADS, SAVE controls removed (discrete_ic migration). */
     draw_wave_monitor(r, ui);
 
     draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);

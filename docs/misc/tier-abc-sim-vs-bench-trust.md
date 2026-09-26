@@ -8,7 +8,7 @@ This note answers how far the Tier A, B, and C desktop sims can stand in for rea
 
 ## 1. What the sim is
 
-The Tier A/B/C apps are one **VIDEO LAB** island built on `apps/netlist_sim/`:
+The Tier A/B/C apps are one **VIDEO LAB** island built on `tools/discrete_ic/`:
 
 | Layer | Models | Does not model |
 | --- | --- | --- |
@@ -223,7 +223,7 @@ These are **documentation of known mismatches**, not blockers for breadboard Tie
 | `apps/sim/tier-b/tests/test_tier_b_priority.c` | Compositor priority |
 | `apps/sim/tier-c/tests/test_tier_c_priority.c` | Field + encode path |
 | `apps/sim/tier-c/tests/test_netlist.c` | Manual opens/shorts |
-| `apps/netlist_sim/tests/test_bus.c` | H/L/Z/X merge |
+| `tools/discrete_ic/tests/test_bus.c` | H/L/Z/X merge |
 
 Tier H tests (`test_board_netlist`, island tests) cover full-machine nets; they do not replace Tier C lab checks for the video slice.
 

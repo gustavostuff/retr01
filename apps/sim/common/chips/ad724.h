@@ -1,7 +1,7 @@
 #ifndef R01A_AD724_H
 #define R01A_AD724_H
 
-#include "netlist_sim/entity.h"
+#include "discrete_ic/entity.h"
 
 /*
  * AD724 RGB-to-composite encoder. Digital shell only.

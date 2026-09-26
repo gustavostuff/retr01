@@ -1,6 +1,6 @@
 # Retr01 board sim
 
-Bring-up labs as isolated trees. Each tier has its own board recipe and does not share netlist wiring with the others. Chips, tests, font, and PNG chrome that match live in [`common/`](common/). The discrete IC engine is [`apps/netlist_sim/`](../netlist_sim/).
+Bring-up labs as isolated trees. Each tier has its own board recipe and does not share netlist wiring with the others. Chips, tests, font, and PNG chrome that match live in [`common/`](common/). The discrete IC engine is [`tools/discrete_ic/`](../../tools/discrete_ic/).
 
 | Lab | Path | Goal |
 | --- | --- | --- |

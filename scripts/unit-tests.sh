@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configure, build, and run unit tests for studio, emu, sdk C, and tier-a/b/c/h sim.
-# Tier-a ctest also runs nested netlist_sim tests. Emu registers test_boot/test_play
+# Tier-a ctest also runs nested discrete_ic tests. Emu registers test_boot/test_play
 # against example_01/example_01.retr01 when that cart is present, and test_sdk_prg
 # when llvm-mos is in tools/llvm-mos or $LLVM_MOS.
 # Does not require (or seed) extra ROM / Studio project fixtures.

@@ -2,7 +2,7 @@
 
 Isolated hardware lab for [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md). Discrete ICs share one VIDEO LAB sim group. Parts sit free on the board canvas (no island frame). Method B color bars on the virtual screen (256x240 CRT field, 1x default with overscan).
 
-Engine: [`apps/netlist_sim/`](../../netlist_sim/). Palette SoT: [`apps/common/r01_kit_palette.c`](../../common/r01_kit_palette.c). Chips, font, and board chrome that both labs use live in [`apps/sim/common/`](../common/). Overlay font is Proggy Tiny.
+Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/). Palette SoT: [`apps/common/r01_kit_palette.c`](../../common/r01_kit_palette.c). Chips, font, and board chrome that both labs use live in [`apps/sim/common/`](../common/). Overlay font is Proggy Tiny.
 
 ## Parts
 

@@ -2,7 +2,7 @@
 
 Isolated hardware lab for [docs/bringup/tier-c-video-lab.md](../../../docs/bringup/tier-c-video-lab.md). Built on [Tier B](../tier-b/README.md): same beam, Compositor, PROM, DAC, and AD724 path. Tier C adds **MCU-S1**, **field SRAM**, and **74HC573** so S1 firmware fills a **sprite field** in VBlank (plus optional **BG0** lines in the ping-pong region on the same chip).
 
-Engine: [`apps/netlist_sim/`](../../netlist_sim/). Shared assets: [`apps/sim/common/`](../common/).
+Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/). Shared assets: [`apps/sim/common/`](../common/).
 
 ## Additions (not in Tier B)
 

@@ -1,6 +1,6 @@
 #include "ad724.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 #include "test_common.h"
 
 static void drive_encode_pins(NsEntity *e) {

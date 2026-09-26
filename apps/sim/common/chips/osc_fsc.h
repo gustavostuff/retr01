@@ -1,7 +1,7 @@
 #ifndef R01A_OSC_FSC_H
 #define R01A_OSC_FSC_H
 
-#include "netlist_sim/entity.h"
+#include "discrete_ic/entity.h"
 
 /*
  * 3.579545 MHz NTSC FSC can into AD724 FIN (DIP-14 metal can, 4 legs used).

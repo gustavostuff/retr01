@@ -1,6 +1,6 @@
 #include "atf22v10.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 #include "r01a_raster.h"
 #include "test_common.h"
 

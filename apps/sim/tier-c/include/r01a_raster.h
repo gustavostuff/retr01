@@ -1,7 +1,7 @@
 #ifndef R01A_RASTER_H
 #define R01A_RASTER_H
 
-#include "netlist_sim/video_sink.h"
+#include "discrete_ic/video_sink.h"
 
 #include <stdint.h>
 

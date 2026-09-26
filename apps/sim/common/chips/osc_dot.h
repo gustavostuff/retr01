@@ -1,7 +1,7 @@
 #ifndef R01A_OSC_DOT_H
 #define R01A_OSC_DOT_H
 
-#include "netlist_sim/entity.h"
+#include "discrete_ic/entity.h"
 
 /*
  * 5.369318 MHz DOT can oscillator (DIP-14 metal can, 4 legs used).

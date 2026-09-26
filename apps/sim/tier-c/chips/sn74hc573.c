@@ -1,6 +1,6 @@
 #include "sn74hc573.h"
 
-#include "netlist_sim/bus.h"
+#include "discrete_ic/bus.h"
 
 #include <stdio.h>
 #include <string.h>
