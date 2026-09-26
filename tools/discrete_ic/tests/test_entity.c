@@ -36,6 +36,10 @@ int main(void) {
     expect_true(ns_entity_pin(&e, 1) != NULL, "pin 1");
     expect_true(ns_entity_pin(&e, 99) == NULL, "missing pin");
 
+    ns_entity_init(&e, &vt, "AT27C256R", "U24");
+    ns_entity_set_dip_mm(&e, 28, 37, 14);
+    expect_true(e.body_w == 37 * NS_PX_PER_MM && e.body_h == 14 * NS_PX_PER_MM, "28P6 exact body px");
+
     ns_entity_init(&e, &vt, "HDR", "J2");
     ns_entity_set_pin_header(&e, 6, 1);
     expect_true(e.visual == NS_ENTITY_VIS_PIN_HDR, "pin header visual");

@@ -4,7 +4,7 @@
   "pan_y": -320,
   "zoom": 1,
   "air_always": 1,
-  "wire_mode": "manual",
+  "wire_mode": "auto",
   "parts": [
     {"id": "BB1", "kind": "BB", "value": "", "x": -278, "y": -193, "orient": "0", "px": 0, "py": 0},
     {"id": "Y2", "kind": "", "value": "", "x": -54, "y": -26, "orient": "0", "px": 0, "py": 0},

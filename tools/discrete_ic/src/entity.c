@@ -20,7 +20,11 @@ static const NsDipPkg NS_DIP_PKGS[] = {
     /* 14/16/20: 74HC N-package family (body width ~6.35 -> 6 mm). */
     {8, 9, 6},   {14, 19, 6},  {16, 20, 6},  {20, 25, 6},
     /* 24 default = 300 mil ATF class. 600 mil 24-pin (AT28C16) uses set_dip_mm. */
-    {24, 32, 8}, {28, 36, 14}, {32, 42, 14}, {40, 52, 14},
+    {24, 32, 8},
+    /* 28P6 PDIP 600 mil: D ~37 mm, molded E1 ~14 mm (Microchip AT27C256R doc0014). */
+    {28, 37, 14},
+    {32, 42, 14},
+    {40, 52, 14},
 };
 
 void ns_dip_pkg_mm(int dip_pins, int *len_mm, int *wid_mm) {
@@ -99,7 +103,9 @@ void ns_entity_refresh_body(NsEntity *e) {
     if (along < 1) {
         along = 1;
     }
-    across = ns_dip_snap_across_px(across);
+    if (!e->pkg_exact_mm) {
+        across = ns_dip_snap_across_px(across);
+    }
     if (!ns_orient_is_horiz(e->orient)) {
         e->body_w = across;
         e->body_h = along;
@@ -182,6 +188,7 @@ void ns_entity_set_dip(NsEntity *e, int dip_pins) {
     }
     e->visual = NS_ENTITY_VIS_IC;
     e->dip_pins = dip_pins > 0 ? dip_pins : 0;
+    e->pkg_exact_mm = 0;
     ns_dip_pkg_mm(e->dip_pins, &e->pkg_len_mm, &e->pkg_wid_mm);
     e->orient = NS_ORIENT_H;
     ns_entity_refresh_body(e);
@@ -196,8 +203,10 @@ void ns_entity_set_dip_mm(NsEntity *e, int dip_pins, int len_mm, int wid_mm) {
     if (len_mm > 0 && wid_mm > 0) {
         e->pkg_len_mm = len_mm;
         e->pkg_wid_mm = wid_mm;
+        e->pkg_exact_mm = 1;
     } else {
         ns_dip_pkg_mm(e->dip_pins, &e->pkg_len_mm, &e->pkg_wid_mm);
+        e->pkg_exact_mm = 0;
     }
     e->orient = NS_ORIENT_H;
     ns_entity_refresh_body(e);
@@ -319,6 +328,37 @@ static int pin_tip_reach(void) {
     return 2; /* pin.png: H=3, OY=0, tip is 2 px out from the body edge */
 }
 
+int ns_entity_dip_row_span_px(const NsEntity *e) {
+    if (!e || e->visual != NS_ENTITY_VIS_IC || !e->pkg_exact_mm || e->pkg_wid_mm <= 0) {
+        return 0;
+    }
+    /* Microchip 28P6 / JEDEC 600 mil: row centers 15.24 mm apart (E), body E1 narrower. */
+    if (e->pkg_wid_mm >= 13) {
+        return (1524 * NS_PX_PER_MM + 500) / 1000;
+    }
+    if (e->pkg_wid_mm <= 7) {
+        return (762 * NS_PX_PER_MM + 500) / 1000;
+    }
+    return 0;
+}
+
+int ns_entity_dip_body_inset_across(const NsEntity *e) {
+    int span;
+    int across;
+    if (!e) {
+        return 0;
+    }
+    span = ns_entity_dip_row_span_px(e);
+    if (span <= 0) {
+        return 0;
+    }
+    across = ns_orient_is_horiz(e->orient) ? e->body_h : e->body_w;
+    if (span <= across) {
+        return 0;
+    }
+    return (span - across) / 2;
+}
+
 static void dip_pin_pos(const NsEntity *e, int pin_num, int *along, int *side_pin1) {
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     int half = dip / 2;
@@ -420,24 +460,46 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
     }
     reach = pin_tip_reach();
     dip_pin_pos(e, pin_num, &along, &side_pin1);
-    switch (e->orient) {
-    case NS_ORIENT_90:
-        *tby = e->board_y + along;
-        *tbx = side_pin1 ? (e->board_x - 1 - reach) : (e->board_x + e->body_w + reach);
-        break;
-    case NS_ORIENT_180:
-        *tbx = e->board_x + along;
-        *tby = side_pin1 ? (e->board_y - 1 - reach) : (e->board_y + e->body_h + reach);
-        break;
-    case NS_ORIENT_270:
-        *tby = e->board_y + along;
-        *tbx = side_pin1 ? (e->board_x + e->body_w + reach) : (e->board_x - 1 - reach);
-        break;
-    case NS_ORIENT_0:
-    default:
-        *tbx = e->board_x + along;
-        *tby = side_pin1 ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);
-        break;
+    {
+        int row_span = ns_entity_dip_row_span_px(e);
+        int inset = ns_entity_dip_body_inset_across(e);
+        int bod_x = e->board_x + (ns_orient_is_horiz(e->orient) ? 0 : inset);
+        int bod_y = e->board_y + (ns_orient_is_horiz(e->orient) ? inset : 0);
+        switch (e->orient) {
+        case NS_ORIENT_90:
+            *tby = e->board_y + along;
+            if (row_span > 0) {
+                *tbx = side_pin1 ? (bod_x - 1 - reach) : (bod_x + row_span + reach);
+            } else {
+                *tbx = side_pin1 ? (e->board_x - 1 - reach) : (e->board_x + e->body_w + reach);
+            }
+            break;
+        case NS_ORIENT_180:
+            *tbx = e->board_x + along;
+            if (row_span > 0) {
+                *tby = side_pin1 ? (bod_y - 1 - reach) : (bod_y + row_span + reach);
+            } else {
+                *tby = side_pin1 ? (e->board_y - 1 - reach) : (e->board_y + e->body_h + reach);
+            }
+            break;
+        case NS_ORIENT_270:
+            *tby = e->board_y + along;
+            if (row_span > 0) {
+                *tbx = side_pin1 ? (bod_x + row_span + reach) : (bod_x - 1 - reach);
+            } else {
+                *tbx = side_pin1 ? (e->board_x + e->body_w + reach) : (e->board_x - 1 - reach);
+            }
+            break;
+        case NS_ORIENT_0:
+        default:
+            *tbx = e->board_x + along;
+            if (row_span > 0) {
+                *tby = side_pin1 ? (bod_y + row_span + reach) : (bod_y - 1 - reach);
+            } else {
+                *tby = side_pin1 ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);
+            }
+            break;
+        }
     }
     return 1;
 }

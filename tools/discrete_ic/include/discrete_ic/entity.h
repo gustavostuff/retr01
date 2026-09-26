@@ -80,6 +80,8 @@ struct NsEntity {
     /* Molded body outline in mm (see hw/md/packages_dip.md). */
     int pkg_len_mm;
     int pkg_wid_mm;
+    /* 1 when set_dip_mm() supplied LxW (no across-body pitch snap). */
+    uint8_t pkg_exact_mm;
     NsPkgOrient orient;
     /* Top-left of package body on the board canvas. */
     int board_x;
@@ -108,6 +110,11 @@ int ns_dip_body_across_px(int dip_pins);
  * 300 mil class -> tip span 20 (across 15). 600 mil -> tip span 35 (across 30).
  * One extra breadboard pitch vs JEDEC so labels fit. */
 int ns_dip_snap_across_px(int across_px);
+
+/* 600 mil / 300 mil row spacing for set_dip_mm(); 0 if not applicable. */
+int ns_entity_dip_row_span_px(const NsEntity *e);
+/* Center E1 body between pin rows when row span exceeds body width. */
+int ns_entity_dip_body_inset_across(const NsEntity *e);
 
 /* Zero entity; set vtable/part/refdes; pins start empty. */
 void ns_entity_init(NsEntity *e, const NsEntityVTable *vt, const char *part, const char *refdes);

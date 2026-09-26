@@ -57,7 +57,7 @@ void r01s_prg_rom_init(R01sPrgRom *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 26, "VSS", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 27, "NC", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 28, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 28);
+    r01s_entity_set_dip_mm(&chip->base, 28, 37, 14);
     r01s_prg_rom_set_reset_vec(chip, 0x8000);
     r01s_entity_reset(&chip->base);
 }

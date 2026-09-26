@@ -1567,8 +1567,12 @@ static void draw_selection(SDL_Renderer *r, int x, int y, int w, int h, int sele
 }
 
 static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int selected) {
-    int x = board_sx(ui, e->board_x);
-    int y = board_sy(ui, e->board_y);
+    int inset_a = ns_entity_dip_body_inset_across(e);
+    int row_span = ns_entity_dip_row_span_px(e);
+    int bod_x = e->board_x + (ns_orient_is_horiz(e->orient) ? 0 : inset_a);
+    int bod_y = e->board_y + (ns_orient_is_horiz(e->orient) ? inset_a : 0);
+    int x = board_sx(ui, bod_x);
+    int y = board_sy(ui, bod_y);
     int i;
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     int horiz = ns_orient_is_horiz(e->orient);
@@ -1594,19 +1598,27 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
             pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
         }
         switch (e->orient) {
-        case NS_ORIENT_90:
-            draw_dip_pad_v(r, y + along, side_pin1 ? x : (x + e->body_w), side_pin1, tint);
+        case NS_ORIENT_90: {
+            int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span) : x + e->body_w);
+            draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
             break;
-        case NS_ORIENT_180:
-            draw_dip_pad_h(r, x + along, side_pin1 ? y : (y + e->body_h), !side_pin1, tint);
+        }
+        case NS_ORIENT_180: {
+            int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span) : y + e->body_h);
+            draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
             break;
-        case NS_ORIENT_270:
-            draw_dip_pad_v(r, y + along, side_pin1 ? (x + e->body_w) : x, !side_pin1, tint);
+        }
+        case NS_ORIENT_270: {
+            int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span) : x + e->body_w) : x;
+            draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
             break;
+        }
         case NS_ORIENT_0:
-        default:
-            draw_dip_pad_h(r, x + along, side_pin1 ? (y + e->body_h) : y, side_pin1, tint);
+        default: {
+            int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span) : y + e->body_h) : y;
+            draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
             break;
+        }
         }
     }
     fill_rect(r, x, y, e->body_w, e->body_h, br, bg, bb);

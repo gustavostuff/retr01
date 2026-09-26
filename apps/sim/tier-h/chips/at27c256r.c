@@ -121,7 +121,7 @@ void r01s_at27c256r_init(R01sAt27c256r *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 26, "A13", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 27, "PGM#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 28, "VCC", R01S_PIN_PWR);
-    r01s_entity_set_dip(&chip->base, 28);
+    r01s_entity_set_dip_mm(&chip->base, 28, 37, 14);
     r01s_at27c256r_load_kit(chip);
     r01s_entity_reset(&chip->base);
 }
