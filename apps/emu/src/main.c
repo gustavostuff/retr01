@@ -17,6 +17,33 @@ static int env_is_one(const char *name) {
     return e && e[0] == '1' && e[1] == '\0';
 }
 
+static const char *parse_cart_path(int argc, char **argv, int *pi_mode) {
+    int i;
+    const char *path = NULL;
+    if (pi_mode) {
+        *pi_mode = 0;
+    }
+    for (i = 1; i < argc; i++) {
+        if (!argv[i] || !argv[i][0]) {
+            continue;
+        }
+        if (strcmp(argv[i], "--pi") == 0) {
+            if (pi_mode) {
+                *pi_mode = 1;
+            }
+            continue;
+        }
+        if (argv[i][0] == '-') {
+            return NULL;
+        }
+        if (path) {
+            return NULL;
+        }
+        path = argv[i];
+    }
+    return path;
+}
+
 static void emu_start_host_bgm(R01eMachine *m) {
     if (!m) {
         return;
@@ -620,11 +647,18 @@ int main(int argc, char **argv) {
     int main_x = 0, main_y = 0, main_w = 0, main_h = 0;
     DbgCpuChart cpu_chart;
 
-    if (argc < 2 || !argv[1] || !argv[1][0]) {
-        fprintf(stderr, "usage: retr01_emu <cart.retr01>\n");
-        return 2;
+    {
+        int pi_mode = 0;
+        path = parse_cart_path(argc, argv, &pi_mode);
+        if (!path) {
+            fprintf(stderr, "usage: retr01_emu <cart.retr01>\n");
+            return 2;
+        }
+        if (pi_mode) {
+            win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+            want_dbg = 0;
+        }
     }
-    path = argv[1];
 
     {
         const char *es = getenv("R01E_SCALE");
