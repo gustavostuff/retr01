@@ -33,13 +33,17 @@ DOT clock -> Beam PLDs (raster + sync) -> 6-bit color index
 
 Optional third ATF22V10 (Compositor) is **not** required for Tier A if the 6-bit index comes from DIP switches or Beam-X equations (see section 5).
 
+Flashing procedures for PLDs and the color PROM are detailed in [`programming-tier-abc.md`](programming-tier-abc.md).
+
 **Not used in Tier A-C:** **AD724**, FSC oscillator, RCA jack.
 
 ### Clocks (required)
 
 | Net | Frequency | Notes |
 | --- | --- | --- |
-| **DOT** | **5.369318 MHz** | Prefer a **canned CMOS oscillator**, not a raw crystal amp. **Only clock required** for the breadboard video lab. |
+| **DOT** | **5.369318 MHz** | Prefer a **canned CMOS oscillator** or an **Si5351A clock generator breakout** (such as Adafruit 2045), not a raw crystal amp. **Only clock required** for the breadboard video lab. |
+
+An Si5351A breakout board plugs directly into breadboard rails and provides the exact 5.369318 MHz CMOS clock without requiring rare through-hole oscillator cans.
 
 ### Passives / connectors (minimum)
 

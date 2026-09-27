@@ -71,6 +71,10 @@ Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
 
 DB28 parts run on **internal HFOSC @ 24 MHz**. No extra MCU crystals on the locked BOM.
 
+### Oscillator packaging and sourcing
+
+Motherboard layout uses half-size DIP-8 through-hole cans (`Retr01_Lib:Oscillator_DIP-8`, Abracon ACH or surplus equivalents). For modern volume availability, standard 4-pad SMD packages (7050 or 5032) or a dedicated clock generator IC (such as Si5351A in 10-MSOP) serve as drop-in alternatives on compatible pad layouts. On solderless breadboards, an Si5351A breakout board supplies the 5.369318 MHz clock directly.
+
 ---
 
 ## Capacitors

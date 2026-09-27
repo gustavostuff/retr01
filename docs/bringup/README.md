@@ -123,3 +123,10 @@ Optional outside the 19: 74HC14, ATtiny85 in the pad, UPDI Friend as tool.
 | H | Play with real pad + sound |
 
 When the Tier H demo is dull, the breadboard path has reached full console behavior with pads. PCB spin and software depth are separate tracks.
+
+---
+
+## Supporting guides
+
+- [`programming-tier-abc.md`](programming-tier-abc.md): Off-board flashing workflows for ATF22V10 PLDs, AT27C256R color PROM, and AVR128DB28 SerialUPDI.
+- [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md): Netlist references and pin mappings.

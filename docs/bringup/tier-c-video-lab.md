@@ -24,7 +24,7 @@ Tier C: S1 firmware fills field SRAM (sprites) + optional BG0 line buffers
 | 1 | **74HC573** | Field A[7:0] latch (S1 multiplexed **AD[7:0]** + **ALE**) - matches locked design |
 | 0-1 | **74HC574** | Scroll X. Optional - hardwire scroll = 0 |
 
-**Programmer:** UPDI (e.g. Adafruit UPDI Friend) for the AVR only.
+**Programmer:** SerialUPDI (Adafruit UPDI Friend or USB-to-UART module with loopback resistor). Flashing procedure: [`programming-tier-abc.md`](programming-tier-abc.md).
 
 **Still omit:** W65C02, MCU-M, MCU-S2, cart flash, 24C64, pads, audio, PHI2, HC157s (those belong to Tier E).
 
