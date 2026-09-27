@@ -7,10 +7,13 @@ Smallest setup that still exercises Retr01's real color path:
 
 ```text
 DOT clock -> Beam PLDs (raster + sync) -> 6-bit color index
+                                              |
                                               v
                                     AT27C256R color PROM
+                                              |
                                               v
                                     R3G3B2 resistor DAC (~0.7 Vpp RGB)
+                                              |
                                               v
                          J2-style header: R, G, B, CSYNC (+ GND) -> monitor
 ```
