@@ -244,13 +244,53 @@ Match the product **J2** default (**RGBS / CSYNC** mode) from `docs/general/hard
 
 ## 8. Suggested bring-up order
 
-1. **Power + DOT only** - scope oscillator. No other ICs if needed.
-2. **Beam X alone** - program minimal H counter + HSYNC/CSYNC. Scope line rate.
-3. **Add Beam Y** - V counter + VSYNC. Scope ~60 Hz. Confirm monitor syncs to black (PROM still optional).
-4. **PROM + DAC + fixed index (DIP)** - solid color on RGB pins. Measure ~0.7 Vpp.
-5. **RGBS header** - solid color on monitor.
-6. **Index from beam (bars)** - full Tier A demo.
-7. **Only then** plan Tier B (Compositor), not before.
+Testing proceeds one chip at a time rather than populating the entire breadboard at once. This isolates timing and equation faults before adding bus dependencies.
+
+### Step 1: Power rails and DOT clock verification
+- Apply 5 V power to the board with no logic ICs installed.
+- Verify +5.0 V (+-0.25 V) across all power rails.
+- Seat the clock source (Si5351A breakout board or canned oscillator).
+- Verify the 5.369318 MHz square wave at the clock output pin before connecting it to any logic chip.
+
+### Step 2: Standalone Beam X verification
+- Install Beam X (ATF22V10) with its 100 nF bypass capacitor.
+- Connect DOT clock (with optional series 33 ohm resistor).
+- Leave all other IC sockets empty.
+- Measure the HSYNC and CSYNC pins. The expected horizontal line frequency is 15.746 kHz (period approximately 63.5 microseconds).
+- Verify line pulse width is approximately 4.7 microseconds (around 25 dots).
+- Do not proceed until Beam X outputs stable 15.74 kHz pulses.
+
+### Step 3: Beam Y addition and monitor lock
+- Install Beam Y (ATF22V10) with its 100 nF bypass capacitor.
+- Connect the HWRAP line from Beam X to Beam Y CLK.
+- Measure the VSYNC pin. The expected vertical refresh rate is 60.098 Hz (period approximately 16.64 milliseconds).
+- Connect CSYNC (or HSYNC and VSYNC) to the monitor or capture card RGBS input.
+- The monitor should detect the signal and display a stable black screen without rolling or tearing.
+
+### Step 4: AT27C256R Color PROM and DAC output
+- Run a blank check in the programmer before flashing the AT27C256R OTP PROM.
+- Install the programmed PROM and the resistor DAC network.
+- Apply a fixed 6-bit index using pull-up resistors or DIP switches.
+- Measure the DC voltage on R, G, and B outputs into a 75 ohm load. Peak values should measure approximately 0.7 Vpp.
+- Connect R, G, B to the monitor header. The screen should show a solid field of the selected master color.
+
+### Step 5: Beam counter to color index (bars)
+- Route the upper counter bits of Beam X into PROM address pins A[5:0].
+- The monitor should display stable vertical color bars across the active area.
+- Once Tier A color bars are stable and repeatable, proceed to Tier B.
+
+### Bench measurement options
+Bench validation of clock rates and pulse timings does not require expensive laboratory oscilloscopes:
+- **USB logic analyzers:** Low-cost 8-channel 24 MHz USB analyzers work on Linux using `sigrok-cli` or `pulseview` (`sudo pacman -S pulseview sigrok-cli` on Arch/Manjaro). These sample up to 24 MS/s, which allows direct capture of the 5.37 MHz dot clock, 15.74 kHz HSYNC, and 60 Hz VSYNC.
+- **Microcontroller frequency counters:** An ATmega328P or RP2040 running a hardware timer input sketch can measure 15.74 kHz and 60 Hz line frequencies and output exact frequencies over serial to a host PC.
+
+Detailed measurement sketches and individual IC truth table verification steps are in [`bench-testing-guide.md`](bench-testing-guide.md).
+
+### Breadboard construction notes
+- Place a 100 nF ceramic bypass capacitor directly between VCC and GND at each IC site with short leads.
+- Bridge ground and 5 V distribution rails on both sides of every breadboard module.
+- Use sacrificial 24-pin DIP sockets on the breadboard to protect ATF22V10 pins from bending during repetitive programming cycles.
+- Tie all unused logic inputs to GND or VCC. Floating CMOS inputs cause oscillation and erratic current draw.
 
 ### Failure quick map
 

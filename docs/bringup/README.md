@@ -129,4 +129,5 @@ When the Tier H demo is dull, the breadboard path has reached full console behav
 ## Supporting guides
 
 - [`programming-tier-abc.md`](programming-tier-abc.md): Off-board flashing workflows for ATF22V10 PLDs, AT27C256R color PROM, and AVR128DB28 SerialUPDI.
+- [`bench-testing-guide.md`](bench-testing-guide.md): Frequency measurement sketches and truth table testing for individual ICs.
 - [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md): Netlist references and pin mappings.
