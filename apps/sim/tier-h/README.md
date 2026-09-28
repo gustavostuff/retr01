@@ -2,7 +2,7 @@
 
 Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
 
-Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, the color PROM is the AT27C256R, and the 74HC14 is not seated (canned PHI2). Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. The AD724 is not in this tree yet, so the mounted IC count is still 16 motherboard parts plus the two cart memories.
+Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. The AD724 is not in this tree yet, so the mounted IC count is still 16 motherboard parts plus the two cart memories.
 
 # Retr01 Board Simulator
 
@@ -52,7 +52,7 @@ Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `K
 | Island | Components (canvas) |
 |--------|---------------------|
 | O Video | `COMPOSITOR` + `AT27C256R` + `LCD_SINK` |
-| A Power+clk | `PWR5V` + `OSC8M` + `SN74HC14` (not shown as UI chips) |
+| A Power+clk | `PWR5V` + `OSC8M` (not shown as UI chips) |
 | C CPU + decode | `W65C02S`, `AS6C62256`, decode helper PLD (non-BOM wire entity) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + VRAM glue PLD helper |
 | H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + Beam Y PLD vs soft `$7F04` + **`SN74HC574`** (`$7F02` SX) |

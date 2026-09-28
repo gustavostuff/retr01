@@ -149,7 +149,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 - Synchronize async inputs into each AVR with two flops (or event system) before acting.
 - PLD registered paths for beam. CPU D on DOT is sampled only with a PHI2-qualified enable (`LE_7Fxx` already does this for scroll/raster).
-- Canned oscillators for PHI2/DOT. Add 74HC14 only if edges are soft.
+- Square CMOS clock stages (74HCU04 and 74HC74) ensure crisp PHI2 and DOT edges.
 - AVR cycle counts are not assumed equal to PHI2 cycles without measuring.
 
 ### 11. Reset and power-up bus chaos (High)

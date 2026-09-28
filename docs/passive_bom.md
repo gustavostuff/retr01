@@ -52,7 +52,7 @@ Video alone does **not** need 32 resistors. Cart damping + pull-ups + crystal fe
 
 | Domain | ICs with VCC | Notes |
 |--------|-------------:|-------|
-| Main PCB | 20 | Motherboard IC footprints (19 counted parts + optional 74HC14) |
+| Main PCB | 20 | Motherboard silicon footprints (19 counted ICs + MCP130 supervisor) |
 | Cart module | 2 | Cart flash and save EEPROM |
 | Controller pad | 1 | Pad ATtiny85 |
 | **Total bypass sites** | **23** | One **100 nF** per VCC pin cluster |
@@ -125,7 +125,7 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 | 1 | **4.7k** | Pad UART **DATA** (MCU-S2). Host side. OD half-duplex |
 | 2 | **4.7k** | Cart I2C **SDA** / **SCL** (MCU-M OD) |
 | 1 | **4.7k** (or **10k**) | CPU **RDY** idle high unless MCU stalls |
-| 1 | **10k** | **RESB** / reset rail idle high (after HC14 conditioning) |
+| 1 | **10k** | **RESB** / reset rail idle high |
 
 **Subtotal pull-ups: 5**
 
@@ -157,7 +157,7 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 
 ## Tier H sim netlist
 
-Pin-level links for bypass, bulk, crystals, DAC, series **33 ohm**, and pull-ups live in `apps/sim/tier-h/src/board_schematic.c`. See [`docs/bringup/schematic-netlist-tier-h.md`](bringup/schematic-netlist-tier-h.md) for refdes mapping and known gaps (**AD724**, **74HC14** not seated in sim).
+Pin-level links for bypass, bulk, crystals, DAC, series **33 ohm**, and pull-ups live in `apps/sim/tier-h/src/board_schematic.c`. See [`docs/bringup/schematic-netlist-tier-h.md`](bringup/schematic-netlist-tier-h.md) for refdes mapping and known gaps (**AD724** not seated in sim).
 
 ---
 

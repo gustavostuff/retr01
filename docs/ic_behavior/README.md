@@ -16,14 +16,14 @@ Docs are per **part**, tagged by where they live:
 
 | Area | Examples |
 | --- | --- |
-| Main motherboard | CPU, AVRs, SRAM, PLDs, mux/latches, color PROM, AD724 |
+| Main motherboard | CPU, AVRs, SRAM, PLDs, mux/latches, color PROM, AD724, 74HCU04, 74HC74 |
 | Cart | Flash, save EEPROM |
-| Pads / controllers | ATtiny85 in the TRS pad (outside the 19-IC count) |
-| Optional | 74HC14 Schmitt glue (outside the 19 if populated) |
+| Pads / controllers | ATtiny85 in the TRS pad (outside the 21-IC count) |
+| Reset supervisor | MCP130 in TO-92 (outside the 21-IC count) |
 
 ## Part index
 
-### Counted motherboard (17)
+### Counted motherboard (19)
 
 | Doc | Part | Qty | Role |
 | --- | --- | --- | --- |
@@ -36,6 +36,8 @@ Docs are per **part**, tagged by where they live:
 | [74HC574.md](74HC574.md) | 74HC574 | 1 | BG1 scroll X `$7F02` |
 | [AT27C256R.md](AT27C256R.md) | AT27C256R | 1 | Color PROM (R3G3B2). Kit RGB: [`../general/palette/`](../general/palette/README.md) |
 | [AD724.md](AD724.md) | AD724 | 1 | RGB to NTSC/PAL composite |
+| [74HCU04.md](74HCU04.md) | 74HCU04 | 1 | Hex unbuffered inverter (crystal oscillator tanks + buffers) |
+| [74HC74.md](74HC74.md) | 74HC74 | 1 | Dual D-type flip-flop (divide-by-4 for dot clock) |
 
 ### Counted cart (2)
 
@@ -44,12 +46,12 @@ Docs are per **part**, tagged by where they live:
 | [SST39SF040.md](SST39SF040.md) | SST39SF040 | 1 | 512 KB cart flash |
 | [24C64.md](24C64.md) | 24C64 | 1 | Cart save EEPROM (I2C) |
 
-### Outside the 19
+### Outside the 21
 
 | Doc | Part | Role |
 | --- | --- | --- |
 | [ATtiny85.md](ATtiny85.md) | ATtiny85 | TRS pad MCU |
-| [74HC14.md](74HC14.md) | 74HC14 | Optional Schmitt clock/reset cleanup |
+| [MCP130.md](MCP130.md) | MCP130 | Power-on reset, brown-out, and switch debounce supervisor |
 
 ## Sim authoring hints
 

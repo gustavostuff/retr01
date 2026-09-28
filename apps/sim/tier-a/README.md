@@ -74,7 +74,7 @@ A first bench that can program its own chips lands around **USD 110-150**. Skip 
 
 ### Do not buy for Tier A or B
 
-W65C02S, AVR128DB28, AS6C62256, 74HC157 / 573 / 574, SST39SF040, 24C64, ATtiny85, an 8 MHz PHI2 oscillator, Adafruit's UPDI Friend. A **74HC14** only if the canned-oscillator edges are soft. A scope is the useful extra for first light.
+W65C02S, AVR128DB28, AS6C62256, 74HC157 / 573 / 574, SST39SF040, 24C64, ATtiny85, an 8 MHz PHI2 oscillator, Adafruit's UPDI Friend, MCP130 supervisor. A scope is the useful extra for first light.
 
 ## Wire modes
 

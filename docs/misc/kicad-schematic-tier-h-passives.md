@@ -41,7 +41,7 @@ Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND*
 | C14 | U573 | VCC |
 | C15 | U574 | VCC |
 | C16 | U24 color PROM | VCC |
-| C17 | (optional 74HC14) | +5V only if populated |
+| C17 | MCP130 supervisor | +5V |
 | C18 | (AD724 **U725**) | +5V only if populated |
 | C19 | U40 cart flash | VDD (cart sheet or J36 stub) |
 | C20 | U50 24C64 | VCC (cart sheet or J36 stub) |

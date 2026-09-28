@@ -24,7 +24,7 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 | C14 | U573 (field ALE) | VCC |
 | C15 | U574 (scroll X) | VCC |
 | C16 | U24 (color PROM) | VCC |
-| C17 | *(74HC14, optional)* | +5V rail only in sim |
+| C17 | *(MCP130 supervisor)* | +5V rail only in sim |
 | C18 | *(AD724)* | +5V rail only in sim |
 | C19 | U40 (cart flash) | VDD |
 | C20 | U50 (24C64) | VCC |
@@ -65,10 +65,10 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 ## Gaps (not schematic-complete on silicon)
 
 - **AD724** RGB/composite path (only SCR1 DAC inputs + **FSC_XTAL** stub).
-- **74HC14** reset/clock conditioning.
+- **MCP130** reset supervisor.
 - Cart **socket** vs **U40** edge (OE#/WE# named stubs on series resistors).
 - Extra PLD helpers (`UPLDA`, `UPLDB`, `UPLDI`, ...) share the real BOM refdes where applicable but are not all in the locked-16 bypass table.
 
-When AD724 and optional HC14 land in sim, extend `board_schematic.c` rather than duplicating links in UI code.
+When AD724 and MCP130 land in sim, extend `board_schematic.c` rather than duplicating links in UI code.
 
 **KiCad schematic (manual):** [`docs/misc/kicad-schematic-tier-h.md`](../misc/kicad-schematic-tier-h.md). **Skidl export (preliminary):** [`tier-h-skidl-export.md`](tier-h-skidl-export.md).

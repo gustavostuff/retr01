@@ -105,7 +105,7 @@ The ladder is **feasible** against the locked design:
 | Cart flash, MAP, optional save EEPROM/FRAM | G |
 | S2, pads, audio PWM | H |
 
-Optional outside the 19: 74HC14, ATtiny85 in the pad, UPDI Friend as tool.
+Outside the 21: crystals, MCP130 supervisor, ATtiny85 in the pad, UPDI Friend as tool.
 
 ---
 

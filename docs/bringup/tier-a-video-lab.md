@@ -63,7 +63,6 @@ The dot clock requires a clean 5.369318 MHz CMOS square wave. Three common optio
 
 | Part | When |
 | --- | --- |
-| **74HC14** | Only if DOT edges are soft or reset chatters. Skip if the canned oscillator is already square. |
 | Third **ATF22V10** | Only if Compositor-style index logic is preferred over discrete/DIP index (section 5). |
 | Scope / logic analyzer | Strongly recommended for first light |
 

@@ -17,7 +17,7 @@ Source of truth after `r01s_board_netlist_rebuild()`:
 Known **gaps** (same as [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md)):
 
 - **AD724** not modeled (SCR1 video sink stands in for part of the video path)
-- **74HC14** optional block not seated
+- **MCP130** supervisor not modeled in sim
 - Cart **edge** vs **U40** module (OE#/WE# stubs)
 - **Y1/Y2** refdes shared between BOM crystals and canned osc chips in sim
 - Skidl export is **motherboard-only**: 17 counted ICs (includes **U725 / AD724** placeholder), **3x ATF22V10** (UPLDX/Y/V), connectors **J1-J9 + J36**. Sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
@@ -96,7 +96,7 @@ For this flow, `scripts/retr01_trim_silk_footprints.py` (run from `export_netlis
 
 Before any fab-ready netlist:
 
-1. AD724 + optional HC14 in sim/schematic links  
+1. AD724 + MCP130 in sim/schematic links  
 2. Resolve refdes / crystal vs osc naming  
 3. Curated **refdes to KiCad symbol + footprint** table (locked-19 BOM)  
 4. Cart edge and pad harness as designed nets, not stubs  

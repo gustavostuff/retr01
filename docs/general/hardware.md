@@ -31,7 +31,7 @@ Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by defa
 | --- | --- |
 | Motherboard | 19 |
 | Cart (flash + save EEPROM) | 2 |
-| Outside the 21 | Crystals. **74HC14** optional (see skip conditions below). **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
+| Outside the 21 | Crystals, reset supervisor (MCP130). **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
 
 ### Bus discipline
 
@@ -74,21 +74,15 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
 | 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
-**Still outside the count:** crystals (common THT HC-49/US). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
+**Still outside the count:** crystals (common THT HC-49/US), reset supervisor (MCP130 in TO-92). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
 
-### Optional: 74HC14 (hex Schmitt inverter)
+### Reset generation: MCP130 supervisor
 
-**Not in the counted 21.** Skip it on the first board when all of these hold:
-
-- **PHI2** and **DOT** come from square CMOS clock stages (the 74HCU04/74HC74 clock network)
-- Series **33 ohm** (already planned) is enough damping on those clock nets
-- **Reset** is a simple pull-up + switch, or a small supervisor IC, with short traces and no visible bounce/chatter on a scope
-
-Add the 74HC14 (or populate its footprint) if bring-up shows soft clock edges, unavoidable crystal-buffer duty, or a noisy/slow reset rail that needs Schmitt cleanup.
+A dedicated 3-pin supervisor IC (**Microchip MCP130** in TO-92) controls system reset. It monitors the 5 V rail, provides brown-out detection, enforces a 350 ms power-on delay, and debounces manual reset switches directly on the **RESB** net with a sharp rising edge.
 
 ### What kind of system is this?
 
-Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video path), not an FPGA soft system and also **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue.
+Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video path), not an FPGA soft system and also **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue and clock generation.
 
 | Class | Parts | Programmable? | Flashed through the console? |
 | --- | --- | --- | --- |
@@ -101,8 +95,8 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 | **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
 | **Clock generation** | 74HCU04, 74HC74 | **No.** Discrete crystal oscillator and divider | No |
 | **Composite encoder** | AD724 | Fixed analog (RGB to NTSC/PAL) | No |
+| **Reset supervisor** | MCP130 | Fixed supervisory timing | No |
 | **Outside the 21** | crystals | Fixed timing | No |
-| **Optional glue** | 74HC14 (hex Schmitt) | Skip if square PHI2/DOT + simple reset. Add if edges/reset need cleanup | No |
 | **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
 
 ### Composite encoder (frozen): AD724

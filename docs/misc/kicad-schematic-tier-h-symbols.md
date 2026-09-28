@@ -50,7 +50,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 
 Cart flash **U40** and EEPROM **U50** belong on the **cart PCB** schematic. The motherboard sheet stops at **J36** (see wiring doc).
 
-Optional **74HC14** (not in counted 19): add only when clock/reset conditioning is required ([`hardware.md`](../general/hardware.md)).
+Reset supervisor **MCP130** (TO-92): provides power-on delay, brown-out protection, and switch debouncing ([`hardware.md`](../general/hardware.md)).
 
 ---
 
