@@ -41,9 +41,12 @@ Flashing procedures for PLDs and the color PROM are detailed in [`programming-ti
 
 | Net | Frequency | Notes |
 | --- | --- | --- |
-| **DOT** | **5.369318 MHz** | Prefer a **canned CMOS oscillator** or an **Si5351A clock generator breakout** (such as Adafruit 2045), not a raw crystal amp. **Only clock required** for the breadboard video lab. |
+| **DOT** | **5.369318 MHz** | Canned CMOS oscillator, classic 21.47727 MHz source divided by 4 (via 74HC74 or PLD), or Si5351A clock generator breakout (such as Adafruit 2045). Only clock required for the breadboard video lab. |
 
-An Si5351A breakout board plugs directly into breadboard rails and provides the exact 5.369318 MHz CMOS clock without requiring rare through-hole oscillator cans.
+The dot clock requires a clean 5.369318 MHz CMOS square wave. Three common options exist:
+- A dedicated 5.369318 MHz canned oscillator.
+- The classic discrete approach: a ubiquitous 21.47727 MHz crystal or oscillator divided by 4 using a 74HC74 dual flip-flop or two spare PLD macrocells.
+- An Si5351A breakout board plugged into breadboard rails, programmed to output 5.369318 MHz.
 
 ### Passives / connectors (minimum)
 

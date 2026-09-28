@@ -64,7 +64,7 @@ Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
 | Qty | Ref / use | Value | Notes |
 |----:|-----------|-------|-------|
 | 1 | Y1 / CPU PHI2 | Abracon ACH **8.000 MHz** | Buffered via board clock path (HC14 / OSC) |
-| 1 | Y2 / DOT | Abracon ACH **5.369318 MHz** | Beam / PPU clock |
+| 1 | Y2 / DOT | Abracon ACH **5.369318 MHz** (or **21.47727 MHz** / 4) | Beam / PPU clock. Direct 5.369318 MHz can or 21.47727 MHz divided by 4 |
 | 1 | Y3 / AD724 FSC | Abracon ACH **14.31818 MHz** | NTSC encoder subcarrier |
 
 **Load capacitors:** **2 per crystal** (**6** total). Exact pF from the Abracon CL rating (often ~18-22 pF each).
@@ -73,7 +73,9 @@ DB28 parts run on **internal HFOSC @ 24 MHz**. No extra MCU crystals on the lock
 
 ### Oscillator packaging and sourcing
 
-Motherboard layout uses half-size DIP-8 through-hole cans (`Retr01_Lib:Oscillator_DIP-8`, Abracon ACH or surplus equivalents). For modern volume availability, standard 4-pad SMD packages (7050 or 5032) or a dedicated clock generator IC (such as Si5351A in 10-MSOP) serve as drop-in alternatives on compatible pad layouts. On solderless breadboards, an Si5351A breakout board supplies the 5.369318 MHz clock directly.
+Motherboard layout uses half-size DIP-8 through-hole cans (`Retr01_Lib:Oscillator_DIP-8`, Abracon ACH or surplus equivalents). For modern volume availability, standard 4-pad SMD packages (7050 or 5032) or a dedicated clock generator IC (such as Si5351A in 10-MSOP) serve as drop-in alternatives on compatible pad layouts.
+
+The classic discrete solution uses a standard 21.47727 MHz crystal or canned oscillator divided by 4 (through a 74HC74 dual flip-flop or two PLD macrocells) to synthesize the 5.369318 MHz dot clock at 50% duty cycle. On solderless breadboards, an Si5351A breakout board or a 21.47727 MHz source divided by 4 supplies the 5.369318 MHz clock directly.
 
 ---
 
