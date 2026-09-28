@@ -97,7 +97,7 @@ void loop() {
 }
 ```
 
-Target reading on the Si5351A output or canned oscillator: approximately 5369318 Hz.
+Target reading on the 74HC74 Q2 output (DOT clock): approximately 5369318 Hz.
 
 ---
 
@@ -341,7 +341,7 @@ An Arduino can run automated truth table checks by driving chip inputs through a
   2. Waits 5 microseconds for the chip to settle
   3. Reads the lower 6 bits of Port B
   4. Prints "Applied: X | Read: Y" over serial
-- You (or a host script) compare each printed pair against the expected truth table. If every applied vector produces the correct result, the IC passes.
+- A host script or manual inspection compares each printed pair against the expected truth table. If every applied vector produces the correct result, the IC passes.
 
 #### Limitations
 
@@ -391,7 +391,90 @@ This automated rig is simply the exhaustive, logged version of the manual DIP-sw
 
 ---
 
-## 3. LED testing reference
+## 3. Solderless breadboard layout rules and high-speed risks (Tiers A, B, and C)
+
+Solderless breadboards introduce parasitic resistance, capacitance, and inductance that do not exist on a finished printed circuit board. At DC and low switching rates these parasitics are negligible. At Retr01 master clock frequencies (21.477 MHz) and video pixel rates (5.369 MHz), breadboard parasitics directly cause oscillator failure, false clock triggering, color smearing, and memory corruption.
+
+### Electrical parasitics baseline of breadboard strips
+
+Standard solderless breadboards exhibit physical limitations across their internal spring contact clips:
+- **Contact row capacitance:** Each 5-hole tie-point strip presents 2 to 5 pF of capacitance to adjacent rows and to the metal backing plate underneath.
+- **Contact resistance:** Spring clips introduce 10 to 50 mohm of series resistance per connection, increasing when dirty or fatigued.
+- **Power rail inductance:** Long internal power bus strips and jumper wires introduce 10 to 30 nH of inductance per connection strip.
+- **Ground loop area:** Without a continuous copper ground plane, return currents follow circuitous jumper paths, forming large magnetic loop antennas that pick up and radiate switching noise.
+
+---
+
+### Risk 1: Pierce oscillator detuning and startup failure (Tier A)
+
+Retr01 generates the master color clock using a discrete Pierce crystal oscillator circuit (74HCU04 inverter, Y2 21.47727 MHz crystal, 1 Mohm feedback resistor, and two load capacitors C1/C2).
+
+**Failure mechanism:**
+- The 2 to 5 pF parasitic capacitance of adjacent breadboard tie-point rows adds directly in parallel with the external crystal load capacitors (nominal 18 to 22 pF).
+- This extra parasitic capacitance alters the total capacitive load seen by the crystal, pulling the resonant frequency off-target or shifting the phase angle across the 74HCU04 inverter.
+- If total loop gain drops below unity or phase shift departs from 180 degrees, the oscillator fails to start completely or produces unstable, intermittent oscillation.
+
+**Mitigation rules:**
+- Y2, the 74HCU04 inverter (pins 1 and 2), the 1 Mohm feedback resistor, and C1/C2 reside on immediately adjacent breadboard rows.
+- Component leads are trimmed as short as practical (under 10 mm) before insertion into the breadboard.
+- The grounded ends of C1, C2, and 74HCU04 pin 7 (GND) connect to a single common tie-point row before connecting to the main ground rail.
+- In high-capacitance breadboards, C1 and C2 are downsized slightly (such as 15 or 18 pF) to compensate for breadboard contact capacitance.
+
+---
+
+### Risk 2: ATF22V10 ground bounce and false clocking (Tiers A and B)
+
+The Beam X, Beam Y, and Compositor functions are implemented in ATF22V10C programmable logic devices running at 5.369 MHz.
+
+**Failure mechanism:**
+- High-speed CMOS PLDs (-7 ns and -10 ns speed grades) feature output transition times under 3 ns.
+- When multiple outputs switch simultaneously (such as the 6-bit index bus or multiple counter MSBs), the rapid change in transient current (dI/dt) across the parasitic inductance of the breadboard ground rail induces a sharp voltage spike:
+  `V_bounce = L_rail * (dI / dt)`
+- This ground bounce momentarily shifts the internal chip 0 V reference relative to external logic levels. A momentary ground bounce spike exceeding 0.8 V on an active-low reset or clock input can falsely clock internal state registers or cause Beam counters to skip lines.
+
+**Mitigation rules:**
+- A 0.1 uF low-ESR ceramic capacitor mounts directly across Pin 24 (VCC) and Pin 12 (GND) of each ATF22V10, straddling the IC package with shortest possible leads.
+- Power and ground distribution rails bridge at both ends of each breadboard slab with short 22 AWG solid jumpers to form a closed low-impedance loop rather than a single open stub.
+- A 10 uF to 47 uF electrolytic or tantalum bulk decoupling capacitor connects at the power entry point of each breadboard.
+
+---
+
+### Risk 3: R-2R DAC bandwidth limitation and RGBS signal degradation (Tiers A and B)
+
+The color PROM drives a discrete R-2R resistor ladder DAC to generate analog Red, Green, and Blue voltages for the RGBS video connector.
+
+**Failure mechanism:**
+- Solderless breadboard row-to-row capacitance (2 to 5 pF per row) forms an unintentional low-pass RC filter with the R-2R ladder resistors (1 kohm and 2 kohm network).
+- This low-pass filtering limits the analog bandwidth of the DAC, rounding off the sharp transitions of the 5.369 MHz dot clock pixels. On an RGBS monitor, this manifests as horizontal color smear, blurred character edges, and chromatic bleeding between adjacent pixels.
+- In addition, running video signals (R, G, B, CSYNC) through long loose jumper wires without dedicated ground returns introduces inductive ringing and 60 Hz hum, resulting in horizontal sync jitter or image tearing.
+
+**Mitigation rules:**
+- R-2R ladder resistors sit immediately adjacent to the AT27C256R PROM data output pins (DQ[7:0]).
+- Resistor leads are trimmed short without daisy-chaining jumpers between ladder nodes.
+- A dedicated ground wire runs twisted alongside each video output line (R, G, B, and CSYNC) directly to the video output connector pins.
+- Cable runs from the breadboard to the monitor or capture card stay under 1 meter during lab testing.
+
+---
+
+### Risk 4: Tier C field SRAM write pulse glitching and bus contention (Tier C)
+
+Tier C introduces MCU-S1, a 74HC573 transparent latch, and field SRAM (e.g. AS6C62256) where MCU-S1 fills sprite patterns during VBlank and hardware video logic reads SRAM during active scan.
+
+**Failure mechanism:**
+- Solderless breadboards feature high capacitive coupling between adjacent jumper wires running in parallel.
+- A fast edge on an adjacent clock or counter line can capacitively inject a narrow negative spike (runt pulse) into the SRAM active-low write enable (/WE) or chip enable (/CE) line.
+- If /WE glitches low while the address bus is in transition, the SRAM executes an unintentional write cycle, corrupting random sprite data.
+- Multiplexed address and data lines (AD[7:0]) driven alternately by MCU-S1 and the video multiplexers can suffer bus contention if latch enable (LE) and output enable (/OE) signals overlap on breadboard lines with asymmetric propagation delays.
+
+**Mitigation rules:**
+- The SRAM /WE control wire runs physically separated from high-frequency clock signals (DOT, 21.48 MHz, and counter toggle lines).
+- A 4.7 kohm to 10 kohm pull-up resistor connects directly at the SRAM /WE pin (pin 27 on DIP-28) to +5 V to hold the line inactive during bus transitions.
+- MCU-S1 firmware maintains explicit non-overlapping guard intervals between releasing the bus and asserting /WE or /OE.
+- Local 0.1 uF decoupling capacitors mount directly at the VCC pins of the SRAM and 74HC573 latch.
+
+---
+
+## 4. LED testing reference
 
 All ICs under test (AT27C256R, 74HC573, 74HC74, ATF22V10, etc.) use 5 V logic.
 
@@ -427,22 +510,28 @@ Do not connect both an LED and a separate pull-down resistor independently to gr
 
 ---
 
-## 4. Wiring checklist for breadboard tests
+## 5. Wiring checklist for breadboard tests
 
 Before applying power to any test setup:
 
 - [ ] All power (VCC) connections are correct (to +5 V only).
 - [ ] All ground (GND) connections are made and are common across all components.
-- [ ] LED series resistors are 1 kΩ and are in series between each output pin and the LED.
-- [ ] DIP switch pull-down resistors are 10 kΩ and pull to ground.
-- [ ] Clock signals are connected to the correct pins and are driven by a slow, debounced source (Arduino or pushbutton).
+- [ ] Power and ground rails are bridged at both ends of each breadboard slab.
+- [ ] 0.1 uF ceramic bypass capacitors are installed across VCC and GND directly at each IC package.
+- [ ] Bulk 10 uF to 47 uF capacitor is installed at the main power entry point.
+- [ ] Crystal oscillator components (Y2, 74HCU04, Rf, C1/C2) have trimmed leads under 10 mm and sit on adjacent tie-point rows.
+- [ ] LED series resistors are 1 kohm and are in series between each output pin and the LED.
+- [ ] DIP switch pull-down resistors are 10 kohm and pull to ground.
+- [ ] Clock signals are connected to the correct pins and are driven by a verified source.
 - [ ] Control signals (CE#, OE#, LE, /CLR, /PRE, etc.) are wired to ground or +5 V as required by the test, or are driven by a switch.
+- [ ] SRAM /WE line has a dedicated 4.7 kohm to 10 kohm pull-up to +5 V and is routed away from clock lines (Tier C).
+- [ ] Video lines (R, G, B, CSYNC) have twisted ground returns running to the display connector.
 - [ ] No two signal pins are shorted together (check for accidental wire touching).
 - [ ] Power supply is turned off while wiring, and turned on only after all connections are verified.
 
 ---
 
-## 5. Common troubleshooting
+## 6. Common troubleshooting
 
 **LEDs don't light at all**
 - Verify +5 V is actually present at VCC pins (use a meter).
@@ -471,7 +560,7 @@ Before applying power to any test setup:
 
 ---
 
-## 6. Troubleshooting the automated Arduino rig
+## 7. Troubleshooting the automated Arduino rig
 
 **No serial output**
 - Verify the Arduino is connected and recognized by the operating system (check /dev/ttyUSB* or dmesg).
