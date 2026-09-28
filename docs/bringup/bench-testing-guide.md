@@ -9,9 +9,11 @@ Methods for measuring frequencies and validating individual IC pin behavior on s
 When laboratory oscilloscopes are unavailable, an ATmega328P Arduino (Uno or Nano) connected via USB to a Linux workstation functions as a hardware frequency and period counter.
 
 ### HSYNC (15.74 kHz) and VSYNC (60 Hz) measurement
+
 The ATmega328P Timer1 Input Capture Unit on digital pin 8 measures pulse intervals with 62.5 nanosecond resolution at 16 MHz.
 
 #### Arduino Input Capture sketch
+
 ```cpp
 // Frequency and period counter on Arduino Pin D8 (ICP1)
 volatile uint16_t t_start = 0;
@@ -50,6 +52,7 @@ void loop() {
 ```
 
 #### Terminal monitoring on Linux
+
 Connect the probe from the test pin to Arduino pin 8, and connect common ground. Open the serial terminal at 115200 baud:
 
 ```bash
@@ -63,9 +66,11 @@ Target readings:
 ---
 
 ### DOT clock (5.369318 MHz) measurement
-Digital pin 5 (T1) connects to the Timer1 external clock input. The timer counts external edges directly up to approximately 6.5 MHz. Gating the counter for 100 milliseconds produces frequency readings in Hertz.
+
+Digital pin 5 (T1) connects to the Timer1 external clock input. The timer counts external edges directly up to approximately 6.5 MHz. Gating the counter for 100 milliseconds produces a frequency reading.
 
 #### Arduino clock counter sketch
+
 ```cpp
 // High-speed pulse counter on Arduino Pin D5 (T1)
 void setup() {
@@ -97,6 +102,7 @@ Target reading on the Si5351A output or canned oscillator: approximately 5369318
 ---
 
 ### Logic analyzer alternative (Linux pulseview)
+
 An 8-channel 24 MHz USB logic analyzer connects directly to Linux via the sigrok toolchain:
 
 ```bash
@@ -112,70 +118,238 @@ Connecting analyzer channels to DOT, HSYNC, CSYNC, and VSYNC provides visual mul
 Testing chips individually with static logic levels confirms proper programming and functionality before placing them on the active video bus.
 
 ### General bench test setup
-- Power rails: Regulated +5.0 V and clean ground.
-- Input drivers: 8-position DIP switch module with 10 k ohm pull-down resistors to ground. Closing a switch applies +5 V (logic high). Opening the switch pulls the pin to ground (logic low).
-- Output indicators: Low-current LEDs with 1 k ohm series resistors to ground, or a digital multimeter set to DC voltage.
+
+This setup applies to all static and combinatorial IC tests:
+
+**Power**
+- Regulated +5.0 V supply (clean, well decoupled)
+- Common ground between all components
+
+**Input drivers**
+- 8-position DIP switch module with 10 kΩ pull-down resistors to ground
+- Closing a switch applies +5 V (logic high)
+- Opening the switch pulls the pin to ground (logic low)
+
+**Output indicators**
+- Low-current LEDs (red or green preferred) with 1 kΩ series resistors to ground
+- Wiring: IC pin --- 1k resistor --- LED anode --- LED cathode --- GND
+- Alternative: digital multimeter set to DC voltage
+- When a pin is high (+5 V) the LED glows; when low (0 V) it goes dark
+
+**Clock and control signals**
+- Slow clock source for sequential tests: Arduino toggling a pin at ~10 Hz, or a manual debounced pushbutton
+- Manual switches for control signals (CE#, OE#, LE, CLK, etc.) held high or low via jumpers
 
 ---
 
 ### Testing AT27C256R Color PROM
-Verifies that programmed memory addresses output the expected packed R3G3B2 color bytes.
+
+This PROM stores 64 packed R3G3B2 color bytes. The software source of truth (`apps/common/r01_kit_palette.c`) holds the full 8-bit RGB triples; the burn tool packs these into single bytes for the hardware PROM.
+
+When CE# and OE# are both low, DQ[7:0] output the byte stored at the selected address. Higher address lines A[14:6] are grounded to keep access within the first 64 bytes.
+
+**Setup**
 
 1. Ground CE# (pin 20) and OE# (pin 22).
 2. Connect VCC (pin 28) to +5 V and GND (pin 14) to ground.
 3. Tie upper address lines A[14:6] to ground.
 4. Connect address lines A[5:0] (pins 10, 9, 8, 7, 6, 5) to DIP switches.
-5. Connect LEDs or probe DQ[7:0] (pins 11, 12, 13, 15, 16, 17, 18, 19).
-6. Set address switches to test indices:
-   - Index 0 (all switches low): Output matches master palette color 0.
-   - Index 1 (A0 high, rest low): Output matches master palette color 1.
-7. Raising CE# or OE# to 5 V should place DQ[7:0] into high impedance (LEDs turn off).
+5. Connect LEDs or probe DQ[7:0] (pins 11, 12, 13, 15, 16, 17, 18, 19) to LEDs via 1 kΩ series resistors, or to a meter set to DC voltage.
+
+**Test procedure**
+
+1. Set address switches to index 0 (all switches open / low).
+2. Read the output: must match the packed R3G3B2 value of palette color 0 (black = 0x00).
+3. Set address switches to index 1 (A0 closed / high, rest open / low).
+4. Read the output: must match the packed R3G3B2 value of palette color 1.
+5. Check a few more distinctive entries (e.g., index 16, 32, 48, 63) against the expected values in `docs/general/palette/global_system_palette.md`.
+6. Raise CE# or OE# to +5 V. The outputs must go high-impedance (LEDs turn off, meter reads very high resistance or open circuit).
+7. Lower CE# and OE# back to ground. Outputs must drive again.
+
+If all checks pass, the PROM is programmed correctly.
 
 ---
 
 ### Testing 74HC573 transparent latch
-Verifies transparent pass-through and edge latching behavior.
 
-1. Connect VCC (pin 20) to +5 V and GND (pin 10) to ground.
-2. Ground OE# (pin 1).
-3. Connect inputs D[7:0] (pins 2 to 9) to DIP switches.
-4. Connect outputs Q[7:0] (pins 19 down to 12) to LEDs.
-5. Connect LE (latch enable, pin 11) to a separate control switch.
-6. Test transparent mode: Set LE high. Toggle DIP switches on D[7:0]. Outputs Q[7:0] mirror inputs immediately.
-7. Test latch mode: With a specific pattern on D[7:0], switch LE low. Change switches on D[7:0]. Outputs Q[7:0] remain frozen on the latched pattern.
+A 74HC573 is a set of 8 memory cells with two modes of operation:
+
+**Transparent mode (LE high)**
+- The outputs Q[7:0] follow the inputs D[7:0] in real time, as if directly wired.
+- Any change on the D pins appears immediately on the Q pins (with only a few nanoseconds propagation delay).
+
+**Latched mode (LE low)**
+- The outputs freeze on the value present on the D pins at the instant LE transitioned from high to low.
+- Further changes to the D pins have no effect; the Q pins hold the old value.
+- Only when LE returns high do the Q pins wake up and follow the D pins again.
+
+The OE# (Output Enable, active-low) pin is a master switch. When OE# is low, outputs drive normally. When OE# is high, outputs go high-impedance.
+
+**Setup**
+
+1. Power
+   - Pin 20 (VCC) to +5 V
+   - Pin 10 (GND) to ground
+
+2. Enable outputs
+   - Pin 1 (OE#) to ground
+
+3. Inputs
+   - Pins 2-9 (D[0:7]) to DIP switches
+
+4. Outputs
+   - Pins 19 down to 12 (Q[0:7]) to LEDs with 1 kΩ series resistors
+
+5. Control
+   - Pin 11 (LE) to a manual switch that can toggle between +5 V and ground
+
+**Test procedure**
+
+Test 1 - Transparent mode:
+1. Set LE high (+5 V).
+2. Toggle the DIP switches on D[7:0] to various patterns.
+3. Verify the LEDs on Q[7:0] follow immediately and perfectly, matching each switch change.
+
+Test 2 - Latched mode:
+1. While LE is high, set a known pattern on the DIP switches (e.g., binary 10101010). Confirm the LEDs show the same pattern.
+2. Switch LE low (to ground).
+3. Change the DIP switches to a different pattern (e.g., binary 01010101).
+4. Verify the LEDs remain frozen on the old pattern (10101010). No switch changes should affect them.
+5. Switch LE back high (+5 V).
+6. Verify the LEDs instantly jump to match the current DIP switch pattern (01010101).
+
+Test 3 - Output disable:
+1. With LE high and a pattern on D[7:0], raise OE# to +5 V.
+2. Outputs must go high-impedance (LEDs turn off).
+3. Lower OE# back to ground.
+4. Outputs must drive again and show the pattern on D[7:0].
+
+If all three behaviors work correctly, the chip is good.
 
 ---
 
 ### Testing 74HC74 dual flip-flop
-Verifies toggle and frequency divider operation.
 
-1. Connect VCC (pin 14) to +5 V and GND (pin 7) to ground.
-2. Tie /CLR (pin 1) and /PRE (pin 4) to +5 V (inactive).
-3. Tie /Q1 (pin 6) back into D1 (pin 2).
-4. Connect Q1 (pin 5) to an indicator LED.
-5. Pulse CLK1 (pin 3) from ground to +5 V using a debounced switch or slow Arduino pulse pin.
-6. The LED on Q1 toggles state on each rising clock edge, confirming divide-by-2 operation.
-7. Connecting Q1 to CLK2 and looping /Q2 to D2 verifies divide-by-4 operation on Q2.
+A 74HC74 contains two independent D flip-flops, each with:
+- D (data input)
+- CLK (clock input)
+- /PRE (preset, active-low) to force the Q output high
+- /CLR (clear, active-low) to force the Q output low
+- Q and /Q outputs
+
+When /CLR and /PRE are both inactive (high), a rising edge on CLK latches the D input into Q and inverts it into /Q. When D and /Q are looped back together, the flip-flop becomes a divide-by-2 frequency divider.
+
+**Setup**
+
+1. Power
+   - Pin 14 (VCC) to +5 V
+   - Pin 7 (GND) to ground
+
+2. Control (make inactive)
+   - Pin 1 (/CLR) to +5 V
+   - Pin 4 (/PRE) to +5 V
+
+3. Flip-flop 1 configuration
+   - Pin 6 (/Q1) looped back to pin 2 (D1)
+   - Pin 5 (Q1) to an LED with 1 kΩ series resistor
+
+4. Flip-flop 2 configuration (for divide-by-4 test)
+   - Pin 5 (Q1) connected to pin 9 (CLK2)
+   - Pin 11 (/Q2) looped back to pin 12 (D2)
+   - Pin 9 (Q2) to an LED with 1 kΩ series resistor
+
+5. Clock input
+   - Pin 3 (CLK1) driven by a slow pulse source (Arduino pin toggling at ~10 Hz, or a debounced manual switch)
+
+**Test procedure**
+
+Test 1 - Divide-by-2 on flip-flop 1:
+1. Pulse CLK1 from 0 V to +5 V, back to 0 V (one complete clock cycle).
+2. Observe the LED on Q1. It must toggle state on each rising edge of CLK1.
+3. After two pulses the LED is back to its original state (one complete 50% duty cycle).
+4. If the LED toggles smoothly on each pulse, divide-by-2 is confirmed.
+
+Test 2 - Divide-by-4 via cascaded flip-flops:
+1. With the same slow clock applied to CLK1, observe the LED on Q2.
+2. It must toggle at half the rate of Q1 (once every two toggles of Q1).
+3. After four clock pulses at CLK1, Q2 is back to its original state (one complete divide-by-4 cycle).
+
+Test 3 - Asynchronous reset:
+1. With CLK1 idle and Q1 high (LED on), pulse /CLR from +5 V to ground and back.
+2. The LED must turn off (Q1 forces low) immediately, without waiting for a clock edge.
+3. Return /CLR to +5 V. Behavior must be normal again (no forced low).
+
+If all behaviors work, the flip-flops are good.
 
 ---
 
 ### Testing ATF22V10 PLD logic and state counters
-Verifies that compiled equations produce correct outputs.
 
-1. Connect VCC (pin 24) to +5 V and GND (pin 12) to ground.
-2. Connect inputs (pins 2 to 11) to DIP switches.
-3. For registered designs (such as Beam X counter):
-   - Connect a slow clock source to CLK (pin 1), such as an Arduino toggling a pin at 10 Hz, or a manual pushbutton.
-   - Connect outputs to LEDs.
-   - Verify that output count lines advance in binary sequence on clock edges and that reset pins clear the state.
-4. For combinatorial decodes (such as Compositor layer priorities):
-   - Set input switches to specific priority states.
-   - Verify that index output lines switch according to the design truth table.
+A programmable logic device (PLD) executes Boolean equations on its inputs to produce outputs. It can be purely combinatorial (outputs depend only on current inputs) or registered (outputs depend on inputs and previous clock states).
+
+The ATF22V10 in Retr01 is used for tasks like beam counters (registered) and compositor layer priorities (combinatorial).
+
+**Setup**
+
+1. Power
+   - Pin 24 (VCC) to +5 V
+   - Pin 12 (GND) to ground
+
+2. Inputs
+   - Pins 2-11 (input pins) to DIP switches
+
+3. Outputs
+   - PLD output pins to LEDs with 1 kΩ series resistors
+
+4. Clock (if registered)
+   - CLK pin to a slow clock source (Arduino toggling at ~10 Hz, or manual pushbutton)
+
+5. Reset (if registered)
+   - Any reset input pins to a manual switch (high = inactive, ground = active) or tied inactive
+
+**Test procedure for combinatorial designs (e.g., priority decoder)**
+
+1. Set input switches to a known state that should produce a specific output pattern.
+2. Read the output LEDs. They must match the expected result for that input.
+3. Change inputs to other known states and verify outputs match the truth table (defined in the design .pld file and documentation).
+4. Test edge cases: all inputs low, all inputs high, alternating patterns.
+
+**Test procedure for registered designs (e.g., beam counter)**
+
+1. Activate reset (drive reset pin low or ground it, depending on the design). Verify all output LEDs are in their reset state (usually all off).
+2. Release reset (return reset pin to high or leave it ungrounded).
+3. Apply a slow clock pulse (one rising edge). Check that the counter output advances by one in binary.
+4. Apply more clock pulses and verify the output counts upward (0, 1, 2, 3, ...).
+5. When the count reaches its maximum (e.g., 255 for an 8-bit counter), the next pulse should wrap to 0 (or follow the design's overflow behavior).
+6. Verify that activating reset again returns the output to its initial state.
+
+If all checks pass, the PLD is programmed correctly.
 
 ---
 
 ### Automated testing via Arduino GPIO rig
-An Arduino can run automated truth table checks by driving chip inputs and reading outputs:
+
+An Arduino can run automated truth table checks by driving chip inputs through a range of test values and recording the outputs. This is the exhaustive, logged version of manual DIP-switch and LED testing.
+
+#### What the sketch does
+
+- Port D (pins 0-7) is configured as outputs that drive the IC's input pins (address lines, data inputs, control signals, etc.).
+- Port B (pins 8-13) is configured as inputs that read the IC's output pins.
+- The loop applies every value from 0 to 63 (covering 6 bits, which covers common test cases: lower address bits of the PROM, small combinatorial PLD decodes, etc.).
+- For each test value the sketch:
+  1. Writes the pattern to Port D
+  2. Waits 5 microseconds for the chip to settle
+  3. Reads the lower 6 bits of Port B
+  4. Prints "Applied: X | Read: Y" over serial
+- You (or a host script) compare each printed pair against the expected truth table. If every applied vector produces the correct result, the IC passes.
+
+#### Limitations
+
+- This sketch only exercises combinatorial or static-latched behavior. Sequential circuits (counters, registered PLDs, flip-flops) need explicit clock pulses and longer vector sequences that must be added to the sketch.
+- Pins 0 and 1 are also the hardware UART. On a real Uno/Nano, avoid driving them while using Serial, or move the stimulus to a different port pair.
+- There is no automatic pass/fail check. The serial log must be verified by hand or by a later script (e.g., a Python wrapper that compares against a reference file).
+
+#### The sketch
 
 ```cpp
 // Automated 8-bit bus stimulus and readback
@@ -205,4 +379,113 @@ void loop() {
 }
 ```
 
-This automated vector testing verifies chip responses against expected values across the full address or pattern range in seconds.
+#### Practical wiring notes
+
+- Wire Arduino Port D pins (0-7) to the IC input pins you want to test (address lines, data lines, control signals, etc.).
+- Wire IC output pins to Arduino Port B pins 8-13.
+- Ensure a common ground between the Arduino and the IC.
+- Power the IC from a clean +5 V regulated supply.
+- Any pins that must be held in a fixed state (CE#, OE#, LE, CLK, etc.) are jumpered to +5 V (high) or ground (low). If the sketch must control extra pins, extend DDRD and PORTD to additional Arduino pins.
+
+This automated rig is simply the exhaustive, logged version of the manual DIP-switch and LED tests described in the sections above.
+
+---
+
+## 3. LED testing reference
+
+All ICs under test (AT27C256R, 74HC573, 74HC74, ATF22V10, etc.) use 5 V logic.
+
+- A high output is approximately +5 V
+- A low output is approximately 0 V
+
+### LED color choice
+
+Any common LED works:
+- **Red or green (preferred):** forward voltage ~1.8-2.2 V, bright with standard 1 kΩ resistor
+- **Yellow:** also fine, similar voltage to red
+- **Blue or white:** forward voltage ~2.8-3.3 V, slightly dimmer with same resistor, but usable
+
+Low-current LEDs (2-5 mA) are ideal. They are clearly visible and put minimal load on the IC pin.
+
+### Correct wiring
+
+LED lights when the pin is HIGH:
+
+```
+IC output pin --- 1k ohm resistor --- LED anode (+) --- LED cathode (-) --- GND
+```
+
+The resistor must be in series with the LED. Without it the LED burns out almost instantly and risks damaging the IC pin.
+
+1 kΩ is the recommended value and is safely conservative:
+- Approximate current for red LED: (5 V - 2 V) / 1000 ohm = 3 mA
+- Approximate current for green LED: (5 V - 2 V) / 1000 ohm = 3 mA
+
+### Incorrect wiring to avoid
+
+Do not connect both an LED and a separate pull-down resistor independently to ground from the same pin. This either shorts the LED or leaves it without a proper current path. The resistor and LED must be in series between the pin and ground.
+
+---
+
+## 4. Wiring checklist for breadboard tests
+
+Before applying power to any test setup:
+
+- [ ] All power (VCC) connections are correct (to +5 V only).
+- [ ] All ground (GND) connections are made and are common across all components.
+- [ ] LED series resistors are 1 kΩ and are in series between each output pin and the LED.
+- [ ] DIP switch pull-down resistors are 10 kΩ and pull to ground.
+- [ ] Clock signals are connected to the correct pins and are driven by a slow, debounced source (Arduino or pushbutton).
+- [ ] Control signals (CE#, OE#, LE, /CLR, /PRE, etc.) are wired to ground or +5 V as required by the test, or are driven by a switch.
+- [ ] No two signal pins are shorted together (check for accidental wire touching).
+- [ ] Power supply is turned off while wiring, and turned on only after all connections are verified.
+
+---
+
+## 5. Common troubleshooting
+
+**LEDs don't light at all**
+- Verify +5 V is actually present at VCC pins (use a meter).
+- Confirm ground is common and solid.
+- Check LED polarity (longer leg = anode, should go to resistor; shorter leg = cathode, should go to ground).
+- If using the automated Arduino rig, check serial output is present and reasonable values are being applied.
+
+**LEDs light but flicker or dim unexpectedly**
+- Verify power supply is clean and well-decoupled (add capacitors near IC VCC pins if not already done).
+- Check for accidental shorts or touching wires.
+- Confirm DIP switch contacts are clean and making solid connections.
+
+**PROM outputs don't match expected values**
+- Verify CE# and OE# are both low (to ground).
+- Confirm address inputs A[5:0] match the intended index (check DIP switch state).
+- Check that the PROM was burned with the correct image (use the automated Arduino test to log all 64 values and compare against the reference palette).
+
+**Latch outputs don't freeze when LE goes low**
+- Ensure LE pin is actually driven to ground (use a meter to confirm 0 V).
+- Verify the chip is powered and the 5 V supply is stable.
+
+**PLD outputs don't follow expected equations**
+- Review the .pld source file and equations to confirm what the outputs should be for the current inputs.
+- Verify all inputs are wired and are at the intended logic level (use a meter or LED on a control line to confirm).
+- If registered, ensure the clock is actually pulsing (use a meter or LED on the clock line to confirm).
+
+---
+
+## 6. Troubleshooting the automated Arduino rig
+
+**No serial output**
+- Verify the Arduino is connected and recognized by the operating system (check /dev/ttyUSB* or dmesg).
+- Confirm the baud rate in the sketch and terminal match (115200).
+- Try reflashing the Arduino with the sketch.
+
+**Outputs always read as zero or always read as all ones (0x3F)**
+- Check that Port B pins (8-13) are actually wired to the IC output pins.
+- Verify the IC is powered and the 5 V supply is present.
+- Use a meter to confirm the output pins are at the expected logic level.
+
+**Results don't match the expected truth table**
+- Double-check the wiring of Port D outputs to the IC input pins (order matters).
+- Verify any fixed control signals (CE#, OE#, LE, etc.) are at the correct logic level.
+- If testing a PROM, confirm the burn image matches the reference palette.
+- If testing a PLD, review the equations in the .pld source file against the applied inputs and expected outputs.
+
