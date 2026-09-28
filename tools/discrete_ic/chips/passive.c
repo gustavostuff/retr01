@@ -32,6 +32,8 @@ static const PassiveSprite k_sprites[NS_PASSIVE_KIND_COUNT] = {
      NS_UI_PASSIVE_OSC4LEGS_SPAN_Y},
     {NS_UI_PASSIVE_D_RGBA, NS_UI_PASSIVE_D_W, NS_UI_PASSIVE_D_H, NS_UI_PASSIVE_D_PIV_X,
      NS_UI_PASSIVE_D_PIV_Y, NS_UI_PASSIVE_D_SPAN_PX, NS_UI_PASSIVE_D_SPAN_Y},
+    {NS_UI_PASSIVE_XTAL_RGBA, NS_UI_PASSIVE_XTAL_W, NS_UI_PASSIVE_XTAL_H, NS_UI_PASSIVE_XTAL_PIV_X,
+     NS_UI_PASSIVE_XTAL_PIV_Y, NS_UI_PASSIVE_XTAL_SPAN_PX, NS_UI_PASSIVE_XTAL_SPAN_Y},
 };
 
 static const NsEntityVTable k_passive_vt = {NULL, NULL, NULL, NULL};
@@ -271,6 +273,8 @@ const char *ns_passive_kind_name(NsPassiveKind kind) {
         return "OSC4LEGS";
     case NS_PASSIVE_D:
         return "D";
+    case NS_PASSIVE_XTAL:
+        return "XTAL";
     default:
         return "?";
     }

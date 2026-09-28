@@ -1798,36 +1798,139 @@ static void pin_net_link_fn(NsEntity *a, const char *an, NsEntity *b, const char
 }
 
 static void pin_net_build(R01aUi *ui) {
+    NsEntity *u04 = ui_ent(ui, "U04");
+    NsEntity *u74 = ui_ent(ui, "U74");
     NsEntity *y2 = ui_ent(ui, "Y2");
     NsEntity *bx = ui_ent(ui, "UPLDX");
     NsEntity *by = ui_ent(ui, "UPLDY");
     NsEntity *u24 = ui_ent(ui, "U24");
     NsEntity *j2 = ui_ent(ui, "J2");
+    NsEntity *r12 = ui_ent(ui, "R12");
+    NsEntity *r13 = ui_ent(ui, "R13");
+    NsEntity *c6 = ui_ent(ui, "C6");
+    NsEntity *c7 = ui_ent(ui, "C7");
+    NsEntity *e1 = ui_ent(ui, "E1");
+    NsEntity *c1 = ui_ent(ui, "C1");
+    NsEntity *c2 = ui_ent(ui, "C2");
+    NsEntity *c3 = ui_ent(ui, "C3");
+    NsEntity *c4 = ui_ent(ui, "C4");
+    NsEntity *c5 = ui_ent(ui, "C5");
     int i;
     char iname[8];
     char aname[4];
 
     g_pin_slot_count = 0;
-    if (!y2 || !bx || !by || !u24 || !j2) {
+    if (!u04 || !u74 || !y2 || !bx || !by || !u24 || !j2) {
         return;
     }
-    pin_net_link(y2, "VDD", y2, "OE#");
-    pin_net_link(y2, "VDD", bx, "VCC");
-    pin_net_link(y2, "VDD", by, "VCC");
-    pin_net_link(y2, "VDD", u24, "VCC");
-    pin_net_link(y2, "VDD", u24, "VPP");
-    pin_net_link(y2, "VDD", bx, "RES#");
-    pin_net_link(y2, "VDD", by, "RES#");
-    pin_net_link(y2, "VDD", u24, "PGM#");
-    pin_net_link(y2, "GND", bx, "GND");
-    pin_net_link(y2, "GND", by, "GND");
-    pin_net_link(y2, "GND", u24, "GND");
-    pin_net_link(y2, "GND", u24, "CE#");
-    pin_net_link(y2, "GND", u24, "OE#");
-    pin_net_link(y2, "GND", j2, "GND");
-    pin_net_link(y2, "GND", j2, "GND2");
-    pin_net_link(y2, "DOT", ui_ent(ui, "R12"), "1");
-    pin_net_link(ui_ent(ui, "R12"), "2", bx, "CLK");
+
+    /* +5V rail distribution */
+    pin_net_link(u04, "VCC", u74, "VCC");
+    pin_net_link(u04, "VCC", bx, "VCC");
+    pin_net_link(u04, "VCC", by, "VCC");
+    pin_net_link(u04, "VCC", u24, "VCC");
+    pin_net_link(u04, "VCC", u24, "VPP");
+    pin_net_link(u04, "VCC", bx, "RES#");
+    pin_net_link(u04, "VCC", by, "RES#");
+    pin_net_link(u04, "VCC", u24, "PGM#");
+    pin_net_link(u74, "VCC", u74, "1PRE#");
+    pin_net_link(u74, "VCC", u74, "1CLR#");
+    pin_net_link(u74, "VCC", u74, "2PRE#");
+    pin_net_link(u74, "VCC", u74, "2CLR#");
+    if (e1) {
+        pin_net_link(u04, "VCC", e1, "+");
+    }
+    if (c1) {
+        pin_net_link(u04, "VCC", c1, "1");
+    }
+    if (c2) {
+        pin_net_link(u04, "VCC", c2, "1");
+    }
+    if (c3) {
+        pin_net_link(u04, "VCC", c3, "1");
+    }
+    if (c4) {
+        pin_net_link(u04, "VCC", c4, "1");
+    }
+    if (c5) {
+        pin_net_link(u04, "VCC", c5, "1");
+    }
+
+    /* GND rail distribution */
+    pin_net_link(u04, "GND", u74, "GND");
+    pin_net_link(u04, "GND", bx, "GND");
+    pin_net_link(u04, "GND", by, "GND");
+    pin_net_link(u04, "GND", u24, "GND");
+    pin_net_link(u04, "GND", u24, "CE#");
+    pin_net_link(u04, "GND", u24, "OE#");
+    pin_net_link(u04, "GND", j2, "GND");
+    pin_net_link(u04, "GND", j2, "GND2");
+    pin_net_link(u04, "GND", u04, "3A");
+    pin_net_link(u04, "GND", u04, "4A");
+    pin_net_link(u04, "GND", u04, "5A");
+    pin_net_link(u04, "GND", u04, "6A");
+    if (e1) {
+        pin_net_link(u04, "GND", e1, "-");
+    }
+    if (c1) {
+        pin_net_link(u04, "GND", c1, "2");
+    }
+    if (c2) {
+        pin_net_link(u04, "GND", c2, "2");
+    }
+    if (c3) {
+        pin_net_link(u04, "GND", c3, "2");
+    }
+    if (c4) {
+        pin_net_link(u04, "GND", c4, "2");
+    }
+    if (c5) {
+        pin_net_link(u04, "GND", c5, "2");
+    }
+    if (c6) {
+        pin_net_link(u04, "GND", c6, "2");
+    }
+    if (c7) {
+        pin_net_link(u04, "GND", c7, "2");
+    }
+    for (i = 6; i <= 13; i++) {
+        snprintf(aname, sizeof(aname), "A%d", i);
+        pin_net_link(u04, "GND", u24, aname);
+    }
+
+    /* Pierce Oscillator Tank: Y2 + R13 (1M) + C6/C7 (20pF) on Gate 1 */
+    pin_net_link(u04, "1A", y2, "1");
+    if (r13) {
+        pin_net_link(u04, "1A", r13, "1");
+    }
+    if (c6) {
+        pin_net_link(u04, "1A", c6, "1");
+    }
+    pin_net_link(u04, "1Y", y2, "2");
+    if (r13) {
+        pin_net_link(u04, "1Y", r13, "2");
+    }
+    if (c7) {
+        pin_net_link(u04, "1Y", c7, "1");
+    }
+    pin_net_link(u04, "1Y", u04, "2A");
+
+    /* Gate 2 output (2Y) 21.47727 MHz master clock into 74HC74 Stage 1 */
+    pin_net_link(u04, "2Y", u74, "1CLK");
+
+    /* 74HC74 Stage 1 divide-by-2 to 10.738636 MHz */
+    pin_net_link(u74, "1/Q", u74, "1D");
+    pin_net_link(u74, "1Q", u74, "2CLK");
+
+    /* 74HC74 Stage 2 divide-by-2 to 5.369318 MHz DOT clock */
+    pin_net_link(u74, "2/Q", u74, "2D");
+    if (r12) {
+        pin_net_link(u74, "2Q", r12, "1");
+        pin_net_link(r12, "2", bx, "CLK");
+    } else {
+        pin_net_link(u74, "2Q", bx, "CLK");
+    }
+
     pin_net_link(bx, "HWRAP", by, "CLK");
     pin_net_link(bx, "CSYNC", j2, "CSYNC");
     for (i = 0; i < 6; i++) {
@@ -1835,11 +1938,7 @@ static void pin_net_build(R01aUi *ui) {
         snprintf(aname, sizeof(aname), "A%d", i);
         pin_net_link(bx, iname, u24, aname);
     }
-    for (i = 6; i <= 13; i++) {
-        snprintf(aname, sizeof(aname), "A%d", i);
-        pin_net_link(y2, "GND", u24, aname);
-    }
-    r01a_netlist_link_dac_rgbs(pin_net_link_fn, y2, u24, j2, ui_ent(ui, "R1"), ui_ent(ui, "R2"),
+    r01a_netlist_link_dac_rgbs(pin_net_link_fn, u04, u24, j2, ui_ent(ui, "R1"), ui_ent(ui, "R2"),
                                ui_ent(ui, "R3"), ui_ent(ui, "R4"), ui_ent(ui, "R5"), ui_ent(ui, "R6"),
                                ui_ent(ui, "R7"), ui_ent(ui, "R8"), ui_ent(ui, "R9"), ui_ent(ui, "R10"),
                                ui_ent(ui, "R11"));
@@ -2014,11 +2113,17 @@ static int pin_on_hub_net(const R01aUi *ui, const NsEntity *e, int pin_index, co
     if (!e || pin_index < 0 || pin_index >= e->pin_count || !rail) {
         return 0;
     }
-    hub = ui_ent(ui, "Y2");
+    hub = ui_ent(ui, "U04");
+    if (!hub) {
+        hub = ui_ent(ui, "UPLDX");
+    }
     if (!hub) {
         return 0;
     }
     rp = ns_entity_pin_named_const(hub, rail);
+    if (!rp && strcmp(rail, "VDD") == 0) {
+        rp = ns_entity_pin_named_const(hub, "VCC");
+    }
     if (!rp) {
         return 0;
     }
@@ -2052,7 +2157,12 @@ static int pin_on_vdd_net(const R01aUi *ui, const NsEntity *e, int pin_index) {
 
 static int pin_name_is_clk(const char *name) {
     return name && (strcmp(name, "DOT") == 0 || strcmp(name, "CLK") == 0 ||
-                    strcmp(name, "CSYNC") == 0 || strcmp(name, "HWRAP") == 0);
+                    strcmp(name, "CSYNC") == 0 || strcmp(name, "HWRAP") == 0 ||
+                    strcmp(name, "1CLK") == 0 || strcmp(name, "2CLK") == 0 ||
+                    strcmp(name, "1Q") == 0 || strcmp(name, "2Q") == 0 ||
+                    strcmp(name, "1/Q") == 0 || strcmp(name, "2/Q") == 0 ||
+                    strcmp(name, "1A") == 0 || strcmp(name, "1Y") == 0 ||
+                    strcmp(name, "2A") == 0 || strcmp(name, "2Y") == 0);
 }
 
 static int pin_on_clk_net(const R01aUi *ui, const NsEntity *e, int pin_index) {

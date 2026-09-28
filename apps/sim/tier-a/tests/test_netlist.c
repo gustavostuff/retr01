@@ -42,7 +42,7 @@ int main(void) {
     R01aBoard board;
     R01aNetIssue iss[R01A_NET_ISSUE_MAX];
     int n;
-    NsEntity *osc;
+    NsEntity *u04_ent;
     NsEntity *bx;
     NsPbHole vdd_h = {4, NS_PB_LANE_A};
     NsPbHole gnd_rail = {0, NS_PB_LANE_TOP_NEG};
@@ -55,8 +55,8 @@ int main(void) {
     n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
     expect_true(n > 0, "unwired Manual reports opens");
 
-    osc = r01a_osc_dot_entity(&board.osc_dot);
-    place_pin_on_hole(osc, 14, &board.breadboard, vdd_h);
+    u04_ent = r01a_sn74hcu04_entity(&board.u04);
+    place_pin_on_hole(u04_ent, 14, &board.breadboard, vdd_h);
     expect_true(r01a_board_jumper_add(&board, vdd_h, gnd_rail), "jumper VDD strip to GND rail");
     n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
     expect_true(has_kind(iss, n, R01A_NET_SHORT_PWR_GND), "5V tied to GND rail is a short");
@@ -101,25 +101,25 @@ int main(void) {
     r01a_board_shutdown(&board);
     r01a_board_init(&board);
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
-    osc = r01a_osc_dot_entity(&board.osc_dot);
+    u04_ent = r01a_sn74hcu04_entity(&board.u04);
     {
         NsPbHole vdd_term = {4, NS_PB_LANE_A};
         NsPbHole pos_right = {40, NS_PB_LANE_TOP_POS};
-        place_pin_on_hole(osc, 14, &board.breadboard, vdd_term);
+        place_pin_on_hole(u04_ent, 14, &board.breadboard, vdd_term);
         expect_true(ns_breadboard_hole_exists(pos_right), "right + rail hole");
         expect_true(r01a_board_jumper_add(&board, vdd_term, pos_right), "VDD to right + rail");
         n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
-        expect_true(!has_text_kind(iss, n, R01A_NET_MISSING, "Y2.VDD"), "right-half + rail feeds Y2.VDD");
+        expect_true(!has_text_kind(iss, n, R01A_NET_MISSING, "U04.VCC"), "right-half + rail feeds U04.VCC");
     }
 
     r01a_board_jumper_clear(&board);
     {
         NsPbHole vdd_term = {4, NS_PB_LANE_A};
         NsPbHole pos_south = {2, NS_PB_LANE_BOT_POS};
-        place_pin_on_hole(osc, 14, &board.breadboard, vdd_term);
+        place_pin_on_hole(u04_ent, 14, &board.breadboard, vdd_term);
         expect_true(r01a_board_jumper_add(&board, vdd_term, pos_south), "VDD to south + rail");
         n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
-        expect_true(!has_text_kind(iss, n, R01A_NET_MISSING, "Y2.VDD"), "south + rail feeds Y2.VDD");
+        expect_true(!has_text_kind(iss, n, R01A_NET_MISSING, "U04.VCC"), "south + rail feeds U04.VCC");
     }
 
     r01a_board_shutdown(&board);

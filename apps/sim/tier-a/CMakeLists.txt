@@ -18,7 +18,8 @@ set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
 set(SIM_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/../common")
 
 add_library(retr01_sim_tier_a_core
-  ${SIM_COMMON}/chips/osc_dot.c
+  ${SIM_COMMON}/chips/sn74hcu04.c
+  ${SIM_COMMON}/chips/sn74hc74.c
   ${SIM_COMMON}/chips/rgbs_hdr.c
   chips/atf22v10.c
   ${SIM_COMMON}/chips/at27c256r.c
@@ -77,12 +78,12 @@ function(r01a_unit_test name src)
   add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
-r01a_unit_test(test_osc_dot ${SIM_COMMON}/tests/test_osc_dot.c)
+r01a_unit_test(test_clock_stage tests/test_clock_stage.c)
 r01a_unit_test(test_beam_x tests/test_beam_x.c)
 r01a_unit_test(test_beam_y ${SIM_COMMON}/tests/test_beam_y.c)
 r01a_unit_test(test_at27c256r ${SIM_COMMON}/tests/test_at27c256r.c)
 r01a_unit_test(test_tier_a_bars tests/test_tier_a_bars.c)
-r01a_unit_test(test_manual_bb ${SIM_COMMON}/tests/test_manual_bb.c)
+r01a_unit_test(test_manual_bb tests/test_manual_bb.c)
 r01a_unit_test(test_layout tests/test_layout.c)
 r01a_unit_test(test_passives tests/test_passives.c)
 r01a_unit_test(test_netlist tests/test_netlist.c)

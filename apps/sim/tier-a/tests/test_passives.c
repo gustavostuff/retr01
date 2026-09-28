@@ -20,7 +20,7 @@ int main(void) {
     NsLevel prev;
 
     r01a_board_init(&board);
-    expect_true(board.passives.count == 18, "passive BOM size");
+    expect_true(board.passives.count == 22, "passive BOM size");
     r = NULL;
     for (i = 0; i < board.passives.count; i++) {
         if (board.passives.parts[i].kind == NS_PASSIVE_R &&
@@ -49,28 +49,28 @@ int main(void) {
         ns_passive_set_pivot(r, hx - tx, hy - ty);
     }
     expect_true(ns_passive_tip_board(r, 2, &t2x, &t2y), "R pin2");
-    ns_entity_place(r01a_osc_dot_entity(&board.osc_dot), 0, 0);
-    expect_true(ns_entity_pin_tip_board(r01a_osc_dot_entity(&board.osc_dot), 14, &osc_tx, &osc_ty),
-                "OSC VDD tip");
-    ns_entity_place(r01a_osc_dot_entity(&board.osc_dot), t2x - osc_tx, t2y - osc_ty);
+    ns_entity_place(r01a_sn74hcu04_entity(&board.u04), 0, 0);
+    expect_true(ns_entity_pin_tip_board(r01a_sn74hcu04_entity(&board.u04), 14, &osc_tx, &osc_ty),
+                "U04 VCC tip");
+    ns_entity_place(r01a_sn74hcu04_entity(&board.u04), t2x - osc_tx, t2y - osc_ty);
 
-    prev = ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "DOT");
+    prev = ns_entity_sense(r01a_sn74hcu04_entity(&board.u04), "1Y");
     toggles = 0;
     for (i = 0; i < 16; i++) {
         r01a_board_step(&board);
-        if (ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "DOT") != prev) {
+        if (ns_entity_sense(r01a_sn74hcu04_entity(&board.u04), "1Y") != prev) {
             toggles++;
-            prev = ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "DOT");
+            prev = ns_entity_sense(r01a_sn74hcu04_entity(&board.u04), "1Y");
         }
     }
-    expect_true(ns_entity_sense(r01a_osc_dot_entity(&board.osc_dot), "VDD") == NS_LVL_H,
-                "resistor carries VDD");
-    expect_true(toggles >= 8, "33 ohm resistor conducts VDD in Manual");
+    expect_true(ns_entity_sense(r01a_sn74hcu04_entity(&board.u04), "VCC") == NS_LVL_H,
+                "resistor carries VCC");
+    expect_true(toggles >= 8, "33 ohm resistor conducts VCC in Manual");
 
     /* Caps occupy holes but do not pass DC. */
     {
         NsPassive *c = NULL;
-        NsEntity *osc = r01a_osc_dot_entity(&board.osc_dot);
+        NsEntity *u04_ent = r01a_sn74hcu04_entity(&board.u04);
         int ctx;
         int cty;
         int ovx;
@@ -93,16 +93,16 @@ int main(void) {
             ns_passive_set_pivot(c, hx - ctx, hy - cty);
         }
         expect_true(ns_passive_tip_board(c, 2, &t2x, &t2y), "C pin2");
-        ns_entity_place(osc, 0, 0);
-        expect_true(ns_entity_pin_tip_board(osc, 14, &ovx, &ovy), "OSC VDD tip 2");
-        ns_entity_place(osc, t2x - ovx, t2y - ovy);
+        ns_entity_place(u04_ent, 0, 0);
+        expect_true(ns_entity_pin_tip_board(u04_ent, 14, &ovx, &ovy), "U04 VCC tip 2");
+        ns_entity_place(u04_ent, t2x - ovx, t2y - ovy);
         r01a_board_step(&board);
-        expect_true(ns_entity_sense(osc, "VDD") != NS_LVL_H, "cap does not pass DC");
+        expect_true(ns_entity_sense(u04_ent, "VCC") != NS_LVL_H, "cap does not pass DC");
     }
 
     {
         NsBreadboard *bb2;
-        NsEntity *osc = r01a_osc_dot_entity(&board.osc_dot);
+        NsEntity *u04_ent = r01a_sn74hcu04_entity(&board.u04);
         NsPbHole rail = {2, NS_PB_LANE_TOP_POS};
         NsPbHole dest = {10, NS_PB_LANE_A};
         NsPbHole vddh = {10, NS_PB_LANE_E};
@@ -115,17 +115,17 @@ int main(void) {
         expect_true(r01a_board_jumper_add_across(&board, &board.breadboard, rail, bb2, dest, 200, 40, 40),
                     "inter-bb jumper");
         ns_breadboard_hole_world(bb2, vddh, &hx, &hy);
-        ns_entity_place(osc, 0, 0);
-        expect_true(ns_entity_pin_tip_board(osc, 14, &tx, &ty), "OSC VDD tip 3");
-        ns_entity_place(osc, hx - tx, hy - ty);
+        ns_entity_place(u04_ent, 0, 0);
+        expect_true(ns_entity_pin_tip_board(u04_ent, 14, &tx, &ty), "U04 VCC tip 3");
+        ns_entity_place(u04_ent, hx - tx, hy - ty);
         r01a_board_step(&board);
-        expect_true(ns_entity_sense(osc, "VDD") == NS_LVL_H, "inter-bb jumper carries VDD");
+        expect_true(ns_entity_sense(u04_ent, "VCC") == NS_LVL_H, "inter-bb jumper carries VCC");
     }
 
     {
         R01aBoard gndb;
         NsBreadboard *bb2;
-        NsEntity *osc;
+        NsEntity *u04_ent;
         NsEntity *prom;
         NsPbHole rail = {2, NS_PB_LANE_TOP_NEG};
         NsPbHole dest = {10, NS_PB_LANE_A};
@@ -137,32 +137,32 @@ int main(void) {
         int ty;
         r01a_board_init(&gndb);
         r01a_board_set_wire_mode(&gndb, R01A_WIRE_MANUAL);
-        osc = r01a_osc_dot_entity(&gndb.osc_dot);
+        u04_ent = r01a_sn74hcu04_entity(&gndb.u04);
         prom = r01a_at27c256r_entity(&gndb.prom);
         bb2 = r01a_board_add_breadboard(&gndb, 400, 40);
         expect_true(bb2 != NULL, "BB2 gnd");
         expect_true(r01a_board_jumper_add_across(&gndb, &gndb.breadboard, rail, bb2, dest, 40, 40, 40),
                     "inter-bb gnd jumper");
         ns_breadboard_hole_world(bb2, gndh, &hx, &hy);
-        ns_entity_place(osc, 0, 0);
-        expect_true(ns_entity_pin_tip_board(osc, 7, &tx, &ty), "OSC GND tip");
-        ns_entity_place(osc, hx - tx, hy - ty);
+        ns_entity_place(u04_ent, 0, 0);
+        expect_true(ns_entity_pin_tip_board(u04_ent, 7, &tx, &ty), "U04 GND tip");
+        ns_entity_place(u04_ent, hx - tx, hy - ty);
         ns_breadboard_hole_world(bb2, gndh2, &hx, &hy);
         ns_entity_place(prom, 0, 0);
         expect_true(ns_entity_pin_tip_board(prom, 14, &tx, &ty), "PROM GND tip");
         ns_entity_place(prom, hx - tx, hy - ty);
         expect_true(r01a_board_jumper_add_on(&gndb, bb2, gndh, gndh2, 40, 40, 40), "tie GND strips");
         r01a_board_step(&gndb);
-        expect_true(ns_entity_sense(osc, "GND") == NS_LVL_L, "inter-bb jumper carries GND");
+        expect_true(ns_entity_sense(u04_ent, "GND") == NS_LVL_L, "inter-bb jumper carries GND");
         expect_true(ns_entity_sense(prom, "GND") == NS_LVL_L, "second GND pin on bridged net");
-        expect_true(ns_entity_sense(osc, "GND") != NS_LVL_X, "tied GND pins are not a bus fight");
+        expect_true(ns_entity_sense(u04_ent, "GND") != NS_LVL_X, "tied GND pins are not a bus fight");
         r01a_board_shutdown(&gndb);
     }
 
     {
         R01aBoard loadb;
         NsPassive *r75 = NULL;
-        NsEntity *osc;
+        NsEntity *u04_ent;
         NsPbHole gnd = {0, NS_PB_LANE_TOP_NEG};
         NsPbHole loadh = {10, NS_PB_LANE_A};
         int hx;
@@ -171,7 +171,7 @@ int main(void) {
         int ty;
         r01a_board_init(&loadb);
         r01a_board_set_wire_mode(&loadb, R01A_WIRE_MANUAL);
-        osc = r01a_osc_dot_entity(&loadb.osc_dot);
+        u04_ent = r01a_sn74hcu04_entity(&loadb.u04);
         for (i = 0; i < loadb.passives.count; i++) {
             if (loadb.passives.parts[i].kind == NS_PASSIVE_R &&
                 strcmp(loadb.passives.parts[i].value, "75.0") == 0) {
@@ -186,12 +186,12 @@ int main(void) {
         expect_true(ns_passive_tip_board(r75, 2, &tx, &ty), "75 pin2");
         ns_breadboard_hole_world(&loadb.breadboard, loadh, &hx, &hy);
         ns_passive_set_pivot(r75, hx - tx, hy - ty);
-        ns_entity_place(osc, 0, 0);
-        expect_true(ns_entity_pin_tip_board(osc, 7, &tx, &ty), "OSC GND for load");
+        ns_entity_place(u04_ent, 0, 0);
+        expect_true(ns_entity_pin_tip_board(u04_ent, 7, &tx, &ty), "U04 GND for load");
         ns_breadboard_hole_world(&loadb.breadboard, gnd, &hx, &hy);
-        ns_entity_place(osc, hx - tx, hy - ty);
+        ns_entity_place(u04_ent, hx - tx, hy - ty);
         r01a_board_step(&loadb);
-        expect_true(ns_entity_sense(osc, "GND") == NS_LVL_L, "75 ohm to GND does not bus-fight GND");
+        expect_true(ns_entity_sense(u04_ent, "GND") == NS_LVL_L, "75 ohm to GND does not bus-fight GND");
         r01a_board_shutdown(&loadb);
     }
 

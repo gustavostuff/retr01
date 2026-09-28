@@ -17,15 +17,15 @@ int main(void) {
     int pan_y = 0;
     int zoom = 1;
     int air_always = 0;
-    NsEntity *osc;
+    NsEntity *u04_ent;
     NsPbHole a = {4, NS_PB_LANE_A};
     NsPbHole b = {12, NS_PB_LANE_A};
 
     r01a_board_init(&board);
-    expect_true(board.passives.count == 18, "Tier A passive count");
-    osc = r01a_osc_dot_entity(&board.osc_dot);
-    ns_entity_place(osc, 120, 80);
-    ns_entity_set_orient(osc, NS_ORIENT_0);
+    expect_true(board.passives.count == 22, "Tier A passive count");
+    u04_ent = r01a_sn74hcu04_entity(&board.u04);
+    ns_entity_place(u04_ent, 120, 80);
+    ns_entity_set_orient(u04_ent, NS_ORIENT_0);
     ns_passive_set_pivot(&board.passives.parts[0], 200, 90);
     {
         int ri;
@@ -59,8 +59,8 @@ int main(void) {
     expect_true(zoom == 3, "zoom restored");
     expect_true(air_always == 1, "air always restored");
     expect_true(r01a_board_wire_mode(&loaded) == R01A_WIRE_MANUAL, "wire mode restored");
-    expect_true(r01a_osc_dot_entity(&loaded.osc_dot)->board_x == 120, "OSC x restored");
-    expect_true(r01a_osc_dot_entity(&loaded.osc_dot)->board_y == 80, "OSC y restored");
+    expect_true(r01a_sn74hcu04_entity(&loaded.u04)->board_x == 120, "U04 x restored");
+    expect_true(r01a_sn74hcu04_entity(&loaded.u04)->board_y == 80, "U04 y restored");
     expect_true(loaded.passives.parts[0].pivot_x == 200, "passive pivot x");
     expect_true(loaded.passives.parts[0].pivot_y == 90, "passive pivot y");
     {
@@ -87,7 +87,7 @@ int main(void) {
     expect_true(loaded.extra_bb_count == 1, "extra bb count");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2") != NULL, "BB2 restored");
     expect_true(r01a_board_entity_by_refdes(&loaded, "BB2")->board_x == 40, "BB2 x");
-    expect_true(loaded.passives.count == 19, "extra passive count");
+    expect_true(loaded.passives.count == 23, "extra passive count");
     expect_true(loaded.jumpers[0].r == 220 && loaded.jumpers[0].g == 160 && loaded.jumpers[0].bcol == 40,
                 "jumper color restored");
     {
@@ -136,17 +136,18 @@ int main(void) {
         expect_true(r01a_layout_load(legacy_path, &legacy, NULL, NULL, NULL, NULL) == 0, "legacy layout load");
         expect_true(r01a_board_entity_by_refdes(&legacy, "Y3") == NULL, "legacy Y3 dropped");
         expect_true(r01a_board_entity_by_refdes(&legacy, "UENC") == NULL, "legacy UENC dropped");
-        expect_true(r01a_osc_dot_entity(&legacy.osc_dot)->board_x == 10, "Y2 position kept");
+        expect_true(r01a_board_entity_by_refdes(&legacy, "Y2") != NULL, "Y2 crystal exists");
         {
             const NsIsland *island = ns_island_group_at(r01a_board_group(&legacy), 0);
             int i;
-            int osc_n = 0;
+            int y2_n = 0;
             for (i = 0; island && i < island->entity_count; i++) {
-                if (island->entities[i] && island->entities[i]->visual == NS_ENTITY_VIS_OSC) {
-                    osc_n++;
+                if (island->entities[i] && island->entities[i]->refdes &&
+                    strcmp(island->entities[i]->refdes, "Y2") == 0) {
+                    y2_n++;
                 }
             }
-            expect_true(osc_n == 1, "single DOT oscillator after legacy layout");
+            expect_true(y2_n == 1, "single Y2 crystal after legacy layout");
         }
         r01a_board_shutdown(&legacy);
     }

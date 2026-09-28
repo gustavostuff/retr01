@@ -3,8 +3,9 @@
 
 #include "at27c256r.h"
 #include "atf22v10.h"
-#include "osc_dot.h"
 #include "rgbs_hdr.h"
+#include "sn74hc74.h"
+#include "sn74hcu04.h"
 
 #include "discrete_ic/breadboard.h"
 #include "discrete_ic/island_builder.h"
@@ -38,7 +39,8 @@ typedef struct R01aJumper {
 } R01aJumper;
 
 typedef struct R01aBoard {
-    R01aOscDot osc_dot;
+    R01aSn74hcu04 u04;
+    R01aSn74hc74 u74;
     R01aAtf22v10 beam_x;
     R01aAtf22v10 beam_y;
     R01aAt27c256r prom;

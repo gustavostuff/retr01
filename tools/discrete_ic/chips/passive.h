@@ -19,6 +19,7 @@ typedef enum NsPassiveKind {
     NS_PASSIVE_OSC,
     NS_PASSIVE_OSC4LEGS,
     NS_PASSIVE_D,
+    NS_PASSIVE_XTAL,
     NS_PASSIVE_KIND_COUNT
 } NsPassiveKind;
 

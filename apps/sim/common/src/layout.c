@@ -147,6 +147,9 @@ static NsPassiveKind kind_parse(const char *s) {
     if (strcmp(s, "D") == 0) {
         return NS_PASSIVE_D;
     }
+    if (strcmp(s, "XTAL") == 0) {
+        return NS_PASSIVE_XTAL;
+    }
     return (NsPassiveKind)-1;
 }
 

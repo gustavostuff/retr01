@@ -484,7 +484,8 @@ static void board_float_external(R01aBoard *b) {
 }
 
 static void board_eval_chips(R01aBoard *b) {
-    ns_entity_eval(r01a_osc_dot_entity(&b->osc_dot));
+    ns_entity_eval(r01a_sn74hcu04_entity(&b->u04));
+    ns_entity_eval(r01a_sn74hc74_entity(&b->u74));
     ns_entity_eval(r01a_atf22v10_entity(&b->beam_x));
     ns_entity_eval(r01a_atf22v10_entity(&b->beam_y));
     ns_entity_eval(r01a_at27c256r_entity(&b->prom));
@@ -493,13 +494,26 @@ static void board_eval_chips(R01aBoard *b) {
 static void board_bind_rails(R01aBoard *b) {
     NsLevel vdd = NS_LVL_H;
 
-    drive_vdd(r01a_osc_dot_entity(&b->osc_dot), "VDD", vdd);
-    drive_vdd(r01a_osc_dot_entity(&b->osc_dot), "OE#", NS_LVL_H);
+    drive_vdd(r01a_sn74hcu04_entity(&b->u04), "VCC", vdd);
+    drive_vdd(r01a_sn74hcu04_entity(&b->u04), "GND", NS_LVL_L);
+    drive_vdd(r01a_sn74hcu04_entity(&b->u04), "3A", NS_LVL_L);
+    drive_vdd(r01a_sn74hcu04_entity(&b->u04), "4A", NS_LVL_L);
+    drive_vdd(r01a_sn74hcu04_entity(&b->u04), "5A", NS_LVL_L);
+    drive_vdd(r01a_sn74hcu04_entity(&b->u04), "6A", NS_LVL_L);
+    drive_vdd(r01a_sn74hc74_entity(&b->u74), "VCC", vdd);
+    drive_vdd(r01a_sn74hc74_entity(&b->u74), "GND", NS_LVL_L);
+    drive_vdd(r01a_sn74hc74_entity(&b->u74), "1PRE#", NS_LVL_H);
+    drive_vdd(r01a_sn74hc74_entity(&b->u74), "1CLR#", NS_LVL_H);
+    drive_vdd(r01a_sn74hc74_entity(&b->u74), "2PRE#", NS_LVL_H);
+    drive_vdd(r01a_sn74hc74_entity(&b->u74), "2CLR#", NS_LVL_H);
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "VCC", vdd);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "GND", NS_LVL_L);
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "RES#", NS_LVL_H);
     drive_vdd(r01a_atf22v10_entity(&b->beam_y), "VCC", vdd);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "GND", NS_LVL_L);
     drive_vdd(r01a_atf22v10_entity(&b->beam_y), "RES#", NS_LVL_H);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VCC", vdd);
+    drive_vdd(r01a_at27c256r_entity(&b->prom), "GND", NS_LVL_L);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VPP", vdd);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "PGM#", NS_LVL_H);
 }
@@ -546,7 +560,7 @@ static void board_plot(R01aBoard *b) {
     if (!ns_rgbs_beam_to_logical(ns_video_sink_scale_2x(&b->sink), x, y, NULL, NULL)) {
         return;
     }
-    if (ns_entity_sense(r01a_osc_dot_entity(&b->osc_dot), "DOT") != NS_LVL_H) {
+    if (ns_entity_sense(r01a_sn74hc74_entity(&b->u74), "2Q") != NS_LVL_H) {
         return;
     }
     idx = r01a_atf22v10_index(&b->beam_x);
@@ -578,7 +592,9 @@ void r01a_board_step(R01aBoard *board) {
     if (board->wire_mode == R01A_WIRE_MANUAL) {
         board_float_external(board);
         board_bb_route(board);
-        ns_entity_tick(r01a_osc_dot_entity(&board->osc_dot));
+        ns_entity_tick(r01a_sn74hcu04_entity(&board->u04));
+        board_bb_route(board);
+        ns_entity_tick(r01a_sn74hc74_entity(&board->u74));
         board_bb_route(board);
         ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
         board_bb_route(board);
@@ -588,8 +604,25 @@ void r01a_board_step(R01aBoard *board) {
         return;
     }
     board_bind_rails(board);
-    ns_entity_tick(r01a_osc_dot_entity(&board->osc_dot));
-    drive_copy(r01a_atf22v10_entity(&board->beam_x), "CLK", r01a_osc_dot_entity(&board->osc_dot), "DOT");
+    {
+        NsLevel prev_dot = ns_entity_sense(r01a_sn74hc74_entity(&board->u74), "2Q");
+        int tries = 0;
+        while (tries < 8) {
+            ns_entity_tick(r01a_sn74hcu04_entity(&board->u04));
+            drive_copy(r01a_sn74hcu04_entity(&board->u04), "2A", r01a_sn74hcu04_entity(&board->u04), "1Y");
+            ns_entity_eval(r01a_sn74hcu04_entity(&board->u04));
+            drive_copy(r01a_sn74hc74_entity(&board->u74), "1CLK", r01a_sn74hcu04_entity(&board->u04), "2Y");
+            drive_copy(r01a_sn74hc74_entity(&board->u74), "1D", r01a_sn74hc74_entity(&board->u74), "1/Q");
+            drive_copy(r01a_sn74hc74_entity(&board->u74), "2CLK", r01a_sn74hc74_entity(&board->u74), "1Q");
+            drive_copy(r01a_sn74hc74_entity(&board->u74), "2D", r01a_sn74hc74_entity(&board->u74), "2/Q");
+            ns_entity_tick(r01a_sn74hc74_entity(&board->u74));
+            tries++;
+            if (ns_entity_sense(r01a_sn74hc74_entity(&board->u74), "2Q") != prev_dot) {
+                break;
+            }
+        }
+    }
+    drive_copy(r01a_atf22v10_entity(&board->beam_x), "CLK", r01a_sn74hc74_entity(&board->u74), "2Q");
     ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
     drive_copy(r01a_atf22v10_entity(&board->beam_y), "CLK", r01a_atf22v10_entity(&board->beam_x), "HWRAP");
     ns_entity_tick(r01a_atf22v10_entity(&board->beam_y));
@@ -610,7 +643,8 @@ static void spawn_tier_a_passives(R01aBoard *b);
 static void island_video_init(NsIsland *island) {
     R01aBoard *b = (R01aBoard *)island->impl;
     int i;
-    r01a_osc_dot_init(&b->osc_dot, "Y2");
+    r01a_sn74hcu04_init(&b->u04, "U04");
+    r01a_sn74hc74_init(&b->u74, "U74");
     r01a_atf22v10_init(&b->beam_x, "UPLDX", R01A_PLD_BEAM_X);
     r01a_atf22v10_init(&b->beam_y, "UPLDY", R01A_PLD_BEAM_Y);
     r01a_at27c256r_init(&b->prom, "U24");
@@ -619,7 +653,8 @@ static void island_video_init(NsIsland *island) {
     ns_video_sink_init(&b->sink, "SCR1");
     ns_video_sink_set_palette(&b->sink, kit_palette);
     ns_island_add_entity(island, ns_breadboard_entity(&b->breadboard));
-    ns_island_add_entity(island, r01a_osc_dot_entity(&b->osc_dot));
+    ns_island_add_entity(island, r01a_sn74hcu04_entity(&b->u04));
+    ns_island_add_entity(island, r01a_sn74hc74_entity(&b->u74));
     ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_x));
     ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_y));
     ns_island_add_entity(island, r01a_at27c256r_entity(&b->prom));
@@ -635,7 +670,8 @@ static const NsIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NU
 
 static void group_reset(NsIslandGroup *group) {
     R01aBoard *b = (R01aBoard *)group->impl;
-    ns_entity_reset(r01a_osc_dot_entity(&b->osc_dot));
+    ns_entity_reset(r01a_sn74hcu04_entity(&b->u04));
+    ns_entity_reset(r01a_sn74hc74_entity(&b->u74));
     ns_entity_reset(r01a_atf22v10_entity(&b->beam_x));
     ns_entity_reset(r01a_atf22v10_entity(&b->beam_y));
     ns_entity_reset(r01a_at27c256r_entity(&b->prom));
@@ -678,10 +714,13 @@ static void spawn_tier_a_passives(R01aBoard *b) {
     int c_seq = 1;
     int e_seq = 1;
     int r_seq = 1;
+    int y_seq = 2;
     ns_passive_bank_clear(&b->passives);
+    add_passives(&b->passives, NS_PASSIVE_XTAL, "Y", &y_seq, "21.47727MHz", 1);
     add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 5);
+    add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "20pF", 2);
     add_passives(&b->passives, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);
-    /* DAC R then G then B, then 75 ohm loads, then DOT series. */
+    /* DAC R then G then B, then 75 ohm loads, then DOT series 33 ohm, then 1M feedback. */
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "4.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
@@ -692,6 +731,7 @@ static void spawn_tier_a_passives(R01aBoard *b) {
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "75.0", 3);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "33", 1);
+    add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "1.00M", 1);
 }
 
 static int place_along(NsEntity *e, int *x, int y, int gap) {
@@ -719,7 +759,11 @@ static void board_place_free(R01aBoard *board) {
 
     x = origin_x;
     y = origin_y;
-    bottom = place_along(r01a_osc_dot_entity(&board->osc_dot), &x, y, gap);
+    bottom = place_along(r01a_sn74hcu04_entity(&board->u04), &x, y, gap);
+    if (bottom - y > row0_h) {
+        row0_h = bottom - y;
+    }
+    bottom = place_along(r01a_sn74hc74_entity(&board->u74), &x, y, gap);
     if (bottom - y > row0_h) {
         row0_h = bottom - y;
     }
@@ -755,7 +799,8 @@ void r01a_board_init(R01aBoard *board) {
         return;
     }
     ns_island_builder_mount(b, ns_breadboard_entity(&board->breadboard), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_osc_dot_entity(&board->osc_dot), R01A_ISLAND_VIDEO, 0, 0);
+    ns_island_builder_mount(b, r01a_sn74hcu04_entity(&board->u04), R01A_ISLAND_VIDEO, 0, 0);
+    ns_island_builder_mount(b, r01a_sn74hc74_entity(&board->u74), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_x), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_y), R01A_ISLAND_VIDEO, 0, 0);
     ns_island_builder_mount(b, r01a_at27c256r_entity(&board->prom), R01A_ISLAND_VIDEO, 0, 0);
@@ -969,6 +1014,7 @@ static const char *passive_ref_prefix(NsPassiveKind kind) {
         return "E";
     case NS_PASSIVE_OSC:
     case NS_PASSIVE_OSC4LEGS:
+    case NS_PASSIVE_XTAL:
         return "Y";
     case NS_PASSIVE_D:
         return "D";

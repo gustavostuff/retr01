@@ -94,35 +94,138 @@ static NsEntity *ent(R01aBoard *b, const char *ref) {
 }
 
 static void build_auto(R01aBoard *b) {
+    NsEntity *u04 = ent(b, "U04");
+    NsEntity *u74 = ent(b, "U74");
     NsEntity *y2 = ent(b, "Y2");
     NsEntity *bx = ent(b, "UPLDX");
     NsEntity *by = ent(b, "UPLDY");
     NsEntity *u24 = ent(b, "U24");
     NsEntity *j2 = ent(b, "J2");
+    NsEntity *r12 = ent(b, "R12");
+    NsEntity *r13 = ent(b, "R13");
+    NsEntity *c6 = ent(b, "C6");
+    NsEntity *c7 = ent(b, "C7");
+    NsEntity *e1 = ent(b, "E1");
+    NsEntity *c1 = ent(b, "C1");
+    NsEntity *c2 = ent(b, "C2");
+    NsEntity *c3 = ent(b, "C3");
+    NsEntity *c4 = ent(b, "C4");
+    NsEntity *c5 = ent(b, "C5");
     int i;
     char iname[8];
     char aname[4];
     g_nslot = 0;
-    if (!y2 || !bx || !by || !u24 || !j2) {
+    if (!u04 || !u74 || !y2 || !bx || !by || !u24 || !j2) {
         return;
     }
-    link_n(y2, "VDD", y2, "OE#");
-    link_n(y2, "VDD", bx, "VCC");
-    link_n(y2, "VDD", by, "VCC");
-    link_n(y2, "VDD", u24, "VCC");
-    link_n(y2, "VDD", u24, "VPP");
-    link_n(y2, "VDD", bx, "RES#");
-    link_n(y2, "VDD", by, "RES#");
-    link_n(y2, "VDD", u24, "PGM#");
-    link_n(y2, "GND", bx, "GND");
-    link_n(y2, "GND", by, "GND");
-    link_n(y2, "GND", u24, "GND");
-    link_n(y2, "GND", u24, "CE#");
-    link_n(y2, "GND", u24, "OE#");
-    link_n(y2, "GND", j2, "GND");
-    link_n(y2, "GND", j2, "GND2");
-    link_n(y2, "DOT", ent(b, "R12"), "1");
-    link_n(ent(b, "R12"), "2", bx, "CLK");
+
+    /* +5V rail distribution */
+    link_n(u04, "VCC", u74, "VCC");
+    link_n(u04, "VCC", bx, "VCC");
+    link_n(u04, "VCC", by, "VCC");
+    link_n(u04, "VCC", u24, "VCC");
+    link_n(u04, "VCC", u24, "VPP");
+    link_n(u04, "VCC", bx, "RES#");
+    link_n(u04, "VCC", by, "RES#");
+    link_n(u04, "VCC", u24, "PGM#");
+    link_n(u74, "VCC", u74, "1PRE#");
+    link_n(u74, "VCC", u74, "1CLR#");
+    link_n(u74, "VCC", u74, "2PRE#");
+    link_n(u74, "VCC", u74, "2CLR#");
+    if (e1) {
+        link_n(u04, "VCC", e1, "+");
+    }
+    if (c1) {
+        link_n(u04, "VCC", c1, "1");
+    }
+    if (c2) {
+        link_n(u04, "VCC", c2, "1");
+    }
+    if (c3) {
+        link_n(u04, "VCC", c3, "1");
+    }
+    if (c4) {
+        link_n(u04, "VCC", c4, "1");
+    }
+    if (c5) {
+        link_n(u04, "VCC", c5, "1");
+    }
+
+    /* GND rail distribution */
+    link_n(u04, "GND", u74, "GND");
+    link_n(u04, "GND", bx, "GND");
+    link_n(u04, "GND", by, "GND");
+    link_n(u04, "GND", u24, "GND");
+    link_n(u04, "GND", u24, "CE#");
+    link_n(u04, "GND", u24, "OE#");
+    link_n(u04, "GND", j2, "GND");
+    link_n(u04, "GND", j2, "GND2");
+    link_n(u04, "GND", u04, "3A");
+    link_n(u04, "GND", u04, "4A");
+    link_n(u04, "GND", u04, "5A");
+    link_n(u04, "GND", u04, "6A");
+    if (e1) {
+        link_n(u04, "GND", e1, "-");
+    }
+    if (c1) {
+        link_n(u04, "GND", c1, "2");
+    }
+    if (c2) {
+        link_n(u04, "GND", c2, "2");
+    }
+    if (c3) {
+        link_n(u04, "GND", c3, "2");
+    }
+    if (c4) {
+        link_n(u04, "GND", c4, "2");
+    }
+    if (c5) {
+        link_n(u04, "GND", c5, "2");
+    }
+    if (c6) {
+        link_n(u04, "GND", c6, "2");
+    }
+    if (c7) {
+        link_n(u04, "GND", c7, "2");
+    }
+    for (i = 6; i <= 13; i++) {
+        snprintf(aname, sizeof(aname), "A%d", i);
+        link_n(u04, "GND", u24, aname);
+    }
+
+    /* Pierce Oscillator Tank: Y2 + R13 (1M) + C6/C7 (20pF) on Gate 1 */
+    link_n(u04, "1A", y2, "1");
+    if (r13) {
+        link_n(u04, "1A", r13, "1");
+    }
+    if (c6) {
+        link_n(u04, "1A", c6, "1");
+    }
+    link_n(u04, "1Y", y2, "2");
+    if (r13) {
+        link_n(u04, "1Y", r13, "2");
+    }
+    if (c7) {
+        link_n(u04, "1Y", c7, "1");
+    }
+    link_n(u04, "1Y", u04, "2A");
+
+    /* Gate 2 output (2Y) 21.47727 MHz master clock into 74HC74 Stage 1 */
+    link_n(u04, "2Y", u74, "1CLK");
+
+    /* 74HC74 Stage 1 divide-by-2 to 10.738636 MHz */
+    link_n(u74, "1/Q", u74, "1D");
+    link_n(u74, "1Q", u74, "2CLK");
+
+    /* 74HC74 Stage 2 divide-by-2 to 5.369318 MHz DOT clock */
+    link_n(u74, "2/Q", u74, "2D");
+    if (r12) {
+        link_n(u74, "2Q", r12, "1");
+        link_n(r12, "2", bx, "CLK");
+    } else {
+        link_n(u74, "2Q", bx, "CLK");
+    }
+
     link_n(bx, "HWRAP", by, "CLK");
     link_n(bx, "CSYNC", j2, "CSYNC");
     for (i = 0; i < 6; i++) {
@@ -130,11 +233,7 @@ static void build_auto(R01aBoard *b) {
         snprintf(aname, sizeof(aname), "A%d", i);
         link_n(bx, iname, u24, aname);
     }
-    for (i = 6; i <= 13; i++) {
-        snprintf(aname, sizeof(aname), "A%d", i);
-        link_n(y2, "GND", u24, aname);
-    }
-    r01a_netlist_link_dac_rgbs((R01aNetLinkFn)link_n, y2, u24, j2, ent(b, "R1"), ent(b, "R2"),
+    r01a_netlist_link_dac_rgbs((R01aNetLinkFn)link_n, u04, u24, j2, ent(b, "R1"), ent(b, "R2"),
                                  ent(b, "R3"), ent(b, "R4"), ent(b, "R5"), ent(b, "R6"),
                                  ent(b, "R7"), ent(b, "R8"), ent(b, "R9"), ent(b, "R10"),
                                  ent(b, "R11"));
@@ -151,7 +250,10 @@ static int name_vdd(const char *n) {
 
 static int name_clk(const char *n) {
     return n && (strcmp(n, "DOT") == 0 || strcmp(n, "CLK") == 0 || strcmp(n, "CSYNC") == 0 ||
-                 strcmp(n, "HWRAP") == 0);
+                 strcmp(n, "HWRAP") == 0 || strcmp(n, "1CLK") == 0 || strcmp(n, "2CLK") == 0 ||
+                 strcmp(n, "1Q") == 0 || strcmp(n, "2Q") == 0 || strcmp(n, "1/Q") == 0 ||
+                 strcmp(n, "2/Q") == 0 || strcmp(n, "1A") == 0 || strcmp(n, "1Y") == 0 ||
+                 strcmp(n, "2A") == 0 || strcmp(n, "2Y") == 0);
 }
 
 static int auto_kind(int slot) {
