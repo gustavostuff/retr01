@@ -18,12 +18,12 @@ SoT values come from [`docs/general/hardware.md`](general/hardware.md) (Video ou
 
 The Sim tray shows **many identical CCAP / R sprites**. That is one part per locked net, not one part per function.
 
-**Ceramic capacitors (27 = 21 + 6)**
+**Ceramic capacitors (29 = 23 + 6)**
 
 | Qty | What | Why |
 |----:|------|-----|
-| 21 | **100 nF** bypass | One per VCC site: 16 mobo ICs + **74HC14** + **AD724** + cart flash + cart EEPROM + pad ATtiny |
-| 6 | Crystal load (~22 pF class) | **2 per crystal** on Y1 / Y2 / Y3. Same CCAP body as bypass, different value |
+| 23 | **100 nF** bypass | One per VCC site: 20 on main PCB, 2 on cart, 1 on pad |
+| 6 | Crystal load (~18-20 pF class) | **2 per crystal** on Y1 / Y2 / Y3. Same CCAP body as bypass, different value |
 
 So most CCAPs are **decoupling**. The extras are **crystal loads**, not more bypass.
 
@@ -33,7 +33,7 @@ So most CCAPs are **decoupling**. The extras are **crystal loads**, not more byp
 |----:|------|-----|
 | 1 | **220 uF** | Single 5 V entry bulk cap (ECAP sprite) |
 
-**Resistors (30 = 11 + 14 + 5)**
+**Resistors (32 = 11 + 14 + 5 + 2)**
 
 Only **11** are the analog video DAC network. The rest are digital:
 
@@ -42,8 +42,9 @@ Only **11** are the analog video DAC network. The rest are digital:
 | 11 | Color DAC (4k / 2k / 1k / 75 ohm) | Weighted R/G/B + 75 ohm terminations to ~0.7 Vpp ([`hardware.md`](general/hardware.md) Video out) |
 | 14 | **33 ohm** series | **2** clocks (PHI2, DOT) + **12** cart edge (**D[7:0]**, OE#, WE#, SDA, SCL) |
 | 5 | Pull-ups | Pad **DATA**, I2C **SDA/SCL**, CPU **RDY**, **RESB** |
+| 2 | **1 M ohm** feedback | Biases the two 74HCU04 crystal inverter gates (Y1 and Y2) into linear active mode |
 
-Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
+Video alone does **not** need 32 resistors. Cart damping + pull-ups + crystal feedback do.
 
 ---
 
@@ -51,11 +52,10 @@ Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
 
 | Domain | ICs with VCC | Notes |
 |--------|-------------:|-------|
-| Main PCB (locked 16) | 16 | CPU, 3x DB28, 3x SRAM, 3x PLD, 3x HC157, HC573, HC574, color PROM |
-| Outside 18 on PCB | 2 | **74HC14** (optional), **AD724** |
-| Cart module | 2 | SST39SF040 + 24C64 |
-| Pad (x1) | 1 | ATtiny85 |
-| **Total bypass sites** | **21** | one **100 nF** per VCC pin cluster |
+| Main PCB | 20 | Motherboard IC footprints (19 counted parts + optional 74HC14) |
+| Cart module | 2 | Cart flash and save EEPROM |
+| Controller pad | 1 | Pad ATtiny85 |
+| **Total bypass sites** | **23** | One **100 nF** per VCC pin cluster |
 
 ---
 
@@ -63,19 +63,22 @@ Video alone does **not** need 30 resistors. Cart damping + pull-ups do.
 
 | Qty | Ref / use | Value | Notes |
 |----:|-----------|-------|-------|
-| 1 | Y1 / CPU PHI2 | Abracon ACH **8.000 MHz** | Buffered via board clock path (HC14 / OSC) |
-| 1 | Y2 / DOT | Abracon ACH **5.369318 MHz** (or **21.47727 MHz** / 4) | Beam / PPU clock. Direct 5.369318 MHz can or 21.47727 MHz divided by 4 |
-| 1 | Y3 / AD724 FSC | Abracon ACH **14.31818 MHz** | NTSC encoder subcarrier |
+| 1 | Y1 / CPU PHI2 | HC-49/US **8.000 MHz** | Driven by two 74HCU04 inverter gates |
+| 1 | Y2 / DOT | HC-49/US **21.47727 MHz** | Driven by two 74HCU04 inverter gates, divided by 4 via 74HC74 to 5.369318 MHz |
+| 1 | Y3 / AD724 FSC | HC-49/US **3.579545 MHz** | Connected to AD724 on-chip oscillator pins (NTSC subcarrier) |
 
-**Load capacitors:** **2 per crystal** (**6** total). Exact pF from the Abracon CL rating (often ~18-22 pF each).
+**Load capacitors:** **2 per crystal** (**6** total). Exact pF from the crystal CL rating (typically 18 to 20 pF each).
 
 DB28 parts run on **internal HFOSC @ 24 MHz**. No extra MCU crystals on the locked BOM.
 
-### Oscillator packaging and sourcing
+### Discrete clock generation
 
-Motherboard layout uses half-size DIP-8 through-hole cans (`Retr01_Lib:Oscillator_DIP-8`, Abracon ACH or surplus equivalents). For modern volume availability, standard 4-pad SMD packages (7050 or 5032) or a dedicated clock generator IC (such as Si5351A in 10-MSOP) serve as drop-in alternatives on compatible pad layouts.
+The motherboard clock network uses standard through-hole quartz crystals and dedicated 74HC logic:
+- **Y1 (8.000 MHz):** An 8.000 MHz crystal with an unbuffered **74HCU04** inverter gate and 1 M ohm feedback resistor forms the Pierce oscillator, buffered by a second inverter gate to drive the CPU PHI2 clock net.
+- **Y2 (21.47727 MHz):** A 21.47727 MHz crystal with a second 74HCU04 inverter gate and 1 M ohm feedback resistor forms the master oscillator, buffered by an inverter gate, and divided by 4 using both stages of an **SN74HC74** dual D-type flip-flop. This produces a clean, symmetrical 50% duty-cycle **5.369318 MHz** dot clock.
+- **Y3 (3.579545 MHz):** Directly drives the internal oscillator pins of the **AD724** composite video encoder with two load capacitors.
 
-The classic discrete solution uses a standard 21.47727 MHz crystal or canned oscillator divided by 4 (through a 74HC74 dual flip-flop or two PLD macrocells) to synthesize the 5.369318 MHz dot clock at 50% duty cycle. On solderless breadboards, an Si5351A breakout board or a 21.47727 MHz source divided by 4 supplies the 5.369318 MHz clock directly.
+On solderless breadboards, an Si5351A breakout board or the same 21.47727 MHz 74HCU04/74HC74 circuit supplies the 5.369318 MHz clock directly.
 
 ---
 
@@ -83,9 +86,9 @@ The classic discrete solution uses a standard 21.47727 MHz crystal or canned osc
 
 | Qty | Value | Role |
 |----:|-------|------|
-| 21 | **100 nF** ceramic | Bypass: 18 PCB (16+HC14+AD724) + 2 cart + 1 pad |
+| 23 | **100 nF** ceramic | Bypass: 20 on main PCB, 2 on cart, 1 on pad |
 | 1 | **220 uF** electrolytic (or polymer) | Entry bulk at 5 V input |
-| 6 | Crystal load (see above) | Y1/Y2/Y3 |
+| 6 | Crystal load (see above) | Y1/Y2/Y3 (18 to 20 pF) |
 
 AD724 may want extra datasheet filter / coupling caps beyond the single VCC bypass. Treat those as app-note add-ons, not locked here.
 
@@ -126,6 +129,14 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 
 **Subtotal pull-ups: 5**
 
+### Crystal feedback
+
+| Qty | Value | Net |
+|----:|-------|-----|
+| 2 | **1M** | Inverter input to output on Y1 and Y2 Pierce oscillator stages |
+
+**Subtotal feedback: 2**
+
 ---
 
 ## Roll-up (this scope)
@@ -134,12 +145,13 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 |-------|----:|
 | Crystals | 3 |
 | Crystal load caps | 6 |
-| 100 nF bypass | 21 |
+| 100 nF bypass | 23 |
 | 220 uF bulk | 1 |
 | DAC resistors | 11 |
 | 33 ohm series | 14 |
 | Pull-ups | 5 |
-| **Passive line items (sum of qtys)** | **61** |
+| Feedback resistors (1M) | 2 |
+| **Passive line items (sum of qtys)** | **65** |
 
 ---
 

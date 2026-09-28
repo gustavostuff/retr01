@@ -16,17 +16,22 @@ Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules
 | Raster | **341 x 262**, about **60.098 Hz** |
 | Composite subcarrier | FSC crystal for **AD724** (NTSC **3.579545 MHz** or PAL **4.433618 MHz**) |
 
+Discrete crystal clock generation:
+- **PHI2 (8.000 MHz):** An 8.000 MHz crystal with an unbuffered **74HCU04** inverter gate and 1 M ohm feedback resistor forms the Pierce oscillator, buffered by a second gate to feed the CPU clock.
+- **DOT (5.369318 MHz):** A 21.47727 MHz master crystal with a second 74HCU04 gate and 1 M ohm feedback resistor feeds an **SN74HC74** dual flip-flop. The flip-flop divides the frequency by 4 to produce a symmetrical 50% duty-cycle 5.369318 MHz square wave.
+- **FSC (3.579545 MHz):** A 3.579545 MHz crystal connects directly to the on-chip oscillator pins of the **AD724** composite video encoder.
+
 Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by default (`SCALE` open). Closing `SCALE_1X` to +5 V selects 1x. Raster size stays the same.
 
 ## IC budget
 
-**17** ICs on the motherboard + **2** on the cart = **19** counted parts.
+**19** ICs on the motherboard + **2** on the cart = **21** counted parts.
 
 | Scope | Count |
 | --- | --- |
-| Motherboard | 17 (includes **AD724**) |
+| Motherboard | 19 |
 | Cart (flash + save EEPROM) | 2 |
-| Outside the 19 | Crystals. **74HC14** optional (see skip conditions below). **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
+| Outside the 21 | Crystals. **74HC14** optional (see skip conditions below). **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
 
 ### Bus discipline
 
@@ -51,7 +56,7 @@ If soft decode ever runs out of PLD room, preferred escapes in order: demux more
 
 Full failure modes and bring-up order: `ic-comms-risks.md`.
 
-## BOM (locked 19)
+## BOM (locked 21)
 
 | Qty | Part | Role | THT (v1) | SMD also? |
 | --- | --- | --- | --- | --- |
@@ -66,14 +71,16 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
 | 1 | AD724 | RGB to NTSC/PAL composite encoder | **SOIC-16** SMD on motherboard | Same (only package Analog sells) |
+| 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
+| 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
-**Still outside the count:** crystals (common THT). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
+**Still outside the count:** crystals (common THT HC-49/US). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
 
 ### Optional: 74HC14 (hex Schmitt inverter)
 
-**Not in the counted 19.** Skip it on the first board when all of these hold:
+**Not in the counted 21.** Skip it on the first board when all of these hold:
 
-- **PHI2** and **DOT** come from **canned oscillators** (or other already-square CMOS clock sources), not a raw crystal amp that needs squaring
+- **PHI2** and **DOT** come from square CMOS clock stages (the 74HCU04/74HC74 clock network)
 - Series **33 ohm** (already planned) is enough damping on those clock nets
 - **Reset** is a simple pull-up + switch, or a small supervisor IC, with short traces and no visible bounce/chatter on a scope
 
@@ -92,14 +99,15 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 | **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves) | **Yes** (cart flash via MCU-M bridge) |
 | **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only | No |
 | **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
+| **Clock generation** | 74HCU04, 74HC74 | **No.** Discrete crystal oscillator and divider | No |
 | **Composite encoder** | AD724 | Fixed analog (RGB to NTSC/PAL) | No |
-| **Outside the 19** | crystals | Fixed timing | No |
-| **Optional glue** | 74HC14 (hex Schmitt) | Skip if canned PHI2/DOT + simple reset. Add if edges/reset need cleanup | No |
+| **Outside the 21** | crystals | Fixed timing | No |
+| **Optional glue** | 74HC14 (hex Schmitt) | Skip if square PHI2/DOT + simple reset. Add if edges/reset need cleanup | No |
 | **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is on the motherboard BOM (one of the **17**). Solder the **SOIC-16** part on **U725** with local bypass (**C18**) and the datasheet coupling network when the composite path is populated. Hand-solder or reflow is fine for a single narrow SOIC.
+**AD724** is on the motherboard BOM (one of the **19**). Solder the **SOIC-16** part on **U725** with local bypass (**C18**) and the datasheet coupling network when the composite path is populated. Hand-solder or reflow is fine for a single narrow SOIC.
 
 It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
@@ -367,7 +375,7 @@ Cart and pad PCBs are **2-layer** as well.
 | J8 | CUI **RCJ-012** audio RCA |
 | J9 | CUI **RCJ-014** composite RCA |
 | J36 | EDAC **395-036-520-201** |
-| Y1 / Y2 / Y3 | Abracon ACH **8.000** / **5.369318** / FSC for AD724 |
+| Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / **3.579545 MHz** (74HCU04 + 74HC74 clock stage) |
 
 Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart D/OE/WE/SDA/SCL series **33 ohm**. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 
