@@ -1,6 +1,6 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Board outline **170 x 120 mm** (locked for the initial design). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Board outline **160 x 100 mm** (Standard Eurocard 3U format, DIN 41494 / IEC 60297). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
 
 **Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. **AD724** is the exception: Analog only sells **SOIC-16**, so **U725** uses a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). Cart and pad stay THT.
 

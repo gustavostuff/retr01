@@ -16,7 +16,23 @@ To achieve clean, short traces with minimal layer transitions, components are ar
 
 ---
 
-## 2. Master PCB floor plan
+## 2. Board form factor: 160 mm x 100 mm (Standard Eurocard 3U)
+
+The physical motherboard outline is specified at **160 mm width by 100 mm height**, conforming to the international **Standard Eurocard 3U format** (standardized under DIN 41494 and IEC 60297).
+
+### Rationale for the 160 mm x 100 mm standard size
+
+1. **Off-the-shelf enclosure compatibility:** As a globally recognized standard format, numerous manufacturers (such as Hammond Manufacturing, Fischer Elektronik, and standard electronic project box suppliers) produce aluminum extruded and molded plastic desktop cases with integrated internal card guide slots designed specifically for 160 mm x 100 mm PCBs. This enables housing the system in durable, professional enclosures without requiring custom 3D-printed chassis rails.
+2. **Component density and breathing room:** Accommodates the complete through-hole counted BOM (19 DIP/SPDIP ICs, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) at a balanced ~45% packing density. This ensures that 0.1 uF ceramic bypass capacitors sit immediately adjacent to IC power pins (< 5 mm), sockets maintain physical clearance for test clips during bring-up, and M3 corner mounting holes retain full 5 mm clearance from copper traces.
+3. **Geometry for 3-column physical bus topology:** The 1.6:1 aspect ratio provides the necessary horizontal span for a balanced 3-column layout:
+   - Left column (~45 mm): System RAM, VRAM, and multiplexers.
+   - Center column (~70 mm): 52 mm CPU package, 65 mm cartridge slot, and central MCU-M.
+   - Right column (~45 mm): Self-contained video engine, Color PROM, and DAC.
+4. **Fabrication efficiency:** Standard PCB prototyping pools at commercial fabricators support 160 mm x 100 mm boards under standard tier pricing and lead times.
+
+---
+
+## 3. Master PCB floor plan
 
 The physical layout arranges connectors along the edges for ergonomics, with internal functional islands organized to minimize trace lengths between communicating chips:
 
@@ -53,7 +69,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 
 ---
 
-## 3. Why this floor plan works (Physics and ergonomics)
+## 4. Why this floor plan works (Physics and ergonomics)
 
 The physical zoning succeeds because it aligns component placement directly with electromagnetic physics, trace parasitics, and user interaction mechanics.
 
@@ -88,7 +104,7 @@ Beyond electrical performance, the floor plan optimizes physical aesthetics, cab
 
 ---
 
-## 4. Detailed zone specifications
+## 5. Detailed zone specifications
 
 ### Zone 1: System RAM and clock generation (Top-Left)
 
@@ -222,7 +238,7 @@ Interfaces with external gamepads, arcade controls, and audio output.
 
 ---
 
-## 5. Connector placement and edge mapping
+## 6. Connector placement and edge mapping
 
 All mechanical interfaces are positioned along the board perimeter according to ergonomic function:
 
@@ -240,7 +256,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 
 ---
 
-## 6. Power routing and ground distribution
+## 7. Power routing and ground distribution
 
 1. **Power entry:** +5.0 V enters at J1 (Top-Left) through power switch SW1 into bulk electrolytic capacitor E1 (220 uF to 470 uF).
 2. **Domain distribution:** Main VCC splits through four 2-pin isolation headers (JP_PWR1 through JP_PWR4) to allow progressive bring-up as specified in [`staged-pcb-bringup-guide.md`](staged-pcb-bringup-guide.md).
