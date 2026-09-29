@@ -39,6 +39,16 @@ int main(void) {
     ns_entity_init(&e, &vt, "AT27C256R", "U24");
     ns_entity_set_dip_mm(&e, 28, 37, 14);
     expect_true(e.body_w == 37 * NS_PX_PER_MM && e.body_h == 14 * NS_PX_PER_MM, "28P6 exact body px");
+    expect_true(ns_entity_dip_row_span_px(&e) == 30, "28P6 row span 30 px (600 mil)");
+    ns_entity_add_pin(&e, 1, "VPP", NS_PIN_PWR);
+    ns_entity_add_pin(&e, 28, "VCC", NS_PIN_PWR);
+    ns_entity_place(&e, 0, 0);
+    {
+        int tx1, ty1, tx28, ty28;
+        expect_true(ns_entity_pin_tip_board(&e, 1, &tx1, &ty1), "pin 1 tip");
+        expect_true(ns_entity_pin_tip_board(&e, 28, &tx28, &ty28), "pin 28 tip");
+        expect_true(ty1 - ty28 == 30, "opposing pin tips 30 px apart");
+    }
 
     ns_entity_init(&e, &vt, "HDR", "J2");
     ns_entity_set_pin_header(&e, 6, 1);
@@ -51,7 +61,7 @@ int main(void) {
         int ty;
         expect_true(ns_entity_pin_tip_board(&e, 1, &tx, &ty), "pin 1 tip");
         expect_true(tx == 10 + NS_PIN_HDR_CELL_PX / 2, "pin 1 tip x");
-        expect_true(ty == 20 + NS_PIN_HDR_CELL_PX + 2, "pin 1 tip y");
+        expect_true(ty == 20 + NS_PIN_HDR_CELL_PX / 2, "pin 1 tip y");
     }
 
     if (g_fail) {

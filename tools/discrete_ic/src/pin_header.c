@@ -188,30 +188,12 @@ int ns_pin_header_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *t
     int row;
     int ox;
     int oy;
-    int reach = 2;
     if (!e || !tbx || !tby || !pin_grid_index(e, pin_num, &col, &row)) {
         return 0;
     }
     cell_origin(e, col, row, &ox, &oy);
-    switch (e->orient) {
-    case NS_ORIENT_90:
-        *tbx = e->board_x + ox + NS_PIN_HDR_CELL_PX / 2;
-        *tby = e->board_y + oy + NS_PIN_HDR_CELL_PX + reach;
-        break;
-    case NS_ORIENT_180:
-        *tbx = e->board_x + ox + NS_PIN_HDR_CELL_PX / 2;
-        *tby = e->board_y + oy - 1 - reach;
-        break;
-    case NS_ORIENT_270:
-        *tbx = e->board_x + ox - 1 - reach;
-        *tby = e->board_y + oy + NS_PIN_HDR_CELL_PX / 2;
-        break;
-    case NS_ORIENT_0:
-    default:
-        *tbx = e->board_x + ox + NS_PIN_HDR_CELL_PX / 2;
-        *tby = e->board_y + oy + NS_PIN_HDR_CELL_PX + reach;
-        break;
-    }
+    *tbx = e->board_x + ox + NS_PIN_HDR_CELL_PX / 2;
+    *tby = e->board_y + oy + NS_PIN_HDR_CELL_PX / 2;
     return 1;
 }
 

@@ -334,10 +334,10 @@ int ns_entity_dip_row_span_px(const NsEntity *e) {
     }
     /* Microchip 28P6 / JEDEC 600 mil: row centers 15.24 mm apart (E), body E1 narrower. */
     if (e->pkg_wid_mm >= 13) {
-        return (1524 * NS_PX_PER_MM + 500) / 1000;
+        return (1524 * NS_PX_PER_MM + 50) / 100;
     }
     if (e->pkg_wid_mm <= 7) {
-        return (762 * NS_PX_PER_MM + 500) / 1000;
+        return (762 * NS_PX_PER_MM + 50) / 100;
     }
     return 0;
 }
@@ -469,7 +469,7 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
         case NS_ORIENT_90:
             *tby = e->board_y + along;
             if (row_span > 0) {
-                *tbx = side_pin1 ? (bod_x - 1 - reach) : (bod_x + row_span + reach);
+                *tbx = side_pin1 ? (bod_x - 1 - reach) : (bod_x + row_span - 1 - reach);
             } else {
                 *tbx = side_pin1 ? (e->board_x - 1 - reach) : (e->board_x + e->body_w + reach);
             }
@@ -477,7 +477,7 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
         case NS_ORIENT_180:
             *tbx = e->board_x + along;
             if (row_span > 0) {
-                *tby = side_pin1 ? (bod_y - 1 - reach) : (bod_y + row_span + reach);
+                *tby = side_pin1 ? (bod_y - 1 - reach) : (bod_y + row_span - 1 - reach);
             } else {
                 *tby = side_pin1 ? (e->board_y - 1 - reach) : (e->board_y + e->body_h + reach);
             }
@@ -485,7 +485,7 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
         case NS_ORIENT_270:
             *tby = e->board_y + along;
             if (row_span > 0) {
-                *tbx = side_pin1 ? (bod_x + row_span + reach) : (bod_x - 1 - reach);
+                *tbx = side_pin1 ? (bod_x + row_span - 1 - reach) : (bod_x - 1 - reach);
             } else {
                 *tbx = side_pin1 ? (e->board_x + e->body_w + reach) : (e->board_x - 1 - reach);
             }
@@ -494,7 +494,7 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
         default:
             *tbx = e->board_x + along;
             if (row_span > 0) {
-                *tby = side_pin1 ? (bod_y + row_span + reach) : (bod_y - 1 - reach);
+                *tby = side_pin1 ? (bod_y + row_span - 1 - reach) : (bod_y - 1 - reach);
             } else {
                 *tby = side_pin1 ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);
             }

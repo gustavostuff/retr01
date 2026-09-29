@@ -1581,46 +1581,6 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
     Uint8 bb = selected ? 36 : 28;
     NsOutlineRgb oc = ns_outline_rgb(e->health);
 
-    for (i = 0; i < e->pin_count; i++) {
-        int num = e->pins[i].number;
-        int along;
-        int side_pin1;
-        Uint8 tint[3];
-        if (num < 1 || num > dip) {
-            continue;
-        }
-        dip_pin_pos(e, num, &along, &side_pin1);
-        if (ui->pin_gray) {
-            tint[0] = 120;
-            tint[1] = 125;
-            tint[2] = 110;
-        } else {
-            pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
-        }
-        switch (e->orient) {
-        case NS_ORIENT_90: {
-            int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span) : x + e->body_w);
-            draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
-            break;
-        }
-        case NS_ORIENT_180: {
-            int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span) : y + e->body_h);
-            draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
-            break;
-        }
-        case NS_ORIENT_270: {
-            int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span) : x + e->body_w) : x;
-            draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
-            break;
-        }
-        case NS_ORIENT_0:
-        default: {
-            int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span) : y + e->body_h) : y;
-            draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
-            break;
-        }
-        }
-    }
     fill_rect(r, x, y, e->body_w, e->body_h, br, bg, bb);
     if (selected) {
         draw_rect(r, x, y, e->body_w, e->body_h, R01A_SEL_YELLOW_R, R01A_SEL_YELLOW_G, R01A_SEL_YELLOW_B);
@@ -1641,6 +1601,47 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
     default:
         fill_rect(r, x - 1, y + e->body_h / 2 - 2, 2, 4, 20, 22, 20);
         break;
+    }
+
+    for (i = 0; i < e->pin_count; i++) {
+        int num = e->pins[i].number;
+        int along;
+        int side_pin1;
+        Uint8 tint[3];
+        if (num < 1 || num > dip) {
+            continue;
+        }
+        dip_pin_pos(e, num, &along, &side_pin1);
+        if (ui->pin_gray) {
+            tint[0] = 120;
+            tint[1] = 125;
+            tint[2] = 110;
+        } else {
+            pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+        }
+        switch (e->orient) {
+        case NS_ORIENT_90: {
+            int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w);
+            draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
+            break;
+        }
+        case NS_ORIENT_180: {
+            int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h);
+            draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
+            break;
+        }
+        case NS_ORIENT_270: {
+            int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w) : x;
+            draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
+            break;
+        }
+        case NS_ORIENT_0:
+        default: {
+            int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h) : y;
+            draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
+            break;
+        }
+        }
     }
     {
         const char *label = e->part ? e->part : e->refdes;

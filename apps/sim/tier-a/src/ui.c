@@ -1581,46 +1581,6 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
     Uint8 bb = selected ? 36 : 28;
     NsOutlineRgb oc = ns_outline_rgb(e->health);
 
-    for (i = 0; i < e->pin_count; i++) {
-        int num = e->pins[i].number;
-        int along;
-        int side_pin1;
-        Uint8 tint[3];
-        if (num < 1 || num > dip) {
-            continue;
-        }
-        dip_pin_pos(e, num, &along, &side_pin1);
-        if (ui->pin_gray) {
-            tint[0] = 120;
-            tint[1] = 125;
-            tint[2] = 110;
-        } else {
-            pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
-        }
-        switch (e->orient) {
-        case NS_ORIENT_90: {
-            int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span) : x + e->body_w);
-            draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
-            break;
-        }
-        case NS_ORIENT_180: {
-            int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span) : y + e->body_h);
-            draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
-            break;
-        }
-        case NS_ORIENT_270: {
-            int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span) : x + e->body_w) : x;
-            draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
-            break;
-        }
-        case NS_ORIENT_0:
-        default: {
-            int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span) : y + e->body_h) : y;
-            draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
-            break;
-        }
-        }
-    }
     fill_rect(r, x, y, e->body_w, e->body_h, br, bg, bb);
     if (selected) {
         draw_rect(r, x, y, e->body_w, e->body_h, R01A_SEL_YELLOW_R, R01A_SEL_YELLOW_G, R01A_SEL_YELLOW_B);
@@ -1641,6 +1601,47 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
     default:
         fill_rect(r, x - 1, y + e->body_h / 2 - 2, 2, 4, 20, 22, 20);
         break;
+    }
+
+    for (i = 0; i < e->pin_count; i++) {
+        int num = e->pins[i].number;
+        int along;
+        int side_pin1;
+        Uint8 tint[3];
+        if (num < 1 || num > dip) {
+            continue;
+        }
+        dip_pin_pos(e, num, &along, &side_pin1);
+        if (ui->pin_gray) {
+            tint[0] = 120;
+            tint[1] = 125;
+            tint[2] = 110;
+        } else {
+            pin_level_rgb(e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+        }
+        switch (e->orient) {
+        case NS_ORIENT_90: {
+            int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w);
+            draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
+            break;
+        }
+        case NS_ORIENT_180: {
+            int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h);
+            draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
+            break;
+        }
+        case NS_ORIENT_270: {
+            int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w) : x;
+            draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
+            break;
+        }
+        case NS_ORIENT_0:
+        default: {
+            int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h) : y;
+            draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
+            break;
+        }
+        }
     }
     {
         const char *label = e->part ? e->part : e->refdes;
@@ -3472,8 +3473,13 @@ static void draw_hover_supply(SDL_Renderer *r, const R01aUi *ui, const R01aBoard
     int sy = ay;
     int g = -1;
     int st = supply_air_src(ui, board, src_e, src_pin, pos, &sx, &sy, &g);
-    if (st != 0) {
+    if (st == 1) {
         return;
+    }
+    if (st == -1) {
+        sx = ax;
+        sy = ay;
+        g = -1;
     }
     if (g >= 0 && gnet_marked(seen, nseen, 128, g)) {
         return;
@@ -4425,6 +4431,22 @@ static void draw_jumpers(SDL_Renderer *r, R01aUi *ui, const R01aBoard *board) {
     }
 }
 
+static void draw_text_outlined(SDL_Renderer *r, int x, int y, const char *text, Uint8 cr, Uint8 cg, Uint8 cb, Uint8 ca) {
+    static const int offsets[8][2] = {
+        {-1, -1}, {0, -1}, {1, -1},
+        {-1,  0},         {1,  0},
+        {-1,  1}, {0,  1}, {1,  1}
+    };
+    int i;
+    if (!text || !text[0]) {
+        return;
+    }
+    for (i = 0; i < 8; i++) {
+        r01a_font_draw_a(r, x + offsets[i][0], y + offsets[i][1], text, 0, 0, 0, ca);
+    }
+    r01a_font_draw_a(r, x, y, text, cr, cg, cb, ca);
+}
+
 static void present_frame(R01aUi *ui);
 
 static void draw_frame(R01aUi *ui, R01aBoard *board) {
@@ -4480,8 +4502,8 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
     draw_rect(ui->rend, btn.x, btn.y, btn.w, btn.h,
               (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL) ? 220 : 180,
               (r01a_board_wire_mode(board) == R01A_WIRE_MANUAL) ? 180 : 180, 80);
-    r01a_font_draw(ui->rend, btn.x + 6, btn.y + 2, wire_mode_label(r01a_board_wire_mode(board)), 230, 230,
-                   200);
+    draw_text_outlined(ui->rend, btn.x + 6, btn.y + 2, wire_mode_label(r01a_board_wire_mode(board)), 230, 230,
+                       200, 255);
 
     ns_island_group_fill_status(r01a_board_group(board), status, sizeof(status));
     hud_x = btn.x + btn.w + 10;
@@ -4554,11 +4576,11 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
         int shown;
         int i;
         if (ni <= 0) {
-            r01a_font_draw_a(ui->rend, 8, y, "NET ok", 80, 200, 110, 200);
+            draw_text_outlined(ui->rend, 8, y, "NET ok", 80, 200, 110, 200);
         } else {
             char head[32];
             snprintf(head, sizeof(head), "NET %d", ni);
-            r01a_font_draw(ui->rend, 8, y, head, 240, 90, 80);
+            draw_text_outlined(ui->rend, 8, y, head, 240, 90, 80, 255);
             y += r01a_font_line_h();
             shown = ni < 6 ? ni : 6;
             for (i = 0; i < shown; i++) {
@@ -4570,15 +4592,18 @@ static void draw_frame(R01aUi *ui, R01aBoard *board) {
                     cg = 90;
                     cb = 80;
                 }
-                r01a_font_draw(ui->rend, 8, y, issues[i].text, cr, cg, cb);
+                draw_text_outlined(ui->rend, 8, y, issues[i].text, cr, cg, cb, 255);
                 y += r01a_font_line_h();
             }
             if (ni > shown) {
                 char more[24];
                 snprintf(more, sizeof(more), "+%d more", ni - shown);
-                r01a_font_draw_a(ui->rend, 8, y, more, 200, 160, 80, 200);
+                draw_text_outlined(ui->rend, 8, y, more, 200, 160, 80, 200);
             }
         }
+    } else {
+        int y = btn.y + btn.h + 3;
+        draw_text_outlined(ui->rend, 8, y, "NET ok", 80, 200, 110, 200);
     }
 
     if (ui->ctx_open) {
