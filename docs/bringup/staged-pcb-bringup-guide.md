@@ -53,6 +53,9 @@ A trace length variation of 50 mm (2 inches) across parallel data lines introduc
 Standard PCB fabrication specifications:
 - **Digital signal traces:** 0.25 mm (10 mil) width with 0.25 mm spacing. This fits between 2.54 mm DIP socket pins while maintaining high fabrication yield.
 - **Power traces (2-layer board):** 0.8 mm to 1.2 mm (30 to 50 mil) for primary VCC distribution buses, bordered by ground copper pours on top and bottom layers.
+- **Unified ground plane rule:** A single, unbroken ground plane serves all digital and analog components. Ground planes are never physically split into digital and analog copper sections. Noise isolation is achieved through component placement and physical zoning rather than cutting copper.
+- **2-layer ground pour strategy:** Ground zones fill both top (F.Cu) and bottom (B.Cu) layers. To prevent slicing the bottom ground plane into disconnected strips, signal routing runs predominantly on the top layer, using the bottom layer only for short jumper links.
+- **Stitching vias:** Ground stitching vias connect top and bottom ground fills liberally (every 10 to 15 mm and adjacent to IC ground pins) to maintain low-impedance return paths. Unconnected copper islands are set to be removed in KiCad zone fill properties.
 - **4-layer board recommendation:** Utilizing a 4-layer stackup (Layer 1: Signals, Layer 2: Solid Ground Plane, Layer 3: +5.0 V Power Plane, Layer 4: Signals) provides unbroken low-impedance power and ground returns. This suppresses rail inductance, simplifies routing, and eliminates ground bounce risks without significant cost penalty.
 
 ### Component placement topology
