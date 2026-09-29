@@ -1,8 +1,8 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. Board outline **160 x 100 mm** (Standard Eurocard 3U format, DIN 41494 / IEC 60297). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **160 x 100 mm** (Standard Eurocard 3U format, DIN 41494 / IEC 60297). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
 
-**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. **AD724** is the exception: Analog only sells **SOIC-16**, so **U725** uses a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). Cart and pad stay THT.
+**Packages (initial DIY board):** The board is mostly through-hole, with counted motherboard ICs using DIP / SPDIP / PDIP footprints. **AD724** is the sole surface-mount exception: Analog only sells **SOIC-16**, so **U725** mounts directly on a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`) without a DIP adapter. Cart and pad stay THT.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -355,7 +355,7 @@ Same pins, same connector body. Cable or jumper chooses the story. CSYNC and H/V
 
 **Stackup (locked for initial design):** Motherboard is **2-layer**. Typical approach: top = signal + local 5 V pours, bottom = mostly unbroken **GND** pour (stitch often). Ground stays continuous under clocks and the CPU/dot buses. Long bottom-side runs stay off the ground pour when a top detour works.
 
-**4-layer later (optional):** Only if hardware bring-up shows real need, or for a commercial **SMD** product spin aimed at lower EMI / RF noise and easier regulatory compliance. Not assumed for the first THT DIY board.
+**4-layer later (optional):** Only if hardware bring-up shows real need, or for a commercial all-SMD product spin aimed at lower EMI / RF noise and easier regulatory compliance. Not assumed for the initial DIY board (mostly THT with SMD AD724).
 
 Cart and pad PCBs are **2-layer** as well.
 

@@ -161,7 +161,8 @@ Before inserting CPU or microcontrollers, the video generation path is confirmed
   - Sockets: UPLDX (Beam X), UPLDY (Beam Y), UPLDV (Compositor), U24 (Color PROM), US1 (MCU-S1), U41 (Field SRAM), U573 (ALE latch).
   - Resistor DAC (R1-R11) and RGBS video header J2.
 - **Leave unpopulated:**
-  - Sockets: U1 (W65C02S), U3 (System RAM), U6 (VRAM), U7A-C (HC157), UM (MCU-M), US2 (MCU-S2), AD724.
+  - Sockets: U1 (W65C02S), U3 (System RAM), U6 (VRAM), U7A-C (HC157), UM (MCU-M), US2 (MCU-S2).
+  - Surface-mount pads: U725 (AD724 composite encoder).
 - **Verification:**
   - Power up with JP_PWR1 and JP_PWR2 installed.
   - Connect monitor to J2 RGBS header.
@@ -250,7 +251,7 @@ Brings the remaining peripherals online to complete the console:
 
 When designing the Tier H KiCad schematic and board layout, include:
 
-1. **IC Sockets:** Use DIP sockets for all 19 counted motherboard ICs.
+1. **IC Sockets:** Use DIP/SPDIP sockets for the 18 through-hole motherboard ICs (U725 AD724 mounts directly on surface-mount SOIC-16 pads without a socket or adapter).
 2. **Four Power Jumpers:** JP_PWR1 (Core/Video), JP_PWR2 (AVRs), JP_PWR3 (CPU/Memory), JP_PWR4 (Audio).
 3. **Dedicated Tap Headers:** 6-pin SPI header and 8-pin timing header on standard 2.54 mm pitch.
 4. **Pull-Up Resistors:** Ensure all active-low control pins (`/OE`, `/WE`, `/CE`, `RESB`, `RDY`) have dedicated pull-ups directly at the socket pins so unpopulated sockets do not leave lines floating.
