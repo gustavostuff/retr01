@@ -126,12 +126,12 @@ This setup applies to all static and combinatorial IC tests:
 - Common ground between all components
 
 **Input drivers**
-- 8-position DIP switch module with 10 kΩ pull-down resistors to ground
+- 8-position DIP switch module with 10 kohm pull-down resistors to ground
 - Closing a switch applies +5 V (logic high)
 - Opening the switch pulls the pin to ground (logic low)
 
 **Output indicators**
-- Low-current LEDs (red or green preferred) with 1 kΩ series resistors to ground
+- Low-current LEDs (red or green preferred) with 1 kohm series resistors to ground
 - Wiring: IC pin --- 1k resistor --- LED anode --- LED cathode --- GND
 - Alternative: digital multimeter set to DC voltage
 - When a pin is high (+5 V) the LED glows; when low (0 V) it goes dark
@@ -154,7 +154,7 @@ When CE# and OE# are both low, DQ[7:0] output the byte stored at the selected ad
 2. Connect VCC (pin 28) to +5 V and GND (pin 14) to ground.
 3. Tie upper address lines A[14:6] to ground.
 4. Connect address lines A[5:0] (pins 10, 9, 8, 7, 6, 5) to DIP switches.
-5. Connect LEDs or probe DQ[7:0] (pins 11, 12, 13, 15, 16, 17, 18, 19) to LEDs via 1 kΩ series resistors, or to a meter set to DC voltage.
+5. Connect LEDs or probe DQ[7:0] (pins 11, 12, 13, 15, 16, 17, 18, 19) to LEDs via 1 kohm series resistors, or to a meter set to DC voltage.
 
 **Test procedure**
 
@@ -198,7 +198,7 @@ The OE# (Output Enable, active-low) pin is a master switch. When OE# is low, out
    - Pins 2-9 (D[0:7]) to DIP switches
 
 4. Outputs
-   - Pins 19 down to 12 (Q[0:7]) to LEDs with 1 kΩ series resistors
+   - Pins 19 down to 12 (Q[0:7]) to LEDs with 1 kohm series resistors
 
 5. Control
    - Pin 11 (LE) to a manual switch that can toggle between +5 V and ground
@@ -251,12 +251,12 @@ When /CLR and /PRE are both inactive (high), a rising edge on CLK latches the D 
 
 3. Flip-flop 1 configuration
    - Pin 6 (/Q1) looped back to pin 2 (D1)
-   - Pin 5 (Q1) to an LED with 1 kΩ series resistor
+   - Pin 5 (Q1) to an LED with 1 kohm series resistor
 
 4. Flip-flop 2 configuration (for divide-by-4 test)
    - Pin 5 (Q1) connected to pin 9 (CLK2)
    - Pin 11 (/Q2) looped back to pin 12 (D2)
-   - Pin 9 (Q2) to an LED with 1 kΩ series resistor
+   - Pin 9 (Q2) to an LED with 1 kohm series resistor
 
 5. Clock input
    - Pin 3 (CLK1) driven by a slow pulse source (Arduino pin toggling at ~10 Hz, or a debounced manual switch)
@@ -299,7 +299,7 @@ The ATF22V10 in Retr01 is used for tasks like beam counters (registered) and com
    - Pins 2-11 (input pins) to DIP switches
 
 3. Outputs
-   - PLD output pins to LEDs with 1 kΩ series resistors
+   - PLD output pins to LEDs with 1 kohm series resistors
 
 4. Clock (if registered)
    - CLK pin to a slow clock source (Arduino toggling at ~10 Hz, or manual pushbutton)
@@ -484,7 +484,7 @@ All ICs under test (AT27C256R, 74HC573, 74HC74, ATF22V10, etc.) use 5 V logic.
 ### LED color choice
 
 Any common LED works:
-- **Red or green (preferred):** forward voltage ~1.8-2.2 V, bright with standard 1 kΩ resistor
+- **Red or green (preferred):** forward voltage ~1.8-2.2 V, bright with standard 1 kohm resistor
 - **Yellow:** also fine, similar voltage to red
 - **Blue or white:** forward voltage ~2.8-3.3 V, slightly dimmer with same resistor, but usable
 
@@ -500,7 +500,7 @@ IC output pin --- 1k ohm resistor --- LED anode (+) --- LED cathode (-) --- GND
 
 The resistor must be in series with the LED. Without it the LED burns out almost instantly and risks damaging the IC pin.
 
-1 kΩ is the recommended value and is safely conservative:
+1 kohm is the recommended value and is safely conservative:
 - Approximate current for red LED: (5 V - 2 V) / 1000 ohm = 3 mA
 - Approximate current for green LED: (5 V - 2 V) / 1000 ohm = 3 mA
 

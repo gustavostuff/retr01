@@ -132,3 +132,4 @@ When the Tier H demo is dull, the breadboard path has reached full console behav
 - [`bench-testing-guide.md`](bench-testing-guide.md): Frequency measurement sketches and truth table testing for individual ICs.
 - [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md): Netlist references and pin mappings.
 - [`staged-pcb-bringup-guide.md`](staged-pcb-bringup-guide.md): Single-board progressive bring-up strategy and PCB layout provisions for Tiers D through H.
+- [`pcb-netlist-verification-guide.md`](pcb-netlist-verification-guide.md): Verification methodology and automated Python comparison tool for Skidl-to-PCB netlists.
