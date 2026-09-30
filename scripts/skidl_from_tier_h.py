@@ -142,6 +142,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     from retr01_kicad.clocks import ensure_clock_parts, wire_clocks
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
     from retr01_kicad.mobo_scope import normalize_export_node
+    from retr01_kicad.net_names import name_all_nets
     from retr01_kicad.stub_pins import stub_unconnected_pins
 
     configure_skidl_logging(quiet)
@@ -176,9 +177,44 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     ensure_connector_parts(parts, part_factory)
     ensure_clock_parts(parts, part_factory)
     ensure_part("U725")
+    ensure_part("U130")
     wire_connectors(parts, nets_map, pin_connect)
     wire_clocks(parts, nets_map, pin_connect)
+
+    if "U130" in parts:
+        res_net = nets_map.get("CPU_RES#")
+        if res_net is None:
+            for sk_net in nets_map.values():
+                for p in getattr(sk_net, "pins", []):
+                    if getattr(getattr(p, "part", None), "ref", None) == "U1" and str(getattr(p, "num", "")) == "40":
+                        res_net = sk_net
+                        break
+        if res_net is not None:
+            pin_connect(parts["U130"], "", "1", res_net)
+        pin_connect(parts["U130"], "", "2", nets_map["+5V"])
+        pin_connect(parts["U130"], "", "3", nets_map["GND"])
+
     stub_unconnected_pins(parts, nets_map, pin_connect)
+
+    # Name all nets with clean, descriptive architectural labels
+    unique_nets = set()
+    for part in parts.values():
+        for pin in getattr(part, "pins", []):
+            if pin.net is not None:
+                unique_nets.add(pin.net)
+    name_all_nets(unique_nets)
+
+    # Ensure canonical GND and +5V names are preserved in the exported netlist.
+    if "J1" in parts:
+        for p in getattr(parts["J1"], "pins", []):
+            if str(p.num) in ("2", "3") and p.net is not None:
+                p.net.name = "GND"
+            elif str(p.num) == "1" and p.net is not None:
+                p.net.name = "+5V"
+    if "GND" in nets_map and nets_map["GND"] is not None:
+        nets_map["GND"].name = "GND"
+    if "+5V" in nets_map and nets_map["+5V"] is not None:
+        nets_map["+5V"].name = "+5V"
 
     buf = StringIO()
     generate_netlist(file_=buf)

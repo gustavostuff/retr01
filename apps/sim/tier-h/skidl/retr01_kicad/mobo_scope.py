@@ -77,10 +77,6 @@ _EE_J36 = {
     P.EE_SCL: P.cart_b(3),
     P.EE_VCC: P.cart_a(2),
     P.EE_GND: P.cart_a(1),
-    P.EE_A0: P.cart_a(1),
-    P.EE_A1: P.cart_a(1),
-    P.EE_A2: P.cart_a(1),
-    P.EE_WP: P.cart_a(1),
 }
 
 _PS1_J1 = {

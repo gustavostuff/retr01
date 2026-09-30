@@ -124,6 +124,30 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, sram_lb, "A6", field_ale, "Q6");
     r01s_pin_netlist_link(nl, sram_lb, "A7", field_ale, "Q7");
 
+    for (i = 0; i < 16; i++) {
+        char an[8];
+        char net_name[16];
+        snprintf(an, sizeof(an), "A%d", i);
+        snprintf(net_name, sizeof(net_name), "CPU_A%d", i);
+        r01s_pin_netlist_name_net(nl, cpu, an, net_name);
+    }
+    for (i = 0; i < 8; i++) {
+        char dn[8];
+        char net_name[16];
+        snprintf(dn, sizeof(dn), "D%d", i);
+        snprintf(net_name, sizeof(net_name), "CPU_D%d", i);
+        r01s_pin_netlist_name_net(nl, cpu, dn, net_name);
+    }
+    r01s_pin_netlist_name_net(nl, cpu, "RWB", "CPU_RW");
+    r01s_pin_netlist_name_net(nl, cpu, "BE", "CPU_BE");
+    r01s_pin_netlist_name_net(nl, cpu, "IRQB", "CPU_IRQ#");
+    r01s_pin_netlist_name_net(nl, mcu, "SPI_MOSI", "SPI_MOSI");
+    r01s_pin_netlist_name_net(nl, mcu, "SPI_MISO", "SPI_MISO");
+    r01s_pin_netlist_name_net(nl, mcu, "SPI_SCK", "SPI_SCK");
+    r01s_pin_netlist_name_net(nl, mcu, "/SS_S1", "SS_S1#");
+    r01s_pin_netlist_name_net(nl, mcu, "/SS_S2", "SS_S2#");
+    r01s_pin_netlist_name_net(nl, s1, "S1_RDY", "S1_RDY");
+
     r01s_pin_netlist_name_net(nl, r01s_pwr5v_entity(&board->pwr), "VDD", "+5V");
     r01s_pin_netlist_name_net(nl, r01s_pwr5v_entity(&board->pwr), "GND", "GND");
 }

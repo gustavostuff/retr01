@@ -20,6 +20,7 @@ R_AX = f"{_R}:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 
 OSC8 = f"{_R}:Oscillator_DIP-8"
 XTAL = f"{_R}:Crystal_HC49-U_Vertical"
+TO92 = f"{_R}:TO-92_Inline"
 
 BARREL = f"{_R}:BarrelJack_GCT_DCJ200-10-A_Horizontal"
 HDR4 = f"{_R}:PinHeader_1x04_P2.54mm_Vertical"

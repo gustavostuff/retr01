@@ -40,9 +40,11 @@ REFDES: dict[str, Res] = {
     "Y1": ("XTAL", fp.XTAL),
     "Y2": ("XTAL", fp.XTAL),
     "Y3": ("XTAL", fp.XTAL),
+    "U130": ("MCP130", fp.TO92),
 }
 
 PART: dict[str, Res] = {
+    "MCP130": ("MCP130", fp.TO92),
     "W65C02S": ("W65C02S", fp.DIP40),
     "AS6C62256": ("AS6C62256", fp.DIP28),
     "AT27C256R": ("AT27C256R", fp.DIP28),

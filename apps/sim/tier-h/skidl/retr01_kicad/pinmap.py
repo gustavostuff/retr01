@@ -311,6 +311,7 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "R_1M": _nums(2),
     # 0 ohm jumpers: bridge global rail <-> per-IC local VCC for Quilter bypass parent ID.
     "R_0": _nums(2),
+    "MCP130": _nums(3),
 }
 
 # KiCad official pin name aliases (num -> kicad name) for documentation / Part aliases
