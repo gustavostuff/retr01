@@ -297,8 +297,8 @@ The motherboard houses 20 decoupling sites (19 digital and mixed-signal ICs plus
 | C16 | 100 nF | Ceramic | U24 (Color PROM) | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 28 |
 | C17 | 100 nF | Ceramic | U130 (MCP130 Supervisor) | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 2 |
 | C18 | 100 nF | Ceramic | U725 (AD724 Composite) | SOIC-16 | Pin 10, Pin 16 (VCC) | Pin 2, 8, 15 (GND) | Zone 2 (Top-Right) | Mount adjacent to pin 16 |
-| C19 | 100 nF | Ceramic | U40 (Cart Flash) | DIP-32 | Pin 32 (VDD) | Pin 16 (VSS) | Cartridge PCB | Located on cart module |
-| C20 | 100 nF | Ceramic | U50 (Cart EEPROM) | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Cartridge PCB | Located on cart module |
+| C19 | 100 nF | Ceramic | U04 (74HCU04) / Cart Flash | DIP-14 / DIP-32 | Pin 14 (VCC) / Pin 32 | Pin 7 (GND) / Pin 16 | Zone 2 (or Cartridge PCB) | Mount within 5 mm of pin 14 |
+| C20 | 100 nF | Ceramic | U74 (74HC74) / Cart EEPROM | DIP-14 / DIP-8 | Pin 14 (VCC) / Pin 8 | Pin 7 (GND) / Pin 4 | Zone 2 (or Cartridge PCB) | Mount within 5 mm of pin 14 |
 | C21 | 100 nF | Ceramic | UPAD1 (Gamepad MCU) | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Controller Pad PCB | Located on gamepad board |
 | C22 | 22 pF | Ceramic | Y2 (21.48 MHz Dot Osc) | Discrete | Pin 1 (XTAL_DOT_IN) | GND | Zone 2 (Top-Right) | Tight loop with Y2 and 74HCU04 |
 | C23 | 22 pF | Ceramic | Y2 (21.48 MHz Dot Osc) | Discrete | Pin 2 (XTAL_DOT_OUT) | GND | Zone 2 (Top-Right) | Tight loop with Y2 and 74HCU04 |
@@ -307,3 +307,5 @@ The motherboard houses 20 decoupling sites (19 digital and mixed-signal ICs plus
 | C26 | 22 pF | Ceramic | Y1 (8.00 MHz CPU Osc) | Discrete | Pin 1 (XTAL_CPU_IN) | GND | Zone 1 (Top-Left) | Tight loop with Y1 and 74HCU04 |
 | C27 | 22 pF | Ceramic | Y1 (8.00 MHz CPU Osc) | Discrete | Pin 2 (XTAL_CPU_OUT) | GND | Zone 1 (Top-Left) | Tight loop with Y1 and 74HCU04 |
 | E1 | 220 uF | Electrolytic | Power Entry Rail | Radial Can | +5V Rail | GND | Zone 1 (Top-Left) | Mount adjacent to J1 / SW1 |
+
+For automated PCB layout tools such as Quilter AI, a pre-formatted bypass capacitor mapping CSV is available at [`apps/sim/tier-h/skidl/quilter_bypass_caps.csv`](../../apps/sim/tier-h/skidl/quilter_bypass_caps.csv) to import directly into the Circuit Comprehension interface.

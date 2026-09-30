@@ -1101,7 +1101,7 @@
 	(footprint "Retr01_Lib:DIP-28_W15.24mm"
 		(layer "F.Cu")
 		(uuid "0ba7c831-8d3a-4189-9f07-bf93ac32d465")
-		(at -58.73 189 90)
+		(at 139.49 109.62 90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U41"
@@ -1313,7 +1313,7 @@
 			(uuid "3672c121-5932-4fb6-a348-85cfee25afc9")
 		)
 		(point
-			(at -42.22 181.38)
+			(at 156 102)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "c15cd087-2224-460f-84da-d5c3cb7f13c0")
@@ -2000,7 +2000,7 @@
 	(footprint "Retr01_Lib:DIP-16_W7.62mm"
 		(layer "F.Cu")
 		(uuid "0d3f0d80-b00a-4650-9c86-c78b63d5f339")
-		(at -172 160 90)
+		(at 26.22 80.62 90)
 		(descr "16-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U7A"
@@ -2212,7 +2212,7 @@
 			(uuid "2e1c0b40-f52b-4369-985d-1277e6b97dc5")
 		)
 		(point
-			(at -163.11 156.19)
+			(at 35.11 76.81)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "bfa8ca2f-b7bb-4069-bc83-f3bfcf7bf363")
@@ -2851,11 +2851,11 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "1a159eda-3b5b-4ad0-9be8-b70b30613d23")
-		(at -49.95 16.85 -90)
+		(at 65.5 43)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C2"
-			(at 2.5 -2.5 90)
+			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "f0302558-2b45-46c8-b370-73458eba4f58")
 			(effects
@@ -2866,7 +2866,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 2.5 2.5 90)
+			(at 2.5 2.5 0)
 			(layer "F.SilkS")
 			(uuid "ac293b00-090f-4e13-8527-3b2effa0d502")
 			(effects
@@ -2877,7 +2877,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 90)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "c23589bd-fcb0-435f-9031-3b76d9dee1ba")
@@ -2888,7 +2888,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 90)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "150b08cd-beb6-45ae-98a2-0d5db2e43d17")
@@ -2899,7 +2899,7 @@
 			)
 		)
 		(property "KiLib_Generator" "capacitor/THT/other"
-			(at 0 0 90)
+			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "ac556967-4b9f-4ebb-bfcd-100fde8af5a6")
@@ -2911,7 +2911,7 @@
 			)
 		)
 		(property "SKiDL Tag" "meb14MTMbX"
-			(at 0 0 270)
+			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -2924,7 +2924,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
-			(at 0 0 270)
+			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -2941,34 +2941,14 @@
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
-			(start -0.12 1.37)
-			(end -0.12 1.033)
+			(start -0.12 -1.37)
+			(end 5.12 -1.37)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "5df861b7-81ff-41c3-9d94-1cd7aeef3be4")
-		)
-		(fp_line
-			(start 5.12 1.37)
-			(end -0.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "7b143fe5-d8a7-49ee-9c87-6832e8886530")
-		)
-		(fp_line
-			(start 5.12 1.033)
-			(end 5.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "4fb44032-7aeb-4c25-b0ee-84ee854127b7")
+			(uuid "a114ac00-3cb0-409f-b718-fa85acc90558")
 		)
 		(fp_line
 			(start -0.12 -1.033)
@@ -2981,14 +2961,14 @@
 			(uuid "b6636e2c-212e-4ef6-bdbb-3899ce714b9b")
 		)
 		(fp_line
-			(start -0.12 -1.37)
-			(end 5.12 -1.37)
+			(start -0.12 1.37)
+			(end -0.12 1.033)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "a114ac00-3cb0-409f-b718-fa85acc90558")
+			(uuid "5df861b7-81ff-41c3-9d94-1cd7aeef3be4")
 		)
 		(fp_line
 			(start 5.12 -1.37)
@@ -2999,6 +2979,26 @@
 			)
 			(layer "F.SilkS")
 			(uuid "d48a5525-9f96-465e-9f87-de3346418f4b")
+		)
+		(fp_line
+			(start 5.12 1.033)
+			(end 5.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "4fb44032-7aeb-4c25-b0ee-84ee854127b7")
+		)
+		(fp_line
+			(start 5.12 1.37)
+			(end -0.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "7b143fe5-d8a7-49ee-9c87-6832e8886530")
 		)
 		(fp_rect
 			(start -1.05 -1.5)
@@ -3023,7 +3023,7 @@
 			(uuid "f2e0ce89-1df8-438e-be5e-9c1bfc53b44d")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0 270)
+			(at 0 0)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -3033,7 +3033,7 @@
 			(uuid "197a8e5a-70b7-4ed5-afe6-b403b9792bcf")
 		)
 		(pad "2" thru_hole circle
-			(at 5 0 270)
+			(at 5 0)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -3058,7 +3058,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "1b43a218-cc34-4c31-a2e0-62601ea89af2")
-		(at -78.3 33.15 -90)
+		(at 123 -9.5 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C27"
@@ -3118,7 +3118,7 @@
 			)
 		)
 		(property "SKiDL Tag" "YDciXOckVI"
-			(at 0 0 270)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -3131,7 +3131,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
-			(at 0 0 270)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -3148,44 +3148,14 @@
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
-			(start -0.12 1.37)
-			(end -0.12 1.033)
+			(start 5.12 -1.37)
+			(end 5.12 -1.033)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "c3c0abf6-e97a-47bc-9757-8b5f6fcadfe9")
-		)
-		(fp_line
-			(start 5.12 1.37)
-			(end -0.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "a896c441-7ba9-41de-800c-e7166ac81474")
-		)
-		(fp_line
-			(start 5.12 1.033)
-			(end 5.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "651b2269-b6c7-446d-8642-ea3e3ddf7b4d")
-		)
-		(fp_line
-			(start -0.12 -1.033)
-			(end -0.12 -1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "fe3991d0-3492-43bc-952f-6e1c5c372f92")
+			(uuid "3862a9df-bd8d-4c0e-a394-282d3171e7bd")
 		)
 		(fp_line
 			(start -0.12 -1.37)
@@ -3198,14 +3168,44 @@
 			(uuid "36387120-a956-46ed-8b38-9a9fa69d706d")
 		)
 		(fp_line
-			(start 5.12 -1.37)
-			(end 5.12 -1.033)
+			(start -0.12 -1.033)
+			(end -0.12 -1.37)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "3862a9df-bd8d-4c0e-a394-282d3171e7bd")
+			(uuid "fe3991d0-3492-43bc-952f-6e1c5c372f92")
+		)
+		(fp_line
+			(start 5.12 1.033)
+			(end 5.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "651b2269-b6c7-446d-8642-ea3e3ddf7b4d")
+		)
+		(fp_line
+			(start 5.12 1.37)
+			(end -0.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "a896c441-7ba9-41de-800c-e7166ac81474")
+		)
+		(fp_line
+			(start -0.12 1.37)
+			(end -0.12 1.033)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "c3c0abf6-e97a-47bc-9757-8b5f6fcadfe9")
 		)
 		(fp_rect
 			(start -1.05 -1.5)
@@ -3230,7 +3230,7 @@
 			(uuid "d3308c5e-a1f8-4e70-8c29-3ff97a5f2e5e")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0 270)
+			(at 0 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -3240,7 +3240,7 @@
 			(uuid "88b0b605-9b3c-4515-9f73-9ecd61273bfb")
 		)
 		(pad "2" thru_hole circle
-			(at 5 0 270)
+			(at 5 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -3786,7 +3786,7 @@
 	(footprint "Retr01_Lib:DIP-24_W7.62mm"
 		(layer "F.Cu")
 		(uuid "210dc102-3de6-49a8-a1b9-54a80731a350")
-		(at -26.895 118.855 -90)
+		(at 171.325 39.475 -90)
 		(descr "24-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "UPLDV"
@@ -3998,7 +3998,7 @@
 			(uuid "8eb21206-5239-46da-bbb5-ee314296416f")
 		)
 		(point
-			(at -40.865 122.665)
+			(at 157.355 43.285)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "73340c9c-dce2-4bba-9ff3-9e0da4e62137")
@@ -4260,12 +4260,12 @@
 	(footprint "Retr01_Lib:Crystal_HC49-U_Vertical"
 		(layer "F.Cu")
 		(uuid "233572dc-9618-4657-8f0d-725a99ed58f4")
-		(at -141.55 126)
+		(at 107.56 -19)
 		(descr "HC-49/U, Crystal, http://5hertz.com/pdfs/04404_D.pdf")
 		(property "Reference" "Y1"
 			(at 2.44 -3.52 0)
 			(layer "F.SilkS")
-			(uuid "9a90ec77-f266-4563-b51a-7060f4062889")
+			(uuid "2795cc9e-587e-45b3-bcae-6dcb61453a45")
 			(effects
 				(font
 					(size 1 1)
@@ -4276,7 +4276,7 @@
 		(property "Value" "XTAL"
 			(at 2.44 3.52 0)
 			(layer "F.SilkS")
-			(uuid "b0386c45-cd95-45eb-9cd7-758bc6f59270")
+			(uuid "8229a74c-e14e-49e2-ae29-4969e24b12e3")
 			(effects
 				(font
 					(size 1 1)
@@ -4288,7 +4288,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "19d7bacd-c9e0-4631-ac98-3dcfcb9a7969")
+			(uuid "1fac3bb7-3ff2-4993-8dfa-a7c4cf550635")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4299,7 +4299,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e737ef41-b667-4000-ae01-5ddc14d43232")
+			(uuid "d725c92a-2ed6-4896-9ef8-3b2320140187")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4510,13 +4510,13 @@
 	(footprint "Retr01_Lib:DIP-40_W15.24mm"
 		(layer "F.Cu")
 		(uuid "239a2c96-359f-4e7e-9be0-04ec848c0686")
-		(at -74.98 120.38 -90)
+		(at 123.24 41 -90)
 		(descr "40-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U1"
 			(at 7.62 -2.33 90)
 			(layer "F.SilkS")
-			(uuid "f3636383-8977-4358-860b-a129e6234bb9")
+			(uuid "d768bbd9-ca6d-4334-af85-c69e340a34a8")
 			(effects
 				(font
 					(size 1 1)
@@ -4527,7 +4527,7 @@
 		(property "Value" "W65C02S"
 			(at 7.62 50.59 90)
 			(layer "F.SilkS")
-			(uuid "09df9848-7187-495c-b167-818f0f58624b")
+			(uuid "d22d81cb-1060-4abf-9b68-3aea4577ab1d")
 			(effects
 				(font
 					(size 1 1)
@@ -4539,7 +4539,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f6d4a143-a3bf-42ff-a06f-3c21dd0a458b")
+			(uuid "7b155606-7161-4ac0-a464-f65471dbd36a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4550,7 +4550,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "dc0e734d-ad1b-4bdb-b9b2-d7310903a062")
+			(uuid "f6a44489-574d-48e4-b558-3749a6456d8b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4722,7 +4722,7 @@
 			(uuid "0a3913e7-710b-41c1-a601-e8f14e91bf39")
 		)
 		(point
-			(at -99.11 128)
+			(at 99.11 48.62)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "cf595dc3-9e39-41fc-b1da-63b9b4afbcc8")
@@ -5144,7 +5144,7 @@
 	(footprint "Retr01_Lib:CP_Radial_D8.0mm_P3.50mm"
 		(layer "F.Cu")
 		(uuid "242adb7a-68a8-432e-8861-8d50a406604d")
-		(at -24.11 110.347349 -90)
+		(at 174.11 30.967349 -90)
 		(descr "CP, Radial series, Radial, pin pitch=3.50mm, diameter=8mm, height=12mm, Electrolytic Capacitor")
 		(tags "CP Radial series Radial pin pitch 3.50mm diameter 8mm height 12mm Electrolytic Capacitor")
 		(property "Reference" "E1"
@@ -7071,7 +7071,7 @@
 	(footprint "Retr01_Lib:DIP-14_W7.62mm"
 		(layer "F.Cu")
 		(uuid "298f80d7-5a34-4e5f-9701-64c6f23d9acc")
-		(at -92.65 113 90)
+		(at 96.46 -24.38 90)
 		(descr "14-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U04"
@@ -7283,7 +7283,7 @@
 			(uuid "c44fa6d4-ab9b-4c0c-a6bb-194fb2071169")
 		)
 		(point
-			(at -85.03 109.19)
+			(at 104.08 -28.19)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "d23de428-dbf4-4ca9-a69a-373c635a9ab8")
@@ -8068,13 +8068,13 @@
 	(footprint "Retr01_Lib:DIP-28_W15.24mm"
 		(layer "F.Cu")
 		(uuid "32e9a85d-403a-49ac-a4b1-4fca50a76e86")
-		(at -134.6 105.38 -90)
+		(at 63.62 26 -90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U3"
 			(at 7.62 -2.33 90)
 			(layer "F.SilkS")
-			(uuid "66414dfd-a8e4-4fe3-9512-e19a7e876908")
+			(uuid "489f6eb7-f064-4a95-b156-5faa5f1a734c")
 			(effects
 				(font
 					(size 1 1)
@@ -8085,7 +8085,7 @@
 		(property "Value" "AS6C62256"
 			(at 7.62 35.35 90)
 			(layer "F.SilkS")
-			(uuid "f3b9f806-61a6-4aa8-a903-51da156ffbde")
+			(uuid "73bd7590-5617-48fe-9646-7f65764fd8d7")
 			(effects
 				(font
 					(size 1 1)
@@ -8097,7 +8097,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e235320c-5058-4e6b-8a87-b1ef8b44e8b1")
+			(uuid "6d21dde6-c912-4204-b32a-70c3231f6314")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8108,7 +8108,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8e83eb8f-291f-4ace-ad12-db3b6c73aae6")
+			(uuid "69c2e3f1-f032-45c7-bd3e-3a00a8851d82")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8280,7 +8280,7 @@
 			(uuid "9c4c724d-77a6-4c19-9c1b-86ad3752d3f0")
 		)
 		(point
-			(at -151.11 113)
+			(at 47.11 33.62)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "d60bd191-e555-4869-b3c9-4b5621a12296")
@@ -8582,11 +8582,11 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "34fab220-f107-4b24-9142-89be2528bd2a")
-		(at -74.25 33.15 -90)
+		(at 118 -21.5 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C26"
-			(at 2.5 -2.5 90)
+			(at 2.5 0.035219 90)
 			(layer "F.SilkS")
 			(uuid "cf91c430-df7a-4ecd-b406-a7f915909be1")
 			(effects
@@ -8597,7 +8597,7 @@
 			)
 		)
 		(property "Value" "22pF"
-			(at 2.5 2.5 90)
+			(at -3.557646 0.176095 90)
 			(layer "F.SilkS")
 			(uuid "adf681b9-620c-4679-9331-8ff66c9bf5ad")
 			(effects
@@ -8642,7 +8642,7 @@
 			)
 		)
 		(property "SKiDL Tag" "EqcmY77Ayc"
-			(at 0 0 270)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -8655,7 +8655,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
-			(at 0 0 270)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -8672,44 +8672,14 @@
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
-			(start -0.12 1.37)
-			(end -0.12 1.033)
+			(start 5.12 -1.37)
+			(end 5.12 -1.033)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "095a2a7e-c09b-49be-99b9-dfb8d9a1ab05")
-		)
-		(fp_line
-			(start 5.12 1.37)
-			(end -0.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "43568619-79fc-4561-8f66-dd2f38ac2283")
-		)
-		(fp_line
-			(start 5.12 1.033)
-			(end 5.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "8f7be29f-8202-4854-a1b2-c74a63d442c7")
-		)
-		(fp_line
-			(start -0.12 -1.033)
-			(end -0.12 -1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "563ac206-473a-4dd3-ae7f-e62577133bb8")
+			(uuid "c6cdddf9-99ee-44e1-abe0-63268374d5c5")
 		)
 		(fp_line
 			(start -0.12 -1.37)
@@ -8722,14 +8692,44 @@
 			(uuid "e5e1a5be-5823-408a-a5e7-9558013098aa")
 		)
 		(fp_line
-			(start 5.12 -1.37)
-			(end 5.12 -1.033)
+			(start -0.12 -1.033)
+			(end -0.12 -1.37)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "c6cdddf9-99ee-44e1-abe0-63268374d5c5")
+			(uuid "563ac206-473a-4dd3-ae7f-e62577133bb8")
+		)
+		(fp_line
+			(start 5.12 1.033)
+			(end 5.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "8f7be29f-8202-4854-a1b2-c74a63d442c7")
+		)
+		(fp_line
+			(start 5.12 1.37)
+			(end -0.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "43568619-79fc-4561-8f66-dd2f38ac2283")
+		)
+		(fp_line
+			(start -0.12 1.37)
+			(end -0.12 1.033)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "095a2a7e-c09b-49be-99b9-dfb8d9a1ab05")
 		)
 		(fp_rect
 			(start -1.05 -1.5)
@@ -8754,7 +8754,7 @@
 			(uuid "00e9dccb-c320-4918-902d-4801c5200bca")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0 270)
+			(at 0 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -8764,7 +8764,7 @@
 			(uuid "c10b69ad-4a83-47cb-8b4d-9b9217075a19")
 		)
 		(pad "2" thru_hole circle
-			(at 5 0 270)
+			(at 5 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -8789,7 +8789,7 @@
 	(footprint "Retr01_Lib:DIP-28_W15.24mm"
 		(layer "F.Cu")
 		(uuid "36a6917a-ce3f-449b-ba95-379e006f28d7")
-		(at -138.9925 131.38 -90)
+		(at 59.2275 52 -90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U6"
@@ -9001,7 +9001,7 @@
 			(uuid "f2858a22-b43f-4d5a-bb84-b164acfc598f")
 		)
 		(point
-			(at -155.5025 139)
+			(at 42.7175 59.62)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "dbfffe4a-b547-40cb-a03e-05156261a69b")
@@ -9796,7 +9796,7 @@
 	(footprint "Retr01_Lib:PinHeader_1x04_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "41b9244c-b7cf-45aa-97a2-d4e663412f81")
-		(at -71.57 193 -90)
+		(at 126.65 113.62 -90)
 		(descr "Through hole straight pin header, 1x04, 2.54mm pitch, single row")
 		(tags "Through hole pin header THT 1x04 2.54mm single row")
 		(property "Reference" "J7"
@@ -10062,7 +10062,7 @@
 	(footprint "Retr01_Lib:DIP-24_W7.62mm"
 		(layer "F.Cu")
 		(uuid "46276960-fa89-4aa4-a8de-806a27b661d7")
-		(at -26.79 141.38 -90)
+		(at 171.43 62 -90)
 		(descr "24-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "UPLDY"
@@ -10274,7 +10274,7 @@
 			(uuid "4037bdb9-d7a4-4a96-8b68-893f2d39634d")
 		)
 		(point
-			(at -40.76 145.19)
+			(at 157.46 65.81)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "f104fe61-39ca-4d1e-b977-dd7e98873931")
@@ -12853,7 +12853,7 @@
 	(footprint "Retr01_Lib:DIP-24_W7.62mm"
 		(layer "F.Cu")
 		(uuid "6e6693b4-ae7f-4b45-b8bc-c1f7813340f7")
-		(at -26.895 129.635 -90)
+		(at 171.325 50.255 -90)
 		(descr "24-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "UPLDX"
@@ -13065,7 +13065,7 @@
 			(uuid "e51a811e-2872-4379-be81-cb6106a40786")
 		)
 		(point
-			(at -40.865 133.445)
+			(at 157.355 54.065)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "7e47d0bd-58c7-4b31-90f9-5152c7e859d4")
@@ -13534,7 +13534,7 @@
 	(footprint "Retr01_Lib:DIP-16_W7.62mm"
 		(layer "F.Cu")
 		(uuid "6f4e1704-fc1d-4e79-8f4f-bf35c50a5dbc")
-		(at -140.305 170.89 180)
+		(at 57.915 91.51 180)
 		(descr "16-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U7B"
@@ -13746,7 +13746,7 @@
 			(uuid "16c6474a-d7a8-42d3-820f-cda8efe60d98")
 		)
 		(point
-			(at -144.115 162)
+			(at 54.105 82.62)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "efc3bf6d-9ca9-4097-89f5-0ca996aeb97e")
@@ -16552,13 +16552,13 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "8edf123a-c42a-47f6-9786-4232fa12b761")
-		(at -32 18.5 -90)
+		(at 105.474184 37.986679)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C1"
-			(at 2.5 -2.5 90)
+			(at 2.5 0 0)
 			(layer "F.SilkS")
-			(uuid "918d40a4-7af6-4ae1-9cab-d7f7081761d6")
+			(uuid "c7c89958-99a5-469e-9206-18dd30d65e5a")
 			(effects
 				(font
 					(size 1 1)
@@ -16567,9 +16567,9 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 2.5 2.5 90)
+			(at -3.5 0 0)
 			(layer "F.SilkS")
-			(uuid "b5da4925-e9a1-412b-9026-03111e90eeea")
+			(uuid "d7abc5a7-cd29-46e6-bf75-3bcf1bd33134")
 			(effects
 				(font
 					(size 1 1)
@@ -16578,10 +16578,10 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 90)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a98be606-be91-468b-bb9d-6783ec1a903a")
+			(uuid "3c8e505e-c8fa-4ba9-bc02-272071c66020")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16589,10 +16589,10 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 90)
+			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d7f48327-3a60-4264-9ca6-1fdb22abfa4d")
+			(uuid "167a98a5-3247-4bfe-8155-1de49d4bda10")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16600,7 +16600,7 @@
 			)
 		)
 		(property "KiLib_Generator" "capacitor/THT/other"
-			(at 0 0 90)
+			(at 0 0 0)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "83279345-4eda-45b8-bfda-442514c3d761")
@@ -16612,7 +16612,7 @@
 			)
 		)
 		(property "SKiDL Tag" "bVgyBXm6bF"
-			(at 0 0 270)
+			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -16625,7 +16625,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
-			(at 0 0 270)
+			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -16642,34 +16642,14 @@
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
-			(start -0.12 1.37)
-			(end -0.12 1.033)
+			(start -0.12 -1.37)
+			(end 5.12 -1.37)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "8c0da808-544e-4c46-b89f-039c4706d729")
-		)
-		(fp_line
-			(start 5.12 1.37)
-			(end -0.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "6ca5aea8-a6fa-4fae-b26f-0021da261725")
-		)
-		(fp_line
-			(start 5.12 1.033)
-			(end 5.12 1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "7f16841b-da75-41e9-8220-3c9654c7a43c")
+			(uuid "151c0881-ea75-4574-9197-c8715f1a0b37")
 		)
 		(fp_line
 			(start -0.12 -1.033)
@@ -16682,14 +16662,14 @@
 			(uuid "13471028-d862-4ccb-8154-c5146939b665")
 		)
 		(fp_line
-			(start -0.12 -1.37)
-			(end 5.12 -1.37)
+			(start -0.12 1.37)
+			(end -0.12 1.033)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "151c0881-ea75-4574-9197-c8715f1a0b37")
+			(uuid "8c0da808-544e-4c46-b89f-039c4706d729")
 		)
 		(fp_line
 			(start 5.12 -1.37)
@@ -16700,6 +16680,26 @@
 			)
 			(layer "F.SilkS")
 			(uuid "993911a4-585c-48ce-8cfc-0d604900ab6f")
+		)
+		(fp_line
+			(start 5.12 1.033)
+			(end 5.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "7f16841b-da75-41e9-8220-3c9654c7a43c")
+		)
+		(fp_line
+			(start 5.12 1.37)
+			(end -0.12 1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "6ca5aea8-a6fa-4fae-b26f-0021da261725")
 		)
 		(fp_rect
 			(start -1.05 -1.5)
@@ -16724,7 +16724,7 @@
 			(uuid "0993cb90-634e-4b75-921b-6974c9a20a76")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0 270)
+			(at 0 0)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -16734,7 +16734,7 @@
 			(uuid "fb816343-8051-40cc-9b36-33d27d5bd23d")
 		)
 		(pad "2" thru_hole circle
-			(at 5 0 270)
+			(at 5 0)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -16759,7 +16759,7 @@
 	(footprint "Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm"
 		(layer "F.Cu")
 		(uuid "912cb5c7-0f8d-49fc-a317-78fd891aa4ff")
-		(at -65.11 118 -90)
+		(at 133.11 38.62 -90)
 		(descr "SOIC, 16 Pin (JEDEC MS-012, variation AC, https://www.jedec.org/document_search?search_api_views_fulltext=MS-012, https://www.analog.com/media/en/package-pcb-resources/package/pkg_pdf/soic_narrow-r/r_16.pdf)")
 		(tags "SOIC SO 16-pin-NSOP R-16 R-16-S D0016A M2B SO16 SOT109-1 751B SOIC_N narrow")
 		(property "Reference" "U725"
@@ -17419,7 +17419,7 @@
 	(footprint "Retr01_Lib:DIP-14_W7.62mm"
 		(layer "F.Cu")
 		(uuid "a402c589-3e53-4ef5-b128-e21c0e433a00")
-		(at -66.92 125.38)
+		(at 131.3 46)
 		(descr "14-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U74"
@@ -17631,7 +17631,7 @@
 			(uuid "083bc3f6-e4af-4a3f-a773-83e2aaf6669d")
 		)
 		(point
-			(at -63.11 133)
+			(at 135.11 53.62)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "32a93349-43bc-46b6-941e-ebfe391855f4")
@@ -17971,7 +17971,7 @@
 	(footprint "Retr01_Lib:DIP-28_W7.62mm"
 		(layer "F.Cu")
 		(uuid "a4786690-54ae-4081-9eec-1fdb222a8248")
-		(at -88.95 162.38 -90)
+		(at 109.27 83 -90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "UM"
@@ -18183,7 +18183,7 @@
 			(uuid "6522ad13-6c34-458e-8b3c-2536bcb30c9a")
 		)
 		(point
-			(at -105.46 166.19)
+			(at 92.76 86.81)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "3ad7779f-c0b3-40b8-b518-f80a2a4c07a5")
@@ -19300,7 +19300,7 @@
 			)
 		)
 		(property "Value" "CART_EDGE_36"
-			(at -3.81 45.95 90)
+			(at -7.54 38.59 180)
 			(layer "F.SilkS")
 			(uuid "f8299de3-d1dc-4842-8a5d-03837a5c65a7")
 			(effects
@@ -20149,7 +20149,7 @@
 	(footprint "Retr01_Lib:DIP-28_W7.62mm"
 		(layer "F.Cu")
 		(uuid "b7df1696-7eac-4992-b4ff-55444b91b6f0")
-		(at -89.41 186 -90)
+		(at 108.81 106.62 -90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "US1"
@@ -20361,7 +20361,7 @@
 			(uuid "6c69952e-b7f8-40e1-bf6b-839bf16d7f71")
 		)
 		(point
-			(at -105.92 189.81)
+			(at 92.3 110.43)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "f094a5f1-5bc2-4a41-848f-1c3bc2828804")
@@ -21233,7 +21233,7 @@
 	(footprint "Retr01_Lib:DIP-20_W7.62mm"
 		(layer "F.Cu")
 		(uuid "bc97f614-64bc-4c1c-a9cf-ac71c32d19f0")
-		(at -137.11 161.38)
+		(at 61.11 82)
 		(descr "20-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U574"
@@ -21445,7 +21445,7 @@
 			(uuid "89c62f11-8889-4874-8de1-67641faa44b7")
 		)
 		(point
-			(at -133.3 172.81)
+			(at 64.92 93.43)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "f0e809f2-81c2-4a04-ada2-b49bc6d74ae1")
@@ -21667,13 +21667,13 @@
 	(footprint "Retr01_Lib:DIP-28_W15.24mm"
 		(layer "F.Cu")
 		(uuid "bda482d5-1745-4d09-87d3-00d748faa991")
-		(at -25.6 155.76 -90)
+		(at 172.62 76.38 -90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U24"
 			(at 7.62 -2.33 90)
 			(layer "F.SilkS")
-			(uuid "d8c8524b-9b21-4766-b533-de9627d4f9db")
+			(uuid "26ddcda3-8732-4445-8b53-1d9f11c33ee8")
 			(effects
 				(font
 					(size 1 1)
@@ -21684,7 +21684,7 @@
 		(property "Value" "AT27C256R"
 			(at 7.62 36.51 90)
 			(layer "F.SilkS")
-			(uuid "43881824-7da4-46c4-8434-b0918e6a5e42")
+			(uuid "c4cf64f3-a3fc-4973-b559-fabbfbd55641")
 			(effects
 				(font
 					(size 1 1)
@@ -21696,7 +21696,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0297cb81-4975-4784-9b38-b1136a86632f")
+			(uuid "2b63d92a-55e3-4c75-ad58-0f24ba14ffc6")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21707,7 +21707,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "285bd9d9-8ad1-4145-9eb3-adc8f0f0ad6f")
+			(uuid "0885dfc6-9d42-44ec-847e-56021cac0292")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21879,7 +21879,7 @@
 			(uuid "767251a4-d03a-4764-8987-095f97186055")
 		)
 		(point
-			(at -42.11 163.38)
+			(at 156.11 84)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "83b1c229-896a-49be-8d6f-59c1a6e7ef5d")
@@ -22898,7 +22898,7 @@
 	(footprint "Retr01_Lib:DIP-28_W7.62mm"
 		(layer "F.Cu")
 		(uuid "cd7f2587-7db9-4e7f-844b-1b1ceb7ca9f6")
-		(at -88.87 174 -90)
+		(at 109.35 94.62 -90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "US2"
@@ -23110,7 +23110,7 @@
 			(uuid "29bd0e1e-d7bb-4317-bfd3-1b31f80ae31a")
 		)
 		(point
-			(at -105.38 177.81)
+			(at 92.84 98.43)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "9ca8188d-c058-467f-becc-6f6c35bcb9e4")
@@ -24959,7 +24959,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "f12843f9-32e0-453a-9487-f5be9ec048e0")
-		(at -70.2 69.84 -90)
+		(at 101 -20.54 -90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R31"
@@ -25493,7 +25493,7 @@
 	(footprint "Retr01_Lib:DIP-16_W7.62mm"
 		(layer "F.Cu")
 		(uuid "f5aa4f01-e5fa-41d3-9947-ee60720e6439")
-		(at -172 171.805 90)
+		(at 26.22 92.425 90)
 		(descr "16-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U7C"
@@ -25705,7 +25705,7 @@
 			(uuid "c9804cbc-d337-470a-961d-f3f4cb998555")
 		)
 		(point
-			(at -163.11 167.995)
+			(at 35.11 88.615)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "e918b994-b0a1-4af4-97c4-0378cc621a49")
@@ -26768,7 +26768,7 @@
 	(footprint "Retr01_Lib:DIP-20_W7.62mm"
 		(layer "F.Cu")
 		(uuid "fc6ecb7a-224e-47f0-92f1-16447f0ec983")
-		(at -68.305 185.43 180)
+		(at 129.62 106.78 180)
 		(descr "20-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U573"
@@ -26980,7 +26980,7 @@
 			(uuid "ee2e8f63-1d56-4a08-b1bf-50feca409b97")
 		)
 		(point
-			(at -72.115 174)
+			(at 125.81 95.35)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "3790cae9-491f-478b-aa30-4974e732f071")
@@ -27212,10 +27212,10 @@
 		(layer "Edge.Cuts")
 		(uuid "978d9393-3228-4dda-8d5f-b651e6edf83e")
 	)
-	(gr_text "6.35 alternative, bulkier cable"
-		(at -114.11 217 0)
+	(gr_text "Alternative to pad ports, more stable but takes more PCB area"
+		(at 24 141 0)
 		(layer "Cmts.User")
-		(uuid "8f3ce3d4-82c8-45b4-acfe-43d78532e6e1")
+		(uuid "04462612-07f6-4036-ab02-ec225307a250")
 		(effects
 			(font
 				(size 1 1)
@@ -27224,10 +27224,10 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "Alternative to pad ports, more stable but takes more PCB area"
-		(at 24 141 0)
+	(gr_text "6.35 alternative, bulkier cable"
+		(at 84.11 137.62 0)
 		(layer "Cmts.User")
-		(uuid "04462612-07f6-4036-ab02-ec225307a250")
+		(uuid "8f3ce3d4-82c8-45b4-acfe-43d78532e6e1")
 		(effects
 			(font
 				(size 1 1)
