@@ -112,10 +112,12 @@ Houses system memory and master CPU clock generation.
 
 **Components:**
 - System RAM AS6C62256 (U3, DIP-28)
-- PHI2 Clock source Y1 (8.000 MHz canned oscillator or discrete circuit)
-- MCP130 Reset Supervisor (TO-92)
+- PHI2 Clock source Y1 (8.000 MHz crystal or canned oscillator)
+- MCP130 Reset Supervisor (U130, TO-92)
 - Reset tactile pushbutton (SW_RST)
-- Decoupling capacitors C2, C17
+- Bulk filter electrolytic capacitor E1 (220 uF near J1)
+- Decoupling capacitors: C2 (for U3), C17 (for U130)
+- Crystal load capacitors: C26, C27 (for Y1)
 
 **Placement and routing rules:**
 - U3 (System RAM) sits in the top-left area to the left of the CPU.
@@ -131,7 +133,7 @@ Serves as the central bus master bridging system RAM and cartridge ROM.
 
 **Components:**
 - W65C02S CPU (U1, DIP-40)
-- Decoupling capacitor C1
+- Decoupling capacitor C1 (for U1)
 
 **Placement and routing rules:**
 - U1 mounts horizontally in the Top-Center of the board, positioned directly above the cartridge connector J36.
@@ -156,6 +158,8 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - Discrete R-2R resistor ladder network (R1 through R11)
 - RGBS video output header J2
 - Optional composite video encoder: AD724 (U725, SOIC-16), Y3 (3.579545 MHz crystal), RCA jack J9
+- Decoupling capacitors: C8 (for UPLDX), C9 (for UPLDY), C10 (for UPLDV), C16 (for U24), C18 (for U725)
+- Crystal load capacitors: C22, C23 (for Y2), C24, C25 (for Y3)
 
 **Placement and routing rules:**
 - Arranged in a strict sequential line:
@@ -192,6 +196,7 @@ Manages video tile memory and the half-cycle PHI2 bus interleave.
 - Interleaved VRAM AS6C62256 (U6, DIP-28)
 - 74HC574 Scroll X register (U574, DIP-20)
 - MCU-M master microcontroller (UM, AVR128DB28, SPDIP-28)
+- Decoupling capacitors: C3 (for U6), C5 (for UM), C11 (for U7A), C12 (for U7B), C13 (for U7C), C15 (for U574)
 
 **Placement and routing rules:**
 - The three 74HC157 multiplexers sit directly adjacent to VRAM U6.
@@ -211,6 +216,7 @@ Builds sprite fields in VBlank and renders background scanline slices.
 - MCU-S1 video assist microcontroller (US1, AVR128DB28, SPDIP-28)
 - 74HC573 transparent address latch (U573, DIP-20)
 - Field SRAM AS6C62256 (U41, DIP-28)
+- Decoupling capacitors: C4 (for U41), C6 (for US1), C14 (for U573)
 
 **Placement and routing rules:**
 - US1, U573, and U41 form a compact triangular cluster in the middle-right area of the board.
@@ -230,6 +236,7 @@ Interfaces with external gamepads, arcade controls, and audio output.
 - 2x10 arcade control pin header (J5)
 - Passive audio low-pass filter components (resistors, film capacitors)
 - RCA audio output jack J8 (routed to top rear edge)
+- Decoupling capacitor: C7 (for US2)
 
 **Placement and routing rules:**
 - US2 sits in the lower-left corner immediately behind controller jacks J3 and J4.
@@ -260,6 +267,43 @@ All mechanical interfaces are positioned along the board perimeter according to 
 
 1. **Power entry:** +5.0 V enters at J1 (Top-Left) through power switch SW1 into bulk electrolytic capacitor E1 (220 uF to 470 uF).
 2. **Domain distribution:** Main VCC splits through four 2-pin isolation headers (JP_PWR1 through JP_PWR4) to allow progressive bring-up as specified in [`staged-pcb-bringup-guide.md`](staged-pcb-bringup-guide.md).
-3. **Decoupling proximity:** Every IC socket has a 0.1 uF low-ESR ceramic capacitor connected within 5 mm of its VCC pin.
+3. **Decoupling proximity:** Every IC socket has a 0.1 uF low-ESR ceramic capacitor connected within 5 mm of its VCC pin according to the complete assignment in Section 8.
 4. **Unified ground plane:** Both top and bottom copper layers are flooded with GND pours. The bottom layer is preserved as the primary continuous ground return by routing the majority of signal traces on the top layer.
 5. **Via stitching:** Ground stitching vias are placed every 10 mm to 15 mm across the board and immediately adjacent to IC ground pins.
+
+---
+
+## 8. Capacitor assignment and placement reference
+
+The motherboard houses 20 decoupling sites (19 digital and mixed-signal ICs plus the MCP130 supervisor), 6 crystal load capacitors, and 1 bulk entry electrolytic capacitor. Cartridge memory and gamepad controller decoupling capacitors reside on their respective daughterboards:
+
+| Cap | Value | Type | Assigned IC or Net | Package | Power Pin | Ground Pin | Board Location | Proximity Requirement |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C1 | 100 nF | Ceramic | U1 (W65C02S CPU) | DIP-40 | Pin 8 (VDD) | Pin 21 (VSS) | Central CPU (Top-Center) | Mount within 5 mm of pin 8 |
+| C2 | 100 nF | Ceramic | U3 (System RAM) | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 28 |
+| C3 | 100 nF | Ceramic | U6 (VRAM) | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 28 |
+| C4 | 100 nF | Ceramic | U41 (Field SRAM) | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 4 (Middle-Right) | Mount within 5 mm of pin 28 |
+| C5 | 100 nF | Ceramic | UM (MCU-M) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 3 (Middle-Center) | Mount within 5 mm of pin 10 |
+| C6 | 100 nF | Ceramic | US1 (MCU-S1) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 4 (Middle-Right) | Mount within 5 mm of pin 10 |
+| C7 | 100 nF | Ceramic | US2 (MCU-S2) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 5 (Bottom-Left) | Mount within 5 mm of pin 10 |
+| C8 | 100 nF | Ceramic | UPLDX (Beam X) | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 24 |
+| C9 | 100 nF | Ceramic | UPLDY (Beam Y) | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 24 |
+| C10 | 100 nF | Ceramic | UPLDV (Compositor) | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 24 |
+| C11 | 100 nF | Ceramic | U7A (74HC157 Mux A) | DIP-16 | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 16 |
+| C12 | 100 nF | Ceramic | U7B (74HC157 Mux B) | DIP-16 | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 16 |
+| C13 | 100 nF | Ceramic | U7C (74HC157 Mux C) | DIP-16 | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 16 |
+| C14 | 100 nF | Ceramic | U573 (Address Latch) | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 4 (Middle-Right) | Mount within 5 mm of pin 20 |
+| C15 | 100 nF | Ceramic | U574 (Scroll X Latch) | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 20 |
+| C16 | 100 nF | Ceramic | U24 (Color PROM) | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 28 |
+| C17 | 100 nF | Ceramic | U130 (MCP130 Supervisor) | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 2 |
+| C18 | 100 nF | Ceramic | U725 (AD724 Composite) | SOIC-16 | Pin 10, Pin 16 (VCC) | Pin 2, 8, 15 (GND) | Zone 2 (Top-Right) | Mount adjacent to pin 16 |
+| C19 | 100 nF | Ceramic | U40 (Cart Flash) | DIP-32 | Pin 32 (VDD) | Pin 16 (VSS) | Cartridge PCB | Located on cart module |
+| C20 | 100 nF | Ceramic | U50 (Cart EEPROM) | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Cartridge PCB | Located on cart module |
+| C21 | 100 nF | Ceramic | UPAD1 (Gamepad MCU) | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Controller Pad PCB | Located on gamepad board |
+| C22 | 22 pF | Ceramic | Y2 (21.48 MHz Dot Osc) | Discrete | Pin 1 (XTAL_DOT_IN) | GND | Zone 2 (Top-Right) | Tight loop with Y2 and 74HCU04 |
+| C23 | 22 pF | Ceramic | Y2 (21.48 MHz Dot Osc) | Discrete | Pin 2 (XTAL_DOT_OUT) | GND | Zone 2 (Top-Right) | Tight loop with Y2 and 74HCU04 |
+| C24 | 22 pF | Ceramic | Y3 (3.58 MHz FSC Osc) | Discrete | Pin 1 (FSC_FIN) | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C25 | 22 pF | Ceramic | Y3 (3.58 MHz FSC Osc) | Discrete | Pin 2 (FSC_XTAL) | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C26 | 22 pF | Ceramic | Y1 (8.00 MHz CPU Osc) | Discrete | Pin 1 (XTAL_CPU_IN) | GND | Zone 1 (Top-Left) | Tight loop with Y1 and 74HCU04 |
+| C27 | 22 pF | Ceramic | Y1 (8.00 MHz CPU Osc) | Discrete | Pin 2 (XTAL_CPU_OUT) | GND | Zone 1 (Top-Left) | Tight loop with Y1 and 74HCU04 |
+| E1 | 220 uF | Electrolytic | Power Entry Rail | Radial Can | +5V Rail | GND | Zone 1 (Top-Left) | Mount adjacent to J1 / SW1 |

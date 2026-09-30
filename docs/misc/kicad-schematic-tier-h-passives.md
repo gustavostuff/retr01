@@ -21,33 +21,33 @@ Star **GND** at the bulk cap return. Branch **+5V** to each IC bypass cluster.
 
 ## 2. Bypass capacitors (100 nF)
 
-Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND**, **+5V** rail to the same VCC pin.
+Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND**, **+5V** rail to the same VCC pin. Place each bypass capacitor within 5 mm of its designated IC power pin.
 
-| Cap | IC | VCC pin name |
-| --- | --- | --- |
-| C1 | U1 W65C02S | VDD |
-| C2 | U3 sys RAM | VCC |
-| C3 | U6 VRAM | VCC |
-| C4 | U41 field SRAM | VCC |
-| C5 | UM MCU-M | VCC |
-| C6 | US1 MCU-S1 | VCC |
-| C7 | US2 MCU-S2 | VCC |
-| C8 | UPLDX | VCC |
-| C9 | UPLDY | VCC |
-| C10 | UPLDV | VCC |
-| C11 | U7A | VCC |
-| C12 | U7B | VCC |
-| C13 | U7C | VCC |
-| C14 | U573 | VCC |
-| C15 | U574 | VCC |
-| C16 | U24 color PROM | VCC |
-| C17 | MCP130 supervisor | +5V |
-| C18 | (AD724 **U725**) | +5V only if populated |
-| C19 | U40 cart flash | VDD (cart sheet or J36 stub) |
-| C20 | U50 24C64 | VCC (cart sheet or J36 stub) |
-| C21 | UPAD1 pad MCU | VCC (pad PCB, not mobo) |
+| Cap | IC RefDes | Device and Role | Package | Power Pin (VCC/VDD) | Ground Pin (GND/VSS) | Placement Zone |
+| --- | --- | --- | --- | --- | --- | --- |
+| C1 | U1 | W65C02S Game CPU | DIP-40 | Pin 8 (VDD) | Pin 21 (VSS) | Central CPU (Top-Center) |
+| C2 | U3 | AS6C62256 System RAM | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 1 (Top-Left) |
+| C3 | U6 | AS6C62256 Interleaved VRAM | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 3 (Middle-Left) |
+| C4 | U41 | AS6C62256 Field SRAM | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 4 (Middle-Right) |
+| C5 | UM | AVR128DB28 Master MCU (MCU-M) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 3 (Middle-Center) |
+| C6 | US1 | AVR128DB28 Sprite Assist (MCU-S1) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 4 (Middle-Right) |
+| C7 | US2 | AVR128DB28 Peripheral MCU (MCU-S2) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 5 (Bottom-Left) |
+| C8 | UPLDX | ATF22V10 Beam X Timing PLD | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
+| C9 | UPLDY | ATF22V10 Beam Y Timing PLD | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
+| C10 | UPLDV | ATF22V10 Compositor PLD | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
+| C11 | U7A | 74HC157 Multiplexer A | DIP-16 | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) |
+| C12 | U7B | 74HC157 Multiplexer B | DIP-16 | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) |
+| C13 | U7C | 74HC157 Multiplexer C | DIP-16 | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) |
+| C14 | U573 | 74HC573 Address Latch | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 4 (Middle-Right) |
+| C15 | U574 | 74HC574 Scroll X Latch | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
+| C16 | U24 | AT27C256R Color PROM | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
+| C17 | U130 | MCP130 Reset Supervisor | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
+| C18 | U725 | AD724 Composite Video Encoder | SOIC-16 | Pin 10, Pin 16 (VCC) | Pin 2, Pin 8, Pin 15 (GND) | Zone 2 (Top-Right) |
+| C19 | U40 | SST39SF040 Cartridge Flash | DIP-32 | Pin 32 (VDD) | Pin 16 (VSS) | Cartridge Module (J36) |
+| C20 | U50 | 24C64 Cartridge Save EEPROM | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Cartridge Module (J36) |
+| C21 | UPAD1 | ATtiny85 Gamepad Controller MCU | DIP-8 / SOIC-8 | Pin 8 (VCC) | Pin 4 (GND) | Controller Pad PCB (J3/J4) |
 
-Place each bypass **adjacent** to the IC symbol in the schematic (same rule on PCB).
+Place each bypass capacitor adjacent to the IC symbol in the schematic and within 5 mm on the PCB layout.
 
 ---
 

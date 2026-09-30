@@ -8,35 +8,37 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 
 ## Bypass (`C1`-`C21`)
 
-| Cap | IC | VCC pin |
-| --- | --- | --- |
-| C1 | U1 (W65C02S) | VDD |
-| C2 | U3 (sys RAM) | VCC |
-| C3 | U6 (VRAM) | VCC |
-| C4 | U41 (linebuf SRAM) | VCC |
-| C5 | UM (MCU-M) | VCC |
-| C6 | US1 (MCU-S1) | VCC |
-| C7 | US2 (MCU-S2) | VCC |
-| C8 | UPLDX (beam X) | VCC |
-| C9 | UPLDY (beam Y) | VCC |
-| C10 | UPLDV (compositor) | VCC |
-| C11-C13 | U7A-U7C (74HC157) | VCC |
-| C14 | U573 (field ALE) | VCC |
-| C15 | U574 (scroll X) | VCC |
-| C16 | U24 (color PROM) | VCC |
-| C17 | *(MCP130 supervisor)* | +5V rail only in sim |
-| C18 | *(AD724)* | +5V rail only in sim |
-| C19 | U40 (cart flash) | VDD |
-| C20 | U50 (24C64) | VCC |
-| C21 | UPAD1 (pad ATtiny) | VCC |
+| Cap | IC RefDes | Device and Role | Power Pin | Ground Pin | Placement Zone |
+| --- | --- | --- | --- | --- | --- |
+| C1 | U1 | W65C02S Game CPU | Pin 8 (VDD) | Pin 21 (VSS) | Central CPU (Top-Center) |
+| C2 | U3 | AS6C62256 System RAM | Pin 28 (VCC) | Pin 14 (VSS) | Zone 1 (Top-Left) |
+| C3 | U6 | AS6C62256 Interleaved VRAM | Pin 28 (VCC) | Pin 14 (VSS) | Zone 3 (Middle-Left) |
+| C4 | U41 | AS6C62256 Field SRAM | Pin 28 (VCC) | Pin 14 (VSS) | Zone 4 (Middle-Right) |
+| C5 | UM | AVR128DB28 Master MCU (MCU-M) | Pin 10 (VDD) | Pin 11 (GND) | Zone 3 (Middle-Center) |
+| C6 | US1 | AVR128DB28 Sprite Assist (MCU-S1) | Pin 10 (VDD) | Pin 11 (GND) | Zone 4 (Middle-Right) |
+| C7 | US2 | AVR128DB28 Peripheral MCU (MCU-S2) | Pin 10 (VDD) | Pin 11 (GND) | Zone 5 (Bottom-Left) |
+| C8 | UPLDX | ATF22V10 Beam X Timing PLD | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
+| C9 | UPLDY | ATF22V10 Beam Y Timing PLD | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
+| C10 | UPLDV | ATF22V10 Compositor PLD | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
+| C11 | U7A | 74HC157 Multiplexer A | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) |
+| C12 | U7B | 74HC157 Multiplexer B | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) |
+| C13 | U7C | 74HC157 Multiplexer C | Pin 16 (VCC) | Pin 8 (GND) | Zone 3 (Middle-Left) |
+| C14 | U573 | 74HC573 Address Latch | Pin 20 (VCC) | Pin 10 (GND) | Zone 4 (Middle-Right) |
+| C15 | U574 | 74HC574 Scroll X Latch | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
+| C16 | U24 | AT27C256R Color PROM | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
+| C17 | U130 | MCP130 Reset Supervisor | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
+| C18 | U725 | AD724 Composite Video Encoder | Pin 10, Pin 16 (VCC) | Pin 2, Pin 8, Pin 15 (GND) | Zone 2 (Top-Right) |
+| C19 | U40 | SST39SF040 Cartridge Flash | Pin 32 (VDD) | Pin 16 (VSS) | Cartridge Module (J36) |
+| C20 | U50 | 24C64 Cartridge Save EEPROM | Pin 8 (VCC) | Pin 4 (GND) | Cartridge Module (J36) |
+| C21 | UPAD1 | ATtiny85 Gamepad Controller MCU | Pin 8 (VCC) | Pin 4 (GND) | Controller Pad PCB (J3/J4) |
 
 Each bypass: cap `1` to IC VCC, cap `2` to `PS1` GND, `PS1` VDD to IC VCC.
 
 ## Bulk and crystals
 
 - **E1:** `+` to `+5V`, `-` to GND.
-- **Y1/Y2/Y3** (passive BOM crystals): load **C22-C27**; **Y1**/`Y2` also tie to functional **OSC8M** / **OSC_DOT** chips (same refdes as canned osc sprites; see sim UI).
-- **Y3:** load caps only; net **`FSC_XTAL`** on crystal pin until AD724 is modeled.
+- **Y1/Y2/Y3** (passive BOM crystals): load **C22-C27**, with **Y1** and **Y2** also tied to functional **OSC8M** and **OSC_DOT** chips (same refdes as canned osc sprites, see sim UI).
+- **Y3:** load caps only, with net **`FSC_XTAL`** on crystal pin until AD724 is modeled.
 
 ## Video DAC
 
