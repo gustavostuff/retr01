@@ -38,10 +38,12 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U573** | SN74HC573 | `74xx_74LS573` | DIP-20 |
 | **U574** | SN74HC574 | `74xx_74LS574` | DIP-20 |
 | **U725** | AD724 | Project symbol or Analog Devices pin names | **SOIC-16** `Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm` |
-| **Y1**, **Y2**, **Y3** | Crystals / osc cans | `Device:Crystal` or canned osc symbol | DIP-8 can per `tier_h_map.py` |
-| **J1** | Barrel 5 V | `Connector:Barrel_Jack` | CUI PJ-063AH class |
+| **U04** | 74HCU04 | `74xx_74HC04` / unbuffered hex inverter | DIP-14 |
+| **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
+| **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |
+| **J1** | Barrel 5 V | `Connector:Barrel_Jack` | GCT DCJ200-10-A class |
 | **J2** | RGB + sync 1x6 | Connector symbol | 1x6 header |
-| **J3**, **J4** | TRS pad jacks | Custom / Switchcraft | `Retr01_Lib` TRS |
+| **J3**, **J4** | TRS pad jacks | `Connector_Audio:AudioJack3_SwitchTR` | CUI SJ1-3515N horizontal |
 | **J5**, **J6** | Arcade 1x10 | Pin header | 1x10 |
 | **J7** | Cabinet power/reset 1x4 | Pin header | 1x4 |
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |

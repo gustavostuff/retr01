@@ -19,15 +19,15 @@ C_ELEC = f"{_R}:CP_Radial_D8.0mm_P3.50mm"
 R_AX = f"{_R}:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 
 OSC8 = f"{_R}:Oscillator_DIP-8"
-XTAL = "Crystal:Crystal_HC49-U_Vertical"
+XTAL = f"{_R}:Crystal_HC49-U_Vertical"
 
-BARREL = f"{_R}:BarrelJack_CUI_PJ-063AH_Horizontal"
+BARREL = f"{_R}:BarrelJack_GCT_DCJ200-10-A_Horizontal"
 HDR4 = f"{_R}:PinHeader_1x04_P2.54mm_Vertical"
 HDR6 = f"{_R}:PinHeader_1x06_P2.54mm_Vertical"
 HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"
 HDR2x10 = f"{_R}:PinHeader_2x10_P2.54mm_Vertical"
 EDGE36_MOBO = f"{_R}:EDAC_395_MoboSocket_2x18_2.54x5.08mm"
-TRS = "Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical"
+TRS = f"{_R}:Jack_3.5mm_CUI_SJ1-3515N_Horizontal"
 # Edge-mount RCJ-01x (1A/1B/1C shell + pad 2 tip); from gametank avboard_tht2.
 RCA = "Retr01_Lib:CUI_RCJ-014"
 RCA_AUDIO = "Retr01_Lib:CUI_RCJ-014_Audio"

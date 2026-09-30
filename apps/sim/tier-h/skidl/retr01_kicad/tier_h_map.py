@@ -26,6 +26,8 @@ REFDES: dict[str, Res] = {
     "UPLDY": ("ATF22V10", fp.DIP24),
     "UPLDV": ("ATF22V10", fp.DIP24),
     "U725": ("AD724", fp.SOIC16),
+    "U04": ("74HCU04", fp.DIP14),
+    "U74": ("74HC74", fp.DIP14),
     "J1": ("BARREL_5V", fp.BARREL),
     "J2": ("RGBS_HDR", fp.HDR6),
     "J3": ("TRS_P1", fp.TRS),
@@ -35,9 +37,9 @@ REFDES: dict[str, Res] = {
     "J8": ("RCJ-012", fp.RCA_AUDIO),
     "J9": ("RCJ-014", fp.RCA),
     "J36": ("CART_EDGE_36", fp.EDGE36_MOBO),
-    "Y1": ("OSC8M", fp.OSC8),
-    "Y2": ("OSC_DOT", fp.OSC8),
-    "Y3": ("OSC_4FSC", fp.OSC8),
+    "Y1": ("XTAL", fp.XTAL),
+    "Y2": ("XTAL", fp.XTAL),
+    "Y3": ("XTAL", fp.XTAL),
 }
 
 PART: dict[str, Res] = {
@@ -59,6 +61,11 @@ PART: dict[str, Res] = {
     "OSC_DOT": ("OSC_DOT", fp.OSC8),
     "OSC4LEGS": ("OSC4LEGS", fp.DIP14),
     "OSC_4FSC": ("OSC_4FSC", fp.OSC8),
+    "74HCU04": ("74HCU04", fp.DIP14),
+    "SN74HCU04": ("74HCU04", fp.DIP14),
+    "74HC74": ("74HC74", fp.DIP14),
+    "SN74HC74": ("74HC74", fp.DIP14),
+    "XTAL": ("XTAL", fp.XTAL),
     "AD724": ("AD724", fp.SOIC16),
     "RCJ-012": ("RCJ-012", fp.RCA_AUDIO),
     "RCJ-014": ("RCJ-014", fp.RCA),
@@ -87,6 +94,8 @@ RESISTOR_REFDES: dict[str, str] = {
     "R28": "R_4K7",
     "R29": "R_4K7",
     "R30": "R_10K",
+    "R31": "R_1M",
+    "R32": "R_1M",
 }
 
 CAP_REFDES: dict[str, str] = {f"C{i}": "C_100N" for i in range(1, 22)}
@@ -110,11 +119,5 @@ def resolve(refdes: str, part_hints: Iterable[str]) -> Optional[Res]:
         if hint in PART:
             return PART[hint]
     if refdes.startswith("Y"):
-        if "OSC_DOT" in hints:
-            return ("OSC_DOT", fp.OSC8)
-        if "OSC8M" in hints:
-            return ("OSC8M", fp.OSC8)
-        if "OSC4LEGS" in hints:
-            return ("OSC4LEGS", fp.DIP14)
-        return ("OSC_4FSC", fp.OSC8)
+        return ("XTAL", fp.XTAL)
     return None

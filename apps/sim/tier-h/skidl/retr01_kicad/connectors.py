@@ -81,6 +81,8 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if pad_net is None:
         pad_net = _find_net_by_node(nets_map, "US2", "PAD_DATA")
 
+    nc = _ensure_net(nets_map, "NC")
+
     if gnd:
         for ref, pin in (
             ("J3", P.TRS_SLEEVE),
@@ -92,23 +94,30 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J7", "2"),
             ("J7", "4"),
             ("J1", "2"),
+            ("J1", "3"),
         ):
             if ref in parts:
-                pin_connect(parts[ref], "", int(pin), gnd)
+                pin_connect(parts[ref], "", pin, gnd)
 
     if v5:
         for ref, pin in (
+            ("J1", "1"),
             ("J7", "1"),
             ("J3", P.TRS_TIP),
             ("J4", P.TRS_TIP),
         ):
             if ref in parts:
-                pin_connect(parts[ref], "", int(pin), v5)
+                pin_connect(parts[ref], "", pin, v5)
 
     if pad_net and "J3" in parts:
-        pin_connect(parts["J3"], "", int(P.TRS_RING), pad_net)
+        pin_connect(parts["J3"], "", P.TRS_RING, pad_net)
     if pad_net and "J4" in parts:
-        pin_connect(parts["J4"], "", int(P.TRS_RING), pad_net)
+        pin_connect(parts["J4"], "", P.TRS_RING, pad_net)
+
+    for ref in ("J3", "J4"):
+        if ref in parts:
+            for nc_pin in P.TRS_NC:
+                pin_connect(parts[ref], "", nc_pin, nc)
 
     if gnd:
         for ref in ("J8", "J9"):
@@ -117,7 +126,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             for shell in ("1A", "1B", "1C"):
                 pin_connect(parts[ref], "", shell, gnd)
 
-    # RCA tip (pad 2); APU / AD724 not in Tier H JSON yet — distinct stub nets.
+    # RCA tip (pad 2); APU / AD724 not in Tier H JSON yet - distinct stub nets.
     if "J8" in parts:
         pin_connect(parts["J8"], "", "2", _ensure_net(nets_map, "AUDIO_OUT"))
     if "J9" in parts:

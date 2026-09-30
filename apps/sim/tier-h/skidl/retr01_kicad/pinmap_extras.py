@@ -37,10 +37,41 @@ def apply_pinmap_extras() -> None:
     t["ATtiny85"] = _nums(8)
     t["OSC4LEGS"] = _nums(14)
     t["AD724"] = _nums(16)
+    t["74HCU04"] = _nums(14)
+    t["SN74HCU04"] = _nums(14)
+    t["74HC74"] = _nums(14)
+    t["SN74HC74"] = _nums(14)
+    t["XTAL"] = ["1", "2"]
+    t["R_1M"] = _nums(2)
+    t["BARREL_5V"] = ["1", "2", "3"]
+    t["TRS_P1"] = ["S", "T", "R", "TN", "RN"]
+    t["TRS_P2"] = ["S", "T", "R", "TN", "RN"]
     for key in ("RCJ-012", "RCJ-014", "AUDIO_OUT", "COMPOSITE_OUT"):
         t[key] = ["1A", "1B", "1C", "2"]
     a["RCJ-012"] = {"2": "SIGNAL", "1A": "GND", "1B": "GND", "1C": "GND"}
     a["RCJ-014"] = dict(a["RCJ-012"])
+    a["BARREL_5V"] = {"1": "+5V", "2": "GND", "3": "GND"}
+    a["TRS_P1"] = {"S": "GND", "T": "+5V", "R": "DATA", "TN": "NC", "RN": "NC"}
+    a["TRS_P2"] = dict(a["TRS_P1"])
+    a["XTAL"] = {"1": "1", "2": "2"}
+    a["74HCU04"] = {
+        "1": "1A", "2": "1Y",
+        "3": "2A", "4": "2Y",
+        "5": "3A", "6": "3Y",
+        "7": "GND",
+        "8": "4Y", "9": "4A",
+        "10": "5Y", "11": "5A",
+        "12": "6Y", "13": "6A",
+        "14": "VCC",
+    }
+    a["SN74HCU04"] = dict(a["74HCU04"])
+    a["74HC74"] = {
+        "1": "1CLR#", "2": "1D", "3": "1CLK", "4": "1PRE#", "5": "1Q", "6": "1/Q",
+        "7": "GND",
+        "8": "2/Q", "9": "2Q", "10": "2PRE#", "11": "2CLK", "12": "2D", "13": "2CLR#",
+        "14": "VCC",
+    }
+    a["SN74HC74"] = dict(a["74HC74"])
 
     a["SN74HC573"] = _hc573_aliases()
     a["SN74HC574"] = _hc574_aliases()

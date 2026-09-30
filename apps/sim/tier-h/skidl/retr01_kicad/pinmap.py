@@ -208,9 +208,9 @@ M1284_P2 = ("1", "2", "3", "4", "5", "6", "7", "8")  # PB0..PB7
 M1284_RESET, M1284_VCC, M1284_GND = "9", "10", "11"
 M1284_SCL, M1284_SDA = "22", "23"  # PC0/PC1 TWI
 M1284_PAD_DATA = "16"  # PD2
-# Switchcraft 35RAPC2BVN4 (VN4 CD / 3BVN4 schematic family): Tip=4 Ring=2 Sleeve=1.
-TRS_TIP, TRS_RING, TRS_SLEEVE = "4", "2", "1"
-TRS_NC = ("3", "5")  # no switch contacts on 2BVN4; still plated for mechanical hold
+# CUI SJ1-3515N horizontal 3.5mm TRS (5-pin): Tip=T, Ring=R, Sleeve=S, TipNormal=TN, RingNormal=RN.
+TRS_TIP, TRS_RING, TRS_SLEEVE = "T", "R", "S"
+TRS_NC = ("TN", "RN")
 M1284_HBLANK = "17"  # PD3
 M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5 (BG0 scroll). SEL_FE00 shares UPLDA pin with FE06.
 # Soft $FExx: palette + MAP seek strobes. Only PD0/PD1 free after DQ remap.
@@ -278,11 +278,11 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "XTAL_16M": _nums(2),
     "AD725": _nums(16),
     "CART_EDGE_36": _nums(36),
-    "BARREL_5V": ["1", "2", "MP"],  # CUI PJ-063AH / KiCad Barrel_Jack_MountingPin
+    "BARREL_5V": ["1", "2", "3"],  # GCT DCJ200-10-A: 1=Center(+5V), 2=Shunt(GND), 3=Sleeve(GND)
     "RGBS_HDR": _nums(6),
-    # 35RAPC2BVN4: VN4 5-pad layout. Tip=4 Ring=2 Sleeve=1; 3+5 NC (no switch).
-    "TRS_P1": _nums(5),
-    "TRS_P2": _nums(5),
+    # CUI SJ1-3515N 5-pin horizontal TRS jack
+    "TRS_P1": ["S", "T", "R", "TN", "RN"],
+    "TRS_P2": ["S", "T", "R", "TN", "RN"],
     "ARCADE_2x10": _nums(20),
     "CAB_PWR_RST": _nums(4),
     "SCALE_SW": _nums(2),
@@ -308,6 +308,7 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "R_4K": _nums(2),
     "R_75": _nums(2),
     "R_R2R": _nums(2),
+    "R_1M": _nums(2),
     # 0 ohm jumpers: bridge global rail <-> per-IC local VCC for Quilter bypass parent ID.
     "R_0": _nums(2),
 }

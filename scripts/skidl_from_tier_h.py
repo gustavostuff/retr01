@@ -139,6 +139,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
 
     if str(TIER_H_SKIDL_DIR) not in sys.path:
         sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+    from retr01_kicad.clocks import ensure_clock_parts, wire_clocks
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
     from retr01_kicad.mobo_scope import normalize_export_node
     from retr01_kicad.stub_pins import stub_unconnected_pins
@@ -171,9 +172,12 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
             ensure_part(ref)
             pin_connect(parts[ref], pin_name, pin_num, sk_net)
 
-    ensure_connector_parts(parts, lambda r: part_for_refdes(r, ref_index.get(r) or {"max_num": 0, "parts": set()}))
+    part_factory = lambda r: part_for_refdes(r, ref_index.get(r) or {"max_num": 0, "parts": set()})
+    ensure_connector_parts(parts, part_factory)
+    ensure_clock_parts(parts, part_factory)
     ensure_part("U725")
     wire_connectors(parts, nets_map, pin_connect)
+    wire_clocks(parts, nets_map, pin_connect)
     stub_unconnected_pins(parts, nets_map, pin_connect)
 
     buf = StringIO()
@@ -228,7 +232,7 @@ def main() -> None:
         os.chdir(orig_cwd)
 
     out_path.write_text(netlist_text, encoding="utf-8")
-    print(f"wrote {out_path} ({len(netlist_text)} bytes) — PRELIMINARY / NOT FAB-READY", file=sys.stderr)
+    print(f"wrote {out_path} ({len(netlist_text)} bytes) - PRELIMINARY / NOT FAB-READY", file=sys.stderr)
 
 
 if __name__ == "__main__":

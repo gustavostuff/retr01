@@ -29,7 +29,7 @@ SKIP_REFDES = frozenset(
     }
 )
 
-# DIP/PLD/MCU on the locked 17-IC motherboard (+ support outside count is separate).
+# DIP/PLD/MCU on the locked 19-IC motherboard (+ support outside count is separate).
 MOBO_COUNTED_IC_REFDES = frozenset(
     {
         "U1",
@@ -49,6 +49,8 @@ MOBO_COUNTED_IC_REFDES = frozenset(
         "UPLDY",
         "UPLDV",
         "U725",
+        "U04",
+        "U74",
     }
 )
 
@@ -82,8 +84,8 @@ _EE_J36 = {
 }
 
 _PS1_J1 = {
-    "1": "1",  # VIN -> barrel tip
-    "3": "1",  # VDD on +5V net with other loads; input still at barrel tip
+    "1": "1",  # VIN -> barrel center (+5V)
+    "3": "1",  # VDD on +5V net with other loads; input still at barrel center
     "4": "2",  # GND -> sleeve
 }
 
@@ -91,6 +93,10 @@ _PS1_J1 = {
 def normalize_export_node(ref: str, pin_name: str, pin_num: int) -> Optional[Node]:
     """Return mobo refdes/pin for Skidl, or None to drop."""
     if ref in SKIP_REFDES:
+        return None
+    if ref in ("Y1", "Y2", "Y3"):
+        # Discrete crystals are wired along with U04/U74 via wire_clocks().
+        # Drop legacy canned-oscillator pin nodes from sim export.
         return None
     sn = str(pin_num)
     if ref == "U40":
