@@ -9,8 +9,8 @@ Feasibility analysis, hardware layout rules, and staged validation strategy for 
 Solderless breadboards remain a valuable intermediate tool before and during PCB assembly:
 
 1. **Individual IC sanity testing:** Before inserting rare or expensive ICs (W65C02S, programmed ATF22V10s, AT27C256R PROM) into a freshly soldered board, individual pin truth tables and programming verification can be performed on a breadboard using an Arduino test rig as detailed in [`bench-testing-guide.md`](bench-testing-guide.md).
-2. **Optional early video exploration (Tiers A, B, and C):** Builders may choose to prototype the video generation stages on a breadboard first to observe raw sync signals or test custom JEDEC equations before ordering copper.
-3. **High-speed breadboard limitations:** When breadboarding Tiers A, B, or C, builders must account for the physical parasitic effects detailed in [`bench-testing-guide.md`](bench-testing-guide.md):
+2. **Optional early video exploration (Tiers A, B, and C):** Video generation may be prototyped on a breadboard first to observe raw sync or test JEDEC equations before ordering copper.
+3. **High-speed breadboard limitations:** Tiers A, B, or C on a breadboard pick up the parasitics in [`bench-testing-guide.md`](bench-testing-guide.md):
    - Contact clip capacitance (2 to 5 pF per row) detuning the 21.477 MHz Pierce crystal oscillator network.
    - Power rail inductance causing ATF22V10 ground bounce and false counter clocking during simultaneous output switching.
    - Resistor row capacitance introducing low-pass filtering on the R-2R DAC, resulting in color smear.
@@ -46,7 +46,7 @@ Signal propagation velocity in standard FR4 fiberglass is approximately 150 mm p
 - At 8.000 MHz (PHI2 clock), one clock period is 125 nanoseconds.
 - At 21.477 MHz (master oscillator), one clock period is 46 nanoseconds.
 
-A trace length variation of 50 mm (2 inches) across parallel data lines introduces approximately 0.33 nanoseconds of propagation skew. In an 8-bit bus with 125 ns cycle times, 0.33 ns represents less than 0.3% of the clock period. Consequently, serpentine trace length matching is unnecessary for Retr01. Direct, point-to-point routing with minimal vias satisfies all timing constraints.
+A 50 mm (2 inch) length difference on parallel data lines is about 0.33 ns of skew. On an 8-bit bus with 125 ns cycles that is under 0.3% of the period. Serpentine length matching is unnecessary. Direct point-to-point routing with few vias meets timing.
 
 ### Recommended trace widths and board stackup
 
@@ -249,10 +249,10 @@ Brings the remaining peripherals online to complete the console:
 
 ## 6. Summary of PCB design requirements checklist
 
-When designing the Tier H KiCad schematic and board layout, include:
+The Tier H board layout includes:
 
-1. **IC Sockets:** Use DIP/SPDIP sockets for the 18 through-hole motherboard ICs (U725 AD724 mounts directly on surface-mount SOIC-16 pads without a socket or adapter).
-2. **Four Power Jumpers:** JP_PWR1 (Core/Video), JP_PWR2 (AVRs), JP_PWR3 (CPU/Memory), JP_PWR4 (Audio).
-3. **Dedicated Tap Headers:** 6-pin SPI header and 8-pin timing header on standard 2.54 mm pitch.
-4. **Pull-Up Resistors:** Ensure all active-low control pins (`/OE`, `/WE`, `/CE`, `RESB`, `RDY`) have dedicated pull-ups directly at the socket pins so unpopulated sockets do not leave lines floating.
-5. **Ground Loops:** Place at least four through-hole ground test loops around the board perimeter for logic analyzer and oscilloscope ground leads.
+1. **IC sockets:** DIP/SPDIP sockets for the 18 through-hole motherboard ICs. U725 (AD724) mounts on SOIC-16 pads with no socket or adapter.
+2. **Four power jumpers:** JP_PWR1 (Core/Video), JP_PWR2 (AVRs), JP_PWR3 (CPU/Memory), JP_PWR4 (Audio).
+3. **Tap headers:** 6-pin SPI header and 8-pin timing header on 2.54 mm pitch.
+4. **Pull-up resistors:** Active-low control pins (`/OE`, `/WE`, `/CE`, `RESB`, `RDY`) have pull-ups at the socket so an empty socket does not float those nets.
+5. **Ground loops:** At least four through-hole ground test loops on the perimeter for analyzer and scope grounds.

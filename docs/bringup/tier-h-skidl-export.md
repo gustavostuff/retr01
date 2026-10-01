@@ -57,7 +57,7 @@ pip install skidl
 
 Defaults: JSON `apps/sim/tier-h/skidl/retr01_tier_h.json`, netlist `apps/sim/tier-h/skidl/retr01_prelim.net`. Skidl backup files (`*_sklib.py`, `.erc`, `.log`) land in that same directory.
 
-Add `-q` to hide Skidl footprint/tag warnings (expected for this draft flow).
+`-q` hides Skidl footprint/tag warnings (expected for this draft flow).
 
 If Skidl cannot find symbol libraries, set `KICAD10_SYMBOL_DIR` to the host KiCad symbols path (on many Linux installs: `/usr/share/kicad/symbols`). The script sets that path before importing Skidl when no KiCad env vars are present.
 
@@ -94,7 +94,7 @@ For this flow, `scripts/retr01_trim_silk_footprints.py` (run from `export_netlis
 
 ## Fabrication-ready criteria
 
-Before any fab-ready netlist:
+A fab-ready netlist waits on:
 
 1. AD724 + MCP130 in sim/schematic links  
 2. Resolve refdes / crystal vs osc naming  

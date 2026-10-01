@@ -26,7 +26,7 @@ Retr01 does not rely on manual graphical schematic capture in KiCad Eeschema (`.
   apps/sim/tier-h/kicad/main-pcb/v_01/v_01.kicad_pcb
 ```
 
-Because graphical schematic entry is skipped, the critical design question is: **How is the physical PCB file (`v_01.kicad_pcb`) proven to match the simulation's pin graph (`retr01_tier_h.json`) with zero missing or swapped connections?**
+Without a KiCad schematic sheet, the board file (`v_01.kicad_pcb`) still has to match the simulation pin graph (`retr01_tier_h.json`) with no missing or swapped connections. The comparison below is that check.
 
 ---
 
@@ -173,7 +173,7 @@ Verification involves two distinct levels:
 - Guarantees zero swapped pins or missing nodes in the KiCad ratsnest.
 
 ### Level 2: Physical copper continuity (KiCad DRC)
-- After routing traces in Pcbnew, running **Inspect -> Design Rules Checker (DRC)** confirms that every logical net is completely routed.
+- After traces are routed in Pcbnew, **Inspect -> Design Rules Checker (DRC)** confirms that every logical net is fully routed.
 - DRC output must read:
   - **Unconnected items: 0**
   - **Track clearance violations: 0**
@@ -203,10 +203,10 @@ A manual datasheet audit covers every counted IC package:
 
 ## 6. Pre-fabrication sign-off checklist
 
-Before exporting Gerber files for fabrication at PCBWay:
+Gerber export for a fab house follows this order:
 
-1. **Sim export:** Regenerate `retr01_tier_h.json` and `retr01_prelim.net` via `export_netlist.sh`.
-2. **Netlist import:** Re-import `retr01_prelim.net` into `v_01.kicad_pcb` to ensure no upstream netlist changes are missing.
-3. **Automated script comparison:** Run `scripts/verify_pcb_netlist.py`. Output must report `PASS: 100% equivalence`.
-4. **KiCad DRC:** Run Pcbnew Design Rules Checker. Output must report **0 unrouted nets** and **0 DRC errors**.
-5. **Physical 1:1 paper printout:** Print board layout on paper at 100% scale and insert actual DIP sockets and jacks into the paper to verify physical lead spacing and hole drill sizes.
+1. **Sim export:** `export_netlist.sh` regenerates `retr01_tier_h.json` and `retr01_prelim.net`.
+2. **Netlist import:** `retr01_prelim.net` is re-imported into `v_01.kicad_pcb` so upstream netlist edits are present.
+3. **Automated script comparison:** `scripts/verify_pcb_netlist.py` reports `PASS: 100% equivalence`.
+4. **KiCad DRC:** Pcbnew Design Rules Checker reports **0 unrouted nets** and **0 DRC errors**.
+5. **Physical 1:1 paper printout:** A 100% scale print of the layout is checked against real DIP sockets and jacks for lead spacing and drill sizes.

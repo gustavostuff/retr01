@@ -6,13 +6,13 @@ Functional zoning, physical placement topology, and bus-flow routing guidelines 
 
 ## 1. Architectural rationale for functional zoning
 
-Preliminary PCB drafts frequently group components by physical package dimensions (such as placing all DIP-28 memory packages in a single vertical column, or aligning all logic ICs on one edge). While visually tidy, package-shape grouping creates severe routing bottlenecks:
+Grouping parts by package size (all DIP-28 memories in one column, all logic ICs along one edge) looks tidy and still creates routing bottlenecks:
 
-1. **Long bus crossings:** Grouping unrelated memory chips forces lines from four independent memory buses (CPU system bus, multiplexed VRAM bus, compositor color index bus, and S1 blitter bus) to cross each other repeatedly across the board.
-2. **Antenna trace loops:** Separating the video timing PLDs from the Color PROM and DAC forces the high-speed 6-bit color index bus to travel across the entire board under the cartridge connector, radiating electromagnetic interference and increasing susceptibility to digital noise.
-3. **Crosstalk into controller and audio lines:** Routing high-speed address buses near sensitive gamepad lines or audio filtering networks degrades signal fidelity.
+1. **Long bus crossings:** Unrelated memory chips in one cluster force four independent buses (CPU system, multiplexed VRAM, compositor color index, and S1 blitter) to cross repeatedly.
+2. **Antenna trace loops:** Video timing PLDs far from the Color PROM and DAC stretch the 6-bit color index bus across the board under the cartridge connector. That run radiates and picks up digital noise.
+3. **Crosstalk into controller and audio lines:** High-speed address buses next to gamepad lines or audio filtering degrade those analog nets.
 
-To achieve clean, short traces with minimal layer transitions, components are arranged by **electrical signal flow** into five dedicated functional zones surrounding the central cartridge connector.
+Components sit by **electrical signal flow** in five functional zones around the central cartridge connector. Traces stay short and layer changes stay few.
 
 ---
 
@@ -22,7 +22,7 @@ The physical motherboard outline is specified at **160 mm width by 100 mm height
 
 ### Rationale for the 160 mm x 100 mm standard size
 
-1. **Off-the-shelf enclosure compatibility:** As a globally recognized standard format, numerous manufacturers (such as Hammond Manufacturing, Fischer Elektronik, and standard electronic project box suppliers) produce aluminum extruded and molded plastic desktop cases with integrated internal card guide slots designed specifically for 160 mm x 100 mm PCBs. This enables housing the system in durable, professional enclosures without requiring custom 3D-printed chassis rails.
+1. **Off-the-shelf enclosure compatibility:** 160 mm x 100 mm is a common Eurocard size. Desktop cases from Hammond, Fischer Elektronik, and similar vendors include card guides for that outline. A custom chassis is not required.
 2. **Component density and breathing room:** Accommodates the counted motherboard BOM (18 through-hole DIP/SPDIP ICs plus the direct-mount SOIC-16 surface-mount AD724 composite encoder, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) at a balanced ~45% packing density. This ensures that 0.1 uF ceramic bypass capacitors sit immediately adjacent to IC power pins (< 5 mm), sockets maintain physical clearance for test clips during bring-up, and M3 corner mounting holes retain full 5 mm clearance from copper traces.
 3. **Geometry for 3-column physical bus topology:** The 1.6:1 aspect ratio provides the necessary horizontal span for a balanced 3-column layout:
    - Left column (~45 mm): System RAM, VRAM, and multiplexers.
@@ -88,7 +88,7 @@ In mixed-signal systems containing high-speed digital buses alongside sensitive 
 Every millimeter of PCB trace adds approximately 1 nH of parasitic inductance and 0.1 pF of stray capacitance. Long traces carrying fast digital edges cause signal overshoot, ringing, and crosstalk.
 
 1. **Master crystal stability (21.48 MHz):** The 21.477 MHz crystal Y2, 74HCU04 inverter, and feedback network sit in an ultra-compact cluster (< 20 mm total loop). This prevents RF emissions and ensures reliable oscillator startup without capacitive detuning.
-2. **Elimination of the color index bus antenna:** In the preliminary prototype layout, the 6-bit color index bus traveled roughly 180 mm across the entire board from the PLDs to the PROM. In this floor plan, placing the Compositor directly adjacent to the Color PROM shrinks that bus to under 25 mm. This eliminates trace inductance, preventing signal ringing without needing series damping resistors.
+2. **Color index bus length:** The Compositor sits next to the Color PROM. The 6-bit index bus stays under 25 mm. Short copper keeps inductance low without series damping on that bus.
 3. **Self-contained blitter loop (24 MHz):** MCU-S1, the 74HC573 address latch, and Field SRAM (U41) form an isolated triangle in Zone 4. The multiplexed AD[7:0] bus, which operates during high-speed VBlank bursts, stays entirely within this local zone.
 4. **Direct cartridge bus drop:** Placing the W65C02S CPU immediately above the central cartridge connector (J36) allows CPU address lines A[13:0] and data lines D[7:0] to descend straight down into the connector pins. This minimizes stub lengths and avoids routing dense parallel buses around board obstacles.
 
@@ -96,9 +96,9 @@ Every millimeter of PCB trace adds approximately 1 nH of parasitic inductance an
 
 ### Visual appeal, cable segregation, and mechanical balance
 
-Beyond electrical performance, the floor plan optimizes physical aesthetics, cable management, and mechanical durability:
+The floor plan also sets cable paths and mechanical load:
 
-1. **Clean cable segregation (Front vs. Rear):** All stationary, heavy cables (5V DC power barrel, RGBS monitor cable, composite RCA, audio line out) attach exclusively along the rear (top) edge. Conversely, dynamic player cables (gamepads and arcade controls) plug into the front (bottom) edge. This prevents cables from draping across the board or tangling with controllers during play.
+1. **Cable segregation (front vs rear):** Stationary cables (5 V DC barrel, RGBS, composite RCA, audio line out) attach along the rear (top) edge. Player cables (gamepads and arcade controls) plug into the front (bottom) edge. Cables stay off the board during play.
 2. **Mechanical balance for cartridge insertion:** Cartridges impose vertical insertion and extraction forces. Placing the heavy 36-pin edge connector dead-center horizontally distributes mechanical strain symmetrically across all four PCB corner mounting holes, preventing board flexing and solder joint fatigue.
 3. **Structured bus highways and retro aesthetics:** By grouping communicating chips in parallel rows (such as CPU and System RAM, or the three 74HC157 multiplexers), traces run in uniform, parallel ribbons with minimal vias. This produces an orderly, clean visual appearance reminiscent of classic arcade and console printed circuit boards rather than an unstructured prototype layout.
 

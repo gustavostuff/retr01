@@ -53,7 +53,7 @@ void loop() {
 
 #### Terminal monitoring on Linux
 
-Connect the probe from the test pin to Arduino pin 8, and connect common ground. Open the serial terminal at 115200 baud:
+The probe from the test pin goes to Arduino pin 8, with a shared ground. Serial is 115200 baud:
 
 ```bash
 screen /dev/ttyUSB0 115200
@@ -134,7 +134,7 @@ This setup applies to all static and combinatorial IC tests:
 - Low-current LEDs (red or green preferred) with 1 kohm series resistors to ground
 - Wiring: IC pin --- 1k resistor --- LED anode --- LED cathode --- GND
 - Alternative: digital multimeter set to DC voltage
-- When a pin is high (+5 V) the LED glows; when low (0 V) it goes dark
+- When a pin is high (+5 V) the LED glows. When low (0 V) it goes dark
 
 **Clock and control signals**
 - Slow clock source for sequential tests: Arduino toggling a pin at ~10 Hz, or a manual debounced pushbutton
@@ -144,7 +144,7 @@ This setup applies to all static and combinatorial IC tests:
 
 ### Testing AT27C256R Color PROM
 
-This PROM stores 64 packed R3G3B2 color bytes. The software source of truth (`apps/common/r01_kit_palette.c`) holds the full 8-bit RGB triples; the burn tool packs these into single bytes for the hardware PROM.
+This PROM stores 64 packed R3G3B2 color bytes. The software source of truth (`apps/common/r01_kit_palette.c`) holds the full 8-bit RGB triples. The burn tool packs those triples into single bytes for the hardware PROM.
 
 When CE# and OE# are both low, DQ[7:0] output the byte stored at the selected address. Higher address lines A[14:6] are grounded to keep access within the first 64 bytes.
 
@@ -180,7 +180,7 @@ A 74HC573 is a set of 8 memory cells with two modes of operation:
 
 **Latched mode (LE low)**
 - The outputs freeze on the value present on the D pins at the instant LE transitioned from high to low.
-- Further changes to the D pins have no effect; the Q pins hold the old value.
+- Further changes to the D pins have no effect. The Q pins hold the latched value.
 - Only when LE returns high do the Q pins wake up and follow the D pins again.
 
 The OE# (Output Enable, active-low) pin is a master switch. When OE# is low, outputs drive normally. When OE# is high, outputs go high-impedance.
@@ -381,11 +381,11 @@ void loop() {
 
 #### Practical wiring notes
 
-- Wire Arduino Port D pins (0-7) to the IC input pins you want to test (address lines, data lines, control signals, etc.).
-- Wire IC output pins to Arduino Port B pins 8-13.
-- Ensure a common ground between the Arduino and the IC.
-- Power the IC from a clean +5 V regulated supply.
-- Any pins that must be held in a fixed state (CE#, OE#, LE, CLK, etc.) are jumpered to +5 V (high) or ground (low). If the sketch must control extra pins, extend DDRD and PORTD to additional Arduino pins.
+- Arduino Port D pins (0-7) connect to the IC inputs under test (address, data, control, and similar).
+- IC outputs connect to Arduino Port B pins 8-13.
+- Arduino and IC share a common ground.
+- The IC is powered from a clean +5 V regulated supply.
+- Pins that stay in a fixed state (CE#, OE#, LE, CLK, and similar) are jumpered to +5 V (high) or ground (low). Extra sketch-driven pins use more Arduino DDR/PORT bits.
 
 This automated rig is simply the exhaustive, logged version of the manual DIP-switch and LED tests described in the sections above.
 
@@ -536,7 +536,7 @@ Before applying power to any test setup:
 **LEDs don't light at all**
 - Verify +5 V is actually present at VCC pins (use a meter).
 - Confirm ground is common and solid.
-- Check LED polarity (longer leg = anode, should go to resistor; shorter leg = cathode, should go to ground).
+- LED polarity: longer leg (anode) goes to the resistor. Shorter leg (cathode) goes to ground.
 - If using the automated Arduino rig, check serial output is present and reasonable values are being applied.
 
 **LEDs light but flicker or dim unexpectedly**
