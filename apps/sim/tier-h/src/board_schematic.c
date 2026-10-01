@@ -1,5 +1,6 @@
 #include "retr01_sim/board.h"
 
+#include <stdio.h>
 #include <string.h>
 
 /*
@@ -83,11 +84,11 @@ static R01sEntity *ic_entity(R01sBoard *board, const char *refdes) {
   if (strcmp(refdes, "SCR1") == 0) {
     return r01s_video_sink_entity(&board->video_sink);
   }
-  if (strcmp(refdes, "Y1") == 0) {
-    return r01s_osc8m_entity(&board->osc);
+  if (strcmp(refdes, "U04") == 0) {
+    return r01a_sn74hcu04_entity(&board->u04);
   }
-  if (strcmp(refdes, "Y2") == 0) {
-    return r01s_osc_dot_entity(&board->osc_dot);
+  if (strcmp(refdes, "U74") == 0) {
+    return r01a_sn74hc74_entity(&board->u74);
   }
   if (strcmp(refdes, "U7A") == 0 || strcmp(refdes, "U7B") == 0 ||
       strcmp(refdes, "U7C") == 0) {
@@ -143,7 +144,7 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
       {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},  {"C12", "U7B", "VCC"},
       {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"}, {"C15", "U574", "VCC"},
       {"C16", "U24", "VCC"},   {"C17", NULL, NULL},    {"C18", NULL, NULL},
-      {"C19", "U40", "VDD"},   {"C20", "U50", "VCC"},  {"C21", "UPAD1", "VCC"},
+      {"C19", "U04", "VCC"},   {"C20", "U74", "VCC"},  {"C21", "UPAD1", "VCC"},
   };
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   size_t i;
@@ -163,41 +164,75 @@ static void apply_bulk(R01sBoard *board, R01sPinNetlist *nl) {
   }
 }
 
-static void apply_crystal_loads(R01sBoard *board, R01sPinNetlist *nl) {
+static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
-  /* Passive Y1/Y2/Y3 are BOM crystals; Y1/Y2 functional osc chips share refdes
-   * (see docs). */
-  R01sEntity *xt_y1 = passive_entity(board, "Y1");
-  R01sEntity *xt_y2 = passive_entity(board, "Y2");
-  R01sEntity *xt_y3 = passive_entity(board, "Y3");
-  R01sEntity *osc_cpu = r01s_osc8m_entity(&board->osc);
-  R01sEntity *osc_dot = r01s_osc_dot_entity(&board->osc_dot);
+  R01sEntity *u04 = r01a_sn74hcu04_entity(&board->u04);
+  R01sEntity *u74 = r01a_sn74hc74_entity(&board->u74);
+  R01sEntity *y1 = passive_entity(board, "Y1");
+  R01sEntity *y2 = passive_entity(board, "Y2");
+  R01sEntity *y3 = passive_entity(board, "Y3");
+  R01sEntity *r31 = passive_entity(board, "R31");
+  R01sEntity *r32 = passive_entity(board, "R32");
 
-  if (xt_y1 && osc_cpu) {
-    r01s_pin_netlist_link(nl, xt_y1, "14", osc_cpu, "VDD");
-    r01s_pin_netlist_link(nl, xt_y1, "7", pwr, "GND");
-    r01s_pin_netlist_link(nl, osc_cpu, "GND", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "1", xt_y1, "1");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "2", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "1", xt_y1, "8");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "2", pwr, "GND");
+  /* Y2 21.47727 MHz Pierce (U04 gates 1-2) + U74 /4 -> DOT. */
+  if (u04 && y2) {
+    r01s_pin_netlist_link(nl, y2, "1", u04, "1A");
+    r01s_pin_netlist_link(nl, y2, "2", u04, "1Y");
+    r01s_pin_netlist_link(nl, u04, "2A", u04, "1Y");
+    r01s_pin_netlist_name_net(nl, u04, "1A", "XTAL_21M_IN");
+    r01s_pin_netlist_name_net(nl, u04, "1Y", "XTAL_21M_OUT");
   }
-  if (xt_y2 && osc_dot) {
-    r01s_pin_netlist_link(nl, xt_y2, "14", osc_dot, "VDD");
-    r01s_pin_netlist_link(nl, xt_y2, "7", pwr, "GND");
-    r01s_pin_netlist_link(nl, osc_dot, "GND", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "1", xt_y2, "1");
+  if (r32 && u04) {
+    r01s_pin_netlist_link(nl, r32, "1", u04, "1A");
+    r01s_pin_netlist_link(nl, r32, "2", u04, "1Y");
+  }
+  r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "1", y2, "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "2", pwr, "GND");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "1", y2, "2");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "2", pwr, "GND");
+  if (u04 && u74) {
+    r01s_pin_netlist_link(nl, u04, "2Y", u74, "1CLK");
+    r01s_pin_netlist_name_net(nl, u04, "2Y", "CLK_21M");
+    r01s_pin_netlist_link(nl, u74, "1CLR#", pwr, "VDD");
+    r01s_pin_netlist_link(nl, u74, "1PRE#", pwr, "VDD");
+    r01s_pin_netlist_link(nl, u74, "1D", u74, "1/Q");
+    r01s_pin_netlist_link(nl, u74, "2PRE#", pwr, "VDD");
+    r01s_pin_netlist_link(nl, u74, "2CLR#", pwr, "VDD");
+    r01s_pin_netlist_link(nl, u74, "2CLK", u74, "1Q");
+    r01s_pin_netlist_link(nl, u74, "2D", u74, "2/Q");
+    r01s_pin_netlist_name_net(nl, u74, "2Q", "DOT");
+  }
+
+  /* Y1 8.000 MHz Pierce (U04 gates 3-4) -> PHI2. */
+  if (u04 && y1) {
+    r01s_pin_netlist_link(nl, y1, "1", u04, "3A");
+    r01s_pin_netlist_link(nl, y1, "2", u04, "3Y");
+    r01s_pin_netlist_link(nl, u04, "4A", u04, "3Y");
+    r01s_pin_netlist_name_net(nl, u04, "3A", "XTAL_CPU_IN");
+    r01s_pin_netlist_name_net(nl, u04, "3Y", "XTAL_CPU_OUT");
+    r01s_pin_netlist_name_net(nl, u04, "4Y", "PHI2");
+  }
+  if (r31 && u04) {
+    r01s_pin_netlist_link(nl, r31, "1", u04, "3A");
+    r01s_pin_netlist_link(nl, r31, "2", u04, "3Y");
+  }
+  r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "1", y1, "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "2", pwr, "GND");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C27"), "1", y1, "2");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C27"), "2", pwr, "GND");
+  if (u04) {
+    r01s_pin_netlist_link(nl, u04, "5A", pwr, "GND");
+    r01s_pin_netlist_link(nl, u04, "6A", pwr, "GND");
+  }
+
+  /* Y3 3.579545 MHz FSC (AD724 on-chip osc; encoder not seated). */
+  if (y3) {
+    r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "1", y3, "1");
     r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "2", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "1", xt_y2, "8");
+    r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "1", y3, "2");
     r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "2", pwr, "GND");
-  }
-  if (xt_y3) {
-    r01s_pin_netlist_link(nl, xt_y3, "7", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "1", xt_y3, "1");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "2", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C27"), "1", xt_y3, "8");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C27"), "2", pwr, "GND");
-    r01s_pin_netlist_name_net(nl, xt_y3, "8", "FSC_XTAL");
+    r01s_pin_netlist_name_net(nl, y3, "1", "FSC_FIN");
+    r01s_pin_netlist_name_net(nl, y3, "2", "FSC_XTAL");
   }
 }
 
@@ -233,16 +268,16 @@ static void apply_dac(R01sBoard *board, R01sPinNetlist *nl) {
 
 static void apply_series_33(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *cpu = r01s_w65c02s_entity(&board->cpu);
-  R01sEntity *osc = r01s_osc8m_entity(&board->osc);
-  R01sEntity *dot = r01s_osc_dot_entity(&board->osc_dot);
+  R01sEntity *u04 = r01a_sn74hcu04_entity(&board->u04);
+  R01sEntity *u74 = r01a_sn74hc74_entity(&board->u74);
   R01sEntity *beam = r01s_beam_xy_entity(&board->pld_beam_x);
   R01sEntity *flash = r01s_sst39sf040_entity(&board->cart_module.flash);
   R01sEntity *mcu = r01s_avr128db28_m_entity(&board->mcu_m);
   R01sEntity *ee = r01s_i2c_eeprom_entity(&board->cart_module.save);
   int i;
 
-  link_series(nl, osc, "PHI2", passive_entity(board, "R12"), cpu, "PHI2");
-  link_series(nl, dot, "DOT", passive_entity(board, "R13"), beam, "DOT");
+  link_series(nl, u04, "4Y", passive_entity(board, "R12"), cpu, "PHI2");
+  link_series(nl, u74, "2Q", passive_entity(board, "R13"), beam, "DOT");
 
   for (i = 0; i < 8; i++) {
     char rn[8];
@@ -309,7 +344,7 @@ void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {
   apply_bypass(board, nl);
   apply_bulk(board, nl);
   apply_gnd_ties(board, nl);
-  apply_crystal_loads(board, nl);
+  apply_clocks(board, nl);
   apply_dac(board, nl);
   apply_series_33(board, nl);
   apply_pullups(board, nl);

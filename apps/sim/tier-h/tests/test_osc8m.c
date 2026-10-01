@@ -7,7 +7,7 @@ int main(void) {
     R01sEntity *e;
     R01sLevel a, b;
 
-    r01s_osc8m_init(&chip, "Y1");
+    r01s_osc8m_init(&chip, "OSC8M");
     e = r01s_osc8m_entity(&chip);
     expect_true(e->dip_pins == 8, "8-pin package");
     expect_true(e->pin_count == 4, "4 modeled pins");

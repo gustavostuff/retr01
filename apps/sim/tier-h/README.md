@@ -52,10 +52,10 @@ Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `K
 | Island | Components (canvas) |
 |--------|---------------------|
 | O Video | `COMPOSITOR` + `AT27C256R` + `LCD_SINK` |
-| A Power+clk | `PWR5V` + `OSC8M` (not shown as UI chips) |
+| A Power+clk | `PWR5V` + `U04`/`U74` (OSC8M ticks PHI2 off-netlist) |
 | C CPU + decode | `W65C02S`, `AS6C62256`, decode helper PLD (non-BOM wire entity) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + VRAM glue PLD helper |
-| H Beam | `OSC_DOT` + `BEAM_XY` (X PLD) + Beam Y PLD vs soft `$7F04` + **`SN74HC574`** (`$7F02` SX) |
+| H Beam | `BEAM_XY` (X PLD) + Beam Y PLD vs soft `$7F04` + **`SN74HC574`** (`$7F02` SX) |
 | J Cart | Console socket. Flash and save live on **N** |
 | K APU + pads | **`AVR128DB28` MCU-S2**: `$7F40`-`$7F5F`, pads `$7F60`/`$7F61`, 8-voice mix + PWM + WAVE monitor |
 | L MCU + field | **`AVR128DB28` MCU-M** (soft `$7Fxx` + SPI mailbox master) + **MCU-S1** (OAM apply / field) + field `AS6C62256` + **`SN74HC573`** ALE |

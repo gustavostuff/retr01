@@ -45,7 +45,7 @@ void r01s_osc8m_init(R01sOsc8m *chip, const char *refdes) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
-    r01s_entity_init(&chip->base, &OSC8M_VT, "OSC8M", refdes ? refdes : "Y1");
+    r01s_entity_init(&chip->base, &OSC8M_VT, "OSC8M", refdes ? refdes : "OSC8M");
     chip->base.impl = chip;
     r01s_entity_add_pin(&chip->base, 1, "OE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);

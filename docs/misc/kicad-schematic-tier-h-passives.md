@@ -76,7 +76,7 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 
 | From | To |
 | --- | --- |
-| R31 (1 M ohm) | U04 pin 1 (1A) and pin 2 (1Y) |
+| R32 (1 M ohm) | U04 pin 1 (1A) and pin 2 (1Y) |
 | Y2 pins 1 and 2 | U04 pin 1 and pin 2 (Pierce tank) |
 | C22 pin 1 / pin 2 | Y2 pin 1 / GND |
 | C23 pin 1 / pin 2 | Y2 pin 2 / GND |
@@ -92,7 +92,7 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 
 | From | To |
 | --- | --- |
-| R32 (1 M ohm) | U04 pin 5 (3A) and pin 6 (3Y) |
+| R31 (1 M ohm) | U04 pin 5 (3A) and pin 6 (3Y) |
 | Y1 pins 1 and 2 | U04 pin 5 and pin 6 (Pierce tank) |
 | C26 pin 1 / pin 2 | Y1 pin 1 / GND |
 | C27 pin 1 / pin 2 | Y1 pin 2 / GND |

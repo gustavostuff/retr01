@@ -1,4 +1,4 @@
-"""Motherboard-only Tier H Skidl export (17 counted ICs per docs/general/hardware.md).
+"""Motherboard-only Tier H Skidl export (19 counted ICs per docs/general/hardware.md).
 
 Drops cart silicon, pad MCUs, sim-only PLD helpers, and the sim PMIC (PS1).
 Remaps cart flash/EEPROM nodes onto J36. Maps PS1 power pins onto J1.
@@ -21,6 +21,9 @@ SKIP_REFDES = frozenset(
         "UPAD1",
         "UPAD2",
         "U4",  # PRG_ROM sim entity, not a mobo IC
+        "OSC8M",
+        "OSC_DOT",
+        "OSC_4FSC",
         "UPLDA",
         "UPLDB",
         "UPLDI",
@@ -89,10 +92,6 @@ _PS1_J1 = {
 def normalize_export_node(ref: str, pin_name: str, pin_num: int) -> Optional[Node]:
     """Return mobo refdes/pin for Skidl, or None to drop."""
     if ref in SKIP_REFDES:
-        return None
-    if ref in ("Y1", "Y2", "Y3"):
-        # Discrete crystals are wired along with U04/U74 via wire_clocks().
-        # Drop legacy canned-oscillator pin nodes from sim export.
         return None
     sn = str(pin_num)
     if ref == "U40":

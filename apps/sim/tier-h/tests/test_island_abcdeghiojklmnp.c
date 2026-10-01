@@ -57,7 +57,7 @@ int main(void) {
     expect_true(r01s_island_group_count(group) == R01S_ISLAND_COUNT,
                 "9 islands incl cart mod (no flasher, no soft-FE DIP island)");
     expect_true(r01s_island_builder_count_bom_ic(&builder) == R01S_BOM_IC_N,
-                "18 BOM IC visuals mounted");
+                "20 BOM IC visuals mounted");
     expect_true(r01s_island_group_at(group, R01S_ISLAND_CART_MOD) != NULL &&
                     r01s_island_group_at(group, R01S_ISLAND_CART_MOD)->entity_count == 2,
                 "cart module island mounts U40+U50");

@@ -25,7 +25,8 @@ static void netlist_link_beam_y_beam(R01sPinNetlist *nl, R01sEntity *beam_y, R01
 static void netlist_register_silicon(R01sBoard *board, R01sPinNetlist *nl) {
     int i;
     netlist_register(nl, r01s_pwr5v_entity(&board->pwr));
-    netlist_register(nl, r01s_osc8m_entity(&board->osc));
+    netlist_register(nl, r01a_sn74hcu04_entity(&board->u04));
+    netlist_register(nl, r01a_sn74hc74_entity(&board->u74));
     netlist_register(nl, r01s_w65c02s_entity(&board->cpu));
     netlist_register(nl, r01s_as6c62256_entity(&board->ram));
     netlist_register(nl, r01s_as6c62256_entity(&board->vram));
@@ -43,7 +44,6 @@ static void netlist_register_silicon(R01sBoard *board, R01sPinNetlist *nl) {
     netlist_register(nl, r01s_atf22v10_entity(&board->pld_vram));
     netlist_register(nl, r01s_beam_xy_entity(&board->pld_beam_x));
     netlist_register(nl, r01s_atf22v10_entity(&board->pld_beam_y));
-    netlist_register(nl, r01s_osc_dot_entity(&board->osc_dot));
     netlist_register(nl, r01s_compositor_entity(&board->compositor));
     netlist_register(nl, r01s_at27c256r_entity(&board->color_prom));
     netlist_register(nl, r01s_video_sink_entity(&board->video_sink));

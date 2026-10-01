@@ -735,10 +735,10 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     }
     ns_passive_bank_clear(bank);
 
-    /* Ordered: OSC, CCAP, ECAP, R. No diodes on this BOM. */
-    add_n(bank, NS_PASSIVE_OSC4LEGS, "Y", &y_seq, "8.000MHz", 1);
-    add_n(bank, NS_PASSIVE_OSC4LEGS, "Y", &y_seq, "5.369318MHz", 1);
-    add_n(bank, NS_PASSIVE_OSC4LEGS, "Y", &y_seq, "14.31818MHz", 1);
+    /* Ordered: XTAL, CCAP, ECAP, R. No diodes on this BOM. */
+    add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "8.000MHz", 1);
+    add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "21.47727MHz", 1);
+    add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "3.579545MHz", 1);
 
     add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 21);
     add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "22pF", 6);
@@ -752,6 +752,7 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "33", 14);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "4.7k", 4);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "10k", 1);
+    add_n(bank, NS_PASSIVE_R, "R", &r_seq, "1M", 2);
 
     return bank->count;
 }

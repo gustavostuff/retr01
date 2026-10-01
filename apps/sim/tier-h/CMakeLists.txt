@@ -16,6 +16,10 @@ if(NOT TARGET discrete_ic)
   add_subdirectory("${DISCRETE_IC_DIR}" "${CMAKE_BINARY_DIR}/discrete_ic")
 endif()
 
+set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
+set(SIM_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/../common")
+set(R01_FW_COMMON_DIR "${R01_COMMON_DIR}/fw")
+
 add_library(retr01_sim_core
   src/gamepad.c
   src/bom_count.c
@@ -44,6 +48,8 @@ add_library(retr01_sim_core
   chips/sst39sf040.c
   chips/w65c02s.c
   chips/osc_dot.c
+  ${SIM_COMMON}/chips/sn74hcu04.c
+  ${SIM_COMMON}/chips/sn74hc74.c
   chips/beam_xy.c
   chips/bg_fetch.c
   chips/at27c256r.c
@@ -56,8 +62,6 @@ add_library(retr01_sim_core
   src/board_flasher.c
   src/ui_button.c
 )
-set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
-set(R01_FW_COMMON_DIR "${R01_COMMON_DIR}/fw")
 set(R01_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../common/assets")
 set(R01_ASSETS_PNG "${R01_ASSETS_DIR}/png")
 set(R01_ASSETS_OTHER "${R01_ASSETS_DIR}/other")
@@ -77,6 +81,7 @@ target_link_libraries(r01_play_common PUBLIC m)
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
+  ${SIM_COMMON}/chips
   ${R01_COMMON_DIR}
   ${R01_FW_COMMON_DIR}
 )

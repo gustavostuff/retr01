@@ -2144,7 +2144,7 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     /* IRQB from beam-Y EQ# in wire_beam; NMIB from beam NMI# in board_step */
 
     phi2 = r01s_entity_sense(osc, "PHI2");
-    /* Canned PHI2. 74HC14 stays off the board while the clock is already square. */
+    /* Canned PHI2 timebase. Netlist PHI2 comes from U04 pin 8. */
     r01s_entity_drive(cpu, "PHI2", phi2 == R01S_LVL_H ? R01S_LVL_H : R01S_LVL_L);
 }
 
@@ -2199,9 +2199,13 @@ void r01s_board_catchup_finish(R01sBoard *board) {
 static void island_power_clk_init(R01sIsland *island) {
     R01sIslandPowerClkImpl *impl = (R01sIslandPowerClkImpl *)island->impl;
     r01s_pwr5v_init(impl->pwr, "PS1");
-    r01s_osc8m_init(impl->osc, "Y1");
+    r01s_osc8m_init(impl->osc, "OSC8M");
+    r01a_sn74hcu04_init(impl->u04, "U04");
+    r01a_sn74hc74_init(impl->u74, "U74");
     r01s_island_add_entity(island, r01s_pwr5v_entity(impl->pwr));
     r01s_island_add_entity(island, r01s_osc8m_entity(impl->osc));
+    r01s_island_add_entity(island, r01a_sn74hcu04_entity(impl->u04));
+    r01s_island_add_entity(island, r01a_sn74hc74_entity(impl->u74));
 }
 
 static void island_cpu_mem_init(R01sIsland *island) {
@@ -2230,7 +2234,7 @@ static void island_cpu_mem_init(R01sIsland *island) {
 
 static void island_beam_init(R01sIsland *island) {
     R01sIslandBeamImpl *impl = (R01sIslandBeamImpl *)island->impl;
-    r01s_osc_dot_init(impl->osc_dot, "Y2");
+    r01s_osc_dot_init(impl->osc_dot, "OSC_DOT");
     r01s_beam_xy_init(impl->beam_x, "UPLDX");
     r01s_atf22v10_init(impl->beam_y, "UPLDY", R01S_PLD_BEAM_Y);
     r01s_sn74hc574_init(impl->scroll_x, "U574");
@@ -3216,6 +3220,8 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_bus_clear_conflicts();
     r01s_entity_reset(r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu));
     r01s_entity_reset(r01s_osc8m_entity(ctx->power_clk_impl.osc));
+    r01s_entity_reset(r01a_sn74hcu04_entity(ctx->power_clk_impl.u04));
+    r01s_entity_reset(r01a_sn74hc74_entity(ctx->power_clk_impl.u74));
     {
         ctx->fe00_ctrl = 0;
         ctx->fe02_scroll_x = 0;
@@ -3450,6 +3456,8 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
 
     board->power_clk_impl.pwr = &board->pwr;
     board->power_clk_impl.osc = &board->osc;
+    board->power_clk_impl.u04 = &board->u04;
+    board->power_clk_impl.u74 = &board->u74;
     board->cpu_mem_impl.cpu = &board->cpu;
     board->cpu_mem_impl.ram = &board->ram;
     board->cpu_mem_impl.prg = &board->prg;
@@ -3536,9 +3544,14 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     }
     {
         R01sEntity *pwr_e = r01s_pwr5v_entity(&board->pwr);
-        R01sEntity *osc_e = r01s_osc8m_entity(&board->osc);
+        R01sEntity *u04_e = r01a_sn74hcu04_entity(&board->u04);
+        R01sEntity *u74_e = r01a_sn74hc74_entity(&board->u74);
+        int x = 0;
         r01s_island_builder_mount_rel(b, pwr_e, R01S_ISLAND_POWER_CLK, 0, 0);
-        r01s_island_builder_mount_rel(b, osc_e, R01S_ISLAND_POWER_CLK, pwr_e->body_w + R01S_CHIP_GAP, 0);
+        x = pwr_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, u04_e, R01S_ISLAND_POWER_CLK, x, 0);
+        x += u04_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, u74_e, R01S_ISLAND_POWER_CLK, x, 0);
     }
     {
         R01sEntity *cpu_e = r01s_w65c02s_entity(&board->cpu);
@@ -3563,19 +3576,12 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         /* pld_vram is non-BOM helper (not mounted). */
     }
     {
-        R01sEntity *dot_e = r01s_osc_dot_entity(&board->osc_dot);
         R01sEntity *beam_x = r01s_beam_xy_entity(&board->pld_beam_x);
         R01sEntity *beam_y = r01s_atf22v10_entity(&board->pld_beam_y);
         R01sEntity *sx = r01s_sn74hc574_entity(&board->scroll_x);
         int x = 0;
-        int beam_yoff = (dot_e->body_h - beam_x->body_h) / 2;
-        if (beam_yoff < 0) {
-            beam_yoff = 0;
-        }
-        r01s_island_builder_mount_rel(b, dot_e, R01S_ISLAND_BEAM, 0, 0);
-        x = dot_e->body_w + R01S_CHIP_GAP;
-        r01s_island_builder_mount_rel(b, beam_x, R01S_ISLAND_BEAM, x, beam_yoff);
-        x += beam_x->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, beam_x, R01S_ISLAND_BEAM, 0, 0);
+        x = beam_x->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, beam_y, R01S_ISLAND_BEAM, x, 0);
         x += beam_y->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, sx, R01S_ISLAND_BEAM, x, 0);

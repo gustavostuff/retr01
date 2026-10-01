@@ -5,8 +5,8 @@ Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`
 | Role | File | Part |
 | --- | --- | --- |
 | 5 V rail | `pwr5v.c` | PWR5V |
-| PHI2 8 MHz | `osc8m.c` | OSC8M |
-| DOT clock | `osc_dot.c` | OSC_DOT |
+| PHI2 8 MHz | `osc8m.c` | OSC8M timebase (netlist is Y1 + U04) |
+| DOT clock | `osc_dot.c` | OSC_DOT timebase (netlist is Y2 + U04 + U74) |
 | Game CPU | `w65c02s.c` | W65C02S |
 | No-cart boot image | `prg_rom.c` | PRG_ROM |
 | SRAM (sys, VRAM, field) | `as6c62256.c` | AS6C62256 |

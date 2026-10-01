@@ -41,7 +41,9 @@ int main(void) {
     expect_true(n > 256, "json size");
     expect_true(strstr(json, "preliminary_pcb_illustrative_only") != NULL, "disclaimer meta");
     expect_true(strstr(json, "\"fabrication_ready\": false") != NULL, "fabrication flag");
-    expect_true(strstr(json, "\"C1\"") != NULL, "bypass C1 in export");
+    expect_true(strstr(json, "\"U04\"") != NULL, "U04 in export");
+    expect_true(strstr(json, "\"Y1\"") != NULL, "Y1 crystal in export");
+    expect_true(strstr(json, "XTAL_21M_IN") != NULL, "Pierce net name");
     expect_true(strstr(json, "\"+5V\"") != NULL, "named +5V rail");
     r01s_island_builder_shutdown(&builder);
     return test_done("test_export_netlist");

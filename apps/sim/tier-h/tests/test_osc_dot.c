@@ -9,7 +9,7 @@ int main(void) {
     int toggles = 0;
     R01sLevel prev;
 
-    r01s_osc_dot_init(&osc, "Y2");
+    r01s_osc_dot_init(&osc, "OSC_DOT");
     e = r01s_osc_dot_entity(&osc);
 
     r01s_entity_drive(e, "VDD", R01S_LVL_H);

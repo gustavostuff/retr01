@@ -38,7 +38,7 @@ Each bypass: cap `1` to IC VCC, cap `2` to `PS1` GND, `PS1` VDD to IC VCC.
 ## Bulk and crystals
 
 - **E1:** `+` to `+5V`, `-` to GND.
-- **Y1/Y2/Y3** (HC-49/US crystals): load **C22-C27**. **Y1** and **Y2** Pierce loops sit on **U04**. **U74** divides Y2 by 4 for DOT. Sim UI may still show canned osc sprites on the same Y refdes.
+- **Y1/Y2/Y3** (HC-49/US crystals): load **C22-C27**. **Y1** and **Y2** Pierce loops sit on **U04**. **U74** divides Y2 by 4 for DOT. Sim time still steps canned **OSC8M** / **OSC_DOT** engines; those chips are not on the exported netlist.
 - **Y3:** load caps plus **`FSC_XTAL`** into AD724 FIN when that path is modeled.
 
 ## Video DAC

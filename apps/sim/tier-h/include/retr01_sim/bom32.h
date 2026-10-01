@@ -3,12 +3,12 @@
 
 /*
  * Mounted VIS_IC parts, excluding pad ATtiny85s.
- * This tree seats 16 motherboard ICs + cart flash + cart EEPROM (18).
- * Locked motherboard is 17 once the AD724 is on the board (docs/general/hardware.md).
+ * Mounted VIS_IC parts, excluding pad ATtiny85s.
+ * Includes U04/U74 clock logic. AD724 is not seated in this tree.
  */
 #define R01S_BOM_HC157_N 3
 #define R01S_BOM_PLD_N   3
-#define R01S_BOM_IC_N    18
+#define R01S_BOM_IC_N    20
 
 enum {
     R01S_MUX157_VRAM0 = 0, /* VRAM CPU/PPU interleave nybble 0 */

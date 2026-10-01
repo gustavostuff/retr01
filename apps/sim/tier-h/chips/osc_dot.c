@@ -45,7 +45,7 @@ void r01s_osc_dot_init(R01sOscDot *chip, const char *refdes) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
-    r01s_entity_init(&chip->base, &OSC_DOT_VT, "OSC_DOT", refdes ? refdes : "Y2");
+    r01s_entity_init(&chip->base, &OSC_DOT_VT, "OSC_DOT", refdes ? refdes : "OSC_DOT");
     chip->base.impl = chip;
     r01s_entity_add_pin(&chip->base, 1, "OE#", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 4, "GND", R01S_PIN_PWR);

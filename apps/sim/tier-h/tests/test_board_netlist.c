@@ -39,7 +39,7 @@ int main(void) {
     memset(&board, 0, sizeof(board));
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
-    expect_true(board.passives.count == 61, "passive BOM count");
+    expect_true(board.passives.count == 63, "passive BOM count");
     nl = &board.pin_netlist;
     passive_pins = passive_slots(&board);
     expect_true(passive_pins >= 122, "passive pins registered in netlist");
@@ -62,8 +62,18 @@ int main(void) {
                                           r01s_w65c02s_entity(&board.cpu), "PHI2"),
                 "R12 series to CPU PHI2");
     expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "R12"), "1",
-                                          r01s_osc8m_entity(&board.osc), "PHI2"),
-                "R12 series to OSC PHI2");
+                                          r01a_sn74hcu04_entity(&board.u04), "4Y"),
+                "R12 series to U04 PHI2 buffer");
+    expect_true(board.passives.parts[0].kind == R01S_PASSIVE_XTAL, "Y1 is XTAL");
+    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "Y1"), "1",
+                                          r01a_sn74hcu04_entity(&board.u04), "3A"),
+                "Y1 Pierce on U04 gate 3");
+    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "Y2"), "1",
+                                          r01a_sn74hcu04_entity(&board.u04), "1A"),
+                "Y2 Pierce on U04 gate 1");
+    expect_true(r01s_pin_netlist_same_net(nl, r01a_sn74hc74_entity(&board.u74), "2Q",
+                                          passive_by_refdes(&board, "R13"), "1"),
+                "U74 DOT into R13");
 
     r01s_island_builder_shutdown(&builder);
     return test_done("test_board_netlist");

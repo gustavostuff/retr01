@@ -14,6 +14,8 @@
 #include "i2c_eeprom.h"
 #include "osc8m.h"
 #include "osc_dot.h"
+#include "sn74hc74.h"
+#include "sn74hcu04.h"
 #include "pads.h"
 #include "pad_uart.h"
 #include "prg_rom.h"
@@ -42,7 +44,7 @@
 /* 9 canvas islands: motherboard + detachable cart. Soft $7Fxx on MCU-M. */
 enum {
     R01S_ISLAND_VIDEO = 0,     /* O: LCD / RGBS (top-left) */
-    R01S_ISLAND_POWER_CLK = 1, /* A+B: 5V + canned PHI2 */
+    R01S_ISLAND_POWER_CLK = 1, /* A: 5V + U04/U74 Pierce clocks */
     R01S_ISLAND_CPU = 2,       /* C: CPU + RAM (decode folded helper) */
     R01S_ISLAND_VRAM = 3,      /* G */
     R01S_ISLAND_BEAM = 4,      /* H: beam + HC574 scroll X */
@@ -56,6 +58,8 @@ enum {
 typedef struct R01sIslandPowerClkImpl {
     R01sPwr5v *pwr;
     R01sOsc8m *osc;
+    R01aSn74hcu04 *u04;
+    R01aSn74hc74 *u74;
 } R01sIslandPowerClkImpl;
 
 typedef struct R01sIslandCpuMemImpl {
@@ -119,10 +123,12 @@ typedef struct R01sIslandIntegrationImpl {
 
 /* Soft $7Fxx. 74HC14 is not seated. AD724 is not in this tree yet. */
 typedef struct R01sBoard {
-    /* Support. 74HC14 stays off while PHI2 is a canned square clock. */
+    /* Support. OSC8M / OSC_DOT tick PHI2 and DOT; netlist is Y1/Y2 + U04/U74. */
     R01sPwr5v pwr;
     R01sOsc8m osc;
     R01sOscDot osc_dot;
+    R01aSn74hcu04 u04;
+    R01aSn74hc74 u74;
     R01sVideoSink video_sink;
     R01sPrgRom prg;
     R01sPads pads;
