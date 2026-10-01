@@ -37,34 +37,34 @@ The physical motherboard outline is specified at **160 mm width by 100 mm height
 The physical layout arranges connectors along the edges for ergonomics, with internal functional islands organized to minimize trace lengths between communicating chips:
 
 ```
-+---------------------------------------------------------------------------+
-| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)    RGBS Video(J2)|
-+-----------------------+-----------------------------+---------------------+
-| SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)    | VIDEO ENGINE & DAC  |
-| (Top-Left)            | (Top-Center, Horizontal)    | (Top-Right)         |
-|                       |                             |                     |
-|   * System RAM (U3)   |   * Sits DIRECTLY above J36 |   * Y1 + Y2 crystals |
-|   * MCP130 Supervisor |   * Address and data drop   |   * U04 / U74 clocks |
-|                       |     into cart. Bus left to U3 |   * Beam X/Y, Comp  |
-|                       |                             |   * Color PROM, DAC  |
-+-----------------------+-----------------------------+---------------------+
-|                 CARTRIDGE SLOT (J36, Center-Horizontal)                   |
-|                 (Directly below the CPU, middle spine)                    |
-+-----------------------+-----------------------------+---------------------+
-| VRAM & 74HC157 MUXES  | MCU-M (CENTRAL DISPATCHER)  | S1 SPRITE ENGINE    |
-| (Middle-Left)         | (Middle-Center)             | (Middle-Right)      |
-|                       |                             |                     |
-|   * VRAM (U6)         |   * MCU-M (AVR128DB28)      |  * MCU-S1 (Blitter) |
-|   * 3x 74HC157 Muxes  |   * Soft I/O bus interface  |  * 74HC573 Latch    |
-|   * Scroll Latch (574)|   * Central SPI routing hub |  * Field SRAM (U41) |
-+-----------------------+-----------------------------+---------------------+
-| CONTROLLER & AUDIO    | [OPEN / EXPANSION AREA]                           |
-| (Bottom-Left)         | (Bottom-Right)                                    |
-|                       |                                                   |
-|   * MCU-S2 (AVR128)   |   * Ground return, test points, mounting          |
-|   * J3, J4 TRS Jacks  |                                                   |
-|   * Arcade Headers J5/J6 |                                                   |
-+-----------------------+---------------------------------------------------+
++--------------------------------------------------------------------------------+
+| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)    RGBS Video(J2)     |
++-----------------------+--------------------------------+-----------------------+
+| SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)       | VIDEO ENGINE & DAC    |
+| (Top-Left)            | (Top-Center, Horizontal)       | (Top-Right)           |
+|                       |                                |                       |
+|   * System RAM (U3)   |   * Sits DIRECTLY above J36    |   * Y1 + Y2 crystals  |
+|   * MCP130 Supervisor |   * Address and data drop      |   * U04 / U74 clocks  |
+|                       |     into cart. Bus left to U3  |   * Beam X/Y, Comp    |
+|                       |                                |   * Color PROM, DAC   |
++-----------------------+--------------------------------+-----------------------+
+|                 CARTRIDGE SLOT (J36, Center-Horizontal)                        |
+|                 (Directly below the CPU, middle spine)                         |
++-----------------------+-----------------------------+--------------------------+
+| VRAM & 74HC157 MUXES  | MCU-M (CENTRAL DISPATCHER)  | S1 SPRITE ENGINE         |
+| (Middle-Left)         | (Middle-Center)             | (Middle-Right)           |
+|                       |                             |                          |
+|   * VRAM (U6)         |   * MCU-M (AVR128DB28)      |  * MCU-S1 (Blitter)      |
+|   * 3x 74HC157 Muxes  |   * Soft I/O bus interface  |  * 74HC573 Latch         |
+|   * Scroll Latch (574)|   * Central SPI routing hub |  * Field SRAM (U41)      |
++-----------------------+-----------------------------+--------------------------+
+| CONTROLLER & AUDIO    | [OPEN / EXPANSION AREA]                                |
+| (Bottom-Left)         | (Bottom-Right)                                         |
+|                       |                                                        |
+|   * MCU-S2 (AVR128)   |   * Ground return, test points, mounting               |
+|   * J3, J4 TRS Jacks  |                                                        |
+|   * Arcade Headers J5/J6 |                                                     |
++-----------------------+--------------------------------------------------------+
 ```
 
 ---
