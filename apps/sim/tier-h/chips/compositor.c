@@ -68,9 +68,8 @@ void r01s_compositor_init(R01sCompositor *chip, const char *refdes) {
     for (i = 0; i < 6; i++) {
         r01s_entity_add_pin(&chip->base, 14 + i, A_NAMES[i], R01S_PIN_OUT);
     }
-    r01s_entity_add_pin(&chip->base, 20, "VCC", R01S_PIN_PWR);
-    /* Soft compositor shell. Body matches ATF22V10 300 mil outline. */
-    r01s_entity_set_dip_mm(&chip->base, 20, 32, 8);
+    r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+    r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     r01s_entity_reset(&chip->base);
 }
 

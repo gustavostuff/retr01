@@ -154,6 +154,13 @@ CPU_SOB, CPU_PHI2O, CPU_RESB = "38", "39", "40"
 
 PLD_CLK, PLD_GND, PLD_VCC = "1", "12", "24"
 
+# AVR128DB28-I/SP (28-pin SPDIP)
+AVR128_VDD = "20"
+AVR128_GND_A = "15"
+AVR128_GND_B = "21"
+AVR128_VDDIO2 = "6"
+AVR128_AVDD = "14"
+
 # UPLDA decode: IN pins 2-11,13 ; I/O 14-23
 UPLDA_A = {i: str(2 + i) for i in range(8)}  # A0-A7 on 2-9
 UPLDA_BE, UPLDA_RWB, UPLDA_FE = "10", "11", "13"
@@ -583,5 +590,13 @@ def power_pin_nums(mpn: str) -> Optional[Tuple[str, str]]:
         "OSC8M": (OSC_VDD, OSC_GND),
         "OSC_DOT": (OSC_VDD, OSC_GND),
         "OSC_4FSC": (OSC_VDD, OSC_GND),
+        "AVR128DB28": (AVR128_VDD, AVR128_GND_A),
+        "74HCU04": (HC14_VCC, HC14_GND),
+        "SN74HCU04": (HC14_VCC, HC14_GND),
+        "74HC74": (HC14_VCC, HC14_GND),
+        "SN74HC74": (HC14_VCC, HC14_GND),
+        "SN74HC573": ("20", "10"),
+        "SN74HC574": ("20", "10"),
+        "AD724": ("14", "13"),
     }
     return table.get(mpn)

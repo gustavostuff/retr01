@@ -143,6 +143,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
     from retr01_kicad.mobo_scope import normalize_export_node
     from retr01_kicad.net_names import name_all_nets
+    from retr01_kicad.power_rails import restore_rail_net_names, wire_power_rails
     from retr01_kicad.stub_pins import stub_unconnected_pins
 
     configure_skidl_logging(quiet)
@@ -180,6 +181,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     ensure_part("U130")
     wire_connectors(parts, nets_map, pin_connect)
     wire_clocks(parts, nets_map, pin_connect)
+    wire_power_rails(parts, nets_map, pin_connect)
 
     if "U130" in parts:
         res_net = nets_map.get("CPU_RES#")
@@ -195,6 +197,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
         pin_connect(parts["U130"], "", "3", nets_map["GND"])
 
     stub_unconnected_pins(parts, nets_map, pin_connect)
+    restore_rail_net_names(parts, nets_map)
 
     # Name all nets with clean, descriptive architectural labels
     unique_nets = set()
@@ -203,18 +206,14 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
             if pin.net is not None:
                 unique_nets.add(pin.net)
     name_all_nets(unique_nets)
+    restore_rail_net_names(parts, nets_map)
 
-    # Ensure canonical GND and +5V names are preserved in the exported netlist.
     if "J1" in parts:
         for p in getattr(parts["J1"], "pins", []):
             if str(p.num) in ("2", "3") and p.net is not None:
                 p.net.name = "GND"
             elif str(p.num) == "1" and p.net is not None:
                 p.net.name = "+5V"
-    if "GND" in nets_map and nets_map["GND"] is not None:
-        nets_map["GND"].name = "GND"
-    if "+5V" in nets_map and nets_map["+5V"] is not None:
-        nets_map["+5V"].name = "+5V"
 
     buf = StringIO()
     generate_netlist(file_=buf)

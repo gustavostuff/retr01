@@ -8,10 +8,12 @@ The export flow supports rough connectivity review, floorplan discussion, and ex
 
 ## What gets exported
 
-Source of truth after `r01s_board_netlist_rebuild()`:
+Source of truth after `r01s_board_netlist_rebuild()` (see [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md)):
 
 - Motherboard IC links (`board_netlist.c`)
 - Passive / power / DAC / series / pull-up links (`board_schematic.c`)
+
+Skidl (`scripts/skidl_from_tier_h.py`) is a **consumer**: JSON in, KiCad `.net` out. Correct pin numbers, power rails, and bus membership belong in the **sim netlist** and chip pin maps; Python only applies motherboard scope (J36/J1 remap), footprint pin templates, NC stubs, and net naming. If JSON and PCB disagree, fix sim/export JSON before patching KiCad by hand.
 - Motherboard ICs, passives, and power (sim still models cart flash/EEPROM and pad MCUs, while Skidl **remaps** those to **J36** and drops pad silicon)
 
 Known **gaps** (same as [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md)):

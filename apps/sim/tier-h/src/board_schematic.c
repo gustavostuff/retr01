@@ -148,8 +148,8 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
     const char *vcc;
   } rows[] = {
       {"C1", "U1", "VDD"},     {"C2", "U3", "VCC"},    {"C3", "U6", "VCC"},
-      {"C4", "U41", "VCC"},    {"C5", "UM", "VCC"},    {"C6", "US1", "VCC"},
-      {"C7", "US2", "VCC"},    {"C8", "UPLDX", "VCC"}, {"C9", "UPLDY", "VCC"},
+      {"C4", "U41", "VCC"},    {"C5", "UM", "VDD"},    {"C6", "US1", "VDD"},
+      {"C7", "US2", "VDD"},    {"C8", "UPLDX", "VCC"}, {"C9", "UPLDY", "VCC"},
       {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},  {"C12", "U7B", "VCC"},
       {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"}, {"C15", "U574", "VCC"},
       {"C16", "U24", "VCC"},   {"C17", NULL, NULL},    {"C18", "U725", "APOS"},
@@ -356,6 +356,26 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
   tie_gnd(nl, pwr, r01s_compositor_entity(&board->compositor), "GND");
   tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "AGND");
   tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "DGND");
+  tie_gnd(nl, pwr, r01a_sn74hcu04_entity(&board->u04), "GND");
+  tie_gnd(nl, pwr, r01a_sn74hc74_entity(&board->u74), "GND");
+  tie_gnd(nl, pwr, r01s_sn74hc157_entity(&board->mux157[0]), "GND");
+  tie_gnd(nl, pwr, r01s_sn74hc157_entity(&board->mux157[1]), "GND");
+  tie_gnd(nl, pwr, r01s_sn74hc157_entity(&board->mux157[2]), "GND");
+  tie_gnd(nl, pwr, r01s_sn74hc573_entity(board->mcu_lb_impl.field_ale), "GND");
+  tie_gnd(nl, pwr, r01s_sn74hc574_entity(&board->scroll_x), "GND");
+  tie_gnd(nl, pwr, r01s_beam_xy_entity(&board->pld_beam_x), "GND");
+  tie_gnd(nl, pwr, r01s_avr128db28_m_entity(&board->mcu_m), "GND");
+  tie_gnd(nl, pwr, r01s_avr128db28_m_entity(&board->mcu_m), "GND2");
+  tie_gnd(nl, pwr, r01s_avr128db28_s1_entity(&board->mcu_s1), "GND");
+  tie_gnd(nl, pwr, r01s_avr128db28_s1_entity(&board->mcu_s1), "GND2");
+  tie_gnd(nl, pwr, r01s_avr128db28_s2_entity(&board->mcu_s2), "GND");
+  tie_gnd(nl, pwr, r01s_avr128db28_s2_entity(&board->mcu_s2), "GND2");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_avr128db28_m_entity(&board->mcu_m), "VDDIO2");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_avr128db28_m_entity(&board->mcu_m), "AVDD");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_avr128db28_s1_entity(&board->mcu_s1), "VDDIO2");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_avr128db28_s1_entity(&board->mcu_s1), "AVDD");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_avr128db28_s2_entity(&board->mcu_s2), "VDDIO2");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_avr128db28_s2_entity(&board->mcu_s2), "AVDD");
 }
 
 static void apply_rca_av(R01sBoard *board, R01sPinNetlist *nl) {

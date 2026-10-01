@@ -4,6 +4,8 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 
 **Source code:** `apps/sim/tier-h/src/board_schematic.c`, invoked from `r01s_board_netlist_rebuild()`.
 
+**Downstream:** KiCad/Skidl ([`tier-h-skidl-export.md`](tier-h-skidl-export.md)) reads the JSON from this graph. Fix connectivity and **physical pad numbers** here first (chip `r01s_entity_add_pin`, `board_schematic.c`, `board_netlist.c`). Skidl should map and name nets, not invent links. Export-only rail merges or renames are a temporary bridge until the sim netlist is complete (e.g. all GND ties, PLD package VCC/GND pins).
+
 **BOM counts:** [`docs/passive_bom.md`](../passive_bom.md).
 
 ## Bypass (`C1`-`C20` on the motherboard)
@@ -74,6 +76,7 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 
 ## Gaps (not schematic-complete on silicon)
 
+- **PLD / beam models:** some ATF22V10 entities still use **logical** pin indices for JEDEC I/O, not always DIP-24 **12 (GND)** / **24 (VCC)**. KiCad footprints need package numbers; align sim entities before relying on export stubs.
 - **AD724** analog NTSC encode (COMP is a logic video-present flag; RGB and J9 are netlisted).
 - **MCP130** reset supervisor.
 - Cart **socket** vs **U40** edge (OE#/WE# named stubs on series resistors).

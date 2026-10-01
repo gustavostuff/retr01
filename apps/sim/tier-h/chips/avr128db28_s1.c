@@ -1,5 +1,6 @@
 #include "avr128db28_s1.h"
 
+#include "avr128db28_pins.h"
 #include "retr01_sim/bus.h"
 
 #include <string.h>
@@ -17,7 +18,6 @@ static void s1_reset(R01sEntity *e) {
 
 static void s1_eval(R01sEntity *e) {
     (void)e;
-    /* OAM apply is mailbox/API only (no parallel CE#/DQ). Field ALE//WE driven by board. */
     r01s_bus_hiz(e, "AD", 8);
 }
 
@@ -44,35 +44,36 @@ void r01s_avr128db28_s1_init(R01sAvr128db28S1 *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &MCU_S1_VT, "AVR128DB28", refdes ? refdes : "US1");
     chip->base.impl = chip;
 
-    /* SoT: AD mux + Ahi + SPI ALT1 + ALE + /WE + S1_RDY (no CPU CE#/DQ). */
-    r01s_entity_add_pin(&chip->base, 1, "RESET#", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 2, "AD0", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 3, "AD1", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 4, "AD2", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 5, "AD3", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 6, "AD4", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 7, "AD5", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 8, "AD6", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 9, "AD7", R01S_PIN_IO);
-    r01s_entity_add_pin(&chip->base, 10, "VCC", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 11, "GND", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 12, "A8", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 13, "A9", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 14, "A10", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 15, "A11", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 16, "A12", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 17, "A13", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 18, "A14", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 19, "SPI_MOSI", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 20, "SPI_MISO", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 21, "SPI_SCK", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 22, "/SS_S1", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 23, "ALE", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 24, "/WE", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 25, "S1_RDY", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 26, "CLK", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 27, "RUN", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 28, "UPDI", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA7, "AD7", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PC0, "A8", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PC1, "A9", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PC2, "A10", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PC3, "A11", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_VDDIO2, "VDDIO2", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD1, "A12", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD2, "A13", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD3, "A14", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD4, "SPI_MOSI", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD5, "SPI_MISO", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD6, "SPI_SCK", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PD7, "/SS_S1", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_AVDD, "AVDD", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_GND1, "GND", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PF0, "ALE", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PF1, "/WE", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PF6, "S1_RDY", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_UPDI, "UPDI", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_VDD, "VDD", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_GND2, "GND2", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA0, "AD0", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA1, "AD1", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA2, "AD2", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA3, "AD3", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA4, "AD4", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA5, "AD5", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_PA6, "AD6", R01S_PIN_IO);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_SIM_CLK, "CLK", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, R01S_AVR_SIM_RUN, "RUN", R01S_PIN_OUT);
     r01s_entity_set_dip_mm(&chip->base, 28, 35, 8);
     r01s_entity_reset(&chip->base);
 }

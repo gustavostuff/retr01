@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Set
 
+from .power_rails import _rail_markers
+
 
 # Priority 1: Direct refdes + pin number to descriptive signal name
 _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
@@ -160,25 +162,24 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U7C", "1"): "MUX_C_SEL",
     ("U7C", "15"): "MUX_C_EN#",
 
-    # MCU-M (UM)
+    # MCU-M (UM) — AVR128DB28 physical SPDIP
     ("UM", "19"): "MCU_M_UPDI",
-    ("UM", "20"): "MCU_M_RESET#",
-    ("UM", "23"): "SPI_SCK",
-    ("UM", "24"): "SPI_MISO",
-    ("UM", "25"): "SPI_MOSI",
-    ("UM", "26"): "SS_S1#",
-    ("UM", "27"): "SS_S2#",
+    ("UM", "2"): "SPI_MOSI",
+    ("UM", "3"): "SPI_MISO",
+    ("UM", "4"): "SPI_SCK",
+    ("UM", "5"): "SS_S1#",
+    ("UM", "11"): "SS_S2#",
+    ("UM", "8"): "CPU_RDY",
+    ("UM", "24"): "MCU_SDA",
+    ("UM", "25"): "MCU_SCL",
 
     # MCU-S1 (US1)
     ("US1", "19"): "MCU_S1_UPDI",
-    ("US1", "20"): "MCU_S1_RESET#",
 
     # MCU-S2 (US2)
     ("US2", "19"): "MCU_S2_UPDI",
-    ("US2", "20"): "MCU_S2_RESET#",
-
-    # Inter-AVR sync
-    ("UM", "14"): "AVR_COMMON_SYNC",
+    ("US2", "17"): "AUDIO_PWM",
+    ("US2", "16"): "PAD_DATA_BUS",
 
     # Crystal oscillators
     ("U04", "1"): "XTAL_21M_IN",
@@ -312,6 +313,16 @@ def name_all_nets(nets: list) -> None:
             continue
 
         pins = getattr(net, "pins", []) or []
+        vdd_m, gnd_m = _rail_markers(pins)
+        if gnd_m >= 3 and gnd_m >= vdd_m:
+            net.name = "GND"
+            used_names.add("GND")
+            continue
+        if vdd_m >= 4 and vdd_m >= gnd_m:
+            net.name = "+5V"
+            used_names.add("+5V")
+            continue
+
         suggested = _suggest_name_for_pins(pins)
         if not suggested:
             suggested = curr_name

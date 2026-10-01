@@ -89,9 +89,14 @@ _PS1_J1 = {
 }
 
 
+_SKIP_PIN_NAMES = frozenset({"CLK", "RUN"})
+
+
 def normalize_export_node(ref: str, pin_name: str, pin_num: int) -> Optional[Node]:
     """Return mobo refdes/pin for Skidl, or None to drop."""
     if ref in SKIP_REFDES:
+        return None
+    if pin_name in _SKIP_PIN_NAMES or pin_num > 28 or pin_num < 1:
         return None
     sn = str(pin_num)
     if ref == "U40":
