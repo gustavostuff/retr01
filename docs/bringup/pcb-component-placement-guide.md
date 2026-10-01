@@ -282,8 +282,8 @@ All mechanical interfaces are positioned along the board perimeter according to 
 1. **Power entry:** +5.0 V enters at J1 (Top-Left) through power switch SW1 into bulk electrolytic capacitor E1 (220 uF to 470 uF).
 2. **Domain distribution:** Main VCC splits through four 2-pin isolation headers (JP_PWR1 through JP_PWR4) to allow progressive bring-up as specified in [`staged-pcb-bringup-guide.md`](staged-pcb-bringup-guide.md).
 3. **Decoupling proximity:** Every IC socket has a 0.1 uF low-ESR ceramic capacitor connected within 5 mm of its VCC pin according to the complete assignment in Section 8.
-4. **Unified ground plane:** Both top and bottom copper layers are flooded with GND pours. The bottom layer is preserved as the primary continuous ground return by routing the majority of signal traces on the top layer.
-5. **Via stitching:** Ground stitching vias are placed every 10 mm to 15 mm across the board and immediately adjacent to IC ground pins.
+4. **Unified ground:** Layers 2 and 3 are solid GND planes. Layers 1 and 4 carry their signals plus a GND fill, so all four layers have GND copper. The pours are not split into digital and analog regions. Net assignment is in `docs/general/hardware.md`.
+5. **Via stitching:** Vias tie GND on all four layers every 10 mm to 15 mm and immediately adjacent to IC ground pins. Orphan copper is removed in the zone fill.
 
 ---
 

@@ -1,6 +1,6 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **160 x 100 mm** (Standard Eurocard 3U format, DIN 41494 / IEC 60297). Initial design: motherboard, cart, and pad PCBs all **2-layer** (locked for now). Revisit **4-layer** later only if bring-up or a commercial SMD revision really needs it (EMI / RF / regulatory).
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **160 x 100 mm** (Standard Eurocard 3U format, DIN 41494 / IEC 60297). The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
 **Packages (initial DIY board):** The board is mostly through-hole, with counted motherboard ICs using DIP / SPDIP / PDIP footprints. **AD724** is the sole surface-mount exception: Analog only sells **SOIC-16**, so **U725** mounts directly on a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`) without a DIP adapter. Cart and pad stay THT.
 
@@ -353,11 +353,22 @@ Same pins, same connector body. Cable or jumper chooses the story. CSYNC and H/V
 
 ## PCB layout practices
 
-**Stackup (locked for initial design):** Motherboard is **2-layer**. Typical approach: top = signal + local 5 V pours, bottom = mostly unbroken **GND** pour (stitch often). Ground stays continuous under clocks and the CPU/dot buses. Long bottom-side runs stay off the ground pour when a top detour works.
+**Stackup:** The motherboard is **4-layer**. Layers 2 and 3 are solid GND planes, so noisy copper and quiet copper each have a ground return directly beside them. Layers 1 and 4 also get a GND zone fill in the copper that is not a trace. Every layer carries GND.
 
-**4-layer later (optional):** Only if hardware bring-up shows real need, or for a commercial all-SMD product spin aimed at lower EMI / RF noise and easier regulatory compliance. Not assumed for the initial DIY board (mostly THT with SMD AD724).
+| Layer | Copper |
+| --- | --- |
+| 1 | Noisy signals, +5V, and a GND fill |
+| 2 | Solid GND plane |
+| 3 | Solid GND plane |
+| 4 | Quiet signals and a GND fill |
 
-Cart and pad PCBs are **2-layer** as well.
+The GND copper is one net. Planes and fills are not cut into a digital region and an analog region. Noise stays down by placement and by which outer layer a signal uses. **+5V** is a routed net on layer 1 (0.8 mm to 1.2 mm). It is not an inner plane. Stitching vias tie GND on all four layers every 10 mm to 15 mm, and next to each IC ground pin. KiCad zone fill drops orphan copper.
+
+**Layer 1 (noisy):** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, S1 `AD[7:0]` / ALE / field `/WE`, SPI, scroll X, and +5V.
+
+**Layer 4 (quiet):** Pierce loops (Y1, Y2, U04, feedback resistors, load caps), Y3 and FSC into the AD724, the R-2R ladder to J2, composite to J9, filtered audio to J8, pad UART, I2C, `RESB`, and `CPU_RDY`.
+
+Cart and pad PCBs are **2-layer**.
 
 | Ref | Locked |
 | --- | --- |
@@ -407,15 +418,15 @@ Starter set (roles can grow):
 
 ### Layout rules (bring-up friendly)
 
-These track common practice for a careful **2-layer** digital + video board (same ideas scale to 4-layer if a later revision needs it):
+These track common practice for this **4-layer** digital and video board:
 
-- **Decoupling:** **100 nF** (or similar) at every IC VCC pin, pad as close as practical to the pin, short path into ground (via to the GND pour). Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
-- **Return paths:** High-frequency return wants a short loop back to ground under the signal. Protect the bottom GND pour. Prefer top-layer crossings. Stitch top ground fills to bottom with vias.
+- **Decoupling:** **100 nF** (or similar) at every IC VCC pin, within 5 mm of the pin, with a short via into the GND plane. Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
+- **Return paths:** High-frequency return flows in the GND copper under the trace. Layer 2 returns layer 1. Layer 3 returns layer 4. Stitching vias tie GND on all four layers every 10 mm to 15 mm and next to each IC ground pin.
 - **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
 - **Board edges:** High-speed and clock traces stay off the PCB perimeter. Edge copper couples into chassis and EMI. Clocks sit toward the middle of the board. Connectors and video out may sit on the edge by nature. Their stub lengths stay short.
 - **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
 - **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Keep digital buses from cutting through that island.
-- **Power:** Fat 5 V pours on top (or a dedicated pour). Feed from the barrel without daisy-thin power through long skinny traces.
+- **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
 - **Silkscreen:** Refdes, polarity, DIP `M/S1/S2/CART` and `ALL OFF = SAFE`, TP names, LED names.
 

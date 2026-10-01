@@ -28,7 +28,7 @@ Bus fights default to **non-fatal** (pins go X, sim keeps running). That matches
 | Tiers | Intended build | Sim role |
 | --- | --- | --- |
 | **A, B, C** | Solderless breadboards, short wires, discrete passives | Primary planning tool for **net names**, **power/clock/sync topology**, and **bring-up order** |
-| **D onward** | Mix of breadboard experiments and eventually **2-layer PCB** (Tier H reference: `apps/sim/tier-h/`, KiCad under `apps/sim/tier-h/kicad/`) | Tier H sim is much closer to full machine behavior; A/B/C stay video-slice labs |
+| **D onward** | Mix of breadboard experiments and eventually the **4-layer** motherboard (Tier H reference: `apps/sim/tier-h/`, KiCad under `apps/sim/tier-h/kicad/`) | Tier H sim is much closer to full machine behavior; A/B/C stay video-slice labs |
 
 Tiers A through C deliberately omit the 6502, cart, interleaved VRAM, SPI mailboxes, and multi-MCU traffic from `docs/general/ic-comms-risks.md`. Those risks dominate trust once PHI2, VRAM mux, and shared **D[7:0]** appear (Tier E/F and beyond).
 

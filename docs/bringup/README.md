@@ -78,7 +78,7 @@ The ladder is **feasible** against the locked design:
 ### H - Pads and audio
 
 **Add:** MCU-S2. Pad path (TRS OD UART and/or arcade GPIO). S2 PWM audio. SPI slave under M for pad/APU mailbox. 
-**Exit:** Playable test cart with pads, audio, and composite out. Optional polish (light gun, FRAM preference, 4-layer spin) stays post-H.
+**Exit:** Playable test cart with pads, audio, and composite out. Optional polish (light gun, FRAM preference) stays post-H.
 
 ---
 

@@ -49,7 +49,7 @@ Input and sound are orthogonal to video/CPU/cart bring-up. S2 is the remaining c
 
 - Audio DMA fantasies on S1 that block video windows.
 - Push-pull drive on the TRS DATA line.
-- Light gun / FRAM preference / 4-layer PCB spin as Tier H exit criteria. Those are post-H polish.
+- Light gun / FRAM preference as Tier H exit criteria. Those are post-H polish.
 
 ---
 

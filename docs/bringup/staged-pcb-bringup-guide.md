@@ -52,11 +52,10 @@ A 50 mm (2 inch) length difference on parallel data lines is about 0.33 ns of sk
 
 Standard PCB fabrication specifications:
 - **Digital signal traces:** 0.25 mm (10 mil) width with 0.25 mm spacing. This fits between 2.54 mm DIP socket pins while maintaining high fabrication yield.
-- **Power traces (2-layer board):** 0.8 mm to 1.2 mm (30 to 50 mil) for primary VCC distribution buses, bordered by ground copper pours on top and bottom layers.
-- **Unified ground plane rule:** A single, unbroken ground plane serves all digital and analog components. Ground planes are never physically split into digital and analog copper sections. Noise isolation is achieved through component placement and physical zoning rather than cutting copper.
-- **2-layer ground pour strategy:** Ground zones fill both top (F.Cu) and bottom (B.Cu) layers. To prevent slicing the bottom ground plane into disconnected strips, signal routing runs predominantly on the top layer, using the bottom layer only for short jumper links.
-- **Stitching vias:** Ground stitching vias connect top and bottom ground fills liberally (every 10 to 15 mm and adjacent to IC ground pins) to maintain low-impedance return paths. Unconnected copper islands are set to be removed in KiCad zone fill properties.
-- **4-layer board recommendation:** Utilizing a 4-layer stackup (Layer 1: Signals, Layer 2: Solid Ground Plane, Layer 3: +5.0 V Power Plane, Layer 4: Signals) provides unbroken low-impedance power and ground returns. This suppresses rail inductance, simplifies routing, and eliminates ground bounce risks without significant cost penalty.
+- **Stackup:** 4-layer motherboard. Layer 1 is noisy signals, +5V, and a GND fill. Layers 2 and 3 are solid GND planes. Layer 4 is quiet signals and a GND fill. Which nets are noisy or quiet is listed in `docs/general/hardware.md`.
+- **Power traces:** +5V is routed on layer 1 at 0.8 mm to 1.2 mm (30 to 50 mil). It is not an inner plane.
+- **Unified ground rule:** GND on all four layers is one net. Planes and fills are not cut into a digital region and an analog region. Noise isolation comes from placement and from keeping quiet nets on layer 4.
+- **Stitching vias:** Vias tie GND on all four layers every 10 mm to 15 mm and next to each IC ground pin. Unconnected copper islands are removed in the KiCad zone fill.
 
 ### Component placement topology
 
