@@ -26,8 +26,11 @@ typedef struct R01sAtf22v10 {
 void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role);
 R01sEntity *r01s_atf22v10_entity(R01sAtf22v10 *chip);
 /* DIP-24 package pads other than pin 12 GND and pin 24 VCC.
- * Names are the datasheet pin class. They are not a fuse map. */
+ * Names are the datasheet pin class. They are not a fuse map.
+ * Skips a number that already carries a signal. */
 void r01s_atf22v10_add_shell_pins(R01sEntity *e);
+/* Next free signal pin on a DIP-24. Skips 12 and 24. Returns 0 when full. */
+int r01s_atf22v10_alloc_pin(int *next);
 int r01s_atf22v10_eq(const R01sAtf22v10 *chip);
 
 #endif

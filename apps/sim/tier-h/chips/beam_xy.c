@@ -98,20 +98,32 @@ void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &BEAM_VT, "ATF22V10", refdes ? refdes : "UPLDX");
     chip->base.impl = chip;
-    /* Signal numbers are logical until a JEDEC map assigns them. The shell still draws every DIP-24 leg. */
-    r01s_entity_add_pin(&chip->base, 101, "DOT", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 102, "RES#", R01S_PIN_IN);
-    for (i = 0; i < 9; i++) {
-        r01s_entity_add_pin(&chip->base, 103 + i, X_NAMES[i], R01S_PIN_OUT);
-    }
-    for (i = 0; i < 9; i++) {
-        r01s_entity_add_pin(&chip->base, 112 + i, Y_NAMES[i], R01S_PIN_OUT);
-    }
-    r01s_entity_add_pin(&chip->base, 121, "HBLANK", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 122, "VBLANK", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 123, "NMI#", R01S_PIN_OUT);
+    /* Each wired signal gets its own leg. Y8 stays off the package so NMI# still has a pin. */
     r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+    {
+        int next = 1;
+        int n;
+        n = r01s_atf22v10_alloc_pin(&next);
+        r01s_entity_add_pin(&chip->base, n > 0 ? n : 101, "DOT", R01S_PIN_IN);
+        n = r01s_atf22v10_alloc_pin(&next);
+        r01s_entity_add_pin(&chip->base, n > 0 ? n : 102, "RES#", R01S_PIN_IN);
+        for (i = 0; i < 9; i++) {
+            n = r01s_atf22v10_alloc_pin(&next);
+            r01s_entity_add_pin(&chip->base, n > 0 ? n : 103 + i, X_NAMES[i], R01S_PIN_OUT);
+        }
+        for (i = 0; i < 8; i++) {
+            n = r01s_atf22v10_alloc_pin(&next);
+            r01s_entity_add_pin(&chip->base, n > 0 ? n : 112 + i, Y_NAMES[i], R01S_PIN_OUT);
+        }
+        n = r01s_atf22v10_alloc_pin(&next);
+        r01s_entity_add_pin(&chip->base, n > 0 ? n : 121, "HBLANK", R01S_PIN_OUT);
+        n = r01s_atf22v10_alloc_pin(&next);
+        r01s_entity_add_pin(&chip->base, n > 0 ? n : 122, "VBLANK", R01S_PIN_OUT);
+        n = r01s_atf22v10_alloc_pin(&next);
+        r01s_entity_add_pin(&chip->base, n > 0 ? n : 123, "NMI#", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 130, "Y8", R01S_PIN_OUT);
+    }
     r01s_atf22v10_add_shell_pins(&chip->base);
     /* Behavioral Beam-X shell. Footprint matches ATF22V10 300 mil. */
     r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);

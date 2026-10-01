@@ -2176,17 +2176,6 @@ static void floor_measure_zone(R01sUi *ui, const int *ids, int n, int *rx, int *
     *out_h = best_h + pad_top + pad_bot;
 }
 
-void floor_btn_rect(SDL_Rect *rc) {
-    int tw = font_text_width("ZONES") + 16;
-    if (!rc) {
-        return;
-    }
-    rc->x = 8;
-    rc->y = 8;
-    rc->w = tw;
-    rc->h = font_line_h() + 8;
-}
-
 /* One horizontal row. Named refdes go left to right. Anything else follows. */
 static void floor_pack_named_row(R01sUi *ui, const int *ids, int n, int *rx, int *ry, int *out_w, int *out_h,
                                  const char *const *order, int norder) {
@@ -2328,24 +2317,44 @@ static void floor_put_refs(const R01sUi *ui, const int *ids, int n, int *rx, int
     }
 }
 
-/* Zone 2 follows the video chain: clocks, beam PLDs, color PROM and DAC, composite. */
+/* Place a horizontal run at content origin (ox, oy). Returns the run size. */
+static void floor_run(const R01sUi *ui, const int *ids, int n, int *rx, int *ry, uint8_t *used,
+                      const char *const *refs, int nrefs, int ox, int oy, int *out_w, int *out_h, int *max_r,
+                      int *max_b) {
+    int x = ox;
+    int row_h = 0;
+    floor_put_refs(ui, ids, n, rx, ry, used, refs, nrefs, &x, oy, &row_h, max_r, max_b);
+    if (out_w) {
+        *out_w = x > ox ? (x - ox) : 0;
+    }
+    if (out_h) {
+        *out_h = row_h;
+    }
+}
+
+/* Zone 2 is a block, not one long strip.
+ * Top: the two Pierce loops. Middle: the three PLDs. Bottom: PROM, DAC ladder, composite. */
 static void floor_pack_zone2(const R01sUi *ui, const int *ids, int n, int *rx, int *ry, int *out_w, int *out_h) {
-    static const char *const clocks[] = {"Y2", "C22", "C23", "R31", "U04", "C19", "R12",
-                                         "Y1", "C26", "C27", "R32", "U74", "C20", "R13"};
-    static const char *const beams[] = {"UPLDX", "C8", "UPLDY", "C9", "UPLDV", "C10"};
+    static const char *const pierce_hi[] = {"Y2", "C22", "C23", "R31", "U04", "C19", "R12"};
+    static const char *const pierce_lo[] = {"Y1", "C26", "C27", "R32", "U74", "C20", "R13"};
+    static const char *const beam_x[] = {"UPLDX", "C8"};
+    static const char *const beam_y[] = {"UPLDY", "C9"};
+    static const char *const beam_v[] = {"UPLDV", "C10"};
     static const char *const color[] = {"U24", "C16"};
     static const char *const dac_a[] = {"R1", "R2", "R3", "R4"};
     static const char *const dac_b[] = {"R5", "R6", "R7", "R8"};
-    static const char *const dac_c[] = {"R9", "R10", "R11"};
+    static const char *const dac_c[] = {"R9", "R10", "R11", "J2"};
     static const char *const ntsc[] = {"Y3", "C24", "C25", "U725", "C18"};
     uint8_t used[R01S_BOARD_MAX_CHIPS];
     int x;
     int y;
+    int w;
+    int h;
     int row_h;
     int max_r;
     int max_b;
     int i;
-    const int row_gap = 10;
+    const int row_gap = 8;
     const int pad_x = 3;
     const int pad_bot = 3;
     int pad_top = font_line_h() + 1;
@@ -2359,51 +2368,48 @@ static void floor_pack_zone2(const R01sUi *ui, const int *ids, int n, int *rx, i
         return;
     }
     memset(used, 0, (size_t)n);
-    x = 0;
-    y = 0;
-    row_h = 0;
     max_r = 0;
     max_b = 0;
-    floor_put_refs(ui, ids, n, rx, ry, used, clocks, (int)(sizeof(clocks) / sizeof(clocks[0])), &x, y, &row_h, &max_r,
-                   &max_b);
-    if (row_h > 0) {
-        y += row_h + row_gap;
-    }
+    y = 0;
+    floor_run(ui, ids, n, rx, ry, used, pierce_hi, 7, 0, y, &w, &h, &max_r, &max_b);
+    y += h + row_gap;
+    floor_run(ui, ids, n, rx, ry, used, pierce_lo, 7, 0, y, &w, &h, &max_r, &max_b);
+    y += h + row_gap;
     x = 0;
-    row_h = 0;
-    floor_put_refs(ui, ids, n, rx, ry, used, beams, (int)(sizeof(beams) / sizeof(beams[0])), &x, y, &row_h, &max_r,
-                   &max_b);
-    if (row_h > 0) {
-        y += row_h + row_gap;
-    }
+    floor_run(ui, ids, n, rx, ry, used, beam_x, 2, x, y, &w, &h, &max_r, &max_b);
+    x += w;
+    floor_run(ui, ids, n, rx, ry, used, beam_y, 2, x, y, &w, &h, &max_r, &max_b);
+    x += w;
+    floor_run(ui, ids, n, rx, ry, used, beam_v, 2, x, y, &w, &h, &max_r, &max_b);
+    y += h + row_gap;
     x = 0;
-    row_h = 0;
-    floor_put_refs(ui, ids, n, rx, ry, used, color, (int)(sizeof(color) / sizeof(color[0])), &x, y, &row_h, &max_r,
-                   &max_b);
+    floor_run(ui, ids, n, rx, ry, used, color, 2, x, y, &w, &h, &max_r, &max_b);
     {
-        int ladder_x = x;
+        int ladder_x = x + w;
+        int ladder_w = 0;
         int ly = y;
         int lh = 0;
-        floor_put_refs(ui, ids, n, rx, ry, used, dac_a, 4, &x, ly, &lh, &max_r, &max_b);
+        int dummy_h = 0;
+        floor_run(ui, ids, n, rx, ry, used, dac_a, 4, ladder_x, ly, &w, &lh, &max_r, &max_b);
+        if (w > ladder_w) {
+            ladder_w = w;
+        }
         ly += lh + 4;
-        x = ladder_x;
-        lh = 0;
-        floor_put_refs(ui, ids, n, rx, ry, used, dac_b, 4, &x, ly, &lh, &max_r, &max_b);
+        floor_run(ui, ids, n, rx, ry, used, dac_b, 4, ladder_x, ly, &w, &lh, &max_r, &max_b);
+        if (w > ladder_w) {
+            ladder_w = w;
+        }
         ly += lh + 4;
-        x = ladder_x;
-        lh = 0;
-        floor_put_refs(ui, ids, n, rx, ry, used, dac_c, 3, &x, ly, &lh, &max_r, &max_b);
-        if (ly + lh - y > row_h) {
-            row_h = ly + lh - y;
+        floor_run(ui, ids, n, rx, ry, used, dac_c, 4, ladder_x, ly, &w, &lh, &max_r, &max_b);
+        if (w > ladder_w) {
+            ladder_w = w;
+        }
+        floor_run(ui, ids, n, rx, ry, used, ntsc, 5, ladder_x + ladder_w + 8, y, &w, &dummy_h, &max_r, &max_b);
+        if (ly + lh > max_b) {
+            max_b = ly + lh;
         }
     }
-    if (row_h > 0) {
-        y += row_h + row_gap;
-    }
-    x = 0;
-    row_h = 0;
-    floor_put_refs(ui, ids, n, rx, ry, used, ntsc, (int)(sizeof(ntsc) / sizeof(ntsc[0])), &x, y, &row_h, &max_r, &max_b);
-    y += row_h + row_gap;
+    y = max_b + row_gap;
     x = 0;
     row_h = 0;
     for (i = 0; i < n; i++) {
@@ -2424,7 +2430,7 @@ void ui_pack_floor_plan(R01sUi *ui) {
         int x, y, w, h;
     } FloorZone;
     FloorZone zone[R01S_ZONE_COUNT];
-    static const char *const rear_order[] = {"J1", "SW1", "J8", "J9", "J2"};
+    static const char *const rear_order[] = {"J1", "SW1", "J8", "J9"};
     int i;
     int ox = 16;
     int oy = 48;

@@ -64,6 +64,7 @@ static void test_zones(void) {
     expect_true(r01s_air_zone_for_ref("U40") == -1, "cart flash stays off the outline");
     expect_true(r01s_air_zone_for_ref("J1") == R01S_ZONE_J8, "J1 on the rear strip");
     expect_true(r01s_air_zone_for_ref("J9") == R01S_ZONE_J8, "J9 on the rear strip");
+    expect_true(r01s_air_zone_for_ref("J2") == R01S_ZONE_Z2, "J2 sits in zone 2");
     expect_true(strcmp(r01s_air_zone_name(R01S_ZONE_J8), "Rear") == 0, "rear strip name");
     expect_true(r01s_air_outside_px(0, 0, 100, 40, 10, 10, 20, 10) == 0, "body inside");
     expect_true(r01s_air_outside_px(0, 0, 100, 40, -8, 0, 20, 10) == 8, "body 8 px past the left edge");

@@ -282,7 +282,7 @@ static const struct {
     {"C17", R01S_ZONE_Z1},  {"C18", R01S_ZONE_Z2},  {"C19", R01S_ZONE_Z2},  {"C20", R01S_ZONE_Z2},
     {"C22", R01S_ZONE_Z2},  {"C23", R01S_ZONE_Z2},  {"C24", R01S_ZONE_Z2},  {"C25", R01S_ZONE_Z2},
     {"C26", R01S_ZONE_Z2},  {"C27", R01S_ZONE_Z2},  {"E1", R01S_ZONE_Z1},   {"J1", R01S_ZONE_J8},
-    {"J2", R01S_ZONE_J8},   {"J3", R01S_ZONE_Z5},   {"J4", R01S_ZONE_Z5},       {"J5", R01S_ZONE_Z5},
+    {"J2", R01S_ZONE_Z2},   {"J3", R01S_ZONE_Z5},   {"J4", R01S_ZONE_Z5},       {"J5", R01S_ZONE_Z5},
     {"J7", R01S_ZONE_Z5},   {"J8", R01S_ZONE_J8},   {"J9", R01S_ZONE_J8},
     {"J36", R01S_ZONE_SPINE}, {"R1", R01S_ZONE_Z2}, {"R2", R01S_ZONE_Z2},   {"R3", R01S_ZONE_Z2},
     {"R4", R01S_ZONE_Z2},   {"R5", R01S_ZONE_Z2},   {"R6", R01S_ZONE_Z2},   {"R7", R01S_ZONE_Z2},

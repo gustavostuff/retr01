@@ -38,7 +38,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 
 ```
 +----------------------------------------------------------------------------------+
-| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)    RGBS Video(J2)       |
+| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)                         |
 +-----------------------+--------------------------------+-------------------------+
 | SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)       | VIDEO ENGINE & DAC      |
 | (Top-Left)            | (Top-Center, Horizontal)       | (Top-Right)             |
@@ -46,7 +46,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 |   * System RAM (U3)   |   * Sits DIRECTLY above J36    |   * Y1 + Y2 crystals    |
 |   * MCP130 Supervisor |   * Address and data drop      |   * U04 / U74 clocks    |
 |                       |     into cart. Bus left to U3  |   * Beam X/Y, Comp      |
-|                       |                                |   * Color PROM, DAC     |
+|                       |                                |   * Color PROM, DAC, J2 |
 +-----------------------+--------------------------------+-------------------------+
 |                 CARTRIDGE SLOT (J36, Center-Horizontal)                          |
 |                 (Directly below the CPU, middle spine)                           |

@@ -147,6 +147,41 @@ static void pld_destroy(R01sEntity *e) {
 
 static const R01sEntityVTable ATF22_VT = {pld_reset, pld_eval, pld_tick, pld_destroy};
 
+static int entity_has_pin_number(const R01sEntity *e, int number) {
+    int i;
+    if (!e) {
+        return 0;
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        if (e->pins[i].number == number) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int r01s_atf22v10_alloc_pin(int *next) {
+    int p;
+    if (!next) {
+        return 0;
+    }
+    p = *next;
+    if (p < 1) {
+        p = 1;
+    }
+    if (p == 12) {
+        p = 13;
+    }
+    if (p < 1 || p > 23) {
+        return 0;
+    }
+    *next = p + 1;
+    if (*next == 12) {
+        *next = 13;
+    }
+    return p;
+}
+
 void r01s_atf22v10_add_shell_pins(R01sEntity *e) {
     static const char *const in_names[10] = {"IN2", "IN3", "IN4", "IN5", "IN6", "IN7", "IN8", "IN9", "IN10", "IN11"};
     static const char *const io_names[10] = {"IO14", "IO15", "IO16", "IO17", "IO18",
@@ -155,14 +190,33 @@ void r01s_atf22v10_add_shell_pins(R01sEntity *e) {
     if (!e) {
         return;
     }
-    r01s_entity_add_pin(e, 1, "CLK", R01S_PIN_IN);
-    for (i = 0; i < 10; i++) {
-        r01s_entity_add_pin(e, 2 + i, in_names[i], R01S_PIN_IN);
+    if (!entity_has_pin_number(e, 1)) {
+        r01s_entity_add_pin(e, 1, "CLK", R01S_PIN_IN);
     }
-    r01s_entity_add_pin(e, 13, "IN13", R01S_PIN_IN);
     for (i = 0; i < 10; i++) {
-        r01s_entity_add_pin(e, 14 + i, io_names[i], R01S_PIN_IO);
+        int n = 2 + i;
+        if (!entity_has_pin_number(e, n)) {
+            r01s_entity_add_pin(e, n, in_names[i], R01S_PIN_IN);
+        }
     }
+    if (!entity_has_pin_number(e, 13)) {
+        r01s_entity_add_pin(e, 13, "IN13", R01S_PIN_IN);
+    }
+    for (i = 0; i < 10; i++) {
+        int n = 14 + i;
+        if (!entity_has_pin_number(e, n)) {
+            r01s_entity_add_pin(e, n, io_names[i], R01S_PIN_IO);
+        }
+    }
+}
+
+static void atf_add_sig(R01sEntity *e, int *next, const char *name, R01sPinDir dir) {
+    int n = r01s_atf22v10_alloc_pin(next);
+    if (n <= 0) {
+        /* Package is full. Keep the name for the sim, off the drawn legs. */
+        n = 100 + e->pin_count;
+    }
+    r01s_entity_add_pin(e, n, name, dir);
 }
 
 static const char *const PLD_I_NAMES[8] = {"I0", "I1", "I2", "I3", "I4", "I5", "I6", "I7"};
@@ -180,52 +234,49 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
     r01s_entity_init(&chip->base, &ATF22_VT, "ATF22V10", refdes ? refdes : "UPLD");
     chip->base.impl = chip;
 
-    if (role == R01S_PLD_DECODE) {
-        static const char *const A_NAMES[8] = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"};
-        for (i = 0; i < 8; i++) {
-            r01s_entity_add_pin(&chip->base, 101 + i, A_NAMES[i], R01S_PIN_IN);
+    /* Placement stand-in. Each signal gets its own leg. Not a JEDEC map. */
+    r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+    {
+        int next = 1;
+        if (role == R01S_PLD_DECODE) {
+            static const char *const A_NAMES[8] = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"};
+            static const char *const SEL_NAMES[11] = {"SEL_7F02", "SEL_7F03", "SEL_7F04", "SEL_7F08", "SEL_7F10",
+                                                      "SEL_7F11", "SEL_7F12", "SEL_7F90", "SEL_7F91", "SEL_7F92",
+                                                      "SEL_7F93"};
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, A_NAMES[i], R01S_PIN_IN);
+            }
+            atf_add_sig(&chip->base, &next, "SOFT#", R01S_PIN_IN);
+            atf_add_sig(&chip->base, &next, "BE", R01S_PIN_IN);
+            atf_add_sig(&chip->base, &next, "RWB", R01S_PIN_IN);
+            for (i = 0; i < 11; i++) {
+                atf_add_sig(&chip->base, &next, SEL_NAMES[i], R01S_PIN_OUT);
+            }
+        } else if (role == R01S_PLD_BEAM_Y) {
+            /* EQ# and P0-P7 are the nets on the canvas. They take legs before the spare names. */
+            atf_add_sig(&chip->base, &next, "EQ#", R01S_PIN_OUT);
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, PLD_P_NAMES[i], R01S_PIN_IN);
+            }
+            atf_add_sig(&chip->base, &next, "OE#", R01S_PIN_IN);
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, PLD_I_NAMES[i], R01S_PIN_IN);
+            }
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, PLD_Y_NAMES[i], R01S_PIN_OUT);
+            }
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, PLD_Q_NAMES[i], R01S_PIN_IN);
+            }
+        } else {
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, PLD_I_NAMES[i], R01S_PIN_IN);
+            }
+            for (i = 0; i < 8; i++) {
+                atf_add_sig(&chip->base, &next, PLD_Y_NAMES[i], R01S_PIN_OUT);
+            }
         }
-        r01s_entity_add_pin(&chip->base, 109, "SOFT#", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 110, "BE", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 111, "RWB", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 112, "SEL_7F02", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 113, "SEL_7F03", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 114, "SEL_7F04", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 115, "SEL_7F08", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 116, "SEL_7F10", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 117, "SEL_7F11", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 118, "SEL_7F12", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 119, "SEL_7F90", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 120, "SEL_7F91", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 121, "SEL_7F92", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 122, "SEL_7F93", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
-        r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
-        r01s_atf22v10_add_shell_pins(&chip->base);
-        r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
-        r01s_entity_reset(&chip->base);
-        return;
-    }
-
-    /* Programmed signals stay on logical pin numbers. The DIP-24 shell is drawn separately. */
-    for (i = 0; i < 8; i++) {
-        r01s_entity_add_pin(&chip->base, 101 + i, PLD_I_NAMES[i], R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 109 + i, PLD_Y_NAMES[i], R01S_PIN_OUT);
-    }
-    if (role == R01S_PLD_BEAM_Y) {
-        for (i = 0; i < 8; i++) {
-            r01s_entity_add_pin(&chip->base, 130 + i, PLD_P_NAMES[i], R01S_PIN_IN);
-        }
-        for (i = 0; i < 8; i++) {
-            r01s_entity_add_pin(&chip->base, 25 + i, PLD_Q_NAMES[i], R01S_PIN_IN);
-        }
-        r01s_entity_add_pin(&chip->base, 33, "OE#", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 34, "EQ#", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
-        r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
-    } else {
-        r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
-        r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
     }
     r01s_atf22v10_add_shell_pins(&chip->base);
     r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);

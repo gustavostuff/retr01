@@ -386,6 +386,58 @@ static const char *json_object_end(const char *obj) {
     return NULL;
 }
 
+/* Grow one zone box until the named part sits inside it. Other parts stay put. */
+static void floor_cover_ref(R01sUi *ui, const char *refdes) {
+    int i;
+    int zone;
+    int x0;
+    int y0;
+    int x1;
+    int y1;
+    const R01sEntity *e;
+    if (!ui || !ui->floor_on || !refdes) {
+        return;
+    }
+    zone = r01s_air_zone_for_ref(refdes);
+    if (zone < 0 || zone >= R01S_ZONE_COUNT) {
+        return;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        e = ui->chips[i];
+        if (!e || !e->refdes || strcmp(e->refdes, refdes) != 0) {
+            continue;
+        }
+        x0 = e->board_x;
+        y0 = e->board_y;
+        x1 = e->board_x + (e->body_w > 0 ? e->body_w : 1);
+        y1 = e->board_y + (e->body_h > 0 ? e->body_h : 1);
+        if (ui->floor_w[zone] <= 0 || ui->floor_h[zone] <= 0) {
+            ui->floor_x[zone] = x0;
+            ui->floor_y[zone] = y0;
+            ui->floor_w[zone] = x1 - x0;
+            ui->floor_h[zone] = y1 - y0;
+            return;
+        }
+        if (ui->floor_x[zone] < x0) {
+            x0 = ui->floor_x[zone];
+        }
+        if (ui->floor_y[zone] < y0) {
+            y0 = ui->floor_y[zone];
+        }
+        if (ui->floor_x[zone] + ui->floor_w[zone] > x1) {
+            x1 = ui->floor_x[zone] + ui->floor_w[zone];
+        }
+        if (ui->floor_y[zone] + ui->floor_h[zone] > y1) {
+            y1 = ui->floor_y[zone] + ui->floor_h[zone];
+        }
+        ui->floor_x[zone] = x0;
+        ui->floor_y[zone] = y0;
+        ui->floor_w[zone] = x1 - x0;
+        ui->floor_h[zone] = y1 - y0;
+        return;
+    }
+}
+
 int r01s_ui_layout_load(R01sUi *ui) {
     const char *path = NULL;
     char *buf = NULL;
@@ -766,6 +818,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     } else {
         r01s_ui_chip_z_init(ui);
     }
+    floor_cover_ref(ui, "J2");
     r01s_ui_clamp_pan(ui);
     ui_islands_strip_clamp(ui);
     ui_legend_strip_clamp(ui);

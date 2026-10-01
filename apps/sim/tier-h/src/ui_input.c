@@ -283,12 +283,6 @@ static int hit_floor_interior(const R01sUi *ui, int logic_x, int logic_y) {
 static void ui_sync_corner_cursor(const R01sUi *ui, int logic_x, int logic_y) {
     int zone = -1;
     int corner = -1;
-    SDL_Rect fb;
-    floor_btn_rect(&fb);
-    if (logic_x >= fb.x && logic_x < fb.x + fb.w && logic_y >= fb.y && logic_y < fb.y + fb.h) {
-        ui_set_sys_cursor(0);
-        return;
-    }
     if (ui && ui->floor_resize >= 0) {
         ui_set_sys_cursor(cursor_for_corner(ui->floor_resize_corner));
         return;
@@ -886,16 +880,6 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             ui->ctx_chip = -1; /* click elsewhere dismisses */
         }
 
-        /* LIVE/MANUAL, ARCADE/PADS, SAVE HUD controls removed. */
-
-        {
-            SDL_Rect fb;
-            floor_btn_rect(&fb);
-            if (logic_x >= fb.x && logic_x < fb.x + fb.w && logic_y >= fb.y && logic_y < fb.y + fb.h) {
-                ui_pack_floor_plan(ui);
-                return 1;
-            }
-        }
         if (ui->floor_on) {
             int zone = -1;
             int corner = hit_floor_corner(ui, logic_x, logic_y, &zone);

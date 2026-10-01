@@ -1316,14 +1316,6 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     SDL_RenderSetScale(r, 1.0f, 1.0f);
     SDL_RenderSetClipRect(r, NULL);
 
-    /* Floating LIVE/MANUAL, ARCADE/PADS, SAVE controls removed (discrete_ic migration). */
-    {
-        SDL_Rect fb;
-        floor_btn_rect(&fb);
-        fill_rect(r, fb.x, fb.y, fb.w, fb.h, 32, 36, 32);
-        draw_rect(r, fb.x, fb.y, fb.w, fb.h, 180, 190, 160);
-        font_draw(r, fb.x + 8, fb.y + 4, "ZONES", 230, 230, 210);
-    }
     draw_wave_monitor(r, ui);
 
     draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);

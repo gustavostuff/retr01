@@ -128,7 +128,6 @@ void ui_save_layout_now(R01sUi *ui);
 void ui_pack_floor_plan(R01sUi *ui);
 void floor_zone_drag_begin(R01sUi *ui, int zone);
 void floor_zone_drag_to(R01sUi *ui, int zone, int board_mx, int board_my);
-void floor_btn_rect(SDL_Rect *rc);
 int ui_lcd_scale_2x(const R01sUi *ui);
 int ui_screen_render_mode(const R01sUi *ui);
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x);
