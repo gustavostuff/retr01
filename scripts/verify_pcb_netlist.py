@@ -36,32 +36,24 @@ def parse_sim_json(json_path: Path) -> dict[str, set[tuple[str, str]]]:
 
 
 def parse_kicad_pcb(pcb_path: Path) -> dict[str, set[tuple[str, str]]]:
-    """Extracts pad-to-net mapping from KiCad .kicad_pcb S-expression file."""
+    """Extracts pad-to-net mapping from a KiCad 8+ .kicad_pcb file."""
     text = pcb_path.read_text(encoding="utf-8")
-
-    # 1. Parse net index: (net <id> "<name>")
-    net_names: dict[int, str] = {}
-    for match in re.finditer(r'\(net\s+(\d+)\s+"([^"]*)"\)', text):
-        net_names[int(match.group(1))] = match.group(2)
-
-    # 2. Parse footprints and pads (supports KiCad 6/7/8 footprint and legacy module tags)
     pcb_nets: dict[str, set[tuple[str, str]]] = defaultdict(set)
-    fp_pattern = re.compile(
-        r'\((?:footprint|module)\s+"[^"]+".*?\n\s+\(fp_text reference "([^"]+)".*?\n(.*?)\n\s+\)',
-        re.DOTALL,
+    ref_re = re.compile(r'\(property "Reference" "([^"]+)"')
+    ref_legacy = re.compile(r'\(fp_text reference "([^"]+)"')
+    pad_re = re.compile(
+        r'\(pad\s+"([^"]+)"[\s\S]*?'
+        r'(?:\(net\s+\d+\s+"([^"]*)"\)|\(net\s+"([^"]+)"\))'
     )
-    pad_pattern = re.compile(r'\(pad\s+"([^"]+)"\s+\w+\s+\w+.*?\(net\s+(\d+)')
-
-    for fp_match in fp_pattern.finditer(text):
-        refdes = fp_match.group(1)
-        body = fp_match.group(2)
-        for pad_match in pad_pattern.finditer(body):
-            pad_num = pad_match.group(1)
-            net_id = int(pad_match.group(2))
-            net_name = net_names.get(net_id, f"UNKNOWN_{net_id}")
-            if net_id != 0 and net_name and net_name != "NC":
-                pcb_nets[net_name].add((refdes, pad_num))
-
+    for chunk in re.split(r"\n\t\(footprint ", text)[1:]:
+        ref_m = ref_re.search(chunk) or ref_legacy.search(chunk)
+        if not ref_m:
+            continue
+        refdes = ref_m.group(1)
+        for pad_m in pad_re.finditer(chunk):
+            net_name = pad_m.group(2) or pad_m.group(3) or ""
+            if net_name and net_name != "NC":
+                pcb_nets[net_name].add((refdes, pad_m.group(1)))
     return pcb_nets
 
 

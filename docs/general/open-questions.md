@@ -74,7 +74,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 13. IC budget + composite IC
 
-**Resolved:** 17+2=19. **AD724** on the motherboard BOM (dual-sync composite). See `hardware.md`.
+**Resolved:** 19 motherboard + 2 cart = 21. **AD724** on the motherboard BOM (dual-sync composite), plus 74HCU04 and 74HC74 clock logic. See `hardware.md`.
 
 ### 14. Scroll edge cases
 
@@ -119,7 +119,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-13 | MCU set | 3x AVR128DB28 (M / S1 / S2). |
 | 2026-09-13 | Color path | AT27C256R master colors. |
 | 2026-09-13 | Composite | **AD724** frozen (CSYNC or H/V). |
-| 2026-09-14 | IC budget | AD724 counted on motherboard. 17 mobo + 2 cart = 19. |
+| 2026-09-14 | IC budget | AD724 counted on the motherboard. |
 | 2026-09-14 | AD724 mount | **SOIC-16** on motherboard (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). No DIP adapter. |
 | 2026-09-14 | Reset supervisor | MCP130 in TO-92 for power-on delay, brown-out, and switch debounce. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). |

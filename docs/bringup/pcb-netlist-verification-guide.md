@@ -51,8 +51,8 @@ A dedicated Python verification tool compares the virtual pin netlist (`retr01_t
    A standard S-expression text file defining footprints, pads, and assigned net IDs:
    ```lisp
    (footprint "Retr01_Lib:DIP-40_W15.24mm"
-     (fp_text reference "U1" ...)
-     (pad "4" thru_hole oval ... (net 11 "NET_11"))
+     (property "Reference" "U1" ...)
+     (pad "4" thru_hole ... (net "CPU_IRQ#"))
    )
    ```
 
@@ -70,94 +70,15 @@ The script constructs an equivalence graph of `(component_ref, pad_number)` pair
 
 ---
 
-## 3. Reference implementation of the comparison tool
+## 3. Comparison tool
 
-The comparison logic is structured as a standalone verification script (`scripts/verify_pcb_netlist.py`):
+`scripts/verify_pcb_netlist.py` reads `retr01_tier_h.json` and `v_02.kicad_pcb`.
 
-```python
-#!/usr/bin/env python3
-"""
-Compares retr01_tier_h.json (sim netlist) against v_02.kicad_pcb (board file).
-Reports missing pins, net mismatches, open circuits, and unintentional shorts.
-"""
+KiCad 10 footprints store the refdes as `(property "Reference" "U1")` and pad nets as `(net "GND")` (name only). Older boards may still use `(fp_text reference ...)` and `(net 11 "NET_11")`. The script accepts both.
 
-from __future__ import annotations
-import json
-import re
-import sys
-from collections import defaultdict
-from pathlib import Path
-
-def parse_sim_json(json_path: Path) -> dict[str, set[tuple[str, str]]]:
-    """Returns mapping: net_name -> set of (refdes, pad_number)."""
-    data = json.loads(json_path.read_text(encoding="utf-8"))
-    sim_nets: dict[str, set[tuple[str, str]]] = {}
-    for net in data.get("nets", []):
-        name = net["name"]
-        nodes = {(n["ref"], str(n["num"])) for n in net.get("nodes", [])}
-        if nodes:
-            sim_nets[name] = nodes
-    return sim_nets
-
-def parse_kicad_pcb(pcb_path: Path) -> dict[str, set[tuple[str, str]]]:
-    """Extracts pad-to-net mapping from KiCad S-expression .kicad_pcb file."""
-    text = pcb_path.read_text(encoding="utf-8")
-    
-    # 1. Parse net index: (net <id> "<name>")
-    net_names: dict[int, str] = {}
-    for match in re.finditer(r'\(net\s+(\d+)\s+"([^"]+)"\)', text):
-        net_names[int(match.group(1))] = match.group(2)
-        
-    # 2. Parse footprints and pads
-    pcb_nets: dict[str, set[tuple[str, str]]] = defaultdict(set)
-    fp_pattern = re.compile(r'\(footprint\s+"[^"]+".*?\n\s+\(fp_text reference "([^"]+)".*?\n(.*?)\n  \)', re.DOTALL)
-    pad_pattern = re.compile(r'\(pad\s+"([^"]+)"\s+\w+\s+\w+.*?\(net\s+(\d+)')
-    
-    for fp_match in fp_pattern.finditer(text):
-        refdes = fp_match.group(1)
-        body = fp_match.group(2)
-        for pad_match in pad_pattern.finditer(body):
-            pad_num = pad_match.group(1)
-            net_id = int(pad_match.group(2))
-            net_name = net_names.get(net_id, f"UNKNOWN_{net_id}")
-            if net_id != 0: # Skip unconnected / unassigned pads
-                pcb_nets[net_name].add((refdes, pad_num))
-                
-    return pcb_nets
-
-def verify(sim_nets: dict, pcb_nets: dict) -> int:
-    errors = 0
-    # Map (refdes, pad) to net name for both
-    sim_pad_to_net = {pad: net for net, pads in sim_nets.items() for pad in pads}
-    pcb_pad_to_net = {pad: net for net, pads in pcb_nets.items() for pad in pads}
-    
-    # Check all sim pads exist in PCB
-    for pad, sim_net in sim_pad_to_net.items():
-        if pad not in pcb_pad_to_net:
-            print(f"ERROR: Pin {pad[0]}.{pad[1]} (Sim net {sim_net}) missing in PCB layout")
-            errors += 1
-            continue
-        pcb_net = pcb_pad_to_net[pad]
-        # Check that connected peer pins match
-        sim_peers = sim_nets[sim_net]
-        pcb_peers = pcb_nets[pcb_net]
-        diff = sim_peers.symmetric_difference(pcb_peers)
-        if diff:
-            print(f"ERROR: Net mismatch for {pad[0]}.{pad[1]}:")
-            print(f"   Sim net {sim_net} peers: {sim_peers}")
-            print(f"   PCB net {pcb_net} peers: {pcb_peers}")
-            errors += 1
-            
-    if errors == 0:
-        print("PASS: 100% equivalence between Sim netlist and KiCad PCB file.")
-    return errors
-
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: verify_pcb_netlist.py <sim.json> <board.kicad_pcb>")
-        sys.exit(1)
-    errs = verify(parse_sim_json(Path(sys.argv[1])), parse_kicad_pcb(Path(sys.argv[2])))
-    sys.exit(1 if errs > 0 else 0)
+```bash
+./scripts/verify_pcb_netlist.py
+./scripts/verify_pcb_netlist.py apps/sim/tier-h/skidl/retr01_tier_h.json apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb
 ```
 
 ---
