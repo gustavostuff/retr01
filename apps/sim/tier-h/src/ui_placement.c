@@ -21,6 +21,7 @@ static int island_chips_overlap(const R01sUi *ui, int island_index);
 static int island_saved_chip_layout_sane(const R01sUi *ui, int island_index);
 static void island_expand_for_saved_chips(R01sUi *ui, int island_index);
 static void island_content_min_size(const R01sUi *ui, int island_index, int *min_w, int *min_h);
+static void place_part_at(R01sEntity *e, int nx, int ny);
 
 static void clamp_chip_to_board(R01sEntity *e) {
     /* Free placement with board-sized overscroll (no hard stop at the origin). */
@@ -56,7 +57,12 @@ static void clamp_chip_to_board(R01sEntity *e) {
     if (by > max_y) {
         by = max_y;
     }
-    r01s_entity_place(e, bx, by);
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        R01sPassive *p = (R01sPassive *)(void *)e;
+        r01s_passive_set_pivot(p, p->pivot_x + (bx - e->board_x), p->pivot_y + (by - e->board_y));
+    } else {
+        r01s_entity_place(e, bx, by);
+    }
 }
 
 static void clamp_chip_in_island(R01sUi *ui, R01sEntity *e, int island_index) {
@@ -304,6 +310,7 @@ void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
     if (!ui->floor_on && (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PASSIVE)) {
         ui_chip_snap_to_breadboard(ui, chip_i);
     }
+    ui->layout_dirty = 1;
 }
 
 void ui_sel_clear(R01sUi *ui) {
@@ -534,6 +541,7 @@ void move_selection_drag(R01sUi *ui, int board_mx, int board_my) {
             ui_chip_snap_to_breadboard(ui, i);
         }
     }
+    ui->layout_dirty = 1;
 }
 
 typedef struct {
@@ -1771,8 +1779,9 @@ void move_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my) 
             continue;
         }
         e = ui->chips[i];
-        r01s_entity_place(e, e->board_x + dx, e->board_y + dy);
+        place_part_at(e, e->board_x + dx, e->board_y + dy);
     }
+    ui->layout_dirty = 1;
 }
 
 static void island_chip_content_bounds(const R01sUi *ui, int island_index, int *out_l, int *out_t, int *out_r,
@@ -2007,6 +2016,65 @@ static void place_part_at(R01sEntity *e, int nx, int ny) {
     }
 }
 
+static struct {
+    int n;
+    int idx[R01S_BOARD_MAX_CHIPS];
+    int x[R01S_BOARD_MAX_CHIPS];
+    int y[R01S_BOARD_MAX_CHIPS];
+    int zx;
+    int zy;
+} floor_move;
+
+void floor_zone_drag_begin(R01sUi *ui, int zone) {
+    int i;
+    floor_move.n = 0;
+    if (!ui || zone < 0 || zone >= R01S_ZONE_COUNT) {
+        return;
+    }
+    floor_move.zx = ui->floor_x[zone];
+    floor_move.zy = ui->floor_y[zone];
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        int cx;
+        int cy;
+        if (!e || ui_chip_hidden(ui, e) || e->visual == R01S_ENTITY_VIS_NONE) {
+            continue;
+        }
+        cx = e->board_x + e->body_w / 2;
+        cy = e->board_y + e->body_h / 2;
+        if (cx < ui->floor_x[zone] || cy < ui->floor_y[zone] || cx >= ui->floor_x[zone] + ui->floor_w[zone] ||
+            cy >= ui->floor_y[zone] + ui->floor_h[zone]) {
+            continue;
+        }
+        floor_move.idx[floor_move.n] = i;
+        floor_move.x[floor_move.n] = e->board_x;
+        floor_move.y[floor_move.n] = e->board_y;
+        floor_move.n++;
+    }
+}
+
+void floor_zone_drag_to(R01sUi *ui, int zone, int board_mx, int board_my) {
+    int nx;
+    int ny;
+    int dx;
+    int dy;
+    int k;
+    if (!ui || zone < 0 || zone >= R01S_ZONE_COUNT) {
+        return;
+    }
+    nx = board_mx - ui->floor_drag_grab_x;
+    ny = board_my - ui->floor_drag_grab_y;
+    dx = nx - floor_move.zx;
+    dy = ny - floor_move.zy;
+    ui->floor_x[zone] = floor_move.zx + dx;
+    ui->floor_y[zone] = floor_move.zy + dy;
+    for (k = 0; k < floor_move.n; k++) {
+        R01sEntity *e = ui->chips[floor_move.idx[k]];
+        place_part_at(e, floor_move.x[k] + dx, floor_move.y[k] + dy);
+    }
+    ui->layout_dirty = 1;
+}
+
 static void sort_ids_by_ref(const R01sUi *ui, int *ids, int n) {
     int i;
     for (i = 1; i < n; i++) {
@@ -2026,6 +2094,88 @@ static void sort_ids_by_ref(const R01sUi *ui, int *ids, int n) {
     }
 }
 
+/* Shelf-pack one zone by real footprints. Offsets include the frame pad. */
+static void floor_measure_zone(R01sUi *ui, const int *ids, int n, int *rx, int *ry, int *out_w, int *out_h) {
+    R01sPackItem items[R01S_BOARD_MAX_CHIPS];
+    int place_x[R01S_BOARD_MAX_CHIPS];
+    int place_y[R01S_BOARD_MAX_CHIPS];
+    int best_x[R01S_BOARD_MAX_CHIPS];
+    int best_y[R01S_BOARD_MAX_CHIPS];
+    int i;
+    int area = 0;
+    int side;
+    int best_score = 0x7fffffff;
+    int best_w = 1;
+    int best_h = 1;
+    int t;
+    const int gap = 2;
+    const int pad_x = 3;
+    const int pad_bot = 3;
+    int pad_top = font_line_h() + 1;
+
+    if (!out_w || !out_h) {
+        return;
+    }
+    if (n <= 0) {
+        *out_w = 0;
+        *out_h = 0;
+        return;
+    }
+    for (i = 0; i < n; i++) {
+        const R01sEntity *e = ui->chips[ids[i]];
+        items[i].idx = i;
+        if (!e) {
+            items[i].pw = 1;
+            items[i].ph = 1;
+        } else {
+            chip_pack_footprint(e, &items[i].pw, &items[i].ph);
+        }
+        area += items[i].pw * items[i].ph;
+    }
+    qsort(items, (size_t)n, sizeof(items[0]), pack_item_taller);
+    side = ui_isqrt(area);
+    if (side < items[0].pw) {
+        side = items[0].pw;
+    }
+    for (t = 0; t < 12; t++) {
+        int max_row = side + (t - 4) * (side / 10 + 4);
+        int bb_w = 0;
+        int bb_h = 0;
+        int score;
+        int diff;
+        if (max_row < items[0].pw) {
+            max_row = items[0].pw;
+        }
+        pack_shelves(items, n, max_row, gap, 0, 0, place_x, place_y, &bb_w, &bb_h);
+        diff = bb_w > bb_h ? bb_w - bb_h : bb_h - bb_w;
+        score = diff * 4 + bb_w + bb_h;
+        if (score < best_score) {
+            best_score = score;
+            best_w = bb_w;
+            best_h = bb_h;
+            memcpy(best_x, place_x, (size_t)n * sizeof(int));
+            memcpy(best_y, place_y, (size_t)n * sizeof(int));
+        }
+    }
+    for (i = 0; i < n; i++) {
+        int k = items[i].idx;
+        const R01sEntity *e = ui->chips[ids[k]];
+        int pw;
+        int ph;
+        int bx = best_x[i];
+        int by = best_y[i];
+        if (e) {
+            chip_pack_footprint(e, &pw, &ph);
+            bx += (pw - e->body_w) / 2;
+            by += (ph - e->body_h) / 2;
+        }
+        rx[k] = pad_x + bx;
+        ry[k] = pad_top + by;
+    }
+    *out_w = best_w + 2 * pad_x;
+    *out_h = best_h + pad_top + pad_bot;
+}
+
 void floor_btn_rect(SDL_Rect *rc) {
     int tw = font_text_width("ZONES") + 16;
     if (!rc) {
@@ -2040,22 +2190,20 @@ void floor_btn_rect(SDL_Rect *rc) {
 void ui_pack_floor_plan(R01sUi *ui) {
     typedef struct {
         int ids[R01S_BOARD_MAX_CHIPS];
+        int rx[R01S_BOARD_MAX_CHIPS];
+        int ry[R01S_BOARD_MAX_CHIPS];
         int n;
         int x, y, w, h;
-        int cols;
-        int cell_w;
-        int cell_h;
     } FloorZone;
     FloorZone zone[R01S_ZONE_COUNT];
     int i;
     int ox = 16;
     int oy = 48;
-    int gap = 18;
+    int gap = 4;
     int x;
     int y;
     int center_w;
     int top_h;
-    int top_w;
     int mid_h;
 
     if (!ui) {
@@ -2077,35 +2225,8 @@ void ui_pack_floor_plan(R01sUi *ui) {
         }
     }
     for (i = 0; i < R01S_ZONE_COUNT; i++) {
-        int k;
-        int max_w = 8;
-        int max_h = 8;
-        int rows;
         sort_ids_by_ref(ui, zone[i].ids, zone[i].n);
-        if (zone[i].n <= 0) {
-            continue;
-        }
-        for (k = 0; k < zone[i].n; k++) {
-            R01sEntity *e = ui->chips[zone[i].ids[k]];
-            if (!e) {
-                continue;
-            }
-            if (e->body_w > max_w) {
-                max_w = e->body_w;
-            }
-            if (e->body_h > max_h) {
-                max_h = e->body_h;
-            }
-        }
-        zone[i].cols = 1;
-        while (zone[i].cols * zone[i].cols < zone[i].n) {
-            zone[i].cols++;
-        }
-        rows = (zone[i].n + zone[i].cols - 1) / zone[i].cols;
-        zone[i].cell_w = max_w + 10;
-        zone[i].cell_h = max_h + 10;
-        zone[i].w = zone[i].cols * zone[i].cell_w + 16;
-        zone[i].h = rows * zone[i].cell_h + 16;
+        floor_measure_zone(ui, zone[i].ids, zone[i].n, zone[i].rx, zone[i].ry, &zone[i].w, &zone[i].h);
     }
 
     center_w = zone[R01S_ZONE_CPU].w;
@@ -2150,16 +2271,8 @@ void ui_pack_floor_plan(R01sUi *ui) {
         zone[R01S_ZONE_Z2].y = oy;
         x += zone[R01S_ZONE_Z2].w;
     }
-    top_w = x - ox;
-    if (top_w < 0) {
-        top_w = 0;
-    }
-
     y = oy + top_h + (top_h > 0 ? gap : 0);
     if (zone[R01S_ZONE_SPINE].n) {
-        if (zone[R01S_ZONE_SPINE].w < top_w) {
-            zone[R01S_ZONE_SPINE].w = top_w;
-        }
         zone[R01S_ZONE_SPINE].x = ox;
         zone[R01S_ZONE_SPINE].y = y;
         y += zone[R01S_ZONE_SPINE].h + gap;
@@ -2204,16 +2317,10 @@ void ui_pack_floor_plan(R01sUi *ui) {
         ui->floor_h[i] = zone[i].n ? zone[i].h : 0;
         for (k = 0; k < zone[i].n; k++) {
             R01sEntity *e = ui->chips[zone[i].ids[k]];
-            int col = k % zone[i].cols;
-            int row = k / zone[i].cols;
-            int px;
-            int py;
             if (!e) {
                 continue;
             }
-            px = zone[i].x + 8 + col * zone[i].cell_w + (zone[i].cell_w - e->body_w) / 2;
-            py = zone[i].y + 8 + row * zone[i].cell_h + (zone[i].cell_h - e->body_h) / 2;
-            place_part_at(e, px, py);
+            place_part_at(e, zone[i].x + zone[i].rx[k], zone[i].y + zone[i].ry[k]);
             clamp_chip(ui, e, ui->chip_island[zone[i].ids[k]]);
         }
     }

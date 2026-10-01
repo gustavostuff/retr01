@@ -22,11 +22,14 @@ int r01s_ui_init(R01sUi *ui) {
     ui->drag_chip = -1;
     ui->drag_island = -1;
     ui->resize_island = -1;
+    ui->floor_resize = -1;
+    ui->floor_drag = -1;
     ui->ctx_chip = -1;
     ui->box_sel = 0;
     ui->input_mode = R01S_INPUT_ARCADE;
     ui->wire_mode = R01S_WIRE_LIVE;
-    ui->air_wires = 1;
+    ui->air_wires = R01S_AIR_VIEW_ALL;
+    ui->zoom = 1;
     ui->layout_compact = 1;
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
     ui->tip_show_at = SDL_GetTicks() + R01S_UI_TOOLTIP_DELAY_MS;
@@ -38,7 +41,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->wave_monitor_x = R01S_UI_WAVE_MONITOR_DEFAULT_X;
     ui->wave_monitor_y = ui_wave_monitor_default_y();
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE wires. P pause. S save. R rotate. ZONES packs the floor plan.");
+             "SPACE cycles wires: all, layer 1, layer 4, hidden. Ctrl+wheel zoom. P pause. S save. R rotate. ZONES packs.");
     return 0;
 }
 
@@ -419,10 +422,21 @@ int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {
 
 void r01s_ui_clamp_pan(R01sUi *ui) {
     int over = R01S_UI_PAN_OVERSCROLL;
+    int z = ui_zoom(ui);
+    int vw = R01S_UI_VIEW_W / z;
+    int vh = R01S_UI_VIEW_H / z;
     int min_x = -over;
     int min_y = -over;
-    int max_x = R01S_BOARD_W - R01S_UI_VIEW_W + over;
-    int max_y = R01S_BOARD_H - R01S_UI_VIEW_H + over;
+    int max_x;
+    int max_y;
+    if (vw < 1) {
+        vw = 1;
+    }
+    if (vh < 1) {
+        vh = 1;
+    }
+    max_x = R01S_BOARD_W - vw + over;
+    max_y = R01S_BOARD_H - vh + over;
     if (max_x < min_x) {
         max_x = min_x;
     }

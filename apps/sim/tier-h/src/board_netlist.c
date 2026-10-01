@@ -30,6 +30,7 @@ static void netlist_register_silicon(R01sBoard *board, R01sPinNetlist *nl) {
     netlist_register(nl, r01s_ad724_entity(&board->ad724));
     netlist_register(nl, r01s_rca_jack_entity(&board->j8));
     netlist_register(nl, r01s_rca_jack_entity(&board->j9));
+    r01s_mobo_io_register(&board->io, nl);
     netlist_register(nl, r01s_w65c02s_entity(&board->cpu));
     netlist_register(nl, r01s_as6c62256_entity(&board->ram));
     netlist_register(nl, r01s_as6c62256_entity(&board->vram));
@@ -85,7 +86,7 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link_bus(nl, cpu, "D", ram, "DQ", 8);
     r01s_pin_netlist_link_bus(nl, cpu, "A", prg, "A", 16);
     r01s_pin_netlist_link_bus(nl, cpu, "D", prg, "DQ", 8);
-    r01s_pin_netlist_link_bus(nl, cpu, "A", vram, "A", 16);
+    /* VRAM A[11:0] goes through the 74HC157s. Do not short CPU address onto U6. */
     r01s_pin_netlist_link_bus(nl, cpu, "D", vram, "DQ", 8);
     r01s_pin_netlist_link_bus(nl, cpu, "D", mcu, "CPU_D", 8);
 

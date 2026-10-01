@@ -33,6 +33,7 @@ add_library(retr01_sim_core
   src/play.c
   chips/pwr5v.c
   chips/ad724.c
+  chips/mobo_io.c
   chips/rca_jack.c
   chips/osc8m.c
   chips/atf22v10.c

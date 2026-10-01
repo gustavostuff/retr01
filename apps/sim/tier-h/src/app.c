@@ -1,7 +1,6 @@
 #include "app.h"
 
 #include "beam_xy.h"
-#include "breadboard.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_netlist.h"
 #include "retr01_sim/bom32.h"
@@ -57,6 +56,8 @@ static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx,
     *ly = (win_y - oy) / scale;
 }
 
+static void app_autosave_layout(R01sApp *app);
+
 static void app_set_render_scale(R01sApp *app, int scale) {
     if (!app || !app->win) {
         return;
@@ -69,6 +70,8 @@ static void app_set_render_scale(R01sApp *app, int scale) {
     }
     app->render_scale = scale;
     app->scale = scale;
+    app->ui.present_scale = scale;
+    app->ui.layout_dirty = 1;
     SDL_SetWindowSize(app->win, R01S_LOGIC_W * scale, R01S_LOGIC_H * scale);
     snprintf(app->ui.status, sizeof(app->ui.status), "scale %dx", scale);
 }
@@ -281,7 +284,6 @@ void r01s_app_mount_builder(R01sApp *app) {
     b = &app->builder;
     r01s_ui_bind_group(&app->ui, &b->group);
     r01s_ui_pin_net_build(r01s_board_from_group(&b->group));
-    r01s_breadboard_init(&app->breadboard, "BB1");
     for (i = 0; i < b->mount_count; i++) {
         R01sEntity *e = b->mounts[i].entity;
         if (!e || e->visual == R01S_ENTITY_VIS_NONE) {
@@ -291,15 +293,15 @@ void r01s_app_mount_builder(R01sApp *app) {
         if (e->visual == R01S_ENTITY_VIS_PWR || e->visual == R01S_ENTITY_VIS_OSC) {
             continue;
         }
+        /* Cart flash, cart EEPROM, pad MCUs, and the preview screen are not motherboard parts. */
+        if (e->refdes && (strcmp(e->refdes, "U40") == 0 || strcmp(e->refdes, "U50") == 0 ||
+                          strcmp(e->refdes, "UPAD1") == 0 || strcmp(e->refdes, "UPAD2") == 0 ||
+                          strcmp(e->refdes, "SCR1") == 0)) {
+            continue;
+        }
         if (r01s_ui_add_chip(&app->ui, e, b->mounts[i].island_index) != 0) {
             fprintf(stderr, "ui: dropped chip mount %d/%d (R01S_BOARD_MAX_CHIPS=%d)\n", i, b->mount_count,
                     R01S_BOARD_MAX_CHIPS);
-        }
-    }
-    {
-        R01sEntity *bbe = r01s_breadboard_entity(&app->breadboard);
-        if (bbe && r01s_ui_add_chip(&app->ui, bbe, 0) == 0) {
-            r01s_entity_place(bbe, 40, 40);
         }
     }
     {
@@ -331,15 +333,13 @@ void r01s_app_mount_builder(R01sApp *app) {
         ui_apply_compact_layout(&app->ui);
         ui_save_compact_layout(&app->ui);
         r01s_ui_ensure_cart_module_chips(&app->ui);
-        /* Sit breadboard below the packed BOM chips. */
         {
-            R01sEntity *bbe = r01s_breadboard_entity(&app->breadboard);
             int max_y = 40;
             int j;
             for (j = 0; j < app->ui.chip_count; j++) {
                 const R01sEntity *e = app->ui.chips[j];
                 int bottom;
-                if (!e || e == bbe || e->visual == R01S_ENTITY_VIS_PASSIVE) {
+                if (!e || e->visual == R01S_ENTITY_VIS_PASSIVE) {
                     continue;
                 }
                 bottom = e->board_y + e->body_h;
@@ -347,17 +347,23 @@ void r01s_app_mount_builder(R01sApp *app) {
                     max_y = bottom;
                 }
             }
-            if (bbe) {
-                r01s_entity_place(bbe, 40, max_y + 24);
-            }
             {
                 R01sBoard *board = r01s_board_from_group(&b->group);
                 if (board) {
-                    r01s_passive_bank_layout_grid(&board->passives, 40, max_y + 56, 6, 6);
+                    r01s_passive_bank_layout_grid(&board->passives, 40, max_y + 24, 6, 6);
                 }
             }
         }
         r01s_ui_chip_z_init(&app->ui);
+    }
+    if (app->ui.present_scale == 1 || app->ui.present_scale == 2) {
+        app->render_scale = app->ui.present_scale;
+        app->scale = app->ui.present_scale;
+        if (app->win) {
+            SDL_SetWindowSize(app->win, R01S_LOGIC_W * app->scale, R01S_LOGIC_H * app->scale);
+        }
+    } else {
+        app->ui.present_scale = app->render_scale > 0 ? app->render_scale : 1;
     }
 }
 
@@ -599,6 +605,31 @@ void r01s_app_frame(R01sApp *app) {
     SDL_RenderClear(app->ren);
     SDL_RenderCopy(app->ren, app->target, NULL, &dst);
     SDL_RenderPresent(app->ren);
+    app_autosave_layout(app);
+}
+
+/* Write view state a moment after the last edit. Quit still saves immediately. */
+static void app_autosave_layout(R01sApp *app) {
+    static Uint32 armed_ms;
+    Uint32 now;
+    if (!app || !app->ui.group || !app->ui.layout_dirty) {
+        armed_ms = 0;
+        return;
+    }
+    now = SDL_GetTicks();
+    if (armed_ms == 0) {
+        armed_ms = now;
+        return;
+    }
+    if ((Uint32)(now - armed_ms) < 500u) {
+        return;
+    }
+    if (r01s_ui_layout_save(&app->ui) != 0) {
+        fprintf(stderr, "layout: autosave failed\n");
+        armed_ms = now;
+        return;
+    }
+    armed_ms = 0;
 }
 
 /* Save the current layout and leave. No confirm dialog. */
@@ -678,9 +709,19 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
                 return;
             }
             break;
-        case SDLK_SPACE:
-            app->ui.air_wires = !app->ui.air_wires;
+        case SDLK_SPACE: {
+            static const char *air_name[] = {"all", "layer 1", "layer 4", "hidden"};
+            int mode = app->ui.air_wires;
+            if (mode < R01S_AIR_VIEW_ALL || mode > R01S_AIR_VIEW_NONE) {
+                mode = R01S_AIR_VIEW_ALL;
+            } else {
+                mode = (mode + 1) % 4;
+            }
+            app->ui.air_wires = mode;
+            app->ui.layout_dirty = 1;
+            snprintf(app->ui.status, sizeof(app->ui.status), "air wires: %s", air_name[mode]);
             return;
+        }
         case SDLK_p:
             if (e->key.keysym.mod & KMOD_CTRL) {
                 break;

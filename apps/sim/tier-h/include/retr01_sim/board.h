@@ -2,6 +2,7 @@
 #define retr01_SIM_BOARD_H
 
 #include "ad724.h"
+#include "mobo_io.h"
 #include "at27c256r.h"
 #include "as6c62256.h"
 #include "avr128db28_m.h"
@@ -137,6 +138,7 @@ typedef struct R01sBoard {
     R01sAd724 ad724;
     R01sRcaJack j8;
     R01sRcaJack j9;
+    R01sMoboIo io;
     R01sVideoSink video_sink;
     R01sPrgRom prg;
     R01sPads pads;

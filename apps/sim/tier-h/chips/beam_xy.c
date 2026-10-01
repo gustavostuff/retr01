@@ -1,5 +1,6 @@
 #include "beam_xy.h"
 
+#include "atf22v10.h"
 #include "retr01_sim/bus.h"
 
 #include <stdio.h>
@@ -97,18 +98,21 @@ void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &BEAM_VT, "ATF22V10", refdes ? refdes : "UPLDX");
     chip->base.impl = chip;
-    r01s_entity_add_pin(&chip->base, 1, "DOT", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 2, "RES#", R01S_PIN_IN);
+    /* Signal numbers are logical until a JEDEC map assigns them. The shell still draws every DIP-24 leg. */
+    r01s_entity_add_pin(&chip->base, 101, "DOT", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 102, "RES#", R01S_PIN_IN);
     for (i = 0; i < 9; i++) {
-        r01s_entity_add_pin(&chip->base, 3 + i, X_NAMES[i], R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 103 + i, X_NAMES[i], R01S_PIN_OUT);
     }
     for (i = 0; i < 9; i++) {
-        r01s_entity_add_pin(&chip->base, 12 + i, Y_NAMES[i], R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 112 + i, Y_NAMES[i], R01S_PIN_OUT);
     }
-    r01s_entity_add_pin(&chip->base, 21, "HBLANK", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 22, "VBLANK", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 23, "NMI#", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 121, "HBLANK", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 122, "VBLANK", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 123, "NMI#", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+    r01s_atf22v10_add_shell_pins(&chip->base);
     /* Behavioral Beam-X shell. Footprint matches ATF22V10 300 mil. */
     r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     r01s_entity_reset(&chip->base);

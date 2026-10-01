@@ -69,7 +69,8 @@ void r01s_ad724_init(R01sAd724 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 14, "DPOS", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 15, "VSYNC", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 16, "HSYNC", R01S_PIN_IN);
-    r01s_entity_set_dip_mm(&chip->base, 16, 10, 4);
+    /* KiCad footprint stays SOIC-16. The canvas uses DIP-16 pitch so the label and pins match the other ICs. */
+    r01s_entity_set_dip(&chip->base, 16);
     r01s_entity_reset(&chip->base);
 }
 

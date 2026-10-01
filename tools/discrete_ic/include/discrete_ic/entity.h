@@ -82,6 +82,8 @@ struct NsEntity {
     int pkg_wid_mm;
     /* 1 when set_dip_mm() supplied LxW (no across-body pitch snap). */
     uint8_t pkg_exact_mm;
+    /* 0 = JEDEC 0.100" (NS_DIP_PIN_PITCH_PX). SOIC sets a tighter pitch. */
+    uint8_t pkg_pitch_px;
     NsPkgOrient orient;
     /* Top-left of package body on the board canvas. */
     int board_x;

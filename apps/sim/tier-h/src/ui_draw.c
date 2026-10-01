@@ -1219,6 +1219,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, R01S_BOARD_BG_R, R01S_BOARD_BG_G, R01S_BOARD_BG_B);
 
     SDL_RenderSetClipRect(r, &view_clip);
+    SDL_RenderSetScale(r, (float)ui_zoom(ui), (float)ui_zoom(ui));
 
     if (ui->floor_on) {
         static const Uint8 zr[R01S_ZONE_COUNT] = {70, 140, 40, 110, 30, 150, 120, 130, 90};
@@ -1312,6 +1313,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         }
         draw_rect(r, x0, y0, bw, bh, 120, 220, 160);
     }
+    SDL_RenderSetScale(r, 1.0f, 1.0f);
     SDL_RenderSetClipRect(r, NULL);
 
     /* Floating LIVE/MANUAL, ARCADE/PADS, SAVE controls removed (discrete_ic migration). */

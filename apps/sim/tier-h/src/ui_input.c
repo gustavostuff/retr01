@@ -7,6 +7,7 @@
 #include "retr01_sim/bus.h"
 #include "retr01_sim/frame_log.h"
 #include "breadboard.h"
+#include "passive.h"
 #include "ui_assets.h"
 #include "video_sink.h"
 
@@ -14,14 +15,109 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
+static void ui_canvas_zoom_by(R01sUi *ui, int delta, int lx, int ly) {
+    int z0 = ui_zoom(ui);
+    int z1 = z0 + delta;
+    int bx;
+    int by;
+    if (!ui) {
+        return;
+    }
+    if (z1 < 1) {
+        z1 = 1;
+    }
+    if (z1 > R01S_ZOOM_MAX) {
+        z1 = R01S_ZOOM_MAX;
+    }
+    if (z1 == z0) {
+        return;
+    }
+    ui_logic_to_board(ui, lx, ly, &bx, &by);
+    ui->zoom = z1;
+    ui->pan_x = bx - (ui_div_floor(lx, z1) - R01S_UI_VIEW_X);
+    ui->pan_y = by - (ui_div_floor(ly, z1) - R01S_UI_VIEW_Y);
+    r01s_ui_clamp_pan(ui);
+    ui->layout_dirty = 1;
+    snprintf(ui->status, sizeof(ui->status), "zoom %dx", z1);
+}
+
+static void ui_pan_grab_begin(R01sUi *ui, int lx, int ly) {
+    ui_logic_to_board(ui, lx, ly, &ui->drag_grab_bx, &ui->drag_grab_by);
+    ui->drag_last_x = lx;
+    ui->drag_last_y = ly;
+}
+
+static void ui_pan_grab_to(R01sUi *ui, int lx, int ly) {
+    int z = ui_zoom(ui);
+    ui->pan_x = ui->drag_grab_bx - (ui_div_floor(lx, z) - R01S_UI_VIEW_X);
+    ui->pan_y = ui->drag_grab_by - (ui_div_floor(ly, z) - R01S_UI_VIEW_Y);
+    ui->drag_last_x = lx;
+    ui->drag_last_y = ly;
+    r01s_ui_clamp_pan(ui);
+    ui->layout_dirty = 1;
+}
+
+static int hit_filled(int lx, int ly, int x, int y, int w, int h) {
+    return w > 0 && h > 0 && lx >= x && lx < x + w && ly >= y && ly < y + h;
+}
+
+static int near_point(int lx, int ly, int tx, int ty, int r) {
+    int dx = lx - tx;
+    int dy = ly - ty;
+    if (dx < 0) {
+        dx = -dx;
+    }
+    if (dy < 0) {
+        dy = -dy;
+    }
+    return dx <= r && dy <= r;
+}
+
+/* Body matches the drawn rect. Pin stubs are the 3px glyphs just outside it. */
+static int hit_ic(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     int x = ui_board_sx(ui, e->board_x);
     int y = ui_board_sy(ui, e->board_y);
-    int pad = R01S_CHIP_PIN_OUT;
-    if (e->visual == R01S_ENTITY_VIS_BREADBOARD) {
-        pad = 0;
+    int dip;
+    int n;
+    if (hit_filled(lx, ly, x, y, e->body_w, e->body_h)) {
+        return 1;
     }
-    return lx >= x - pad && lx < x + e->body_w + pad && ly >= y - pad && ly < y + e->body_h + pad;
+    dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    for (n = 1; n <= dip; n++) {
+        int tbx;
+        int tby;
+        if (!ui_chip_pin_tip_board(e, n, &tbx, &tby)) {
+            continue;
+        }
+        if (near_point(lx, ly, ui_board_sx(ui, tbx), ui_board_sy(ui, tby), 2)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
+    int x;
+    int y;
+    if (!ui || !e) {
+        return 0;
+    }
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        int bx = lx - R01S_UI_VIEW_X + ui->pan_x;
+        int by = ly - R01S_UI_VIEW_Y + ui->pan_y;
+        return r01s_passive_hit((const R01sPassive *)(const void *)e, bx, by);
+    }
+    x = ui_board_sx(ui, e->board_x);
+    y = ui_board_sy(ui, e->board_y);
+    if (e->visual == R01S_ENTITY_VIS_IC) {
+        return hit_ic(ui, e, lx, ly);
+    }
+    if (e->visual == R01S_ENTITY_VIS_PWR || e->visual == R01S_ENTITY_VIS_OSC ||
+        e->visual == R01S_ENTITY_VIS_DISPLAY) {
+        /* Side pin stubs only. Top and bottom stay on the body. */
+        return lx >= x - 3 && lx < x + e->body_w + 3 && ly >= y && ly < y + e->body_h;
+    }
+    return hit_filled(lx, ly, x, y, e->body_w, e->body_h);
 }
 
 static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
@@ -30,18 +126,236 @@ static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, 
     return lx >= x && lx < x + island->board_w && ly >= y && ly < y + island->board_h;
 }
 
-/* Returns corner id, or -1 if miss. Bottom-right grip only. */
+/* Closest corner within hs px of (lx, ly), or -1. No drawn grip. */
+static int hit_rect_corner(int lx, int ly, int x, int y, int w, int h, int hs) {
+    int pts[4][3];
+    int i;
+    int best = -1;
+    int best_d = hs * hs + 1;
+    pts[0][0] = x;
+    pts[0][1] = y;
+    pts[0][2] = R01S_ISLAND_CORNER_TL;
+    pts[1][0] = x + w;
+    pts[1][1] = y;
+    pts[1][2] = R01S_ISLAND_CORNER_TR;
+    pts[2][0] = x;
+    pts[2][1] = y + h;
+    pts[2][2] = R01S_ISLAND_CORNER_BL;
+    pts[3][0] = x + w;
+    pts[3][1] = y + h;
+    pts[3][2] = R01S_ISLAND_CORNER_BR;
+    for (i = 0; i < 4; i++) {
+        int dx = lx - pts[i][0];
+        int dy = ly - pts[i][1];
+        int d;
+        if (dx < 0) {
+            dx = -dx;
+        }
+        if (dy < 0) {
+            dy = -dy;
+        }
+        if (dx > hs || dy > hs) {
+            continue;
+        }
+        d = dx * dx + dy * dy;
+        if (d < best_d) {
+            best_d = d;
+            best = pts[i][2];
+        }
+    }
+    return best;
+}
+
+/* Returns corner id, or -1 if miss. */
 static int hit_island_resize(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
     int x = ui_board_sx(ui, island->board_x);
     int y = ui_board_sy(ui, island->board_y);
-    int hs = R01S_ISLAND_RESIZE_HANDLE;
-    int right = x + island->board_w;
-    int bottom = y + island->board_h;
+    return hit_rect_corner(lx, ly, x, y, island->board_w, island->board_h, R01S_ISLAND_RESIZE_HANDLE);
+}
 
-    if (lx >= right - hs && lx < right && ly >= bottom - hs && ly < bottom) {
-        return R01S_ISLAND_CORNER_BR;
+static int hit_floor_corner(const R01sUi *ui, int logic_x, int logic_y, int *zone_out) {
+    int z;
+    int lx;
+    int ly;
+    int i;
+    const int hs = 8;
+    if (zone_out) {
+        *zone_out = -1;
+    }
+    if (!ui || !ui->floor_on) {
+        return -1;
+    }
+    z = ui_zoom(ui);
+    lx = ui_div_floor(logic_x, z);
+    ly = ui_div_floor(logic_y, z);
+    for (i = R01S_ZONE_COUNT - 1; i >= 0; i--) {
+        int x;
+        int y;
+        int corner;
+        if (ui->floor_w[i] <= 0 || ui->floor_h[i] <= 0) {
+            continue;
+        }
+        x = ui_board_sx(ui, ui->floor_x[i]);
+        y = ui_board_sy(ui, ui->floor_y[i]);
+        corner = hit_rect_corner(lx, ly, x, y, ui->floor_w[i], ui->floor_h[i], hs);
+        if (corner >= 0) {
+            if (zone_out) {
+                *zone_out = i;
+            }
+            return corner;
+        }
     }
     return -1;
+}
+
+/* 0 arrow, 1 NW-SE, 2 NE-SW, 3 move. */
+static void ui_set_sys_cursor(int which) {
+    static SDL_Cursor *nwse;
+    static SDL_Cursor *nesw;
+    static SDL_Cursor *move;
+    static int ready;
+    static int last = -2;
+    SDL_Cursor *c;
+    if (which == last) {
+        return;
+    }
+    last = which;
+    if (!ready) {
+        nwse = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
+        nesw = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
+        move = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
+        ready = 1;
+    }
+    if (which == 1) {
+        c = nwse;
+    } else if (which == 2) {
+        c = nesw;
+    } else if (which == 3) {
+        c = move;
+    } else {
+        c = SDL_GetDefaultCursor();
+    }
+    if (c) {
+        SDL_SetCursor(c);
+    }
+}
+
+static int cursor_for_corner(int corner) {
+    if (corner == R01S_ISLAND_CORNER_TL || corner == R01S_ISLAND_CORNER_BR) {
+        return 1;
+    }
+    if (corner == R01S_ISLAND_CORNER_TR || corner == R01S_ISLAND_CORNER_BL) {
+        return 2;
+    }
+    return 0;
+}
+
+/* Topmost zone whose interior contains the point and no part. -1 otherwise. */
+static int hit_floor_interior(const R01sUi *ui, int logic_x, int logic_y) {
+    int z;
+    int lx;
+    int ly;
+    int i;
+    if (!ui || !ui->floor_on || !ui_logic_in_view(logic_x, logic_y)) {
+        return -1;
+    }
+    if (hit_board_top(ui, logic_x, logic_y, NULL, NULL, NULL) == 1) {
+        return -1;
+    }
+    z = ui_zoom(ui);
+    lx = ui_div_floor(logic_x, z);
+    ly = ui_div_floor(logic_y, z);
+    for (i = R01S_ZONE_COUNT - 1; i >= 0; i--) {
+        int x;
+        int y;
+        if (ui->floor_w[i] <= 0 || ui->floor_h[i] <= 0) {
+            continue;
+        }
+        x = ui_board_sx(ui, ui->floor_x[i]);
+        y = ui_board_sy(ui, ui->floor_y[i]);
+        if (hit_filled(lx, ly, x, y, ui->floor_w[i], ui->floor_h[i])) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void ui_sync_corner_cursor(const R01sUi *ui, int logic_x, int logic_y) {
+    int zone = -1;
+    int corner = -1;
+    SDL_Rect fb;
+    floor_btn_rect(&fb);
+    if (logic_x >= fb.x && logic_x < fb.x + fb.w && logic_y >= fb.y && logic_y < fb.y + fb.h) {
+        ui_set_sys_cursor(0);
+        return;
+    }
+    if (ui && ui->floor_resize >= 0) {
+        ui_set_sys_cursor(cursor_for_corner(ui->floor_resize_corner));
+        return;
+    }
+    if (ui && ui->floor_drag >= 0) {
+        ui_set_sys_cursor(3);
+        return;
+    }
+    corner = hit_floor_corner(ui, logic_x, logic_y, &zone);
+    if (corner >= 0) {
+        ui_set_sys_cursor(cursor_for_corner(corner));
+        return;
+    }
+    if (!(SDL_GetModState() & KMOD_SHIFT) && hit_floor_interior(ui, logic_x, logic_y) >= 0) {
+        ui_set_sys_cursor(3);
+        return;
+    }
+    (void)zone;
+    ui_set_sys_cursor(0);
+}
+
+static void floor_resize_to(R01sUi *ui, int board_mx, int board_my) {
+    int corner;
+    int left;
+    int top;
+    int right;
+    int bottom;
+    const int min_s = 16;
+    int z;
+    if (!ui || ui->floor_resize < 0 || ui->floor_resize >= R01S_ZONE_COUNT) {
+        return;
+    }
+    z = ui->floor_resize;
+    corner = ui->floor_resize_corner;
+    left = ui->floor_anchor_x;
+    top = ui->floor_anchor_y;
+    right = ui->floor_anchor_x;
+    bottom = ui->floor_anchor_y;
+    if (corner == R01S_ISLAND_CORNER_BR || corner == R01S_ISLAND_CORNER_TR) {
+        right = board_mx;
+    } else {
+        left = board_mx;
+    }
+    if (corner == R01S_ISLAND_CORNER_BR || corner == R01S_ISLAND_CORNER_BL) {
+        bottom = board_my;
+    } else {
+        top = board_my;
+    }
+    if (right < left + min_s) {
+        if (corner == R01S_ISLAND_CORNER_BL || corner == R01S_ISLAND_CORNER_TL) {
+            left = right - min_s;
+        } else {
+            right = left + min_s;
+        }
+    }
+    if (bottom < top + min_s) {
+        if (corner == R01S_ISLAND_CORNER_TR || corner == R01S_ISLAND_CORNER_TL) {
+            top = bottom - min_s;
+        } else {
+            bottom = top + min_s;
+        }
+    }
+    ui->floor_x[z] = left;
+    ui->floor_y[z] = top;
+    ui->floor_w[z] = right - left;
+    ui->floor_h[z] = bottom - top;
+    ui->layout_dirty = 1;
 }
 
 /* Front-most island first (matches island_z_order). */
@@ -113,6 +427,8 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
     if (!ui || !ui_logic_in_view(lx, ly)) {
         return 0;
     }
+    lx = ui_div_floor(lx, ui_zoom(ui));
+    ly = ui_div_floor(ly, ui_zoom(ui));
 
     if (ui->group && !ui->layout_compact) {
         nstack = island_hit_stack(ui, stack, R01S_MAX_ISLANDS);
@@ -275,10 +591,30 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return 1;
     }
     if (e->type == SDL_MOUSEWHEEL) {
+        int dy = e->wheel.y;
+        int dx = e->wheel.x;
+        if (e->wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+            dy = -dy;
+            dx = -dx;
+        }
         if (ui_logic_in_view(logic_x, logic_y)) {
-            ui->pan_x -= e->wheel.x * 32;
-            ui->pan_y -= e->wheel.y * 32;
+            int step;
+            if (SDL_GetModState() & KMOD_CTRL) {
+                if (dy > 0) {
+                    ui_canvas_zoom_by(ui, 1, logic_x, logic_y);
+                } else if (dy < 0) {
+                    ui_canvas_zoom_by(ui, -1, logic_x, logic_y);
+                }
+                return 1;
+            }
+            step = 32 / ui_zoom(ui);
+            if (step < 1) {
+                step = 1;
+            }
+            ui->pan_x -= dx * step;
+            ui->pan_y -= dy * step;
             r01s_ui_clamp_pan(ui);
+            ui->layout_dirty = 1;
             return 1;
         }
     }
@@ -307,8 +643,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
             ui->ctx_chip = -1;
             ui->drag_pan = 1;
-            ui->drag_last_x = logic_x;
-            ui->drag_last_y = logic_y;
+            ui_pan_grab_begin(ui, logic_x, logic_y);
             return 1;
         }
     }
@@ -316,8 +651,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         e->button.button == SDL_BUTTON_MIDDLE && ui_logic_in_view(logic_x, logic_y)) {
         ui->ctx_chip = -1;
         ui->drag_pan = 1;
-        ui->drag_last_x = logic_x;
-        ui->drag_last_y = logic_y;
+        ui_pan_grab_begin(ui, logic_x, logic_y);
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONUP &&
@@ -354,14 +688,20 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         ui->drag_pan = 0;
         return 1;
     }
+    if (e->type == SDL_MOUSEMOTION && ui->floor_resize >= 0) {
+        floor_resize_to(ui, board_mx, board_my);
+        ui_set_sys_cursor(cursor_for_corner(ui->floor_resize_corner));
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->floor_drag >= 0) {
+        floor_zone_drag_to(ui, ui->floor_drag, board_mx, board_my);
+        ui_set_sys_cursor(3);
+        return 1;
+    }
     if (e->type == SDL_MOUSEMOTION && ui->drag_pan) {
         if (ui_logic_in_view(logic_x, logic_y) || ui_logic_in_view(ui->drag_last_x, ui->drag_last_y)) {
-            ui->pan_x -= (logic_x - ui->drag_last_x);
-            ui->pan_y -= (logic_y - ui->drag_last_y);
-            r01s_ui_clamp_pan(ui);
+            ui_pan_grab_to(ui, logic_x, logic_y);
         }
-        ui->drag_last_x = logic_x;
-        ui->drag_last_y = logic_y;
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->resize_island >= 0) {
@@ -387,7 +727,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
     }
     if (e->type == SDL_KEYDOWN) {
         const Uint8 *mods = SDL_GetKeyboardState(NULL);
-        int step = 48;
+        int step = 48 / ui_zoom(ui);
+        if (step < 1) {
+            step = 1;
+        }
         if (r01s_frame_log_enabled()) {
             if (e->key.keysym.sym == SDLK_LEFTBRACKET || e->key.keysym.sym == SDLK_PAGEUP) {
                 r01s_frame_log_page_delta(-1);
@@ -425,28 +768,38 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (e->key.keysym.sym == SDLK_LEFT) {
                 ui->pan_x -= step;
                 r01s_ui_clamp_pan(ui);
+                ui->layout_dirty = 1;
                 return 1;
             }
             if (e->key.keysym.sym == SDLK_RIGHT) {
                 ui->pan_x += step;
                 r01s_ui_clamp_pan(ui);
+                ui->layout_dirty = 1;
                 return 1;
             }
             if (e->key.keysym.sym == SDLK_UP) {
                 ui->pan_y -= step;
                 r01s_ui_clamp_pan(ui);
+                ui->layout_dirty = 1;
                 return 1;
             }
             if (e->key.keysym.sym == SDLK_DOWN) {
                 ui->pan_y += step;
                 r01s_ui_clamp_pan(ui);
+                ui->layout_dirty = 1;
                 return 1;
             }
         }
     }
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_LEFT) {
-        int was_layout_drag =
-            (ui->drag_chip >= 0 || ui->drag_island >= 0 || ui->resize_island >= 0);
+        int was_layout_drag;
+        if (ui->floor_resize >= 0 || ui->floor_drag >= 0) {
+            ui->floor_resize = -1;
+            ui->floor_drag = -1;
+            ui_sync_corner_cursor(ui, logic_x, logic_y);
+            return 1;
+        }
+        was_layout_drag = (ui->drag_chip >= 0 || ui->drag_island >= 0 || ui->resize_island >= 0);
         if (ui->box_sel) {
             int shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
             int w = ui->box_bx1 - ui->box_bx0;
@@ -541,6 +894,38 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             if (logic_x >= fb.x && logic_x < fb.x + fb.w && logic_y >= fb.y && logic_y < fb.y + fb.h) {
                 ui_pack_floor_plan(ui);
                 return 1;
+            }
+        }
+        if (ui->floor_on) {
+            int zone = -1;
+            int corner = hit_floor_corner(ui, logic_x, logic_y, &zone);
+            if (corner >= 0 && zone >= 0) {
+                ui->floor_resize = zone;
+                ui->floor_resize_corner = corner;
+                if (corner == R01S_ISLAND_CORNER_BR || corner == R01S_ISLAND_CORNER_TR) {
+                    ui->floor_anchor_x = ui->floor_x[zone];
+                } else {
+                    ui->floor_anchor_x = ui->floor_x[zone] + ui->floor_w[zone];
+                }
+                if (corner == R01S_ISLAND_CORNER_BR || corner == R01S_ISLAND_CORNER_BL) {
+                    ui->floor_anchor_y = ui->floor_y[zone];
+                } else {
+                    ui->floor_anchor_y = ui->floor_y[zone] + ui->floor_h[zone];
+                }
+                ui_set_sys_cursor(cursor_for_corner(corner));
+                return 1;
+            }
+            if (!(SDL_GetModState() & KMOD_SHIFT)) {
+                int body = hit_floor_interior(ui, logic_x, logic_y);
+                if (body >= 0) {
+                    ui->floor_drag = body;
+                    ui->floor_drag_grab_x = board_mx - ui->floor_x[body];
+                    ui->floor_drag_grab_y = board_my - ui->floor_y[body];
+                    floor_zone_drag_begin(ui, body);
+                    ui_set_sys_cursor(3);
+                    snprintf(ui->status, sizeof(ui->status), "move %s", r01s_air_zone_name(body));
+                    return 1;
+                }
             }
         }
 
@@ -644,6 +1029,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             ui_sel_clear(ui);
         }
         return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->drag_chip < 0 && ui->drag_island < 0 && ui->resize_island < 0 &&
+        ui->floor_drag < 0 && ui->floor_resize < 0 && !ui->drag_pan && !ui->box_sel) {
+        ui_sync_corner_cursor(ui, logic_x, logic_y);
     }
     return 0;
 }

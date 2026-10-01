@@ -740,7 +740,9 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "21.47727MHz", 1);
     add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "3.579545MHz", 1);
 
-    add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 21);
+    /* C1-C20 are motherboard bypass. Cart and pad 100 nF stay on those boards. */
+    add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 20);
+    c_seq = 22;
     add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "22pF", 6);
 
     add_n(bank, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);

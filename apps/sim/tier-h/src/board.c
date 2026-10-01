@@ -3471,6 +3471,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         return -1;
     }
     memset(board, 0, sizeof(*board));
+    r01s_mobo_io_init(&board->io);
 
     r01s_island_builder_bind(b, &BOARD_GROUP_VT, board);
 
@@ -3643,6 +3644,19 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         x = flash_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, ee_e, R01S_ISLAND_CART_MOD, x, 0);
     }
+    r01s_island_builder_mount_rel(b, &board->io.j1, R01S_ISLAND_POWER_CLK, 0, 48);
+    r01s_island_builder_mount_rel(b, &board->io.sw1, R01S_ISLAND_POWER_CLK, 32, 48);
+    r01s_island_builder_mount_rel(b, &board->io.u130, R01S_ISLAND_POWER_CLK, 52, 48);
+    r01s_island_builder_mount_rel(b, &board->io.sw_rst, R01S_ISLAND_POWER_CLK, 64, 48);
+    r01s_island_builder_mount_rel(b, &board->io.j36, R01S_ISLAND_CART, 0, 0);
+    r01s_island_builder_mount_rel(b, &board->io.j2, R01S_ISLAND_VIDEO, 0, 48);
+    r01s_island_builder_mount_rel(b, r01s_rca_jack_entity(&board->j9), R01S_ISLAND_VIDEO, 16, 48);
+    r01s_island_builder_mount_rel(b, r01s_rca_jack_entity(&board->j8), R01S_ISLAND_APU, 40, 0);
+    r01s_island_builder_mount_rel(b, &board->io.j3, R01S_ISLAND_APU, 0, 40);
+    r01s_island_builder_mount_rel(b, &board->io.j4, R01S_ISLAND_APU, 28, 40);
+    r01s_island_builder_mount_rel(b, &board->io.j5, R01S_ISLAND_APU, 56, 40);
+    r01s_island_builder_mount_rel(b, &board->io.j6, R01S_ISLAND_APU, 72, 40);
+    r01s_island_builder_mount_rel(b, &board->io.j7, R01S_ISLAND_APU, 88, 40);
 
     r01s_island_builder_fit_all(b);
     r01s_island_builder_arrange_rows(b, 40, 40, R01S_ISLAND_GAP, R01S_ISLAND_GAP, R01S_ISLAND_ROW_MAX_W);

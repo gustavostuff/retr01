@@ -5,7 +5,7 @@
 
 /*
  * Passive ↔ silicon links from docs/passive_bom.md and tier-a DAC pattern.
- * AD724 / 74HC14 analog encoding is stubbed; C17 is unused until MCP130 is seated.
+ * AD724 analog encoding is stubbed. C17 bypasses the MCP130.
  */
 
 static R01sEntity *passive_entity(R01sBoard *board, const char *refdes) {
@@ -99,6 +99,9 @@ static R01sEntity *ic_entity(R01sBoard *board, const char *refdes) {
   if (strcmp(refdes, "J9") == 0) {
     return r01s_rca_jack_entity(&board->j9);
   }
+  if (strcmp(refdes, "U130") == 0) {
+    return &board->io.u130;
+  }
   if (strcmp(refdes, "U7A") == 0 || strcmp(refdes, "U7B") == 0 ||
       strcmp(refdes, "U7C") == 0) {
     static const char *const mux_ref[R01S_BOM_HC157_N] = {"U7A", "U7B", "U7C"};
@@ -141,6 +144,7 @@ static void tie_gnd(R01sPinNetlist *nl, R01sEntity *pwr, R01sEntity *ic,
   }
 }
 
+/* Visual ratsnest copies this table in air_bypass_vcc (ui_pin_net.c). */
 static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
   static const struct {
     const char *cap;
@@ -152,8 +156,8 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
       {"C7", "US2", "VDD"},    {"C8", "UPLDX", "VCC"}, {"C9", "UPLDY", "VCC"},
       {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},  {"C12", "U7B", "VCC"},
       {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"}, {"C15", "U574", "VCC"},
-      {"C16", "U24", "VCC"},   {"C17", NULL, NULL},    {"C18", "U725", "APOS"},
-      {"C19", "U04", "VCC"},   {"C20", "U74", "VCC"},  {"C21", "UPAD1", "VCC"},
+      {"C16", "U24", "VCC"},   {"C17", "U130", "VDD"}, {"C18", "U725", "APOS"},
+      {"C19", "U04", "VCC"},   {"C20", "U74", "VCC"},
   };
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   size_t i;
@@ -313,6 +317,31 @@ static void apply_series_33(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_name_net(nl, passive_entity(board, "R23"), "1", "CART_WE#");
   link_series(nl, mcu, "SDA", passive_entity(board, "R24"), ee, "SDA");
   link_series(nl, mcu, "SCL", passive_entity(board, "R25"), ee, "SCL");
+  /* Motherboard side of the cart nets also lands on J36. Flash stays on the same nets. */
+  {
+    R01sEntity *j36 = &board->io.j36;
+    for (i = 0; i < 8; i++) {
+      char rn[8];
+      char dn[8];
+      snprintf(rn, sizeof(rn), "R%d", 14 + i);
+      snprintf(dn, sizeof(dn), "D%d", i);
+      r01s_pin_netlist_link(nl, passive_entity(board, rn), "2", j36, dn);
+    }
+    for (i = 0; i < 14; i++) {
+      char an[8];
+      snprintf(an, sizeof(an), "A%d", i);
+      r01s_pin_netlist_link(nl, cpu, an, j36, an);
+    }
+    r01s_pin_netlist_link(nl, passive_entity(board, "R22"), "2", j36, "OE#");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R23"), "2", j36, "WE#");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R24"), "2", j36, "SDA");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R25"), "2", j36, "SCL");
+    r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "GND", j36, "GND_A1");
+    r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "GND", j36, "GND_B1");
+    r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "GND", j36, "GND_A18");
+    r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "VDD", j36, "VCC_A");
+    r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "VDD", j36, "VCC_B");
+  }
 }
 
 static void apply_pullups(R01sBoard *board, R01sPinNetlist *nl) {
@@ -413,6 +442,128 @@ static void apply_rca_av(R01sBoard *board, R01sPinNetlist *nl) {
   }
 }
 
+static void apply_vram_mux(R01sBoard *board, R01sPinNetlist *nl) {
+  static const char *const a_pins[4] = {"1A", "2A", "3A", "4A"};
+  static const char *const y_pins[4] = {"1Y", "2Y", "3Y", "4Y"};
+  R01sEntity *cpu = r01s_w65c02s_entity(&board->cpu);
+  R01sEntity *vram = r01s_as6c62256_entity(&board->vram);
+  int bit;
+  /* A inputs are the CPU side. Select and beam-side inputs wait on the PLD phase decode. */
+  for (bit = 0; bit < 12; bit++) {
+    char an[8];
+    R01sEntity *mux = r01s_sn74hc157_entity(&board->mux157[bit / 4]);
+    snprintf(an, sizeof(an), "A%d", bit);
+    r01s_pin_netlist_link(nl, cpu, an, mux, a_pins[bit % 4]);
+    r01s_pin_netlist_link(nl, mux, y_pins[bit % 4], vram, an);
+  }
+}
+
+static void apply_field_bus(R01sBoard *board, R01sPinNetlist *nl) {
+  R01sEntity *s1 = r01s_avr128db28_s1_entity(&board->mcu_s1);
+  R01sEntity *ale = r01s_sn74hc573_entity(&board->field_ale);
+  R01sEntity *sram = r01s_as6c62256_entity(&board->linebuf);
+  R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
+  int i;
+  for (i = 0; i < 8; i++) {
+    char ad[8];
+    char dn[8];
+    char dq[8];
+    snprintf(ad, sizeof(ad), "AD%d", i);
+    snprintf(dn, sizeof(dn), "D%d", i);
+    snprintf(dq, sizeof(dq), "DQ%d", i);
+    r01s_pin_netlist_link(nl, s1, ad, ale, dn);
+    r01s_pin_netlist_link(nl, s1, ad, sram, dq);
+  }
+  for (i = 8; i <= 14; i++) {
+    char an[8];
+    snprintf(an, sizeof(an), "A%d", i);
+    r01s_pin_netlist_link(nl, s1, an, sram, an);
+  }
+  r01s_pin_netlist_link(nl, s1, "ALE", ale, "LE");
+  r01s_pin_netlist_link(nl, s1, "/WE", sram, "WE#");
+  r01s_pin_netlist_link(nl, ale, "OE#", pwr, "GND");
+}
+
+static void apply_color_index(R01sBoard *board, R01sPinNetlist *nl) {
+  R01sEntity *comp = r01s_compositor_entity(&board->compositor);
+  R01sEntity *prom = r01s_at27c256r_entity(&board->color_prom);
+  R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
+  int i;
+  for (i = 0; i < 6; i++) {
+    char an[8];
+    snprintf(an, sizeof(an), "A%d", i);
+    r01s_pin_netlist_link(nl, comp, an, prom, an);
+  }
+  for (i = 6; i <= 13; i++) {
+    char an[8];
+    snprintf(an, sizeof(an), "A%d", i);
+    r01s_pin_netlist_link(nl, prom, an, pwr, "GND");
+  }
+  r01s_pin_netlist_link(nl, prom, "CE#", pwr, "GND");
+  r01s_pin_netlist_link(nl, prom, "OE#", pwr, "GND");
+}
+
+static void apply_scroll_latch(R01sBoard *board, R01sPinNetlist *nl) {
+  R01sEntity *cpu = r01s_w65c02s_entity(&board->cpu);
+  R01sEntity *lat = r01s_sn74hc574_entity(&board->scroll_x);
+  R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
+  int i;
+  for (i = 0; i < 8; i++) {
+    char dn[8];
+    snprintf(dn, sizeof(dn), "D%d", i);
+    r01s_pin_netlist_link(nl, cpu, dn, lat, dn);
+  }
+  r01s_pin_netlist_link(nl, lat, "OE#", pwr, "GND");
+}
+
+static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
+  R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
+  R01sEntity *cpu = r01s_w65c02s_entity(&board->cpu);
+  R01sEntity *s2 = r01s_avr128db28_s2_entity(&board->mcu_s2);
+  R01sEntity *sink = r01s_video_sink_entity(&board->video_sink);
+  R01sMoboIo *io = &board->io;
+  static const char *const p2[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
+  static const char *const p2_pin[8] = {"P2_RIGHT", "P2_LEFT", "P2_DOWN", "P2_UP", "P2_X", "P2_Y", "P2_COIN", "P2_START"};
+  int i;
+  r01s_pin_netlist_link(nl, &io->j1, "1", &io->sw1, "1");
+  r01s_pin_netlist_link(nl, &io->sw1, "2", pwr, "VDD");
+  r01s_pin_netlist_link(nl, &io->j1, "2", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->u130, "VDD", pwr, "VDD");
+  r01s_pin_netlist_link(nl, &io->u130, "VSS", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->u130, "RESET#", cpu, "RESB");
+  r01s_pin_netlist_link(nl, &io->sw_rst, "1", cpu, "RESB");
+  r01s_pin_netlist_link(nl, &io->sw_rst, "2", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j2, "R", sink, "RIN");
+  r01s_pin_netlist_link(nl, &io->j2, "G", sink, "GIN");
+  r01s_pin_netlist_link(nl, &io->j2, "B", sink, "BIN");
+  r01s_pin_netlist_link(nl, &io->j2, "GND1", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j2, "GND2", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j3, "TIP", pwr, "VDD");
+  r01s_pin_netlist_link(nl, &io->j3, "RING", s2, "PAD_DATA");
+  r01s_pin_netlist_link(nl, &io->j3, "SLEEVE", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j4, "TIP", pwr, "VDD");
+  r01s_pin_netlist_link(nl, &io->j4, "RING", s2, "PAD_DATA");
+  r01s_pin_netlist_link(nl, &io->j4, "SLEEVE", pwr, "GND");
+  for (i = 0; i < 8; i++) {
+    char jn[4];
+    char pn[8];
+    snprintf(jn, sizeof(jn), "P%d", i);
+    snprintf(pn, sizeof(pn), "PAD%d", i);
+    r01s_pin_netlist_link(nl, &io->j5, jn, s2, pn);
+  }
+  for (i = 0; i < 8; i++) {
+    r01s_pin_netlist_link(nl, &io->j6, p2[i], s2, p2_pin[i]);
+  }
+  r01s_pin_netlist_link(nl, &io->j5, "GND9", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j5, "GND10", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j6, "GND9", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j6, "GND10", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j7, "VCC", pwr, "VDD");
+  r01s_pin_netlist_link(nl, &io->j7, "GND1", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j7, "GND2", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j7, "RESB", cpu, "RESB");
+}
+
 void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {
   if (!board || !nl) {
     return;
@@ -425,4 +576,9 @@ void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {
   apply_series_33(board, nl);
   apply_pullups(board, nl);
   apply_rca_av(board, nl);
+  apply_vram_mux(board, nl);
+  apply_field_bus(board, nl);
+  apply_color_index(board, nl);
+  apply_scroll_latch(board, nl);
+  apply_mobo_io_nets(board, nl);
 }

@@ -39,7 +39,7 @@ int main(void) {
     memset(&board, 0, sizeof(board));
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
-    expect_true(board.passives.count == 63, "passive BOM count");
+    expect_true(board.passives.count == 62, "passive BOM count");
     nl = &board.pin_netlist;
     passive_pins = passive_slots(&board);
     expect_true(passive_pins >= 122, "passive pins registered in netlist");
@@ -78,6 +78,24 @@ int main(void) {
     expect_true(r01s_pin_netlist_same_net(nl, r01s_avr128db28_s2_entity(&board.mcu_s2), "AUDIO_PWM",
                                           r01s_rca_jack_entity(&board.j8), "2"),
                 "J8 tip on MCU-S2 PWM");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_w65c02s_entity(&board.cpu), "A0",
+                                          r01s_sn74hc157_entity(&board.mux157[0]), "1A"),
+                "CPU A0 on U7A 1A");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_sn74hc157_entity(&board.mux157[0]), "1Y",
+                                          r01s_as6c62256_entity(&board.vram), "A0"),
+                "U7A 1Y on VRAM A0");
+    expect_true(!r01s_pin_netlist_same_net(nl, r01s_w65c02s_entity(&board.cpu), "A0",
+                                           r01s_as6c62256_entity(&board.vram), "A0"),
+                "CPU A0 is not shorted to VRAM A0");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_compositor_entity(&board.compositor), "A0",
+                                          r01s_at27c256r_entity(&board.color_prom), "A0"),
+                "color index A0");
+    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "R14"), "2", &board.io.j36, "D0"),
+                "R14 cart side on J36 D0");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.u130, "RESET#", r01s_w65c02s_entity(&board.cpu), "RESB"),
+                "MCP130 reset on CPU RESB");
+    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "C17"), "1", &board.io.u130, "VDD"),
+                "C17 on MCP130 VDD");
     expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP",
                                           r01s_rca_jack_entity(&board.j9), "2"),
                 "J9 tip on AD724 COMP");

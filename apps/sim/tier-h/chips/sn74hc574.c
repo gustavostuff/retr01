@@ -61,9 +61,9 @@ void r01s_sn74hc574_init(R01sSn74hc574 *chip, const char *refdes) {
 
     r01s_entity_add_pin(&chip->base, 1, "OE#", R01S_PIN_IN);
     for (i = 0; i < 8; i++) {
-        /* Datasheet interleaves D/Q; sim uses contiguous D then Q for bus helpers. */
         r01s_entity_add_pin(&chip->base, 2 + i, D_NAMES[i], R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 12 + i, Q_NAMES[i], R01S_PIN_OUT);
+        /* Datasheet Q bus is reversed: pin 12 is Q7, pin 19 is Q0. */
+        r01s_entity_add_pin(&chip->base, 19 - i, Q_NAMES[i], R01S_PIN_OUT);
     }
     r01s_entity_add_pin(&chip->base, 10, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 11, "CLK", R01S_PIN_IN);

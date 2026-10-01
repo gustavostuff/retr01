@@ -1,3 +1,5 @@
+#include "discrete_ic/pin_header.h"
+
 #include "ui.h"
 #include "retr01_sim/ui_button.h"
 #include "ui_internal.h"
@@ -513,7 +515,7 @@ void ui_chip_dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side
     int half = dip / 2;
     int idx;
     int span;
-    int pitch = R01S_DIP_PIN_PITCH_PX;
+    int pitch = e->pkg_pitch_px > 0 ? e->pkg_pitch_px : R01S_DIP_PIN_PITCH_PX;
     int row_span;
     int margin;
     int reverse;
@@ -551,6 +553,9 @@ int ui_chip_pin_tip_board(const R01sEntity *e, int pin_num, int *tbx, int *tby) 
     }
     if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
         return r01s_passive_tip_board((const R01sPassive *)(const void *)e, pin_num, tbx, tby);
+    }
+    if (e->visual == R01S_ENTITY_VIS_PIN_HDR) {
+        return ns_pin_header_pin_tip_board(e, pin_num, tbx, tby);
     }
     dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
     if (pin_num < 1 || pin_num > dip) {
@@ -716,6 +721,12 @@ void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selec
         break;
     case R01S_ENTITY_VIS_PANEL:
         draw_panel_glyph(r, ui, e, selected);
+        break;
+    case R01S_ENTITY_VIS_PIN_HDR:
+        ns_pin_header_draw(r, e, ui_board_sx(ui, e->board_x), ui_board_sy(ui, e->board_y), selected);
+        if (e->refdes && e->refdes[0]) {
+            font_draw(r, ui_board_sx(ui, e->board_x), ui_board_sy(ui, e->board_y) - 8, e->refdes, 180, 185, 170);
+        }
         break;
     case R01S_ENTITY_VIS_BREADBOARD:
         r01s_breadboard_draw(r, (const R01sBreadboard *)(const void *)e, ui_board_sx(ui, e->board_x),

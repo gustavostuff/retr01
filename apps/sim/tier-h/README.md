@@ -33,14 +33,14 @@ Default path uses soft air-wire settle (LIVE). MANUAL breadboard electrical mode
 
 ### Passives tray
 
-Full console passive BOM ([`docs/passive_bom.md`](../../docs/passive_bom.md)): **61** parts below ICs + breadboard, ordered OSC -> CCAP -> ECAP -> R.
+Motherboard passives from [`docs/passive_bom.md`](../../docs/passive_bom.md): **62** parts below the ICs, ordered OSC -> CCAP -> ECAP -> R. Cart and pad bypass caps are not in this tray.
 
 | Kind | Role in tray | Notes |
 |------|--------------|-------|
 | **OSC** | Y1/Y2/Y3 | 3 crystals |
-| **CCAP** | 100 nF bypass + crystal loads | 21 + 6 |
+| **CCAP** | 100 nF bypass + crystal loads | 20 + 6 |
 | **ECAP** | 220 uF bulk | Polarized flag set (polarity rules later) |
-| **R** | DAC + 33 ohm series + pull-ups | 30 total. Only 11 are video DAC |
+| **R** | DAC + 33 ohm series + pull-ups + crystal feedback | 32 total. Only 11 are video DAC |
 | **D** | Art present | Not spawned (not on this BOM) |
 
 Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `KIND_x_y.png`. Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c` per [`docs/bringup/schematic-netlist-tier-h.md`](../../docs/bringup/schematic-netlist-tier-h.md)). Breadboard strip merge and bus settle through passives are still TODO.
@@ -188,7 +188,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $7Fxx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
 
-**Controls:** `Space` show or hide air wires * `P` pause/resume * `Ctrl+R` reset * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (`G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **ZONES** packs parts into the motherboard floor plan * **left-drag chip** move (snaps to breadboard) * **right-click chip** rotate * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
+**Controls:** `Space` cycles air wires: all except GND, layer 1 (noisy, including +5V), layer 4 (quiet), hidden (hover a part to see its wires) * `P` pause/resume * `Ctrl+R` reset * `Ctrl+wheel` zoom (1x-8x) * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (`G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **ZONES** packs parts into the motherboard floor plan * **left-drag chip** move * **right-click chip** rotate * **Shift+arrows / wheel / middle-drag** pan * `S` save now * `Esc` quit. Placement, pan, zoom, window scale, zone boxes, and the Space wire view also save on their own about half a second after the last change.
 
 **Layout persistence:** island frames + chip positions saved to `app/sim/ui_layout.json` (override with `R01S_LAYOUT`).
 

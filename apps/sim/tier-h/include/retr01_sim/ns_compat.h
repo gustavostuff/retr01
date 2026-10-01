@@ -75,6 +75,7 @@ typedef NsOutlineRgb R01sOutlineRgb;
 #define R01S_ENTITY_VIS_DISPLAY NS_ENTITY_VIS_DISPLAY
 #define R01S_ENTITY_VIS_BUTTON NS_ENTITY_VIS_BUTTON
 #define R01S_ENTITY_VIS_PANEL NS_ENTITY_VIS_PANEL
+#define R01S_ENTITY_VIS_PIN_HDR NS_ENTITY_VIS_PIN_HDR
 #define R01S_ENTITY_VIS_BREADBOARD NS_ENTITY_VIS_BREADBOARD
 #define R01S_ENTITY_VIS_PASSIVE NS_ENTITY_VIS_PASSIVE
 #define R01S_ENTITY_VIS_NONE NS_ENTITY_VIS_NONE
@@ -282,6 +283,7 @@ int r01s_island_builder_count_bom_ic(const R01sIslandBuilder *builder);
 #define r01s_passive_set_pivot ns_passive_set_pivot
 #define r01s_passive_set_orient ns_passive_set_orient
 #define r01s_passive_tip_board ns_passive_tip_board
+#define r01s_passive_hit ns_passive_hit
 #define r01s_passive_draw ns_passive_draw
 #define r01s_passive_bank_spawn_bom ns_passive_bank_spawn_bom
 #define r01s_passive_bank_layout_grid ns_passive_bank_layout_grid

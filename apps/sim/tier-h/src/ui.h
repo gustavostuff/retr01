@@ -31,6 +31,15 @@
 /* Allow panning past board origin so the view is not stuck at top-left. */
 #define R01S_UI_PAN_OVERSCROLL (R01S_UI_VIEW_W / 2)
 
+/* Ctrl+wheel canvas zoom. 1 = native logic pixels. */
+#define R01S_ZOOM_MAX 8
+
+/* Space cycles these. Layer 1 is noisy (red). Layer 4 is quiet (blue). */
+#define R01S_AIR_VIEW_ALL 0
+#define R01S_AIR_VIEW_L1 1
+#define R01S_AIR_VIEW_L4 2
+#define R01S_AIR_VIEW_NONE 3
+
 #define R01S_UI_MODAL_NONE 0
 #define R01S_UI_MODAL_QUIT 1
 
@@ -71,11 +80,20 @@ typedef struct R01sUi {
     int sel_start_y[R01S_BOARD_MAX_CHIPS];
     int pan_x;
     int pan_y;
+    int zoom; /* 1..R01S_ZOOM_MAX. Ctrl+wheel. */
+    int present_scale; /* 1 or 2. Ctrl+1 / Ctrl+2 window size. 0 = unset. */
     int drag_pan; /* middle/right button pan */
     int drag_chip; /* chip index while left-dragging, else -1 */
     int drag_island; /* island index while moving frame, else -1 */
     int resize_island; /* island index while resizing, else -1 */
     int resize_corner; /* R01S_ISLAND_CORNER_* while resizing */
+    int floor_resize;  /* zone index while dragging a corner, else -1 */
+    int floor_resize_corner;
+    int floor_anchor_x; /* opposite corner, board px */
+    int floor_anchor_y;
+    int floor_drag; /* zone index while moving the box, else -1 */
+    int floor_drag_grab_x;
+    int floor_drag_grab_y;
     /* Draw order back->front: island_z_order[0] is bottom, [count-1] is top. */
     uint8_t island_z_order[R01S_MAX_ISLANDS];
     int island_z_count;
@@ -98,7 +116,7 @@ typedef struct R01sUi {
     R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
     int input_mode; /* R01S_INPUT_ARCADE or R01S_INPUT_PADS */
     int wire_mode;  /* R01S_WIRE_LIVE or R01S_WIRE_MANUAL */
-    int air_wires;  /* 1 = draw the ratsnest. Space toggles. */
+    int air_wires;  /* R01S_AIR_VIEW_*. Space cycles. */
     int floor_on;   /* 1 = zone rects are live and out-of-zone parts blink */
     int floor_x[R01S_ZONE_COUNT];
     int floor_y[R01S_ZONE_COUNT];
@@ -156,7 +174,7 @@ typedef struct R01sUi {
     int undo_chip_x[R01S_BOARD_MAX_CHIPS];
     int undo_chip_y[R01S_BOARD_MAX_CHIPS];
     uint8_t undo_chip_orient[R01S_BOARD_MAX_CHIPS];
-    int layout_dirty; /* 1 = unsaved layout edits (SAVE / S to write ui_layout.json) */
+    int layout_dirty; /* 1 = view state not yet written. Autosave and S both clear it. */
     SDL_Texture *lcd_tex; /* 256x240 LCD framebuffer upload (streaming) */
 } R01sUi;
 

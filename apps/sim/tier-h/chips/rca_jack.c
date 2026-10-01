@@ -31,7 +31,7 @@ void r01s_rca_jack_init(R01sRcaJack *jack, const char *refdes, const char *part)
     r01s_entity_add_pin(&jack->base, 12, "1B", R01S_PIN_PWR);
     r01s_entity_add_pin(&jack->base, 13, "1C", R01S_PIN_PWR);
     r01s_entity_add_pin(&jack->base, 2, "2", R01S_PIN_IO);
-    r01s_entity_set_glyph(&jack->base, R01S_ENTITY_VIS_NONE, 16, 12);
+    r01s_entity_set_glyph(&jack->base, R01S_ENTITY_VIS_PANEL, 24, 16);
     r01s_entity_reset(&jack->base);
 }
 

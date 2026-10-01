@@ -37,34 +37,34 @@ The physical motherboard outline is specified at **160 mm width by 100 mm height
 The physical layout arranges connectors along the edges for ergonomics, with internal functional islands organized to minimize trace lengths between communicating chips:
 
 ```
-+--------------------------------------------------------------------------------+
-| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)    RGBS Video(J2)     |
-+-----------------------+--------------------------------+-----------------------+
-| SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)       | VIDEO ENGINE & DAC    |
-| (Top-Left)            | (Top-Center, Horizontal)       | (Top-Right)           |
-|                       |                                |                       |
-|   * System RAM (U3)   |   * Sits DIRECTLY above J36    |   * Y1 + Y2 crystals  |
-|   * MCP130 Supervisor |   * Address and data drop      |   * U04 / U74 clocks  |
-|                       |     into cart. Bus left to U3  |   * Beam X/Y, Comp    |
-|                       |                                |   * Color PROM, DAC   |
-+-----------------------+--------------------------------+-----------------------+
-|                 CARTRIDGE SLOT (J36, Center-Horizontal)                        |
-|                 (Directly below the CPU, middle spine)                         |
-+-----------------------+-----------------------------+--------------------------+
-| VRAM & 74HC157 MUXES  | MCU-M (CENTRAL DISPATCHER)  | S1 SPRITE ENGINE         |
-| (Middle-Left)         | (Middle-Center)             | (Middle-Right)           |
-|                       |                             |                          |
-|   * VRAM (U6)         |   * MCU-M (AVR128DB28)      |  * MCU-S1 (Blitter)      |
-|   * 3x 74HC157 Muxes  |   * Soft I/O bus interface  |  * 74HC573 Latch         |
-|   * Scroll Latch (574)|   * Central SPI routing hub |  * Field SRAM (U41)      |
-+-----------------------+-----------------------------+--------------------------+
-| CONTROLLER & AUDIO    | [OPEN / EXPANSION AREA]                                |
-| (Bottom-Left)         | (Bottom-Right)                                         |
-|                       |                                                        |
-|   * MCU-S2 (AVR128)   |   * Ground return, test points, mounting               |
-|   * J3, J4 TRS Jacks  |                                                        |
-|   * Arcade Headers J5/J6 |                                                     |
-+-----------------------+--------------------------------------------------------+
++----------------------------------------------------------------------------------+
+| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)    RGBS Video(J2)       |
++-----------------------+--------------------------------+-------------------------+
+| SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)       | VIDEO ENGINE & DAC      |
+| (Top-Left)            | (Top-Center, Horizontal)       | (Top-Right)             |
+|                       |                                |                         |
+|   * System RAM (U3)   |   * Sits DIRECTLY above J36    |   * Y1 + Y2 crystals    |
+|   * MCP130 Supervisor |   * Address and data drop      |   * U04 / U74 clocks    |
+|                       |     into cart. Bus left to U3  |   * Beam X/Y, Comp      |
+|                       |                                |   * Color PROM, DAC     |
++-----------------------+--------------------------------+-------------------------+
+|                 CARTRIDGE SLOT (J36, Center-Horizontal)                          |
+|                 (Directly below the CPU, middle spine)                           |
++-------------------------+-----------------------------+--------------------------+
+| VRAM & 74HC157 MUXES    | MCU-M (CENTRAL DISPATCHER)  | S1 SPRITE ENGINE         |
+| (Middle-Left)           | (Middle-Center)             | (Middle-Right)           |
+|                         |                             |                          |
+|   * VRAM (U6)           |   * MCU-M (AVR128DB28)      |  * MCU-S1 (Blitter)      |
+|   * 3x 74HC157 Muxes    |   * Soft I/O bus interface  |  * 74HC573 Latch         |
+|   * Scroll Latch (574)  |   * Central SPI routing hub |  * Field SRAM (U41)      |
++-------------------------+-----------------------------+--------------------------+
+| CONTROLLER & AUDIO       | [OPEN / EXPANSION AREA]                               |
+| (Bottom-Left)            | (Bottom-Right)                                        |
+|                          |                                                       |
+|   * MCU-S2 (AVR128)      |   * Ground return, test points, mounting              |
+|   * J3, J4 TRS Jacks     |                                                       |
+|   * Arcade Headers J5/J6 |                                                       |
++-----------------------+----------------------------------------------------------+
 ```
 
 ---
@@ -77,7 +77,7 @@ The physical zoning succeeds because it aligns component placement directly with
 
 In mixed-signal systems containing high-speed digital buses alongside sensitive analog outputs, noise coupling occurs primarily through shared ground return paths.
 
-1. **Digital return current isolation:** High-frequency currents returning through the ground plane flow directly beneath their respective signal traces. In this layout, CPU bus switching (Zone 1) and S1 blitter traffic (Zone 4) remain strictly confined to the left side and lower right of the board. Their ground return currents never pass beneath the analog video DAC (Zone 2) or audio filtering network (Zone 5).
+1. **Digital return current isolation:** High-frequency currents returning through the ground plane flow directly beneath their respective signal traces. In this layout, CPU bus switching stays on the left and top-center, and S1 blitter traffic stays in the middle-right (Zone 4). Those return paths stay off the analog video DAC (Zone 2) and the audio jack run (Zone 5 up to J8).
 2. **Analog video quiet zone:** By placing the video engine, Color PROM, and R-2R ladder in the upper-right corner directly next to the RGBS header (J2), the entire analog video signal path spans less than 20 mm of total copper. No high-speed digital buses cut through or run parallel to these analog nodes, preventing visual sparkling, pixel noise, and 60 Hz hum on CRT monitors.
 3. **Audio line protection:** The PWM audio line from MCU-S2 is filtered locally in Zone 5 before traveling up to RCA jack J8. Keeping controller lines and audio generation on the opposite end of the board from CPU memory buses prevents digital bus activity from leaking into the sound output as high-pitched whine.
 
@@ -201,7 +201,7 @@ Manages video tile memory and the half-cycle PHI2 bus interleave.
 - Input A of each multiplexer connects to CPU address lines A[11:0] descending from Zone 1.
 - Input B of each multiplexer connects to Beam counter lines arriving from Zone 2.
 - Multiplexer outputs Y connect directly to VRAM address pins with shortest possible trace lengths.
-- Strobe pins (G) of all three 74HC157 chips tie solidly to ground.
+- Strobe pin G on each 74HC157 must not float. G high forces the Y outputs low. The strobe comes from the PLD phase decode, not a hard tie to ground.
 
 ---
 
@@ -246,14 +246,14 @@ Interfaces with external gamepads, arcade controls, and audio output.
 - 2x 3.5 mm TRS controller jacks (J3, J4)
 - Arcade control headers J5 and J6 (1x10)
 - Cabinet power/reset header J7 (1x4)
-- Passive audio low-pass filter components (resistors, film capacitors)
-- RCA audio output jack J8 (routed to top rear edge)
+- RCA audio output jack J8 (top rear edge)
+- PWM from US2 pin PF1 runs to J8. The locked BOM has no extra audio filter capacitors.
 - Decoupling capacitor: C7 (for US2)
 
 **Placement and routing rules:**
 - US2 sits in the lower-left corner immediately behind controller jacks J3 and J4.
 - Open-drain UART controller data lines connect to J3 and J4 through short traces with local 4.7 kohm pull-up resistors.
-- Audio PWM output from US2 pin PF1 feeds through a passive RC filter network in Zone 5 before routing up to the rear audio jack J8.
+- Audio PWM output from US2 pin PF1 routes up to the rear audio jack J8.
 
 ---
 

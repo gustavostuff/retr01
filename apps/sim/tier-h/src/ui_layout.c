@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define R01S_LAYOUT_VERSION 3
+#define R01S_LAYOUT_VERSION 4
 /* Pre-v3 layouts had empty soft-$7Fxx island D at index 3. */
 
 static const char *orient_to_json(R01sPkgOrient o) {
@@ -173,6 +173,21 @@ int r01s_ui_layout_save(R01sUi *ui) {
     fprintf(f, "  \"mode\": \"%s\",\n", ui->layout_compact ? "compact" : "islands");
     fprintf(f, "  \"pan_x\": %d,\n", ui->pan_x);
     fprintf(f, "  \"pan_y\": %d,\n", ui->pan_y);
+    fprintf(f, "  \"zoom\": %d,\n", ui_zoom(ui));
+    fprintf(f, "  \"air_wires\": %d,\n", ui->air_wires);
+    fprintf(f, "  \"present_scale\": %d,\n", ui->present_scale);
+    fprintf(f, "  \"floor_on\": %d,\n", ui->floor_on ? 1 : 0);
+    fprintf(f, "  \"floor\": [\n");
+    first = 1;
+    for (i = 0; i < R01S_ZONE_COUNT; i++) {
+        if (!first) {
+            fprintf(f, ",\n");
+        }
+        first = 0;
+        fprintf(f, "    {\"i\": %d, \"x\": %d, \"y\": %d, \"w\": %d, \"h\": %d}", i, ui->floor_x[i], ui->floor_y[i],
+                ui->floor_w[i], ui->floor_h[i]);
+    }
+    fprintf(f, "\n  ],\n");
     fprintf(f, "  \"islands_strip_x\": %d,\n", ui->islands_strip_x);
     fprintf(f, "  \"islands_strip_y\": %d,\n", ui->islands_strip_y);
     fprintf(f, "  \"legend_strip_x\": %d,\n", ui->legend_strip_x);
@@ -381,6 +396,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int mode_compact = 0;
     int pan_x = 0;
     int pan_y = 0;
+    int zoom = 1;
+    int air_wires = -1;
+    int present_scale = 0;
+    int floor_on = -1;
     int islands_strip_x = R01S_UI_ISLANDS_STRIP_DEFAULT_X;
     int islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
     int legend_strip_x = R01S_UI_LEGEND_STRIP_DEFAULT_X;
@@ -452,6 +471,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
     mode_compact = (strcmp(mode, "compact") == 0);
     json_int_after(buf, "\"pan_x\"", &pan_x);
     json_int_after(buf, "\"pan_y\"", &pan_y);
+    json_int_after(buf, "\"zoom\"", &zoom);
+    json_int_after(buf, "\"air_wires\"", &air_wires);
+    json_int_after(buf, "\"present_scale\"", &present_scale);
+    json_int_after(buf, "\"floor_on\"", &floor_on);
     json_int_after(buf, "\"islands_strip_x\"", &islands_strip_x);
     json_int_after(buf, "\"islands_strip_y\"", &islands_strip_y);
     json_int_after(buf, "\"legend_strip_x\"", &legend_strip_x);
@@ -641,6 +664,57 @@ int r01s_ui_layout_load(R01sUi *ui) {
 
     ui->pan_x = pan_x;
     ui->pan_y = pan_y;
+    if (zoom < 1) {
+        zoom = 1;
+    }
+    if (zoom > R01S_ZOOM_MAX) {
+        zoom = R01S_ZOOM_MAX;
+    }
+    ui->zoom = zoom;
+    if (air_wires >= 0) {
+        if (file_version < 4) {
+            /* Older files stored a boolean. 1 was every wire, 0 was hidden. */
+            ui->air_wires = air_wires ? R01S_AIR_VIEW_ALL : R01S_AIR_VIEW_NONE;
+        } else if (air_wires >= R01S_AIR_VIEW_ALL && air_wires <= R01S_AIR_VIEW_NONE) {
+            ui->air_wires = air_wires;
+        }
+    }
+    if (present_scale == 1 || present_scale == 2) {
+        ui->present_scale = present_scale;
+    }
+    if (floor_on == 0 || floor_on == 1) {
+        ui->floor_on = floor_on;
+    }
+    section = json_find(buf, "\"floor\"");
+    if (section) {
+        const char *stop = json_find(buf, "\"islands\"");
+        obj = json_next_object(section);
+        while (obj && (!stop || obj < stop)) {
+            int idx = -1;
+            int x = 0;
+            int y = 0;
+            int w = 0;
+            int h = 0;
+            char slice[160];
+            end = json_object_end(obj);
+            if (!end || (size_t)(end - obj) >= sizeof(slice)) {
+                break;
+            }
+            memcpy(slice, obj, (size_t)(end - obj));
+            slice[end - obj] = '\0';
+            if (json_int_after(slice, "\"i\"", &idx) && idx >= 0 && idx < R01S_ZONE_COUNT) {
+                json_int_after(slice, "\"x\"", &x);
+                json_int_after(slice, "\"y\"", &y);
+                json_int_after(slice, "\"w\"", &w);
+                json_int_after(slice, "\"h\"", &h);
+                ui->floor_x[idx] = x;
+                ui->floor_y[idx] = y;
+                ui->floor_w[idx] = w;
+                ui->floor_h[idx] = h;
+            }
+            obj = json_next_object(end);
+        }
+    }
     ui->islands_strip_x = islands_strip_x;
     ui->islands_strip_y = islands_strip_y;
     ui->legend_strip_x = legend_strip_x;

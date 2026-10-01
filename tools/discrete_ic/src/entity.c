@@ -103,6 +103,17 @@ void ns_entity_refresh_body(NsEntity *e) {
     if (along < 1) {
         along = 1;
     }
+    /* Grow a short body until the pin row sits on the plastic. Pitch is 0.100"
+     * unless the part set pkg_pitch_px (SOIC). */
+    if (e->dip_pins >= 4) {
+        int half = e->dip_pins / 2;
+        int pitch = e->pkg_pitch_px > 0 ? e->pkg_pitch_px : NS_DIP_PIN_PITCH_PX;
+        int row = (half > 1) ? (half - 1) * pitch : 0;
+        int min_along = row + 2 * NS_DIP_PIN_MARGIN_PX;
+        if (along < min_along) {
+            along = min_along;
+        }
+    }
     if (!e->pkg_exact_mm) {
         across = ns_dip_snap_across_px(across);
     }
@@ -364,7 +375,7 @@ static void dip_pin_pos(const NsEntity *e, int pin_num, int *along, int *side_pi
     int half = dip / 2;
     int idx;
     int span;
-    int pitch = NS_DIP_PIN_PITCH_PX;
+    int pitch = e->pkg_pitch_px > 0 ? e->pkg_pitch_px : NS_DIP_PIN_PITCH_PX;
     int row_span;
     int margin;
     int reverse;

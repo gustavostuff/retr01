@@ -147,6 +147,24 @@ static void pld_destroy(R01sEntity *e) {
 
 static const R01sEntityVTable ATF22_VT = {pld_reset, pld_eval, pld_tick, pld_destroy};
 
+void r01s_atf22v10_add_shell_pins(R01sEntity *e) {
+    static const char *const in_names[10] = {"IN2", "IN3", "IN4", "IN5", "IN6", "IN7", "IN8", "IN9", "IN10", "IN11"};
+    static const char *const io_names[10] = {"IO14", "IO15", "IO16", "IO17", "IO18",
+                                              "IO19", "IO20", "IO21", "IO22", "IO23"};
+    int i;
+    if (!e) {
+        return;
+    }
+    r01s_entity_add_pin(e, 1, "CLK", R01S_PIN_IN);
+    for (i = 0; i < 10; i++) {
+        r01s_entity_add_pin(e, 2 + i, in_names[i], R01S_PIN_IN);
+    }
+    r01s_entity_add_pin(e, 13, "IN13", R01S_PIN_IN);
+    for (i = 0; i < 10; i++) {
+        r01s_entity_add_pin(e, 14 + i, io_names[i], R01S_PIN_IO);
+    }
+}
+
 static const char *const PLD_I_NAMES[8] = {"I0", "I1", "I2", "I3", "I4", "I5", "I6", "I7"};
 static const char *const PLD_Y_NAMES[8] = {"Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7"};
 static const char *const PLD_P_NAMES[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
@@ -165,39 +183,39 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
     if (role == R01S_PLD_DECODE) {
         static const char *const A_NAMES[8] = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"};
         for (i = 0; i < 8; i++) {
-            r01s_entity_add_pin(&chip->base, 1 + i, A_NAMES[i], R01S_PIN_IN);
+            r01s_entity_add_pin(&chip->base, 101 + i, A_NAMES[i], R01S_PIN_IN);
         }
-        r01s_entity_add_pin(&chip->base, 9, "SOFT#", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 10, "BE", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 11, "RWB", R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, 12, "SEL_7F02", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 13, "SEL_7F03", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 14, "SEL_7F04", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 15, "SEL_7F08", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 16, "SEL_7F10", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 17, "SEL_7F11", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 18, "SEL_7F12", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 19, "SEL_7F90", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 20, "SEL_7F91", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 21, "SEL_7F92", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 22, "SEL_7F93", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 109, "SOFT#", R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 110, "BE", R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 111, "RWB", R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 112, "SEL_7F02", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 113, "SEL_7F03", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 114, "SEL_7F04", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 115, "SEL_7F08", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 116, "SEL_7F10", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 117, "SEL_7F11", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 118, "SEL_7F12", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 119, "SEL_7F90", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 120, "SEL_7F91", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 121, "SEL_7F92", R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 122, "SEL_7F93", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
         r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+        r01s_atf22v10_add_shell_pins(&chip->base);
         r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
         r01s_entity_reset(&chip->base);
         return;
     }
 
+    /* Programmed signals stay on logical pin numbers. The DIP-24 shell is drawn separately. */
     for (i = 0; i < 8; i++) {
-        r01s_entity_add_pin(&chip->base, i + 1, PLD_I_NAMES[i], R01S_PIN_IN);
-        r01s_entity_add_pin(&chip->base, i + 9, PLD_Y_NAMES[i], R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 101 + i, PLD_I_NAMES[i], R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 109 + i, PLD_Y_NAMES[i], R01S_PIN_OUT);
     }
     if (role == R01S_PLD_BEAM_Y) {
-        for (i = 0; i < 7; i++) {
-            r01s_entity_add_pin(&chip->base, 17 + i, PLD_P_NAMES[i], R01S_PIN_IN);
+        for (i = 0; i < 8; i++) {
+            r01s_entity_add_pin(&chip->base, 130 + i, PLD_P_NAMES[i], R01S_PIN_IN);
         }
-        /* Pin 24 is package VCC (ATF22V10). P7 stays logical-only like Q0-Q7. */
-        r01s_entity_add_pin(&chip->base, 36, PLD_P_NAMES[7], R01S_PIN_IN);
         for (i = 0; i < 8; i++) {
             r01s_entity_add_pin(&chip->base, 25 + i, PLD_Q_NAMES[i], R01S_PIN_IN);
         }
@@ -205,20 +223,12 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
         r01s_entity_add_pin(&chip->base, 34, "EQ#", R01S_PIN_OUT);
         r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
         r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
-        r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     } else {
-        /* VRAM glue (UPLDB): fill PDIP-24 so both rows are even (was 12 vs 5). */
-        r01s_entity_add_pin(&chip->base, 17, "NC17", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 18, "NC18", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 19, "NC19", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 20, "NC20", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 21, "NC21", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 22, "NC22", R01S_PIN_NC);
-        r01s_entity_add_pin(&chip->base, 23, "NC23", R01S_PIN_NC);
         r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
         r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
-        r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     }
+    r01s_atf22v10_add_shell_pins(&chip->base);
+    r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     r01s_entity_reset(&chip->base);
 }
 

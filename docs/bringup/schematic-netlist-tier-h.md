@@ -33,7 +33,7 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 | C19 | U04 | 74HCU04 clock inverter | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 
-Cart flash, cart EEPROM, and pad ATtiny85 each have one 100 nF on those boards. Those caps are not C19-C21 on the motherboard.
+Cart flash, cart EEPROM, and the pad ATtiny85 each have one 100 nF on those boards. Those caps are not spawned on the motherboard canvas. Crystal loads stay C22-C27.
 
 Each bypass: cap `1` to IC VCC, cap `2` to `PS1` GND, `PS1` VDD to IC VCC.
 
@@ -76,12 +76,10 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 
 ## Gaps (not schematic-complete on silicon)
 
-- **PLD / beam models:** some ATF22V10 entities still use **logical** pin indices for JEDEC I/O, not always DIP-24 **12 (GND)** / **24 (VCC)**. KiCad footprints need package numbers; align sim entities before relying on export stubs.
+- **PLD signal pins** stay logical until a JEDEC map exists. The canvas still draws the full DIP-24. CLK, IN, and IO names are the datasheet pin class. Air wires for programmed signals meet the body.
 - **AD724** analog NTSC encode (COMP is a logic video-present flag; RGB and J9 are netlisted).
-- **MCP130** reset supervisor.
-- Cart **socket** vs **U40** edge (OE#/WE# named stubs on series resistors).
-- Extra PLD helpers (`UPLDA`, `UPLDB`, `UPLDI`, ...) share BOM refdes where applicable but are not all in the C1-C20 motherboard bypass table.
-
-When MCP130 lands in sim, extend `board_schematic.c` rather than duplicating links in UI code.
+- VRAM mux **B** inputs and the **A/B** select wait on the PLD phase decode. **A** inputs are the CPU address and **Y** outputs are VRAM A[11:0].
+- Cart MAP **A14-A18** on **J36** wait on the compositor fuse map.
+- Extra PLD helpers (`UPLDA`, `UPLDB`, `UPLDI`, ...) are not motherboard placements.
 
 **KiCad schematic (manual):** [`docs/misc/kicad-schematic-tier-h.md`](../misc/kicad-schematic-tier-h.md). **Skidl export (preliminary):** [`tier-h-skidl-export.md`](tier-h-skidl-export.md).

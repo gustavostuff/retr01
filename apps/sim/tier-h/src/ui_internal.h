@@ -35,6 +35,24 @@ typedef struct R01sBoard R01sBoard;
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_TOOLTIP_DELAY_MS 400
 
+static inline int ui_div_floor(int a, int b) {
+    if (b <= 0) {
+        return a;
+    }
+    if (a >= 0) {
+        return a / b;
+    }
+    return -((-a + b - 1) / b);
+}
+
+static inline int ui_zoom(const R01sUi *ui) {
+    int z = (ui && ui->zoom > 0) ? ui->zoom : 1;
+    if (z > R01S_ZOOM_MAX) {
+        z = R01S_ZOOM_MAX;
+    }
+    return z;
+}
+
 static inline int ui_board_sx(const R01sUi *ui, int board_x) {
     return R01S_UI_VIEW_X + board_x - ui->pan_x;
 }
@@ -49,8 +67,9 @@ static inline int ui_logic_in_view(int lx, int ly) {
 }
 
 static inline void ui_logic_to_board(const R01sUi *ui, int lx, int ly, int *bx, int *by) {
-    *bx = lx - R01S_UI_VIEW_X + ui->pan_x;
-    *by = ly - R01S_UI_VIEW_Y + ui->pan_y;
+    int z = ui_zoom(ui);
+    *bx = ui_div_floor(lx, z) - R01S_UI_VIEW_X + ui->pan_x;
+    *by = ui_div_floor(ly, z) - R01S_UI_VIEW_Y + ui->pan_y;
 }
 
 /* ui_font.c */
@@ -107,6 +126,8 @@ void input_mode_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void wire_mode_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void ui_save_layout_now(R01sUi *ui);
 void ui_pack_floor_plan(R01sUi *ui);
+void floor_zone_drag_begin(R01sUi *ui, int zone);
+void floor_zone_drag_to(R01sUi *ui, int zone, int board_mx, int board_my);
 void floor_btn_rect(SDL_Rect *rc);
 int ui_lcd_scale_2x(const R01sUi *ui);
 int ui_screen_render_mode(const R01sUi *ui);

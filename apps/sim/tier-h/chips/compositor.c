@@ -1,5 +1,6 @@
 #include "compositor.h"
 
+#include "atf22v10.h"
 #include "retr01_sim/bus.h"
 
 #include <stdio.h>
@@ -58,17 +59,20 @@ void r01s_compositor_init(R01sCompositor *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &COMP_VT, "ATF22V10", refdes ? refdes : "UPLDV");
     chip->base.impl = chip;
+    /* Signal numbers are logical until a JEDEC map assigns them. The shell still draws every DIP-24 leg. */
     for (i = 0; i < 6; i++) {
-        r01s_entity_add_pin(&chip->base, 1 + i, BG_NAMES[i], R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 101 + i, BG_NAMES[i], R01S_PIN_IN);
     }
     for (i = 0; i < 6; i++) {
-        r01s_entity_add_pin(&chip->base, 7 + i, SPR_NAMES[i], R01S_PIN_IN);
+        r01s_entity_add_pin(&chip->base, 107 + i, SPR_NAMES[i], R01S_PIN_IN);
     }
-    r01s_entity_add_pin(&chip->base, 13, "SPEN", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 113, "SPEN", R01S_PIN_IN);
     for (i = 0; i < 6; i++) {
-        r01s_entity_add_pin(&chip->base, 14 + i, A_NAMES[i], R01S_PIN_OUT);
+        r01s_entity_add_pin(&chip->base, 114 + i, A_NAMES[i], R01S_PIN_OUT);
     }
+    r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+    r01s_atf22v10_add_shell_pins(&chip->base);
     r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     r01s_entity_reset(&chip->base);
 }

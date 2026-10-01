@@ -4,7 +4,8 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Analog Devices AD724 RGB-to-NTSC/PAL encoder (SOIC-16, U725).
+ * Analog Devices AD724 RGB-to-NTSC/PAL encoder (U725).
+ * PCB footprint is SOIC-16. The canvas draws a DIP-16 so the part can be placed.
  * Logic stub: COMP is a video-present flag. No NTSC waveform.
  * Pin names match docs/ic_behavior/AD724.md.
  */
