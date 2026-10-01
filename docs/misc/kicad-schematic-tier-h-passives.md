@@ -66,38 +66,48 @@ Tie **U725** analog ground and **SCR1** / DAC return per video section in wiring
 
 ---
 
-## 4. Crystals and load caps
+## 4. Crystals and clock logic
 
-Sim uses **Y1/Y2** crystals plus functional oscillator symbols for PHI2/DOT paths. On schematic, either draw **crystal + loads** or **canned osc** symbols with the same net names.
+Motherboard clocks are HC-49/US crystals plus **U04** (74HCU04) and **U74** (74HC74). Gate roles match [`docs/ic_behavior/74HCU04.md`](../ic_behavior/74HCU04.md) and [`docs/ic_behavior/74HC74.md`](../ic_behavior/74HC74.md). Load caps match [`pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md) (C22/C23 = Y2, C24/C25 = Y3, C26/C27 = Y1).
 
-### Y1 (8 MHz, CPU PHI2 path)
+U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 
-| From | To |
-| --- | --- |
-| Y1 pin 14 (or osc VCC) | +5V |
-| Y1 pin 7 | GND |
-| C22 pin 1 | Y1 pin 1 |
-| C22 pin 2 | GND |
-| C23 pin 1 | Y1 pin 8 |
-| C23 pin 2 | GND |
-| Osc **PHI2** out | **R12** pin 1 (see series section) |
-
-### Y2 (DOT, ~5.369318 MHz)
+### Y2 (21.47727 MHz) and DOT
 
 | From | To |
 | --- | --- |
-| Y2 pin 14 | +5V |
-| Y2 pin 7 | GND |
-| C24, C25 | load pins 1/8 of Y2 to GND (same pattern as C22/C23) |
-| Osc **DOT** out | **R13** pin 1 |
+| R31 (1 M ohm) | U04 pin 1 (1A) and pin 2 (1Y) |
+| Y2 pins 1 and 2 | U04 pin 1 and pin 2 (Pierce tank) |
+| C22 pin 1 / pin 2 | Y2 pin 1 / GND |
+| C23 pin 1 / pin 2 | Y2 pin 2 / GND |
+| U04 pin 3 (2A) | U04 pin 2 (1Y) |
+| U04 pin 4 (2Y) | U74 pin 3 (1CLK) |
+| U74 pin 6 (1/Q) | U74 pin 2 (1D) |
+| U74 pin 5 (1Q) | U74 pin 11 (2CLK) |
+| U74 pin 8 (2/Q) | U74 pin 12 (2D) |
+| U74 pins 1, 4, 10, 13 (CLR/PRE) | +5V |
+| U74 pin 9 (2Q) | **R13** pin 1 (DOT to UPLDX) |
 
-### Y3 (14.31818 MHz, AD724 FSC)
+### Y1 (8.000 MHz) and PHI2
 
 | From | To |
 | --- | --- |
-| Y3 pin 7 | GND |
-| C26, C27 | Y3 pins 1 and 8 to GND |
-| Y3 pin 8 (or osc out) | net **`FSC_XTAL`** -> **U725** FSC input |
+| R32 (1 M ohm) | U04 pin 5 (3A) and pin 6 (3Y) |
+| Y1 pins 1 and 2 | U04 pin 5 and pin 6 (Pierce tank) |
+| C26 pin 1 / pin 2 | Y1 pin 1 / GND |
+| C27 pin 1 / pin 2 | Y1 pin 2 / GND |
+| U04 pin 9 (4A) | U04 pin 6 (3Y) |
+| U04 pin 8 (4Y) | **R12** pin 1 (PHI2 to U1) |
+
+Unused U04 inputs pin 11 (5A) and pin 13 (6A) tie to GND.
+
+### Y3 (3.579545 MHz, AD724 FSC)
+
+| From | To |
+| --- | --- |
+| C24 pin 1 / pin 2 | Y3 pin 1 / GND |
+| C25 pin 1 / pin 2 | Y3 pin 2 / GND |
+| Y3 | U725 FIN (pin 3) per Analog Devices crystal recipe |
 
 ---
 
@@ -134,8 +144,8 @@ Unused **U24** address pins: tie to **GND** on schematic ([`hardware.md`](../gen
 
 | Resistor | From | To |
 | --- | --- | --- |
-| R12 pin 1 | Y1/osc **PHI2** | R12 pin 2 -> **U1** PHI2 |
-| R13 pin 1 | Y2/osc **DOT** | R13 pin 2 -> **UPLDX** DOT |
+| R12 pin 1 | U04 pin 8 (PHI2 buffer) | R12 pin 2 -> **U1** PHI2 |
+| R13 pin 1 | U74 pin 9 (DOT, 5.369318 MHz) | R13 pin 2 -> **UPLDX** DOT |
 | R14-R21 | **U1** D0-D7 | **J36** cart D0-D7 (via flash symbol or socket net names) |
 | R22 pin 1 | net **CART_OE#** (from PLD decode) | R22 pin 2 -> cart **OE#** |
 | R23 pin 1 | net **CART_WE#** (MCU-M bridge) | R23 pin 2 -> cart **WE#** |

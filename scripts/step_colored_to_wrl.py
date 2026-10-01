@@ -5,8 +5,8 @@ KiCad WRL uses 0.1 inch per unit; STEP/OBJ mm → multiply by 10/25.4.
 
 Example:
   .venv-wrl/bin/python scripts/step_colored_to_wrl.py \\
-    apps/sim/tier-h/skidl/library/Retr01_Lib.3dshapes/Switchcraft_35RAPC4BVN4.step \\
-    -o apps/sim/tier-h/skidl/library/Retr01_Lib.3dshapes/Switchcraft_35RAPC4BVN4.wrl \\
+    apps/sim/tier-h/skidl/library/Retr01_Lib.3dshapes/_step_source/CUI_RCJ-014.step \\
+    -o apps/sim/tier-h/skidl/library/Retr01_Lib.3dshapes/CUI_RCJ-014.wrl \\
     --default black
 
   .venv-wrl/bin/python scripts/step_colored_to_wrl.py .../CUI_RCJ-014.step \\

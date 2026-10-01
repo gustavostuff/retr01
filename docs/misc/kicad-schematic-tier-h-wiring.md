@@ -74,7 +74,7 @@ Repeat muxing pattern for higher address bits on **U7B** / **U7C** per layout (b
 
 | Net | Role |
 | --- | --- |
-| **DOT** | **R13** from Y2 oscillator |
+| **DOT** | **R13** from U74 pin 9 |
 | **PHI2** | CPU clock reference |
 | Scroll / raster latches | **U574**, hard regs `$7F02-$7F04` ([`memory.md`](../general/memory.md)) |
 | **VBLANK**, **HBLANK**, **NMI** | **UM** `VBL`, CPU **IRQB** via **UPLDY** |

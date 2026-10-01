@@ -49,8 +49,8 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 
 | R | Net |
 | --- | --- |
-| R12 | Y1 `PHI2` to U1 `PHI2` |
-| R13 | Y2 `DOT` to UPLDX `DOT` |
+| R12 | U04 pin 8 to U1 `PHI2` |
+| R13 | U74 pin 9 to UPLDX `DOT` |
 | R14-R21 | U1 `D[n]` to U40 `DQ[n]` |
 | R22 | `CART_OE#` to U40 `OE#` |
 | R23 | `CART_WE#` to U40 `WE#` |
@@ -64,6 +64,13 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 | R27-R28 | I2C SDA/SCL to +5V (MCU-M side) |
 | R29 | CPU `RDY` (+5V, MCU-M `CPU_RDY` tied) |
 | R30 | CPU `RESB` to +5V |
+
+## Clock feedback (1 M ohm)
+
+| R | Net |
+| --- | --- |
+| R31 | U04 Y2 Pierce (pins 1-2) |
+| R32 | U04 Y1 Pierce (pins 5-6) |
 
 ## Gaps (not schematic-complete on silicon)
 

@@ -40,7 +40,6 @@ STOCK: list[tuple[str, str]] = [
     ),
     ("Oscillator.pretty", "Oscillator_DIP-8.kicad_mod"),
     ("Crystal.pretty", "Crystal_HC49-U_Vertical.kicad_mod"),
-    ("Connector_BarrelJack.pretty", "BarrelJack_CUI_PJ-063AH_Horizontal.kicad_mod"),
     ("Connector_BarrelJack.pretty", "BarrelJack_GCT_DCJ200-10-A_Horizontal.kicad_mod"),
     ("Connector_Audio.pretty", "Jack_3.5mm_CUI_SJ1-3515N_Horizontal.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_1x04_P2.54mm_Vertical.kicad_mod"),
@@ -118,11 +117,6 @@ def main() -> int:
             body = patch_dip28_28p6(body)
         dst.write_text(body, encoding="utf-8")
         n += 1
-    for name in ("Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical.kicad_mod",):
-        src = OUT / name
-        if src.is_file():
-            src.write_text(trim_mod(src.read_text(encoding="utf-8")), encoding="utf-8")
-            n += 1
     print(f"trimmed {n} footprints -> {OUT}")
     return 0
 
