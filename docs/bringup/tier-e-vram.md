@@ -11,7 +11,7 @@
 
 | Qty | Part | Role |
 | --- | --- | --- |
-| 1 | PHI2 canned oscillator | **8.000 MHz**, series ~**33 ohm** |
+| 1 | Y1 8.000 MHz crystal + U04 buffer | PHI2, series ~**33 ohm** |
 | 1 | **AS6C62256-55** | Interleaved **VRAM** (#2 role) |
 | 3 | **74HC157** | VRAM A[11:0] mux: CPU-side vs beam-side |
 

@@ -60,7 +60,7 @@ The ladder is **feasible** against the locked design:
 
 ### E - PHI2 and interleaved VRAM
 
-**Add:** PHI2 **8.000 MHz** canned oscillator (series ~33 ohm). AS6C62256 as interleaved VRAM. 3x 74HC157 (G never floating). 
+**Add:** PHI2 **8.000 MHz** from Y1 / U04 (series ~33 ohm). AS6C62256 as interleaved VRAM. 3x 74HC157 (G never floating). 
 **Prove:** PHI2 high = lab writer or later CPU `$7F10-$7F12` fill. PHI2 low = beam BG1 fetch. Island tests CPU-only, beam-only, then both. 
 **Exit:** Stable BG1 from VRAM under live beam + S1 sprites on top.
 

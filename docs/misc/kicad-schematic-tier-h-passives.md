@@ -2,7 +2,7 @@
 
 Pin-level links match `apps/sim/tier-h/src/board_schematic.c` and [`schematic-netlist-tier-h.md`](../bringup/schematic-netlist-tier-h.md). Passive **values** match [`passive_bom.md`](../passive_bom.md).
 
-Use **Device** symbols for **R** and **C**. Polarized **E1** uses an electrolytic symbol. Crystal **Y1-Y3** use `Device:Crystal` or the canned oscillator symbol that matches the footprint.
+Use **Device** symbols for **R** and **C**. Polarized **E1** uses an electrolytic symbol. Crystal **Y1-Y3** use `Device:Crystal` (HC-49/US). Clock logic is **U04** (74HCU04) and **U74** (74HC74).
 
 ---
 
@@ -29,9 +29,9 @@ Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND*
 | C2 | U3 | AS6C62256 System RAM | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 1 (Top-Left) |
 | C3 | U6 | AS6C62256 Interleaved VRAM | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 3 (Middle-Left) |
 | C4 | U41 | AS6C62256 Field SRAM | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 4 (Middle-Right) |
-| C5 | UM | AVR128DB28 Master MCU (MCU-M) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 3 (Middle-Center) |
-| C6 | US1 | AVR128DB28 Sprite Assist (MCU-S1) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 4 (Middle-Right) |
-| C7 | US2 | AVR128DB28 Peripheral MCU (MCU-S2) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 5 (Bottom-Left) |
+| C5 | UM | AVR128DB28 Master MCU (MCU-M) | SPDIP-28 | Pin 20 (VDD) | Pins 15, 21 (GND) | Middle-Center |
+| C6 | US1 | AVR128DB28 Sprite Assist (MCU-S1) | SPDIP-28 | Pin 20 (VDD) | Pins 15, 21 (GND) | Zone 4 (Middle-Right) |
+| C7 | US2 | AVR128DB28 Peripheral MCU (MCU-S2) | SPDIP-28 | Pin 20 (VDD) | Pins 15, 21 (GND) | Zone 5 (Bottom-Left) |
 | C8 | UPLDX | ATF22V10 Beam X Timing PLD | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
 | C9 | UPLDY | ATF22V10 Beam Y Timing PLD | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
 | C10 | UPLDV | ATF22V10 Compositor PLD | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) |
@@ -42,12 +42,11 @@ Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND*
 | C15 | U574 | 74HC574 Scroll X Latch | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
 | C16 | U24 | AT27C256R Color PROM | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
 | C17 | U130 | MCP130 Reset Supervisor | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
-| C18 | U725 | AD724 Composite Video Encoder | SOIC-16 | Pin 10, Pin 16 (VCC) | Pin 2, Pin 8, Pin 15 (GND) | Zone 2 (Top-Right) |
-| C19 | U40 | SST39SF040 Cartridge Flash | DIP-32 | Pin 32 (VDD) | Pin 16 (VSS) | Cartridge Module (J36) |
-| C20 | U50 | 24C64 Cartridge Save EEPROM | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Cartridge Module (J36) |
-| C21 | UPAD1 | ATtiny85 Gamepad Controller MCU | DIP-8 / SOIC-8 | Pin 8 (VCC) | Pin 4 (GND) | Controller Pad PCB (J3/J4) |
+| C18 | U725 | AD724 Composite Video Encoder | SOIC-16 | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) |
+| C19 | U04 | 74HCU04 clock inverter | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
+| C20 | U74 | 74HC74 DOT divider | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 
-Place each bypass capacitor adjacent to the IC symbol in the schematic and within 5 mm on the PCB layout.
+Place each bypass capacitor adjacent to the IC symbol in the schematic and within 5 mm on the PCB layout. Cart flash, cart EEPROM, and pad ATtiny85 each have one 100 nF on those boards.
 
 ---
 

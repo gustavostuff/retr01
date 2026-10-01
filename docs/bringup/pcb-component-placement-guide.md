@@ -40,13 +40,13 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 +---------------------------------------------------------------------------+
 | [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)    RGBS Video(J2)|
 +-----------------------+-----------------------------+---------------------+
-| SYSTEM RAM & CLOCK    | W65C02S CPU (U1, DIP-40)    | VIDEO ENGINE & DAC  |
+| SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)    | VIDEO ENGINE & DAC  |
 | (Top-Left)            | (Top-Center, Horizontal)    | (Top-Right)         |
 |                       |                             |                     |
-|   * System RAM (U3)   |   * Sits DIRECTLY above J36 |   * 21.48 MHz Osc   |
-|   * PHI2 Clock (Y1)   |   * Address & Data drop     |   * Beam X & Y PLDs |
-|   * MCP130 Supervisor |     straight down into cart |   * Compositor PLD  |
-|                       |   * Bus branches left to U3 |   * Color PROM, DAC |
+|   * System RAM (U3)   |   * Sits DIRECTLY above J36 |   * Y1 + Y2 crystals |
+|   * MCP130 Supervisor |   * Address and data drop   |   * U04 / U74 clocks |
+|                       |     into cart. Bus left to U3 |   * Beam X/Y, Comp  |
+|                       |                             |   * Color PROM, DAC  |
 +-----------------------+-----------------------------+---------------------+
 |                 CARTRIDGE SLOT (J36, Center-Horizontal)                   |
 |                 (Directly below the CPU, middle spine)                    |
@@ -63,7 +63,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 |                       |                                                   |
 |   * MCU-S2 (AVR128)   |   * Ground return, test points, mounting          |
 |   * J3, J4 TRS Jacks  |                                                   |
-|   * Arcade Header J5  |                                                   |
+|   * Arcade Headers J5/J6 |                                                   |
 +-----------------------+---------------------------------------------------+
 ```
 
@@ -87,7 +87,7 @@ In mixed-signal systems containing high-speed digital buses alongside sensitive 
 
 Every millimeter of PCB trace adds approximately 1 nH of parasitic inductance and 0.1 pF of stray capacitance. Long traces carrying fast digital edges cause signal overshoot, ringing, and crosstalk.
 
-1. **Master crystal stability (21.48 MHz):** The 21.477 MHz crystal Y2, 74HCU04 inverter, and feedback network sit in an ultra-compact cluster (< 20 mm total loop). This prevents RF emissions and ensures reliable oscillator startup without capacitive detuning.
+1. **Clock crystal island:** Y1 (8.000 MHz), Y2 (21.47727 MHz), U04, feedback resistors, and load capacitors sit in one compact cluster (< 20 mm analog loop). That keeps both Pierce oscillators at the same chip.
 2. **Color index bus length:** The Compositor sits next to the Color PROM. The 6-bit index bus stays under 25 mm. Short copper keeps inductance low without series damping on that bus.
 3. **Self-contained blitter loop (24 MHz):** MCU-S1, the 74HC573 address latch, and Field SRAM (U41) form an isolated triangle in Zone 4. The multiplexed AD[7:0] bus, which operates during high-speed VBlank bursts, stays entirely within this local zone.
 4. **Direct cartridge bus drop:** Placing the W65C02S CPU immediately above the central cartridge connector (J36) allows CPU address lines A[13:0] and data lines D[7:0] to descend straight down into the connector pins. This minimizes stub lengths and avoids routing dense parallel buses around board obstacles.
@@ -106,24 +106,22 @@ The floor plan also sets cable paths and mechanical load:
 
 ## 5. Detailed zone specifications
 
-### Zone 1: System RAM and clock generation (Top-Left)
+### Zone 1: System RAM and reset (Top-Left)
 
-Houses system memory and master CPU clock generation.
+Houses system memory and the MCP130 reset supervisor.
 
 **Components:**
 - System RAM AS6C62256 (U3, DIP-28)
-- PHI2 Clock source Y1 (8.000 MHz crystal or canned oscillator)
 - MCP130 Reset Supervisor (U130, TO-92)
 - Reset tactile pushbutton (SW_RST)
 - Bulk filter electrolytic capacitor E1 (220 uF near J1)
 - Decoupling capacitors: C2 (for U3), C17 (for U130)
-- Crystal load capacitors: C26, C27 (for Y1)
 
 **Placement and routing rules:**
 - U3 (System RAM) sits in the top-left area to the left of the CPU.
 - The 16-bit address bus (A[15:0]) and 8-bit data bus (D[7:0]) run directly into U3 from the left side of the CPU.
 - MCP130 mounts immediately adjacent to CPU pin 40 (`RESB`), with a dedicated 10 kohm pull-up resistor (R30) tied to +5.0 V.
-- Y1 (PHI2) sits near CPU pin 37 (`PHI2_IN`) with series 33 ohm damping resistor R12 placed directly at the oscillator output.
+- Buffered PHI2 from the Zone 2 clock island reaches CPU pin 37 through series 33 ohm R12 at the buffer output.
 
 ---
 
@@ -137,7 +135,7 @@ Serves as the central bus master bridging system RAM and cartridge ROM.
 
 **Placement and routing rules:**
 - U1 mounts horizontally in the Top-Center of the board, positioned directly above the cartridge connector J36.
-- Address pins A[13:0] (pins 9-23) and Data pins D[7:0] (pins 26-33) face toward the cartridge connector and drop straight down into the top pin row of J36.
+- Address pins A0-A11 (pins 9-20) and A12-A15 (pins 22-25) plus data pins D7-D0 (pins 26-33) face toward the cartridge connector. A0-A13 and D[7:0] drop into the top pin row of J36. Pin 21 is VSS, not an address pin.
 - The address and data bus branches westward to feed System RAM U3 in Zone 1.
 - Placing the CPU directly above J36 eliminates dog-leg bends and long stub traces on the primary memory bus.
 
@@ -149,8 +147,9 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 
 **Components:**
 - Y2 (21.47727 MHz crystal, HC-49/US)
-- 74HCU04 unbuffered inverter (oscillator feedback stage)
-- 74HC74 dual D-type flip-flop (divide-by-4 dot clock divider)
+- Y1 (8.000 MHz crystal, HC-49/US)
+- 74HCU04 unbuffered inverter (U04, both Pierce loops and clock buffers)
+- 74HC74 dual D-type flip-flop (U74, divide-by-4 dot clock)
 - Beam X PLD (UPLDX, ATF22V10)
 - Beam Y PLD (UPLDY, ATF22V10)
 - Compositor PLD (UPLDV, ATF22V10)
@@ -158,13 +157,13 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - Discrete R-2R resistor ladder network (R1 through R11)
 - RGBS video output header J2
 - Optional composite video encoder: AD724 (U725, SOIC-16), Y3 (3.579545 MHz crystal), RCA jack J9
-- Decoupling capacitors: C8 (for UPLDX), C9 (for UPLDY), C10 (for UPLDV), C16 (for U24), C18 (for U725)
-- Crystal load capacitors: C22, C23 (for Y2), C24, C25 (for Y3)
+- Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U725), C19 (U04), C20 (U74)
+- Crystal load capacitors: C22, C23 (Y2), C24, C25 (Y3), C26, C27 (Y1)
 
 **Placement and routing rules:**
 - Arranged in a strict sequential line:
   `Oscillator -> Beam X/Y -> Compositor -> Color PROM -> DAC Resistors -> J2 Video Header`
-- Y2, the 74HCU04, feedback resistor, and load capacitors C22/C23 form a tight cluster with trace loop area under 20 mm.
+- Y1, Y2, U04, feedback resistors, and load capacitors C22/C23/C26/C27 form one clock island (loop area under 20 mm). Analog Pierce loops stay at U04. Buffered PHI2 and DOT leave that island as digital clocks.
 - The 6-bit color index bus runs directly from Compositor outputs to Color PROM address inputs A[5:0] with trace lengths under 25 mm.
 - Resistors R1 through R8 mount immediately adjacent to PROM data output pins DQ[7:0].
 - The analog video header J2 sits on the top board edge directly adjacent to the DAC termination resistors R9, R10, and R11.
@@ -181,7 +180,7 @@ Provides the physical docking slot for game cartridges and flash memory.
 
 **Placement and routing rules:**
 - J36 mounts horizontally across the middle of the motherboard directly below the W65C02S CPU.
-- CPU address lines A[13:0] and data lines D[7:0] drop straight down from U1 into the upper pin row of J36.
+- CPU address lines A0-A13 and data lines D[7:0] drop straight down from U1 into the upper pin row of J36.
 - Compositor mapping lines (`CART_A14` through `CART_A18`, `CART_OE#`, `CART_WE#`) enter J36 from Zone 2 on the right.
 - Series damping resistors (R14 through R23) sit directly in line between the motherboard buses and J36 pins.
 
@@ -195,8 +194,7 @@ Manages video tile memory and the half-cycle PHI2 bus interleave.
 - 3x 74HC157 quad 2:1 multiplexers (U7A, U7B, U7C, DIP-16)
 - Interleaved VRAM AS6C62256 (U6, DIP-28)
 - 74HC574 Scroll X register (U574, DIP-20)
-- MCU-M master microcontroller (UM, AVR128DB28, SPDIP-28)
-- Decoupling capacitors: C3 (for U6), C5 (for UM), C11 (for U7A), C12 (for U7B), C13 (for U7C), C15 (for U574)
+- Decoupling capacitors: C3 (for U6), C11 (for U7A), C12 (for U7B), C13 (for U7C), C15 (for U574)
 
 **Placement and routing rules:**
 - The three 74HC157 multiplexers sit directly adjacent to VRAM U6.
@@ -204,7 +202,20 @@ Manages video tile memory and the half-cycle PHI2 bus interleave.
 - Input B of each multiplexer connects to Beam counter lines arriving from Zone 2.
 - Multiplexer outputs Y connect directly to VRAM address pins with shortest possible trace lengths.
 - Strobe pins (G) of all three 74HC157 chips tie solidly to ground.
-- MCU-M sits at the central junction between Zone 1 (CPU data bus), Zone 3 (soft register decode), and the SPI bus going to S1 and S2.
+
+---
+
+### Central dispatcher: MCU-M (Middle-Center)
+
+Soft `$7Fxx` and SPI hub between CPU, S1, and S2.
+
+**Components:**
+- MCU-M (UM, AVR128DB28, SPDIP-28)
+- Decoupling capacitor C5 (for UM)
+
+**Placement and routing rules:**
+- UM sits at the junction of the CPU data bus, Zone 3 decode, and SPI to S1/S2.
+- Bypass C5 is within 5 mm of pin 20 (VDD). Pins 15 and 21 are GND.
 
 ---
 
@@ -222,7 +233,7 @@ Builds sprite fields in VBlank and renders background scanline slices.
 - US1, U573, and U41 form a compact triangular cluster in the middle-right area of the board.
 - The multiplexed address and data bus (AD[7:0]) connects US1 pins directly to U573 inputs and U41 data pins.
 - S1 write enable (`/WE`) runs with a dedicated short trace to U41 pin 27, held high by local pull-up resistor.
-- SPI lines (MOSI, MISO, SCK, `/SS_S1`) run leftward to MCU-M in Zone 3.
+- SPI lines (MOSI, MISO, SCK, `/SS_S1`) run to MCU-M in the middle-center dispatcher.
 
 ---
 
@@ -233,7 +244,8 @@ Interfaces with external gamepads, arcade controls, and audio output.
 **Components:**
 - MCU-S2 peripheral microcontroller (US2, AVR128DB28, SPDIP-28)
 - 2x 3.5 mm TRS controller jacks (J3, J4)
-- 2x10 arcade control pin header (J5)
+- Arcade control headers J5 and J6 (1x10)
+- Cabinet power/reset header J7 (1x4)
 - Passive audio low-pass filter components (resistors, film capacitors)
 - RCA audio output jack J8 (routed to top rear edge)
 - Decoupling capacitor: C7 (for US2)
@@ -259,7 +271,9 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J36** | CART_EDGE | Center board spine | 36-pin 2.54 mm edge connector for game carts |
 | **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad |
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad |
-| **J5** | ARCADE | Bottom-Left edge near J4 | 2x10 dual-row pin header for arcade cabinet controls |
+| **J5** | ARCADE_P1 | Bottom-Left edge near J4 | 1x10 pin header, arcade Player 1 |
+| **J6** | ARCADE_P2 | Bottom-Left edge near J5 | 1x10 pin header, arcade Player 2 |
+| **J7** | CAB_PWR | Bottom edge near J5/J6 | 1x4 `+5V` / `GND` / `RESET_N` / `GND` |
 
 ---
 
@@ -275,7 +289,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 
 ## 8. Capacitor assignment and placement reference
 
-The motherboard houses 20 decoupling sites (19 digital and mixed-signal ICs plus the MCP130 supervisor), 6 crystal load capacitors, and 1 bulk entry electrolytic capacitor. Cartridge memory and gamepad controller decoupling capacitors reside on their respective daughterboards:
+The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 supervisor), 6 crystal load capacitors, and 1 bulk entry electrolytic capacitor. Cart flash, cart EEPROM, and pad ATtiny85 each have their own 100 nF on those boards, not in the C1-C20 motherboard set.
 
 | Cap | Value | Type | Assigned IC or Net | Package | Power Pin | Ground Pin | Board Location | Proximity Requirement |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -283,9 +297,9 @@ The motherboard houses 20 decoupling sites (19 digital and mixed-signal ICs plus
 | C2 | 100 nF | Ceramic | U3 (System RAM) | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 28 |
 | C3 | 100 nF | Ceramic | U6 (VRAM) | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 28 |
 | C4 | 100 nF | Ceramic | U41 (Field SRAM) | DIP-28 | Pin 28 (VCC) | Pin 14 (VSS) | Zone 4 (Middle-Right) | Mount within 5 mm of pin 28 |
-| C5 | 100 nF | Ceramic | UM (MCU-M) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 3 (Middle-Center) | Mount within 5 mm of pin 10 |
-| C6 | 100 nF | Ceramic | US1 (MCU-S1) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 4 (Middle-Right) | Mount within 5 mm of pin 10 |
-| C7 | 100 nF | Ceramic | US2 (MCU-S2) | SPDIP-28 | Pin 10 (VDD) | Pin 11 (GND) | Zone 5 (Bottom-Left) | Mount within 5 mm of pin 10 |
+| C5 | 100 nF | Ceramic | UM (MCU-M) | SPDIP-28 | Pin 20 (VDD) | Pins 15, 21 (GND) | Middle-Center | Mount within 5 mm of pin 20 |
+| C6 | 100 nF | Ceramic | US1 (MCU-S1) | SPDIP-28 | Pin 20 (VDD) | Pins 15, 21 (GND) | Zone 4 (Middle-Right) | Mount within 5 mm of pin 20 |
+| C7 | 100 nF | Ceramic | US2 (MCU-S2) | SPDIP-28 | Pin 20 (VDD) | Pins 15, 21 (GND) | Zone 5 (Bottom-Left) | Mount within 5 mm of pin 20 |
 | C8 | 100 nF | Ceramic | UPLDX (Beam X) | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 24 |
 | C9 | 100 nF | Ceramic | UPLDY (Beam Y) | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 24 |
 | C10 | 100 nF | Ceramic | UPLDV (Compositor) | DIP-24 | Pin 24 (VCC) | Pin 12 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 24 |
@@ -296,16 +310,14 @@ The motherboard houses 20 decoupling sites (19 digital and mixed-signal ICs plus
 | C15 | 100 nF | Ceramic | U574 (Scroll X Latch) | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 20 |
 | C16 | 100 nF | Ceramic | U24 (Color PROM) | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 28 |
 | C17 | 100 nF | Ceramic | U130 (MCP130 Supervisor) | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 2 |
-| C18 | 100 nF | Ceramic | U725 (AD724 Composite) | SOIC-16 | Pin 10, Pin 16 (VCC) | Pin 2, 8, 15 (GND) | Zone 2 (Top-Right) | Mount adjacent to pin 16 |
-| C19 | 100 nF | Ceramic | U04 (74HCU04) / Cart Flash | DIP-14 / DIP-32 | Pin 14 (VCC) / Pin 32 | Pin 7 (GND) / Pin 16 | Zone 2 (or Cartridge PCB) | Mount within 5 mm of pin 14 |
-| C20 | 100 nF | Ceramic | U74 (74HC74) / Cart EEPROM | DIP-14 / DIP-8 | Pin 14 (VCC) / Pin 8 | Pin 7 (GND) / Pin 4 | Zone 2 (or Cartridge PCB) | Mount within 5 mm of pin 14 |
-| C21 | 100 nF | Ceramic | UPAD1 (Gamepad MCU) | DIP-8 | Pin 8 (VCC) | Pin 4 (GND) | Controller Pad PCB | Located on gamepad board |
-| C22 | 22 pF | Ceramic | Y2 (21.48 MHz Dot Osc) | Discrete | Pin 1 (XTAL_DOT_IN) | GND | Zone 2 (Top-Right) | Tight loop with Y2 and 74HCU04 |
-| C23 | 22 pF | Ceramic | Y2 (21.48 MHz Dot Osc) | Discrete | Pin 2 (XTAL_DOT_OUT) | GND | Zone 2 (Top-Right) | Tight loop with Y2 and 74HCU04 |
-| C24 | 22 pF | Ceramic | Y3 (3.58 MHz FSC Osc) | Discrete | Pin 1 (FSC_FIN) | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
-| C25 | 22 pF | Ceramic | Y3 (3.58 MHz FSC Osc) | Discrete | Pin 2 (FSC_XTAL) | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
-| C26 | 22 pF | Ceramic | Y1 (8.00 MHz CPU Osc) | Discrete | Pin 1 (XTAL_CPU_IN) | GND | Zone 1 (Top-Left) | Tight loop with Y1 and 74HCU04 |
-| C27 | 22 pF | Ceramic | Y1 (8.00 MHz CPU Osc) | Discrete | Pin 2 (XTAL_CPU_OUT) | GND | Zone 1 (Top-Left) | Tight loop with Y1 and 74HCU04 |
+| C18 | 100 nF | Ceramic | U725 (AD724 Composite) | SOIC-16 | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) | Mount adjacent to pins 4 and 14 |
+| C19 | 100 nF | Ceramic | U04 (74HCU04) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
+| C20 | 100 nF | Ceramic | U74 (74HC74) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
+| C22 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
+| C23 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
+| C24 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 1 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C25 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 2 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C26 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
+| C27 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
 | E1 | 220 uF | Electrolytic | Power Entry Rail | Radial Can | +5V Rail | GND | Zone 1 (Top-Left) | Mount adjacent to J1 / SW1 |
 
-For automated PCB layout tools such as Quilter AI, a pre-formatted bypass capacitor mapping CSV is available at [`apps/sim/tier-h/skidl/quilter_bypass_caps.csv`](../../apps/sim/tier-h/skidl/quilter_bypass_caps.csv) to import directly into the Circuit Comprehension interface.

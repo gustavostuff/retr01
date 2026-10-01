@@ -43,7 +43,7 @@ A dedicated Python verification tool compares the virtual pin netlist (`retr01_t
      "name": "NET_11",
      "nodes": [
        {"ref": "U1", "pin": "IRQB", "num": 4, "part": "W65C02S"},
-       {"ref": "UPLDY", "pin": "EQ#", "num": 34, "part": "ATF22V10"}
+       {"ref": "UPLDY", "pin": "CLK", "num": 1, "part": "ATF22V10"}
      ]
    }
    ```
@@ -193,11 +193,13 @@ A manual datasheet audit covers every counted IC package:
 | **ATF22V10** | DIP-24 (300 mil) | Pin 24 (VCC), Pin 12 (GND), Pin 1 (CLK/IN) |
 | **AT27C256R** | DIP-28 (600 mil) | Pin 28 (VCC), Pin 14 (GND), Pin 20 (CE#), Pin 22 (OE#) |
 | **AS6C62256** | DIP-28 (600 mil) | Pin 28 (VCC), Pin 14 (GND), Pin 27 (WE#), Pin 22 (OE#), Pin 20 (CE#) |
-| **AVR128DB28** | SPDIP-28 (300 mil) | Pin 28 (VDD), Pin 27 (GND), Pin 23 (UPDI) |
+| **AVR128DB28** | SPDIP-28 (300 mil) | Pin 20 (VDD), pins 15 and 21 (GND), pin 19 (UPDI) |
 | **74HC157** | DIP-16 (300 mil) | Pin 16 (VCC), Pin 8 (GND), Pin 1 (S), Pin 15 (G) |
-| **AD724** | SOIC-16 (150 mil) | Pin 16 (VCC), Pin 8 (GND), Pin 1 (FIN), Pin 7 (FSC_XTAL) |
-| **Switchcraft TRS** | Custom 35RAPC2BVN4 | Pin 1 (Sleeve / GND), Pin 2 (Tip), Pin 3 (Ring) |
-| **CUI DC Jack** | Custom PJ-063AH | Center pin (+5.0 V) vs outer sleeve (GND) |
+| **74HCU04** | DIP-14 (300 mil) | Pin 14 (VCC), Pin 7 (GND) |
+| **74HC74** | DIP-14 (300 mil) | Pin 14 (VCC), Pin 7 (GND) |
+| **AD724** | SOIC-16 (150 mil) | Pin 4 (APOS), pin 14 (DPOS), pin 2 (AGND), pin 13 (DGND), pin 3 (FIN) |
+| **CUI SJ1-3515N TRS** | `Retr01_Lib:Jack_3.5mm_CUI_SJ1-3515N_Horizontal` | Tip / ring / sleeve vs datasheet |
+| **GCT DCJ200 barrel** | `Retr01_Lib:BarrelJack_GCT_DCJ200-10-A_Horizontal` | Center pin (+5.0 V) vs sleeve (GND) |
 
 ---
 

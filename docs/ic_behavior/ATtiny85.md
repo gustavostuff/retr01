@@ -1,6 +1,6 @@
 # ATtiny85 behavior
 
-Microchip **ATtiny85**. Retr01 **TRS pad** MCU (inside the controller shell). **Outside** the counted **19**.
+Microchip **ATtiny85**. Retr01 **TRS pad** MCU (inside the controller shell). **Outside** the counted **21**.
 
 **Package:** 8-pin **DIP** (or SOIC-8). **VCC:** 5 V from the TRS tip. Programmed with **ISP** off the console (Arduino-as-ISP or USBasp). Adafruit's UPDI Friend does **not** program this part.
 

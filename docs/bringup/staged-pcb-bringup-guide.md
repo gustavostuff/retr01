@@ -62,7 +62,7 @@ Standard PCB fabrication specifications:
 
 Component placement follows the natural left-to-right signal flow of the console architecture:
 
-1. **Oscillator cluster:** Y2 (21.477 MHz crystal), 74HCU04 inverter, 1 Mohm feedback resistor, and C22/C23 load capacitors reside within a tight 20 mm cluster. The ground pins of the load capacitors return directly to the 74HCU04 ground pin before reaching the board ground plane.
+1. **Oscillator cluster:** Y1 (8.000 MHz), Y2 (21.47727 MHz), U04, 1 Mohm feedback resistors, and C22/C23/C26/C27 reside within a tight 20 mm analog loop. Load-capacitor grounds return to U04 pin 7 before the plane.
 2. **Video pipeline flow:** Components align sequentially:
    `Beam X / Beam Y PLDs -> Compositor PLD -> Color PROM -> R-2R Resistor Ladder -> J2 Video Header`
    The R-2R ladder resistors mount immediately adjacent to the PROM data output pins to minimize analog trace capacitance.
@@ -84,7 +84,7 @@ Power rails split from the main +5.0 V input jack (J1) through 2-pin 2.54 mm hea
 | **JP_PWR1** | VCC_CORE | Clocks, Beam PLDs, Compositor, Color PROM, DAC | Allows video subsystem testing without powering processors |
 | **JP_PWR2** | VCC_AVR | MCU-M, MCU-S1, MCU-S2 | Isolates microcontrollers for independent current and programming checks |
 | **JP_PWR3** | VCC_CPU | W65C02S, System RAM, VRAM, 74HC157 muxes | Keeps CPU and main memory unpowered during early SPI lab stages |
-| **JP_PWR4** | VCC_AUDIO | Audio op-amps, filter passives | Keeps audio circuitry unpowered until Tier H |
+| **JP_PWR4** | VCC_AUDIO | Audio filter passives, J8 | Keeps audio circuitry unpowered until Tier H |
 
 Removing a shunt allows measuring supply current to that domain with a multimeter in series, or keeping a domain completely unpowered while debugging a short circuit.
 
