@@ -3655,7 +3655,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     r01s_island_builder_mount_rel(b, &board->io.j3, R01S_ISLAND_APU, 0, 40);
     r01s_island_builder_mount_rel(b, &board->io.j4, R01S_ISLAND_APU, 28, 40);
     r01s_island_builder_mount_rel(b, &board->io.j5, R01S_ISLAND_APU, 56, 40);
-    r01s_island_builder_mount_rel(b, &board->io.j6, R01S_ISLAND_APU, 72, 40);
     r01s_island_builder_mount_rel(b, &board->io.j7, R01S_ISLAND_APU, 88, 40);
 
     r01s_island_builder_fit_all(b);

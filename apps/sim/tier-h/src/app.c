@@ -293,10 +293,9 @@ void r01s_app_mount_builder(R01sApp *app) {
         if (e->visual == R01S_ENTITY_VIS_PWR || e->visual == R01S_ENTITY_VIS_OSC) {
             continue;
         }
-        /* Cart flash, cart EEPROM, pad MCUs, and the preview screen are not motherboard parts. */
+        /* Cart flash, cart EEPROM, and pad MCUs are not motherboard parts. SCR1 stays as the preview. */
         if (e->refdes && (strcmp(e->refdes, "U40") == 0 || strcmp(e->refdes, "U50") == 0 ||
-                          strcmp(e->refdes, "UPAD1") == 0 || strcmp(e->refdes, "UPAD2") == 0 ||
-                          strcmp(e->refdes, "SCR1") == 0)) {
+                          strcmp(e->refdes, "UPAD1") == 0 || strcmp(e->refdes, "UPAD2") == 0)) {
             continue;
         }
         if (r01s_ui_add_chip(&app->ui, e, b->mounts[i].island_index) != 0) {

@@ -552,12 +552,12 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, &io->j5, jn, s2, pn);
   }
   for (i = 0; i < 8; i++) {
-    r01s_pin_netlist_link(nl, &io->j6, p2[i], s2, p2_pin[i]);
+    r01s_pin_netlist_link(nl, &io->j5, p2[i], s2, p2_pin[i]);
   }
-  r01s_pin_netlist_link(nl, &io->j5, "GND9", pwr, "GND");
-  r01s_pin_netlist_link(nl, &io->j5, "GND10", pwr, "GND");
-  r01s_pin_netlist_link(nl, &io->j6, "GND9", pwr, "GND");
-  r01s_pin_netlist_link(nl, &io->j6, "GND10", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j5, "GND17", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j5, "GND18", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j5, "GND19", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j5, "GND20", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j7, "VCC", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j7, "GND1", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j7, "GND2", pwr, "GND");

@@ -154,7 +154,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | AUDIO_PWM | PF1 -> analog audio jack network |
 | UPDI | pin 19 -> DIP pos 3 |
 
-Arcade: **J5**/**J6** 1x10 pins 1-8 to PA0-7 / PC0-3 etc. per [`hardware.md`](../general/hardware.md) Controllers table.
+Arcade: **J5** 2x10. Odd pins 1-15 to Player 1, even pins 2-16 to Player 2, pins 17-20 to GND. See [`hardware.md`](../general/hardware.md) Controllers.
 
 ---
 
@@ -183,7 +183,7 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | **J1** | 5 V in | +5V, GND |
 | **J2** | RGB + sync out | DAC R/G/B, CSYNC or HSYNC/VSYNC from **UPLDX/Y** and mode jumper |
 | **J3**, **J4** | TRS pads | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
-| **J5**, **J6** | Arcade buttons | GPIO from **US2**, GND on pins 9-10 |
+| **J5** | Arcade buttons | 2x10. GPIO from **US2**. GND on pins 17-20 |
 | **J7** | Cab power/reset | +5V, GND, **RESB** / reset |
 | **J8** | Audio RCA | PWM / mix from **US2** |
 | **J9** | Composite RCA | **U725** output when populated |

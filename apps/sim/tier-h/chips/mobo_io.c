@@ -76,28 +76,21 @@ static void init_j2(R01sEntity *e) {
     io_header(e, 1, 6);
 }
 
+/* 2x10 IDC. Odd pins are Player 1, even pins are Player 2. Last two rows are GND. */
 static void init_j5(R01sEntity *e) {
-    static const char *const names[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
+    static const char *const p1[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
+    static const char *const p2[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
     int i;
-    io_begin(e, "HDR-1x10", "J5");
+    io_begin(e, "HDR-2x10", "J5");
     for (i = 0; i < 8; i++) {
-        io_pin(e, i + 1, names[i]);
+        io_pin(e, i * 2 + 1, p1[i]);
+        io_pin(e, i * 2 + 2, p2[i]);
     }
-    io_pin(e, 9, "GND9");
-    io_pin(e, 10, "GND10");
-    io_header(e, 1, 10);
-}
-
-static void init_j6(R01sEntity *e) {
-    static const char *const names[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
-    int i;
-    io_begin(e, "HDR-1x10", "J6");
-    for (i = 0; i < 8; i++) {
-        io_pin(e, i + 1, names[i]);
-    }
-    io_pin(e, 9, "GND9");
-    io_pin(e, 10, "GND10");
-    io_header(e, 1, 10);
+    io_pin(e, 17, "GND17");
+    io_pin(e, 18, "GND18");
+    io_pin(e, 19, "GND19");
+    io_pin(e, 20, "GND20");
+    io_header(e, 2, 10);
 }
 
 static void init_j7(R01sEntity *e) {
@@ -122,7 +115,7 @@ static void init_trs(R01sEntity *e, const char *refdes) {
     io_pin(e, 1, "TIP");
     io_pin(e, 2, "RING");
     io_pin(e, 3, "SLEEVE");
-    io_panel(e, 24, 16);
+    io_panel(e, 48, 32);
 }
 
 static void init_named_panel(R01sEntity *e, const char *part, const char *refdes, int w, int h) {
@@ -137,21 +130,20 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
         return;
     }
     memset(io, 0, sizeof(*io));
-    init_named_panel(&io->j1, "DCJ200", "J1", 28, 20);
+    init_named_panel(&io->j1, "DCJ200", "J1", 48, 32);
     init_j2(&io->j2);
     init_trs(&io->j3, "J3");
     init_trs(&io->j4, "J4");
     init_j5(&io->j5);
-    init_j6(&io->j6);
     init_j7(&io->j7);
     init_j36(&io->j36);
-    init_named_panel(&io->sw1, "SW-SLIDE", "SW1", 16, 10);
-    init_named_panel(&io->sw_rst, "SW-TACT", "SW_RST", 12, 12);
+    init_named_panel(&io->sw1, "SW-SLIDE", "SW1", 48, 32);
+    init_named_panel(&io->sw_rst, "SW-TACT", "SW_RST", 72, 32);
     init_u130(&io->u130);
 }
 
 void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
-    R01sEntity *list[11];
+    R01sEntity *list[10];
     int i;
     if (!io || !nl) {
         return;
@@ -161,13 +153,12 @@ void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
     list[2] = &io->j3;
     list[3] = &io->j4;
     list[4] = &io->j5;
-    list[5] = &io->j6;
-    list[6] = &io->j7;
-    list[7] = &io->j36;
-    list[8] = &io->sw1;
-    list[9] = &io->sw_rst;
-    list[10] = &io->u130;
-    for (i = 0; i < 11; i++) {
+    list[5] = &io->j7;
+    list[6] = &io->j36;
+    list[7] = &io->sw1;
+    list[8] = &io->sw_rst;
+    list[9] = &io->u130;
+    for (i = 0; i < 10; i++) {
         r01s_pin_netlist_register_entity(nl, list[i]);
     }
 }

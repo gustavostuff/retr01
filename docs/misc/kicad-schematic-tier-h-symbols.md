@@ -44,7 +44,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **J1** | Barrel 5 V | `Connector:Barrel_Jack` | GCT DCJ200-10-A class |
 | **J2** | RGB + sync 1x6 | Connector symbol | 1x6 header |
 | **J3**, **J4** | TRS pad jacks | `Connector_Audio:AudioJack3_SwitchTR` | CUI SJ1-3515N horizontal |
-| **J5**, **J6** | Arcade 1x10 | Pin header | 1x10 |
+| **J5** | Arcade 2x10 | Pin header | 2x10 |
 | **J7** | Cabinet power/reset 1x4 | Pin header | 1x4 |
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |
 | **J36** | Cart socket 2x18 | Custom | `EDAC_395_MoboSocket_2x18_2.54x5.08mm` |

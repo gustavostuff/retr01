@@ -281,9 +281,9 @@ static const struct {
     {"C13", R01S_ZONE_Z3},  {"C14", R01S_ZONE_Z4},  {"C15", R01S_ZONE_Z3},  {"C16", R01S_ZONE_Z2},
     {"C17", R01S_ZONE_Z1},  {"C18", R01S_ZONE_Z2},  {"C19", R01S_ZONE_Z2},  {"C20", R01S_ZONE_Z2},
     {"C22", R01S_ZONE_Z2},  {"C23", R01S_ZONE_Z2},  {"C24", R01S_ZONE_Z2},  {"C25", R01S_ZONE_Z2},
-    {"C26", R01S_ZONE_Z2},  {"C27", R01S_ZONE_Z2},  {"E1", R01S_ZONE_Z1},   {"J1", R01S_ZONE_Z1},
-    {"J2", R01S_ZONE_Z2},   {"J3", R01S_ZONE_Z5},   {"J4", R01S_ZONE_Z5},   {"J5", R01S_ZONE_Z5},
-    {"J6", R01S_ZONE_Z5},   {"J7", R01S_ZONE_Z5},   {"J8", R01S_ZONE_J8},   {"J9", R01S_ZONE_Z2},
+    {"C26", R01S_ZONE_Z2},  {"C27", R01S_ZONE_Z2},  {"E1", R01S_ZONE_Z1},   {"J1", R01S_ZONE_J8},
+    {"J2", R01S_ZONE_J8},   {"J3", R01S_ZONE_Z5},   {"J4", R01S_ZONE_Z5},       {"J5", R01S_ZONE_Z5},
+    {"J7", R01S_ZONE_Z5},   {"J8", R01S_ZONE_J8},   {"J9", R01S_ZONE_J8},
     {"J36", R01S_ZONE_SPINE}, {"R1", R01S_ZONE_Z2}, {"R2", R01S_ZONE_Z2},   {"R3", R01S_ZONE_Z2},
     {"R4", R01S_ZONE_Z2},   {"R5", R01S_ZONE_Z2},   {"R6", R01S_ZONE_Z2},   {"R7", R01S_ZONE_Z2},
     {"R8", R01S_ZONE_Z2},   {"R9", R01S_ZONE_Z2},   {"R10", R01S_ZONE_Z2},  {"R11", R01S_ZONE_Z2},
@@ -292,7 +292,7 @@ static const struct {
     {"R20", R01S_ZONE_SPINE}, {"R21", R01S_ZONE_SPINE}, {"R22", R01S_ZONE_SPINE}, {"R23", R01S_ZONE_SPINE},
     {"R24", R01S_ZONE_M},   {"R25", R01S_ZONE_M},   {"R26", R01S_ZONE_Z5},  {"R27", R01S_ZONE_M},
     {"R28", R01S_ZONE_M},   {"R29", R01S_ZONE_CPU}, {"R30", R01S_ZONE_Z1},  {"R31", R01S_ZONE_Z2},
-    {"R32", R01S_ZONE_Z2},  {"SW1", R01S_ZONE_Z1},  {"SW_RST", R01S_ZONE_Z1}, {"U04", R01S_ZONE_Z2},
+    {"R32", R01S_ZONE_Z2},  {"SW1", R01S_ZONE_J8},  {"SW_RST", R01S_ZONE_Z1}, {"U04", R01S_ZONE_Z2},
     {"U1", R01S_ZONE_CPU},  {"U130", R01S_ZONE_Z1}, {"U24", R01S_ZONE_Z2},  {"U3", R01S_ZONE_Z1},
     {"U41", R01S_ZONE_Z4},  {"U573", R01S_ZONE_Z4}, {"U574", R01S_ZONE_Z3}, {"U6", R01S_ZONE_Z3},
     {"U725", R01S_ZONE_Z2}, {"U74", R01S_ZONE_Z2},  {"U7A", R01S_ZONE_Z3},  {"U7B", R01S_ZONE_Z3},
@@ -316,7 +316,7 @@ int r01s_air_zone_for_ref(const char *refdes) {
 
 const char *r01s_air_zone_name(int zone) {
     static const char *names[R01S_ZONE_COUNT] = {
-        "Zone 1", "CPU", "Zone 2", "Spine", "Zone 3", "MCU-M", "Zone 4", "Zone 5", "J8",
+        "Zone 1", "CPU", "Zone 2", "Spine", "Zone 3", "MCU-M", "Zone 4", "Zone 5", "Rear",
     };
     if (zone < 0 || zone >= R01S_ZONE_COUNT) {
         return "";

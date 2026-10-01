@@ -473,7 +473,7 @@ static void draw_panel_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity
     (void)ui;
     fill_rect(r, x, y, e->body_w, e->body_h, 38, 42, 48);
     draw_rect(r, x, y, e->body_w, e->body_h, selected ? 255 : 120, selected ? 220 : 100, selected ? 80 : 85);
-    label = e->part ? e->part : e->refdes;
+    label = (e->refdes && e->refdes[0]) ? e->refdes : e->part;
     if (label && label[0] && e->body_w > 4 && e->body_h > 4) {
         unsigned seed = 0;
         const char *s;
@@ -725,7 +725,7 @@ void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selec
     case R01S_ENTITY_VIS_PIN_HDR:
         ns_pin_header_draw(r, e, ui_board_sx(ui, e->board_x), ui_board_sy(ui, e->board_y), selected);
         if (e->refdes && e->refdes[0]) {
-            font_draw(r, ui_board_sx(ui, e->board_x), ui_board_sy(ui, e->board_y) - 8, e->refdes, 180, 185, 170);
+            font_draw(r, ui_board_sx(ui, e->board_x), ui_board_sy(ui, e->board_y) - font_line_h() - 2, e->refdes, 180, 185, 170);
         }
         break;
     case R01S_ENTITY_VIS_BREADBOARD:

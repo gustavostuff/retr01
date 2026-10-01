@@ -63,7 +63,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 |                          |                                                       |
 |   * MCU-S2 (AVR128)      |   * Ground return, test points, mounting              |
 |   * J3, J4 TRS Jacks     |                                                       |
-|   * Arcade Headers J5/J6 |                                                       |
+|   * Arcade header J5     |                                                       |
 +-----------------------+----------------------------------------------------------+
 ```
 
@@ -244,7 +244,7 @@ Interfaces with external gamepads, arcade controls, and audio output.
 **Components:**
 - MCU-S2 peripheral microcontroller (US2, AVR128DB28, SPDIP-28)
 - 2x 3.5 mm TRS controller jacks (J3, J4)
-- Arcade control headers J5 and J6 (1x10)
+- Arcade control header J5 (2x10)
 - Cabinet power/reset header J7 (1x4)
 - RCA audio output jack J8 (top rear edge)
 - PWM from US2 pin PF1 runs to J8. The locked BOM has no extra audio filter capacitors.
@@ -271,9 +271,8 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J36** | CART_EDGE | Center board spine | 36-pin 2.54 mm edge connector for game carts |
 | **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad |
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad |
-| **J5** | ARCADE_P1 | Bottom-Left edge near J4 | 1x10 pin header, arcade Player 1 |
-| **J6** | ARCADE_P2 | Bottom-Left edge near J5 | 1x10 pin header, arcade Player 2 |
-| **J7** | CAB_PWR | Bottom edge near J5/J6 | 1x4 `+5V` / `GND` / `RESET_N` / `GND` |
+| **J5** | ARCADE | Bottom-Left edge near J4 | 2x10 pin header. Odd pins are Player 1, even pins are Player 2, pins 17-20 are GND |
+| **J7** | CAB_PWR | Bottom edge near J5 | 1x4 `+5V` / `GND` / `RESET_N` / `GND` |
 
 ---
 

@@ -96,6 +96,13 @@ int main(void) {
                 "MCP130 reset on CPU RESB");
     expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "C17"), "1", &board.io.u130, "VDD"),
                 "C17 on MCP130 VDD");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "P0", r01s_avr128db28_s2_entity(&board.mcu_s2), "PAD0"),
+                "J5 P0 on PAD0");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "RIGHT", r01s_avr128db28_s2_entity(&board.mcu_s2),
+                                          "P2_RIGHT"),
+                "J5 RIGHT on P2");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "GND17", r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J5 pin 17 GND");
     expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP",
                                           r01s_rca_jack_entity(&board.j9), "2"),
                 "J9 tip on AD724 COMP");

@@ -2187,6 +2187,234 @@ void floor_btn_rect(SDL_Rect *rc) {
     rc->h = font_line_h() + 8;
 }
 
+/* One horizontal row. Named refdes go left to right. Anything else follows. */
+static void floor_pack_named_row(R01sUi *ui, const int *ids, int n, int *rx, int *ry, int *out_w, int *out_h,
+                                 const char *const *order, int norder) {
+    int seq[R01S_BOARD_MAX_CHIPS];
+    int i;
+    int j;
+    int x = 0;
+    int max_h = 0;
+    const int gap = 2;
+    const int pad_x = 3;
+    const int pad_bot = 3;
+    int pad_top = font_line_h() + 1;
+
+    if (!out_w || !out_h) {
+        return;
+    }
+    if (n <= 0) {
+        *out_w = 0;
+        *out_h = 0;
+        return;
+    }
+    for (i = 0; i < n; i++) {
+        seq[i] = i;
+    }
+    for (i = 1; i < n; i++) {
+        int s = seq[i];
+        const R01sEntity *e = ui->chips[ids[s]];
+        const char *ref = e && e->refdes ? e->refdes : "";
+        int rank = norder;
+        int p;
+        for (p = 0; p < norder; p++) {
+            if (strcmp(order[p], ref) == 0) {
+                rank = p;
+                break;
+            }
+        }
+        j = i;
+        while (j > 0) {
+            const R01sEntity *pe = ui->chips[ids[seq[j - 1]]];
+            const char *pref = pe && pe->refdes ? pe->refdes : "";
+            int prank = norder;
+            for (p = 0; p < norder; p++) {
+                if (strcmp(order[p], pref) == 0) {
+                    prank = p;
+                    break;
+                }
+            }
+            if (prank <= rank) {
+                break;
+            }
+            seq[j] = seq[j - 1];
+            j--;
+        }
+        seq[j] = s;
+    }
+    for (i = 0; i < n; i++) {
+        int s = seq[i];
+        const R01sEntity *e = ui->chips[ids[s]];
+        int pw = 1;
+        int ph = 1;
+        if (e) {
+            chip_pack_footprint(e, &pw, &ph);
+            rx[s] = pad_x + x + (pw - e->body_w) / 2;
+            ry[s] = pad_top + (ph - e->body_h) / 2;
+        } else {
+            rx[s] = pad_x + x;
+            ry[s] = pad_top;
+        }
+        x += pw + gap;
+        if (ph > max_h) {
+            max_h = ph;
+        }
+    }
+    if (x >= gap) {
+        x -= gap;
+    }
+    *out_w = x + 2 * pad_x;
+    *out_h = max_h + pad_top + pad_bot;
+}
+
+static int floor_max(int a, int b) {
+    return a > b ? a : b;
+}
+
+static int floor_slot(const R01sUi *ui, const int *ids, int n, const char *ref) {
+    int i;
+    for (i = 0; i < n; i++) {
+        const R01sEntity *e = ui->chips[ids[i]];
+        if (e && e->refdes && strcmp(e->refdes, ref) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+/* Place one part at content (x, y). Advances *x. Grows the row and the zone bounds. */
+static void floor_put(const R01sUi *ui, const int *ids, int slot, int *rx, int *ry, uint8_t *used, int *x, int y,
+                      int *row_h, int *max_r, int *max_b) {
+    const R01sEntity *e;
+    int pw = 1;
+    int ph = 1;
+    const int gap = 4;
+    const int pad_x = 3;
+    int pad_top = font_line_h() + 1;
+    int right;
+    int bottom;
+    if (slot < 0 || used[slot]) {
+        return;
+    }
+    e = ui->chips[ids[slot]];
+    if (e) {
+        chip_pack_footprint(e, &pw, &ph);
+        rx[slot] = pad_x + *x + (pw - e->body_w) / 2;
+        ry[slot] = pad_top + y + (ph - e->body_h) / 2;
+    } else {
+        rx[slot] = pad_x + *x;
+        ry[slot] = pad_top + y;
+    }
+    used[slot] = 1;
+    right = *x + pw;
+    bottom = y + ph;
+    *x = right + gap;
+    if (ph > *row_h) {
+        *row_h = ph;
+    }
+    if (right > *max_r) {
+        *max_r = right;
+    }
+    if (bottom > *max_b) {
+        *max_b = bottom;
+    }
+}
+
+static void floor_put_refs(const R01sUi *ui, const int *ids, int n, int *rx, int *ry, uint8_t *used,
+                           const char *const *refs, int nrefs, int *x, int y, int *row_h, int *max_r, int *max_b) {
+    int i;
+    for (i = 0; i < nrefs; i++) {
+        floor_put(ui, ids, floor_slot(ui, ids, n, refs[i]), rx, ry, used, x, y, row_h, max_r, max_b);
+    }
+}
+
+/* Zone 2 follows the video chain: clocks, beam PLDs, color PROM and DAC, composite. */
+static void floor_pack_zone2(const R01sUi *ui, const int *ids, int n, int *rx, int *ry, int *out_w, int *out_h) {
+    static const char *const clocks[] = {"Y2", "C22", "C23", "R31", "U04", "C19", "R12",
+                                         "Y1", "C26", "C27", "R32", "U74", "C20", "R13"};
+    static const char *const beams[] = {"UPLDX", "C8", "UPLDY", "C9", "UPLDV", "C10"};
+    static const char *const color[] = {"U24", "C16"};
+    static const char *const dac_a[] = {"R1", "R2", "R3", "R4"};
+    static const char *const dac_b[] = {"R5", "R6", "R7", "R8"};
+    static const char *const dac_c[] = {"R9", "R10", "R11"};
+    static const char *const ntsc[] = {"Y3", "C24", "C25", "U725", "C18"};
+    uint8_t used[R01S_BOARD_MAX_CHIPS];
+    int x;
+    int y;
+    int row_h;
+    int max_r;
+    int max_b;
+    int i;
+    const int row_gap = 10;
+    const int pad_x = 3;
+    const int pad_bot = 3;
+    int pad_top = font_line_h() + 1;
+
+    if (!out_w || !out_h) {
+        return;
+    }
+    if (n <= 0) {
+        *out_w = 0;
+        *out_h = 0;
+        return;
+    }
+    memset(used, 0, (size_t)n);
+    x = 0;
+    y = 0;
+    row_h = 0;
+    max_r = 0;
+    max_b = 0;
+    floor_put_refs(ui, ids, n, rx, ry, used, clocks, (int)(sizeof(clocks) / sizeof(clocks[0])), &x, y, &row_h, &max_r,
+                   &max_b);
+    if (row_h > 0) {
+        y += row_h + row_gap;
+    }
+    x = 0;
+    row_h = 0;
+    floor_put_refs(ui, ids, n, rx, ry, used, beams, (int)(sizeof(beams) / sizeof(beams[0])), &x, y, &row_h, &max_r,
+                   &max_b);
+    if (row_h > 0) {
+        y += row_h + row_gap;
+    }
+    x = 0;
+    row_h = 0;
+    floor_put_refs(ui, ids, n, rx, ry, used, color, (int)(sizeof(color) / sizeof(color[0])), &x, y, &row_h, &max_r,
+                   &max_b);
+    {
+        int ladder_x = x;
+        int ly = y;
+        int lh = 0;
+        floor_put_refs(ui, ids, n, rx, ry, used, dac_a, 4, &x, ly, &lh, &max_r, &max_b);
+        ly += lh + 4;
+        x = ladder_x;
+        lh = 0;
+        floor_put_refs(ui, ids, n, rx, ry, used, dac_b, 4, &x, ly, &lh, &max_r, &max_b);
+        ly += lh + 4;
+        x = ladder_x;
+        lh = 0;
+        floor_put_refs(ui, ids, n, rx, ry, used, dac_c, 3, &x, ly, &lh, &max_r, &max_b);
+        if (ly + lh - y > row_h) {
+            row_h = ly + lh - y;
+        }
+    }
+    if (row_h > 0) {
+        y += row_h + row_gap;
+    }
+    x = 0;
+    row_h = 0;
+    floor_put_refs(ui, ids, n, rx, ry, used, ntsc, (int)(sizeof(ntsc) / sizeof(ntsc[0])), &x, y, &row_h, &max_r, &max_b);
+    y += row_h + row_gap;
+    x = 0;
+    row_h = 0;
+    for (i = 0; i < n; i++) {
+        if (!used[i]) {
+            floor_put(ui, ids, i, rx, ry, used, &x, y, &row_h, &max_r, &max_b);
+        }
+    }
+    *out_w = max_r + 2 * pad_x;
+    *out_h = max_b + pad_top + pad_bot;
+}
+
 void ui_pack_floor_plan(R01sUi *ui) {
     typedef struct {
         int ids[R01S_BOARD_MAX_CHIPS];
@@ -2196,15 +2424,19 @@ void ui_pack_floor_plan(R01sUi *ui) {
         int x, y, w, h;
     } FloorZone;
     FloorZone zone[R01S_ZONE_COUNT];
+    static const char *const rear_order[] = {"J1", "SW1", "J8", "J9", "J2"};
     int i;
     int ox = 16;
     int oy = 48;
     int gap = 4;
-    int x;
     int y;
-    int center_w;
+    int c0;
+    int c1;
+    int c2;
+    int span;
     int top_h;
     int mid_h;
+    int spine_w;
 
     if (!ui) {
         return;
@@ -2228,85 +2460,112 @@ void ui_pack_floor_plan(R01sUi *ui) {
         sort_ids_by_ref(ui, zone[i].ids, zone[i].n);
         floor_measure_zone(ui, zone[i].ids, zone[i].n, zone[i].rx, zone[i].ry, &zone[i].w, &zone[i].h);
     }
+    floor_pack_zone2(ui, zone[R01S_ZONE_Z2].ids, zone[R01S_ZONE_Z2].n, zone[R01S_ZONE_Z2].rx, zone[R01S_ZONE_Z2].ry,
+                     &zone[R01S_ZONE_Z2].w, &zone[R01S_ZONE_Z2].h);
 
-    center_w = zone[R01S_ZONE_CPU].w;
-    if (zone[R01S_ZONE_J8].w > center_w) {
-        center_w = zone[R01S_ZONE_J8].w;
+    /* Rear jacks in diagram order, then three columns, the cart spine, the middle row, Zone 5. */
+    floor_pack_named_row(ui, zone[R01S_ZONE_J8].ids, zone[R01S_ZONE_J8].n, zone[R01S_ZONE_J8].rx,
+                         zone[R01S_ZONE_J8].ry, &zone[R01S_ZONE_J8].w, &zone[R01S_ZONE_J8].h, rear_order,
+                         (int)(sizeof(rear_order) / sizeof(rear_order[0])));
+
+    c0 = floor_max(zone[R01S_ZONE_Z1].w, floor_max(zone[R01S_ZONE_Z3].w, zone[R01S_ZONE_Z5].w));
+    c1 = floor_max(zone[R01S_ZONE_CPU].w, zone[R01S_ZONE_M].w);
+    c2 = floor_max(zone[R01S_ZONE_Z2].w, zone[R01S_ZONE_Z4].w);
+    span = c0 + (c0 > 0 ? gap : 0) + c1 + (c1 > 0 && c2 > 0 ? gap : 0) + c2;
+    if (zone[R01S_ZONE_J8].w > span) {
+        span = zone[R01S_ZONE_J8].w;
     }
-    top_h = zone[R01S_ZONE_Z1].h;
-    {
-        int cpu_block = zone[R01S_ZONE_CPU].h;
-        if (zone[R01S_ZONE_J8].n && zone[R01S_ZONE_CPU].n) {
-            cpu_block += gap + zone[R01S_ZONE_J8].h;
-        } else if (zone[R01S_ZONE_J8].n) {
-            cpu_block = zone[R01S_ZONE_J8].h;
-        }
-        if (cpu_block > top_h) {
-            top_h = cpu_block;
-        }
-    }
-    if (zone[R01S_ZONE_Z2].h > top_h) {
-        top_h = zone[R01S_ZONE_Z2].h;
+    if (zone[R01S_ZONE_SPINE].w > span) {
+        span = zone[R01S_ZONE_SPINE].w;
     }
 
-    x = ox;
-    if (zone[R01S_ZONE_Z1].n) {
-        zone[R01S_ZONE_Z1].x = x;
-        zone[R01S_ZONE_Z1].y = oy;
-        x += zone[R01S_ZONE_Z1].w + gap;
-    }
+    y = oy;
     if (zone[R01S_ZONE_J8].n) {
-        zone[R01S_ZONE_J8].x = x;
-        zone[R01S_ZONE_J8].y = oy;
+        int rear_w = zone[R01S_ZONE_J8].w;
+        int last_right = 0;
+        int k;
+        for (k = 0; k < zone[R01S_ZONE_J8].n; k++) {
+            const R01sEntity *e = ui->chips[zone[R01S_ZONE_J8].ids[k]];
+            int right = zone[R01S_ZONE_J8].rx[k] + (e ? e->body_w : 1);
+            if (right > last_right) {
+                last_right = right;
+            }
+        }
+        if (span > rear_w && last_right > 8) {
+            int dst = span - 3;
+            for (k = 0; k < zone[R01S_ZONE_J8].n; k++) {
+                zone[R01S_ZONE_J8].rx[k] = zone[R01S_ZONE_J8].rx[k] * dst / last_right;
+            }
+        }
+        zone[R01S_ZONE_J8].x = ox;
+        zone[R01S_ZONE_J8].y = y;
+        zone[R01S_ZONE_J8].w = span;
+        y += zone[R01S_ZONE_J8].h + gap;
+    }
+    top_h = floor_max(zone[R01S_ZONE_Z1].h, floor_max(zone[R01S_ZONE_CPU].h, zone[R01S_ZONE_Z2].h));
+    if (zone[R01S_ZONE_Z1].n) {
+        zone[R01S_ZONE_Z1].x = ox;
+        zone[R01S_ZONE_Z1].y = y;
+        zone[R01S_ZONE_Z1].w = c0;
+        zone[R01S_ZONE_Z1].h = top_h;
     }
     if (zone[R01S_ZONE_CPU].n) {
-        zone[R01S_ZONE_CPU].x = x;
-        zone[R01S_ZONE_CPU].y = oy + (zone[R01S_ZONE_J8].n ? zone[R01S_ZONE_J8].h + gap : 0);
-    }
-    if (center_w > 0) {
-        x += center_w + gap;
+        zone[R01S_ZONE_CPU].x = ox + c0 + (c0 > 0 ? gap : 0);
+        zone[R01S_ZONE_CPU].y = y;
+        zone[R01S_ZONE_CPU].w = c1;
+        zone[R01S_ZONE_CPU].h = top_h;
     }
     if (zone[R01S_ZONE_Z2].n) {
-        zone[R01S_ZONE_Z2].x = x;
-        zone[R01S_ZONE_Z2].y = oy;
-        x += zone[R01S_ZONE_Z2].w;
+        zone[R01S_ZONE_Z2].x = ox + c0 + (c0 > 0 ? gap : 0) + c1 + (c1 > 0 ? gap : 0);
+        zone[R01S_ZONE_Z2].y = y;
+        zone[R01S_ZONE_Z2].w = c2;
+        zone[R01S_ZONE_Z2].h = top_h;
     }
-    y = oy + top_h + (top_h > 0 ? gap : 0);
+    if (top_h > 0) {
+        y += top_h + gap;
+    }
     if (zone[R01S_ZONE_SPINE].n) {
+        spine_w = zone[R01S_ZONE_SPINE].w;
+        if (span > spine_w) {
+            int shift = (span - spine_w) / 2;
+            int k;
+            for (k = 0; k < zone[R01S_ZONE_SPINE].n; k++) {
+                zone[R01S_ZONE_SPINE].rx[k] += shift;
+            }
+            zone[R01S_ZONE_SPINE].w = span;
+        }
         zone[R01S_ZONE_SPINE].x = ox;
         zone[R01S_ZONE_SPINE].y = y;
         y += zone[R01S_ZONE_SPINE].h + gap;
     }
-
-    x = ox;
-    mid_h = 0;
+    mid_h = floor_max(zone[R01S_ZONE_Z3].h, floor_max(zone[R01S_ZONE_M].h, zone[R01S_ZONE_Z4].h));
     if (zone[R01S_ZONE_Z3].n) {
-        zone[R01S_ZONE_Z3].x = x;
+        zone[R01S_ZONE_Z3].x = ox;
         zone[R01S_ZONE_Z3].y = y;
-        x += zone[R01S_ZONE_Z3].w + gap;
-        if (zone[R01S_ZONE_Z3].h > mid_h) {
-            mid_h = zone[R01S_ZONE_Z3].h;
-        }
+        zone[R01S_ZONE_Z3].w = c0;
+        zone[R01S_ZONE_Z3].h = mid_h;
     }
     if (zone[R01S_ZONE_M].n) {
-        zone[R01S_ZONE_M].x = x;
+        zone[R01S_ZONE_M].x = ox + c0 + (c0 > 0 ? gap : 0);
         zone[R01S_ZONE_M].y = y;
-        x += zone[R01S_ZONE_M].w + gap;
-        if (zone[R01S_ZONE_M].h > mid_h) {
-            mid_h = zone[R01S_ZONE_M].h;
-        }
+        zone[R01S_ZONE_M].w = c1;
+        zone[R01S_ZONE_M].h = mid_h;
     }
     if (zone[R01S_ZONE_Z4].n) {
-        zone[R01S_ZONE_Z4].x = x;
+        zone[R01S_ZONE_Z4].x = ox + c0 + (c0 > 0 ? gap : 0) + c1 + (c1 > 0 ? gap : 0);
         zone[R01S_ZONE_Z4].y = y;
-        if (zone[R01S_ZONE_Z4].h > mid_h) {
-            mid_h = zone[R01S_ZONE_Z4].h;
-        }
+        zone[R01S_ZONE_Z4].w = c2;
+        zone[R01S_ZONE_Z4].h = mid_h;
     }
-    y += mid_h + (mid_h > 0 ? gap : 0);
+    if (mid_h > 0) {
+        y += mid_h + gap;
+    }
     if (zone[R01S_ZONE_Z5].n) {
         zone[R01S_ZONE_Z5].x = ox;
         zone[R01S_ZONE_Z5].y = y;
+        if (c0 > zone[R01S_ZONE_Z5].w) {
+            zone[R01S_ZONE_Z5].w = c0;
+        }
     }
 
     for (i = 0; i < R01S_ZONE_COUNT; i++) {
