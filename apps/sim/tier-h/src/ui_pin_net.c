@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "ui_internal.h"
 
+#include "retr01_sim/airwire.h"
 #include "retr01_sim/board.h"
 #include "retr01_sim/board_netlist.h"
 #include "retr01_sim/bus.h"
@@ -755,50 +756,181 @@ int ui_ic_connected_peers(SDL_Renderer *r, const R01sUi *ui, int chip_i) {
     return count;
 }
 
-/* Ctrl+hover IC body: all off-chip connection wires. */
-static int ui_draw_ic_connection_overlay(SDL_Renderer *r, R01sUi *ui) {
-    int chip_i = -1;
-    int kind;
-    const R01sEntity *src;
+static Uint8 air_fade_alpha(void) {
+    const Uint32 half = 600;
+    Uint32 t = SDL_GetTicks() % (half * 2u);
+    if (t >= half) {
+        t = (half * 2u) - t;
+    }
+    return (Uint8)((t * 255u) / half);
+}
 
-    if (!ui || !r) {
-        return 0;
+static int air_warn_phase(void) {
+    return (int)((SDL_GetTicks() / 100u) & 1u);
+}
+
+static void air_seg_rgb(int layer, int warn, Uint8 *cr, Uint8 *cg, Uint8 *cb) {
+    if (warn) {
+        if (air_warn_phase()) {
+            *cr = 220;
+            *cg = 40;
+            *cb = 40;
+        } else {
+            *cr = 0;
+            *cg = 0;
+            *cb = 0;
+        }
+        return;
     }
-    if (!(SDL_GetModState() & KMOD_CTRL)) {
-        return 0;
+    if (layer == R01S_AIR_LAYER_GND) {
+        *cr = 150;
+        *cg = 150;
+        *cb = 145;
+    } else if (layer == R01S_AIR_LAYER_QUIET) {
+        *cr = 40;
+        *cg = 120;
+        *cb = 220;
+    } else {
+        *cr = 220;
+        *cg = 40;
+        *cb = 40;
     }
-    if (!ui_logic_in_view(ui->mouse_lx, ui->mouse_ly)) {
-        return 0;
+}
+
+static void draw_wire_hseg_a(SDL_Renderer *r, int x0, int x1, int y, Uint8 cr, Uint8 cg, Uint8 cb, Uint8 a) {
+    int xa;
+    int xb;
+    if (!r || x0 == x1 || a == 0) {
+        return;
     }
-    kind = hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL);
-    if (kind != 1 || chip_i < 0 || chip_i >= ui->chip_count) {
-        return 0;
+    xa = x0 < x1 ? x0 : x1;
+    xb = x0 < x1 ? x1 : x0;
+    fill_rect_a(r, xa, y, xb - xa + 1, 1, cr, cg, cb, a);
+}
+
+static void draw_wire_vseg_a(SDL_Renderer *r, int x, int y0, int y1, Uint8 cr, Uint8 cg, Uint8 cb, Uint8 a) {
+    int ya;
+    int yb;
+    if (!r || y0 == y1 || a == 0) {
+        return;
     }
-    src = ui->chips[chip_i];
-    if (!src || src->visual != R01S_ENTITY_VIS_IC) {
-        return 0;
+    ya = y0 < y1 ? y0 : y1;
+    yb = y0 < y1 ? y1 : y0;
+    fill_rect_a(r, x, ya, 1, yb - ya + 1, cr, cg, cb, a);
+}
+
+static void ui_draw_air_manhattan(SDL_Renderer *r, int x0, int y0, int x1, int y1, Uint8 cr, Uint8 cg,
+                                  Uint8 cb, Uint8 a) {
+    int mid_y = (y0 + y1) / 2;
+    draw_wire_vseg_a(r, x0, y0, mid_y, cr, cg, cb, a);
+    draw_wire_hseg_a(r, x0, x1, mid_y, cr, cg, cb, a);
+    draw_wire_vseg_a(r, x1, mid_y, y1, cr, cg, cb, a);
+}
+
+static const char *air_net_label(const R01sPinNetlist *nl, int root) {
+    int i;
+    if (!nl || root < 0) {
+        return "";
     }
-    (void)ui_ic_connected_peers(r, ui, chip_i);
-    return 1;
+    if (nl->net_name[root][0]) {
+        return nl->net_name[root];
+    }
+    for (i = 0; i < nl->slot_count; i++) {
+        if (r01s_pin_netlist_root(nl, i) == root && nl->net_name[i][0]) {
+            return nl->net_name[i];
+        }
+    }
+    return "";
+}
+
+static int air_collect_net(const R01sUi *ui, const R01sPinNetlist *nl, int root, R01sAirPt *pts,
+                           R01sAirEnd *ends, int *sx, int *sy) {
+    int n = 0;
+    int i;
+    for (i = 0; i < nl->slot_count && n < R01S_AIR_PT_MAX; i++) {
+        const R01sEntity *e;
+        const R01sPin *pin;
+        int tbx;
+        int tby;
+        if (r01s_pin_netlist_root(nl, i) != root) {
+            continue;
+        }
+        e = nl->slots[i].entity;
+        if (!e || ui_chip_hidden(ui, e) || e->visual == R01S_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        if (nl->slots[i].pin_index < 0 || nl->slots[i].pin_index >= e->pin_count) {
+            continue;
+        }
+        pin = &e->pins[nl->slots[i].pin_index];
+        if (pin->dir == R01S_PIN_NC) {
+            continue;
+        }
+        if (!ui_chip_pin_tip_board(e, pin->number, &tbx, &tby)) {
+            continue;
+        }
+        pts[n].x = tbx;
+        pts[n].y = tby;
+        ends[n].refdes = e->refdes ? e->refdes : "";
+        ends[n].pin = pin->name ? pin->name : "";
+        sx[n] = ui_board_sx(ui, tbx);
+        sy[n] = ui_board_sy(ui, tby);
+        n++;
+    }
+    return n;
+}
+
+static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui) {
+    R01sPinNetlist *nl = ui_board_pin_net(ui);
+    unsigned char seen[NS_PIN_NETLIST_MAX];
+    int i;
+
+    if (!ui || !r || !nl) {
+        return;
+    }
+    memset(seen, 0, sizeof(seen));
+    for (i = 0; i < nl->slot_count; i++) {
+        R01sAirPt pts[R01S_AIR_PT_MAX];
+        R01sAirEnd ends[R01S_AIR_PT_MAX];
+        R01sAirSeg seg[R01S_AIR_PT_MAX];
+        int sx[R01S_AIR_PT_MAX];
+        int sy[R01S_AIR_PT_MAX];
+        R01sAirStyle style;
+        int root;
+        int n;
+        int ns;
+        int k;
+
+        root = r01s_pin_netlist_root(nl, i);
+        if (root < 0 || root >= NS_PIN_NETLIST_MAX || seen[root]) {
+            continue;
+        }
+        seen[root] = 1;
+        n = air_collect_net(ui, nl, root, pts, ends, sx, sy);
+        if (n < 2) {
+            continue;
+        }
+        ns = r01s_air_mst(pts, n, seg, n - 1);
+        r01s_air_style(air_net_label(nl, root), ends, n, &style);
+        for (k = 0; k < ns; k++) {
+            int a = seg[k].a;
+            int b = seg[k].b;
+            int limit = r01s_air_hop_limit_mm(&style, &ends[a], &ends[b]);
+            int dist = r01s_air_dist_mm(pts[a].x, pts[a].y, pts[b].x, pts[b].y);
+            int warn = r01s_air_too_long(dist, limit);
+            Uint8 cr;
+            Uint8 cg;
+            Uint8 cb;
+            Uint8 alpha = warn ? (Uint8)255 : air_fade_alpha();
+            air_seg_rgb(style.layer, warn, &cr, &cg, &cb);
+            ui_draw_air_manhattan(r, sx[a], sy[a], sx[b], sy[b], cr, cg, cb, alpha);
+        }
+    }
 }
 
 void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui) {
-    int chip_i;
-    int pin_i;
-    int peer_chip;
-    int peer_pin;
-
-    if (!ui || !r) {
+    if (!ui || !r || !ui->air_wires) {
         return;
     }
-    if (ui_draw_ic_connection_overlay(r, ui)) {
-        return;
-    }
-    if (!ui_hit_chip_pin(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, &pin_i)) {
-        return;
-    }
-    if (!ui_pin_net_peer(ui, chip_i, pin_i, &peer_chip, &peer_pin)) {
-        return;
-    }
-    ui_draw_pin_wire_pair(r, ui, chip_i, pin_i, peer_chip, peer_pin);
+    ui_draw_air_trees(r, ui);
 }

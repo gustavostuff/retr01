@@ -59,13 +59,15 @@ void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *p
 
 void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg,
                      Uint8 *pb) {
-    if (ui && (ui->pins_quiet || ui->wire_mode == R01S_WIRE_MANUAL)) {
-        *pr = R01S_UI_PIN_GRAY_R;
-        *pg = R01S_UI_PIN_GRAY_G;
-        *pb = R01S_UI_PIN_GRAY_B;
+    (void)ui;
+    (void)lvl;
+    (void)dir;
+    if (!pr || !pg || !pb) {
         return;
     }
-    pin_level_rgb(lvl, dir, pr, pg, pb);
+    *pr = R01S_UI_PIN_GRAY_R;
+    *pg = R01S_UI_PIN_GRAY_G;
+    *pb = R01S_UI_PIN_GRAY_B;
 }
 
 /* Manual BB status for pin.png pivot (col OX, row OY). Priority: red > green > yellow. */

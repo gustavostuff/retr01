@@ -26,6 +26,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->box_sel = 0;
     ui->input_mode = R01S_INPUT_ARCADE;
     ui->wire_mode = R01S_WIRE_LIVE;
+    ui->air_wires = 1;
     ui->layout_compact = 1;
     memset(ui->chip_sel, 0, sizeof(ui->chip_sel));
     ui->tip_show_at = SDL_GetTicks() + R01S_UI_TOOLTIP_DELAY_MS;
@@ -37,7 +38,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->wave_monitor_x = R01S_UI_WAVE_MONITOR_DEFAULT_X;
     ui->wave_monitor_y = ui_wave_monitor_default_y();
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE pause. S save. R rotate. DBL-CLK SCR1 scale. WASD/ARROWS pads.");
+             "SPACE wires. P pause. S save. R rotate. ZONES packs the floor plan.");
     return 0;
 }
 

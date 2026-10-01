@@ -188,7 +188,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $7Fxx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
 
-**Controls:** `Space` pause/resume * `Ctrl+R` reset * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (`G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **LIVE / MANUAL** (HUD, soft netlist vs breadboard-gated) * **left-drag chip** move (snaps to breadboard) * **right-click chip** rotate * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
+**Controls:** `Space` show or hide air wires * `P` pause/resume * `Ctrl+R` reset * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (`G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **ZONES** packs parts into the motherboard floor plan * **left-drag chip** move (snaps to breadboard) * **right-click chip** rotate * **Shift+arrows / wheel / middle-drag** pan * `Esc` quit.
 
 **Layout persistence:** island frames + chip positions saved to `app/sim/ui_layout.json` (override with `R01S_LAYOUT`).
 

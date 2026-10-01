@@ -1,6 +1,7 @@
 #ifndef retr01_SIM_UI_H
 #define retr01_SIM_UI_H
 
+#include "retr01_sim/airwire.h"
 #include "retr01_sim/entity.h"
 #include "retr01_sim/gamepad.h"
 #include "retr01_sim/health.h"
@@ -97,6 +98,12 @@ typedef struct R01sUi {
     R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
     int input_mode; /* R01S_INPUT_ARCADE or R01S_INPUT_PADS */
     int wire_mode;  /* R01S_WIRE_LIVE or R01S_WIRE_MANUAL */
+    int air_wires;  /* 1 = draw the ratsnest. Space toggles. */
+    int floor_on;   /* 1 = zone rects are live and out-of-zone parts blink */
+    int floor_x[R01S_ZONE_COUNT];
+    int floor_y[R01S_ZONE_COUNT];
+    int floor_w[R01S_ZONE_COUNT];
+    int floor_h[R01S_ZONE_COUNT];
     int mouse_lx; /* last logic-space mouse (for tooltips) */
     int mouse_ly;
     int tip_stable_mx; /* mouse position when hover timer last reset */

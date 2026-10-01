@@ -496,10 +496,12 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             }
         }
         if (was_layout_drag) {
-            if (ui_sel_count(ui) > 0) {
-                ui_sel_snap_to_breadboard(ui);
-            } else if (ui->drag_chip >= 0) {
-                ui_chip_snap_to_breadboard(ui, ui->drag_chip);
+            if (!ui->floor_on) {
+                if (ui_sel_count(ui) > 0) {
+                    ui_sel_snap_to_breadboard(ui);
+                } else if (ui->drag_chip >= 0) {
+                    ui_chip_snap_to_breadboard(ui, ui->drag_chip);
+                }
             }
             ui->layout_dirty = 1;
         }
@@ -532,6 +534,15 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         }
 
         /* LIVE/MANUAL, ARCADE/PADS, SAVE HUD controls removed. */
+
+        {
+            SDL_Rect fb;
+            floor_btn_rect(&fb);
+            if (logic_x >= fb.x && logic_x < fb.x + fb.w && logic_y >= fb.y && logic_y < fb.y + fb.h) {
+                ui_pack_floor_plan(ui);
+                return 1;
+            }
+        }
 
         /* Compact / Islands toggle removed from UI (always compact). */
 

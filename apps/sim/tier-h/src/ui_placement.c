@@ -301,7 +301,7 @@ void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
         r01s_entity_place(e, nx, ny);
     }
     clamp_chip(ui, e, ui->chip_island[chip_i]);
-    if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PASSIVE) {
+    if (!ui->floor_on && (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PASSIVE)) {
         ui_chip_snap_to_breadboard(ui, chip_i);
     }
 }
@@ -1993,5 +1993,235 @@ void resize_island_drag(R01sUi *ui, int island_index, int board_mx, int board_my
             clamp_chip(ui, ui->chips[i], island_index);
         }
     }
+}
+
+static void place_part_at(R01sEntity *e, int nx, int ny) {
+    if (!e) {
+        return;
+    }
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        R01sPassive *p = (R01sPassive *)(void *)e;
+        r01s_passive_set_pivot(p, p->pivot_x + (nx - e->board_x), p->pivot_y + (ny - e->board_y));
+    } else {
+        r01s_entity_place(e, nx, ny);
+    }
+}
+
+static void sort_ids_by_ref(const R01sUi *ui, int *ids, int n) {
+    int i;
+    for (i = 1; i < n; i++) {
+        int id = ids[i];
+        const char *ref = (ui->chips[id] && ui->chips[id]->refdes) ? ui->chips[id]->refdes : "";
+        int j = i;
+        while (j > 0) {
+            const R01sEntity *prev = ui->chips[ids[j - 1]];
+            const char *pref = (prev && prev->refdes) ? prev->refdes : "";
+            if (strcmp(pref, ref) <= 0) {
+                break;
+            }
+            ids[j] = ids[j - 1];
+            j--;
+        }
+        ids[j] = id;
+    }
+}
+
+void floor_btn_rect(SDL_Rect *rc) {
+    int tw = font_text_width("ZONES") + 16;
+    if (!rc) {
+        return;
+    }
+    rc->x = 8;
+    rc->y = 8;
+    rc->w = tw;
+    rc->h = font_line_h() + 8;
+}
+
+void ui_pack_floor_plan(R01sUi *ui) {
+    typedef struct {
+        int ids[R01S_BOARD_MAX_CHIPS];
+        int n;
+        int x, y, w, h;
+        int cols;
+        int cell_w;
+        int cell_h;
+    } FloorZone;
+    FloorZone zone[R01S_ZONE_COUNT];
+    int i;
+    int ox = 16;
+    int oy = 48;
+    int gap = 18;
+    int x;
+    int y;
+    int center_w;
+    int top_h;
+    int top_w;
+    int mid_h;
+
+    if (!ui) {
+        return;
+    }
+    memset(zone, 0, sizeof(zone));
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        int zid;
+        if (!e || ui_chip_hidden(ui, e) || e->visual == R01S_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
+        zid = r01s_air_zone_for_ref(e->refdes);
+        if (zid < 0 || zid >= R01S_ZONE_COUNT) {
+            continue;
+        }
+        if (zone[zid].n < R01S_BOARD_MAX_CHIPS) {
+            zone[zid].ids[zone[zid].n++] = i;
+        }
+    }
+    for (i = 0; i < R01S_ZONE_COUNT; i++) {
+        int k;
+        int max_w = 8;
+        int max_h = 8;
+        int rows;
+        sort_ids_by_ref(ui, zone[i].ids, zone[i].n);
+        if (zone[i].n <= 0) {
+            continue;
+        }
+        for (k = 0; k < zone[i].n; k++) {
+            R01sEntity *e = ui->chips[zone[i].ids[k]];
+            if (!e) {
+                continue;
+            }
+            if (e->body_w > max_w) {
+                max_w = e->body_w;
+            }
+            if (e->body_h > max_h) {
+                max_h = e->body_h;
+            }
+        }
+        zone[i].cols = 1;
+        while (zone[i].cols * zone[i].cols < zone[i].n) {
+            zone[i].cols++;
+        }
+        rows = (zone[i].n + zone[i].cols - 1) / zone[i].cols;
+        zone[i].cell_w = max_w + 10;
+        zone[i].cell_h = max_h + 10;
+        zone[i].w = zone[i].cols * zone[i].cell_w + 16;
+        zone[i].h = rows * zone[i].cell_h + 16;
+    }
+
+    center_w = zone[R01S_ZONE_CPU].w;
+    if (zone[R01S_ZONE_J8].w > center_w) {
+        center_w = zone[R01S_ZONE_J8].w;
+    }
+    top_h = zone[R01S_ZONE_Z1].h;
+    {
+        int cpu_block = zone[R01S_ZONE_CPU].h;
+        if (zone[R01S_ZONE_J8].n && zone[R01S_ZONE_CPU].n) {
+            cpu_block += gap + zone[R01S_ZONE_J8].h;
+        } else if (zone[R01S_ZONE_J8].n) {
+            cpu_block = zone[R01S_ZONE_J8].h;
+        }
+        if (cpu_block > top_h) {
+            top_h = cpu_block;
+        }
+    }
+    if (zone[R01S_ZONE_Z2].h > top_h) {
+        top_h = zone[R01S_ZONE_Z2].h;
+    }
+
+    x = ox;
+    if (zone[R01S_ZONE_Z1].n) {
+        zone[R01S_ZONE_Z1].x = x;
+        zone[R01S_ZONE_Z1].y = oy;
+        x += zone[R01S_ZONE_Z1].w + gap;
+    }
+    if (zone[R01S_ZONE_J8].n) {
+        zone[R01S_ZONE_J8].x = x;
+        zone[R01S_ZONE_J8].y = oy;
+    }
+    if (zone[R01S_ZONE_CPU].n) {
+        zone[R01S_ZONE_CPU].x = x;
+        zone[R01S_ZONE_CPU].y = oy + (zone[R01S_ZONE_J8].n ? zone[R01S_ZONE_J8].h + gap : 0);
+    }
+    if (center_w > 0) {
+        x += center_w + gap;
+    }
+    if (zone[R01S_ZONE_Z2].n) {
+        zone[R01S_ZONE_Z2].x = x;
+        zone[R01S_ZONE_Z2].y = oy;
+        x += zone[R01S_ZONE_Z2].w;
+    }
+    top_w = x - ox;
+    if (top_w < 0) {
+        top_w = 0;
+    }
+
+    y = oy + top_h + (top_h > 0 ? gap : 0);
+    if (zone[R01S_ZONE_SPINE].n) {
+        if (zone[R01S_ZONE_SPINE].w < top_w) {
+            zone[R01S_ZONE_SPINE].w = top_w;
+        }
+        zone[R01S_ZONE_SPINE].x = ox;
+        zone[R01S_ZONE_SPINE].y = y;
+        y += zone[R01S_ZONE_SPINE].h + gap;
+    }
+
+    x = ox;
+    mid_h = 0;
+    if (zone[R01S_ZONE_Z3].n) {
+        zone[R01S_ZONE_Z3].x = x;
+        zone[R01S_ZONE_Z3].y = y;
+        x += zone[R01S_ZONE_Z3].w + gap;
+        if (zone[R01S_ZONE_Z3].h > mid_h) {
+            mid_h = zone[R01S_ZONE_Z3].h;
+        }
+    }
+    if (zone[R01S_ZONE_M].n) {
+        zone[R01S_ZONE_M].x = x;
+        zone[R01S_ZONE_M].y = y;
+        x += zone[R01S_ZONE_M].w + gap;
+        if (zone[R01S_ZONE_M].h > mid_h) {
+            mid_h = zone[R01S_ZONE_M].h;
+        }
+    }
+    if (zone[R01S_ZONE_Z4].n) {
+        zone[R01S_ZONE_Z4].x = x;
+        zone[R01S_ZONE_Z4].y = y;
+        if (zone[R01S_ZONE_Z4].h > mid_h) {
+            mid_h = zone[R01S_ZONE_Z4].h;
+        }
+    }
+    y += mid_h + (mid_h > 0 ? gap : 0);
+    if (zone[R01S_ZONE_Z5].n) {
+        zone[R01S_ZONE_Z5].x = ox;
+        zone[R01S_ZONE_Z5].y = y;
+    }
+
+    for (i = 0; i < R01S_ZONE_COUNT; i++) {
+        int k;
+        ui->floor_x[i] = zone[i].x;
+        ui->floor_y[i] = zone[i].y;
+        ui->floor_w[i] = zone[i].n ? zone[i].w : 0;
+        ui->floor_h[i] = zone[i].n ? zone[i].h : 0;
+        for (k = 0; k < zone[i].n; k++) {
+            R01sEntity *e = ui->chips[zone[i].ids[k]];
+            int col = k % zone[i].cols;
+            int row = k / zone[i].cols;
+            int px;
+            int py;
+            if (!e) {
+                continue;
+            }
+            px = zone[i].x + 8 + col * zone[i].cell_w + (zone[i].cell_w - e->body_w) / 2;
+            py = zone[i].y + 8 + row * zone[i].cell_h + (zone[i].cell_h - e->body_h) / 2;
+            place_part_at(e, px, py);
+            clamp_chip(ui, e, ui->chip_island[zone[i].ids[k]]);
+        }
+    }
+    ui->floor_on = 1;
+    ui->layout_dirty = 1;
+    ui->pan_x = 0;
+    ui->pan_y = 0;
+    r01s_ui_clamp_pan(ui);
+    snprintf(ui->status, sizeof(ui->status), "floor plan grouped");
 }
 

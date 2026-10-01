@@ -679,6 +679,12 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
             }
             break;
         case SDLK_SPACE:
+            app->ui.air_wires = !app->ui.air_wires;
+            return;
+        case SDLK_p:
+            if (e->key.keysym.mod & KMOD_CTRL) {
+                break;
+            }
             if (r01s_app_catchup_active(app)) {
                 return;
             }

@@ -25,6 +25,7 @@ add_library(retr01_sim_core
   src/bom_count.c
   src/board.c
   src/board_netlist.c
+  src/airwire.c
   src/board_schematic.c
   src/spi_mailbox.c
   src/board_debug.c
@@ -173,6 +174,7 @@ r01s_unit_test(test_pads)
 r01s_unit_test(test_attiny85)
 r01s_unit_test(test_pad_uart)
 r01s_unit_test(test_board_netlist)
+r01s_unit_test(test_airwire)
 r01s_unit_test(test_export_netlist)
 
 add_executable(export_tier_h_netlist tools/export_tier_h_netlist.c)

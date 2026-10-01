@@ -579,6 +579,23 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         } else if (e->refdes) {
             snprintf(out, out_len, "%s", e->refdes);
         }
+        if (ui->floor_on && e->refdes) {
+            int zone = r01s_air_zone_for_ref(e->refdes);
+            int over;
+            if (zone >= 0) {
+                over = r01s_air_outside_px(ui->floor_x[zone], ui->floor_y[zone], ui->floor_w[zone],
+                                           ui->floor_h[zone], e->board_x, e->board_y, e->body_w, e->body_h);
+                if (over > 2) {
+                    int mm = over / NS_PX_PER_MM;
+                    char base[96];
+                    if (mm < 1) {
+                        mm = 1;
+                    }
+                    snprintf(base, sizeof(base), "%s", out);
+                    snprintf(out, out_len, "%s  %s, %d mm outside", base, r01s_air_zone_name(zone), mm);
+                }
+            }
+        }
         return;
     }
     if ((kind == 2 || kind == 3) && island_i >= 0 && ui->group) {
@@ -1203,6 +1220,23 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     SDL_RenderSetClipRect(r, &view_clip);
 
+    if (ui->floor_on) {
+        static const Uint8 zr[R01S_ZONE_COUNT] = {70, 140, 40, 110, 30, 150, 120, 130, 90};
+        static const Uint8 zg[R01S_ZONE_COUNT] = {90, 110, 100, 70, 120, 90, 50, 120, 90};
+        static const Uint8 zb[R01S_ZONE_COUNT] = {130, 50, 70, 140, 110, 40, 90, 40, 90};
+        int zi;
+        for (zi = 0; zi < R01S_ZONE_COUNT; zi++) {
+            int zx;
+            int zy;
+            if (ui->floor_w[zi] <= 0 || ui->floor_h[zi] <= 0) {
+                continue;
+            }
+            zx = ui_board_sx(ui, ui->floor_x[zi]);
+            zy = ui_board_sy(ui, ui->floor_y[zi]);
+            fill_rect_a(r, zx, zy, ui->floor_w[zi], ui->floor_h[zi], zr[zi], zg[zi], zb[zi], 36);
+        }
+    }
+
     /* UI is compact-only. Islands stay in the sim group for tests / bring-up. */
     n_chips = ui->chip_z_count;
     if (n_chips <= 0) {
@@ -1217,6 +1251,43 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
             continue;
         }
         draw_board_item(r, ui, ui->chips[ci], ui->chip_sel[ci] || ci == ui->selected);
+        if (ui->floor_on && ui->chips[ci] && ui->chips[ci]->refdes) {
+            int zone = r01s_air_zone_for_ref(ui->chips[ci]->refdes);
+            int over;
+            if (zone >= 0) {
+                over = r01s_air_outside_px(ui->floor_x[zone], ui->floor_y[zone], ui->floor_w[zone],
+                                           ui->floor_h[zone], ui->chips[ci]->board_x, ui->chips[ci]->board_y,
+                                           ui->chips[ci]->body_w, ui->chips[ci]->body_h);
+                if (over > 2) {
+                    int sx = ui_board_sx(ui, ui->chips[ci]->board_x);
+                    int sy = ui_board_sy(ui, ui->chips[ci]->board_y);
+                    int on = (int)((SDL_GetTicks() / 100u) & 1u);
+                    if (on) {
+                        fill_rect_a(r, sx, sy, ui->chips[ci]->body_w, ui->chips[ci]->body_h, 220, 40, 40, 150);
+                    } else {
+                        fill_rect_a(r, sx, sy, ui->chips[ci]->body_w, ui->chips[ci]->body_h, 0, 0, 0, 170);
+                    }
+                }
+            }
+        }
+    }
+    if (ui->floor_on) {
+        int zi;
+        for (zi = 0; zi < R01S_ZONE_COUNT; zi++) {
+            int zx;
+            int zy;
+            const char *name;
+            if (ui->floor_w[zi] <= 0 || ui->floor_h[zi] <= 0) {
+                continue;
+            }
+            zx = ui_board_sx(ui, ui->floor_x[zi]);
+            zy = ui_board_sy(ui, ui->floor_y[zi]);
+            draw_rect(r, zx, zy, ui->floor_w[zi], ui->floor_h[zi], 210, 210, 200);
+            name = r01s_air_zone_name(zi);
+            if (name && name[0] && ui->floor_w[zi] > font_text_width(name) + 4) {
+                font_draw(r, zx + 4, zy + 2, name, 230, 230, 220);
+            }
+        }
     }
     ui_draw_pin_wire_overlay(r, ui);
     if (ui->box_sel) {
@@ -1244,6 +1315,13 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     SDL_RenderSetClipRect(r, NULL);
 
     /* Floating LIVE/MANUAL, ARCADE/PADS, SAVE controls removed (discrete_ic migration). */
+    {
+        SDL_Rect fb;
+        floor_btn_rect(&fb);
+        fill_rect(r, fb.x, fb.y, fb.w, fb.h, 32, 36, 32);
+        draw_rect(r, fb.x, fb.y, fb.w, fb.h, 180, 190, 160);
+        font_draw(r, fb.x + 8, fb.y + 4, "ZONES", 230, 230, 210);
+    }
     draw_wave_monitor(r, ui);
 
     draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);

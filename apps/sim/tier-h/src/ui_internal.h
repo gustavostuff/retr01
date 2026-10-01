@@ -28,9 +28,9 @@ typedef struct R01sBoard R01sBoard;
 #define R01S_UI_CHIP_ATTINY_R 57
 #define R01S_UI_CHIP_ATTINY_G 13
 #define R01S_UI_CHIP_ATTINY_B 25
-#define R01S_UI_PIN_GRAY_R 179
-#define R01S_UI_PIN_GRAY_G 179
-#define R01S_UI_PIN_GRAY_B 204
+#define R01S_UI_PIN_GRAY_R 188
+#define R01S_UI_PIN_GRAY_G 186
+#define R01S_UI_PIN_GRAY_B 176
 
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_TOOLTIP_DELAY_MS 400
@@ -106,6 +106,8 @@ void save_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void input_mode_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void wire_mode_btn_rect(const R01sUi *ui, SDL_Rect *rc);
 void ui_save_layout_now(R01sUi *ui);
+void ui_pack_floor_plan(R01sUi *ui);
+void floor_btn_rect(SDL_Rect *rc);
 int ui_lcd_scale_2x(const R01sUi *ui);
 int ui_screen_render_mode(const R01sUi *ui);
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x);
