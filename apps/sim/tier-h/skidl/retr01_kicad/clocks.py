@@ -158,4 +158,3 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         pin_connect(parts["C25"], "", "2", gnd)
     if "U725" in parts:
         pin_connect(parts["U725"], "", "3", fin)
-        pin_connect(parts["U725"], "", "7", fsc_xtal)

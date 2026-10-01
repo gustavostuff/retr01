@@ -5,7 +5,7 @@
 
 /*
  * Passive ↔ silicon links from docs/passive_bom.md and tier-a DAC pattern.
- * AD724 / 74HC14 are not seated in sim; C17/C18 tie to +5V/GND rails only.
+ * AD724 / 74HC14 analog encoding is stubbed; C17 is unused until MCP130 is seated.
  */
 
 static R01sEntity *passive_entity(R01sBoard *board, const char *refdes) {
@@ -90,6 +90,15 @@ static R01sEntity *ic_entity(R01sBoard *board, const char *refdes) {
   if (strcmp(refdes, "U74") == 0) {
     return r01a_sn74hc74_entity(&board->u74);
   }
+  if (strcmp(refdes, "U725") == 0) {
+    return r01s_ad724_entity(&board->ad724);
+  }
+  if (strcmp(refdes, "J8") == 0) {
+    return r01s_rca_jack_entity(&board->j8);
+  }
+  if (strcmp(refdes, "J9") == 0) {
+    return r01s_rca_jack_entity(&board->j9);
+  }
   if (strcmp(refdes, "U7A") == 0 || strcmp(refdes, "U7B") == 0 ||
       strcmp(refdes, "U7C") == 0) {
     static const char *const mux_ref[R01S_BOM_HC157_N] = {"U7A", "U7B", "U7C"};
@@ -143,7 +152,7 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
       {"C7", "US2", "VCC"},    {"C8", "UPLDX", "VCC"}, {"C9", "UPLDY", "VCC"},
       {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},  {"C12", "U7B", "VCC"},
       {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"}, {"C15", "U574", "VCC"},
-      {"C16", "U24", "VCC"},   {"C17", NULL, NULL},    {"C18", NULL, NULL},
+      {"C16", "U24", "VCC"},   {"C17", NULL, NULL},    {"C18", "U725", "APOS"},
       {"C19", "U04", "VCC"},   {"C20", "U74", "VCC"},  {"C21", "UPAD1", "VCC"},
   };
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
@@ -168,6 +177,7 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   R01sEntity *u04 = r01a_sn74hcu04_entity(&board->u04);
   R01sEntity *u74 = r01a_sn74hc74_entity(&board->u74);
+  R01sEntity *u725 = r01s_ad724_entity(&board->ad724);
   R01sEntity *y1 = passive_entity(board, "Y1");
   R01sEntity *y2 = passive_entity(board, "Y2");
   R01sEntity *y3 = passive_entity(board, "Y3");
@@ -225,7 +235,7 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, u04, "6A", pwr, "GND");
   }
 
-  /* Y3 3.579545 MHz FSC (AD724 on-chip osc; encoder not seated). */
+  /* Y3 3.579545 MHz FSC into AD724 FIN. */
   if (y3) {
     r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "1", y3, "1");
     r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "2", pwr, "GND");
@@ -233,12 +243,16 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "2", pwr, "GND");
     r01s_pin_netlist_name_net(nl, y3, "1", "FSC_FIN");
     r01s_pin_netlist_name_net(nl, y3, "2", "FSC_XTAL");
+    if (u725) {
+      r01s_pin_netlist_link(nl, y3, "1", u725, "FIN");
+    }
   }
 }
 
 static void apply_dac(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *prom = r01s_at27c256r_entity(&board->color_prom);
   R01sEntity *sink = r01s_video_sink_entity(&board->video_sink);
+  R01sEntity *enc = r01s_ad724_entity(&board->ad724);
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   static const struct {
     const char *prom_o;
@@ -264,6 +278,11 @@ static void apply_dac(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, sink, "BIN", passive_entity(board, "R11"), "1");
   r01s_pin_netlist_link(nl, passive_entity(board, "R11"), "2", pwr, "GND");
   r01s_pin_netlist_link(nl, sink, "AGND", pwr, "GND");
+  if (enc) {
+    r01s_pin_netlist_link(nl, enc, "RIN", sink, "RIN");
+    r01s_pin_netlist_link(nl, enc, "GIN", sink, "GIN");
+    r01s_pin_netlist_link(nl, enc, "BIN", sink, "BIN");
+  }
 }
 
 static void apply_series_33(R01sBoard *board, R01sPinNetlist *nl) {
@@ -335,6 +354,43 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
   tie_gnd(nl, pwr, r01s_i2c_eeprom_entity(&board->cart_module.save), "WP#");
   tie_gnd(nl, pwr, r01s_atf22v10_entity(&board->pld_beam_y), "GND");
   tie_gnd(nl, pwr, r01s_compositor_entity(&board->compositor), "GND");
+  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "AGND");
+  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "DGND");
+}
+
+static void apply_rca_av(R01sBoard *board, R01sPinNetlist *nl) {
+  R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
+  R01sEntity *enc = r01s_ad724_entity(&board->ad724);
+  R01sEntity *j8 = r01s_rca_jack_entity(&board->j8);
+  R01sEntity *j9 = r01s_rca_jack_entity(&board->j9);
+  R01sEntity *apu = r01s_avr128db28_s2_entity(&board->mcu_s2);
+  const char *shell[3] = {"1A", "1B", "1C"};
+  int i;
+
+  if (enc) {
+    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "DPOS");
+    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "STND");
+    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "ENCD");
+    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "VSYNC");
+    r01s_pin_netlist_link(nl, pwr, "GND", enc, "SELECT");
+    r01s_pin_netlist_name_net(nl, enc, "HSYNC", "CSYNC");
+    r01s_pin_netlist_name_net(nl, enc, "COMP", "COMPOSITE_OUT");
+  }
+  if (j8) {
+    for (i = 0; i < 3; i++) {
+      r01s_pin_netlist_link(nl, j8, shell[i], pwr, "GND");
+    }
+    if (apu) {
+      r01s_pin_netlist_link(nl, apu, "AUDIO_PWM", j8, "2");
+    }
+    r01s_pin_netlist_name_net(nl, j8, "2", "AUDIO_OUT");
+  }
+  if (j9 && enc) {
+    for (i = 0; i < 3; i++) {
+      r01s_pin_netlist_link(nl, j9, shell[i], pwr, "GND");
+    }
+    r01s_pin_netlist_link(nl, enc, "COMP", j9, "2");
+  }
 }
 
 void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {
@@ -348,4 +404,5 @@ void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {
   apply_dac(board, nl);
   apply_series_33(board, nl);
   apply_pullups(board, nl);
+  apply_rca_av(board, nl);
 }

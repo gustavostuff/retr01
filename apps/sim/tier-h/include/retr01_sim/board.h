@@ -1,6 +1,7 @@
 #ifndef retr01_SIM_BOARD_H
 #define retr01_SIM_BOARD_H
 
+#include "ad724.h"
 #include "at27c256r.h"
 #include "as6c62256.h"
 #include "avr128db28_m.h"
@@ -20,6 +21,7 @@
 #include "pad_uart.h"
 #include "prg_rom.h"
 #include "pwr5v.h"
+#include "rca_jack.h"
 #include "retr01_sim/bom32.h"
 #include "retr01_sim/island_builder.h"
 #include "retr01_sim/play.h"
@@ -95,6 +97,8 @@ typedef struct R01sIslandVideoImpl {
     R01sCompositor *comp;
     R01sAt27c256r *prom;
     R01sVideoSink *sink;
+    R01sAd724 *ad724;
+    R01sRcaJack *j9;
 } R01sIslandVideoImpl;
 
 typedef struct R01sIslandCartImpl {
@@ -104,6 +108,7 @@ typedef struct R01sIslandCartImpl {
 
 typedef struct R01sIslandApuImpl {
     R01sAvr128db28S2 *apu;
+    R01sRcaJack *j8;
 } R01sIslandApuImpl;
 
 typedef struct R01sIslandMcuLbImpl {
@@ -121,7 +126,7 @@ typedef struct R01sIslandIntegrationImpl {
     R01sIntegration *integ;
 } R01sIslandIntegrationImpl;
 
-/* Soft $7Fxx. 74HC14 is not seated. AD724 is not in this tree yet. */
+/* Soft $7Fxx. 74HC14 is not seated. */
 typedef struct R01sBoard {
     /* Support. OSC8M / OSC_DOT tick PHI2 and DOT; netlist is Y1/Y2 + U04/U74. */
     R01sPwr5v pwr;
@@ -129,6 +134,9 @@ typedef struct R01sBoard {
     R01sOscDot osc_dot;
     R01aSn74hcu04 u04;
     R01aSn74hc74 u74;
+    R01sAd724 ad724;
+    R01sRcaJack j8;
+    R01sRcaJack j9;
     R01sVideoSink video_sink;
     R01sPrgRom prg;
     R01sPads pads;

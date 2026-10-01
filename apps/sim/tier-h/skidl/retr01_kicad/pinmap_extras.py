@@ -37,6 +37,24 @@ def apply_pinmap_extras() -> None:
     t["ATtiny85"] = _nums(8)
     t["OSC4LEGS"] = _nums(14)
     t["AD724"] = _nums(16)
+    a["AD724"] = {
+        "1": "STND",
+        "2": "AGND",
+        "3": "FIN",
+        "4": "APOS",
+        "5": "ENCD",
+        "6": "RIN",
+        "7": "GIN",
+        "8": "BIN",
+        "9": "CRMA",
+        "10": "COMP",
+        "11": "LUMA",
+        "12": "SELECT",
+        "13": "DGND",
+        "14": "DPOS",
+        "15": "VSYNC",
+        "16": "HSYNC",
+    }
     t["74HCU04"] = _nums(14)
     t["SN74HCU04"] = _nums(14)
     t["74HC74"] = _nums(14)

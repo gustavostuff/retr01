@@ -185,8 +185,8 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U04", "2"): "XTAL_21M_OUT",
     ("U04", "5"): "XTAL_10M_IN",
     ("U04", "6"): "XTAL_10M_OUT",
-    ("U725", "3"): "XTAL_3M58_IN",
-    ("U725", "7"): "XTAL_3M58_OUT",
+    ("U725", "3"): "FSC_FIN",
+    ("U725", "10"): "COMPOSITE_OUT",
 
     # Connectors
     ("J2", "1"): "VIDEO_RED",

@@ -2,7 +2,7 @@
 
 Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
 
-Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. The AD724 is not in this tree yet, so the mounted IC count is still 16 motherboard parts plus the two cart memories.
+Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. **U725** (AD724) is a logic stub; **J8**/**J9** RCA tips follow PWM and COMP.
 
 # Retr01 Board Simulator
 
@@ -67,7 +67,7 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/general/hardware.md`](../../../docs/general/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
 
-**BOM:** mounted visuals are 16 motherboard ICs plus cart flash and the 24C64. The locked motherboard is 17 once the AD724 is modeled. Helper tick domain is 24 MHz.
+**BOM:** mounted VIS_IC count includes U725. RCA jacks are netlist-only (no chip glyph). Helper tick domain is 24 MHz.
 
 **Cart load:** argv, or `example_01/example_01.retr01` when omitted, is copied into cart `SST39SF040`. The app then overlays a short boot program that streams the palette and the start screen through `$7Fxx` on the pin netlist. That catchup is the boot wait. Host Play starts after it and drives the wave monitor from `game_logic.c` beside the cart. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`.
 

@@ -4,11 +4,11 @@
 /*
  * Mounted VIS_IC parts, excluding pad ATtiny85s.
  * Mounted VIS_IC parts, excluding pad ATtiny85s.
- * Includes U04/U74 clock logic. AD724 is not seated in this tree.
+ * Includes U04/U74 clock logic and U725 AD724.
  */
 #define R01S_BOM_HC157_N 3
 #define R01S_BOM_PLD_N   3
-#define R01S_BOM_IC_N    20
+#define R01S_BOM_IC_N    21
 
 enum {
     R01S_MUX157_VRAM0 = 0, /* VRAM CPU/PPU interleave nybble 0 */

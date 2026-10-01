@@ -1,6 +1,6 @@
 # Chip models
 
-Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`. Parts follow `docs/general/hardware.md`. The AD724 is not modeled yet.
+Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`. Parts follow `docs/general/hardware.md`. The AD724 model is a logic stub (COMP as video-present).
 
 | Role | File | Part |
 | --- | --- | --- |

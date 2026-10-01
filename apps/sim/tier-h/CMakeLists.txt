@@ -31,6 +31,8 @@ add_library(retr01_sim_core
   src/frame_log.c
   src/play.c
   chips/pwr5v.c
+  chips/ad724.c
+  chips/rca_jack.c
   chips/osc8m.c
   chips/atf22v10.c
   chips/i2c_eeprom.c
@@ -133,6 +135,7 @@ r01s_unit_test(test_entity)
 r01s_unit_test(test_bus)
 r01s_unit_test(test_gamepad)
 r01s_unit_test(test_pwr5v)
+r01s_unit_test(test_ad724)
 r01s_unit_test(test_osc8m)
 r01s_unit_test(test_sn74hc157)
 r01s_unit_test(test_beam_xy)

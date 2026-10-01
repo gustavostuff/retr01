@@ -2146,6 +2146,19 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
     phi2 = r01s_entity_sense(osc, "PHI2");
     /* Canned PHI2 timebase. Netlist PHI2 comes from U04 pin 8. */
     r01s_entity_drive(cpu, "PHI2", phi2 == R01S_LVL_H ? R01S_LVL_H : R01S_LVL_L);
+
+    if (ctx->video_impl.ad724) {
+        R01sEntity *enc = r01s_ad724_entity(ctx->video_impl.ad724);
+        r01s_entity_drive(enc, "APOS", vdd);
+        r01s_entity_drive(enc, "DPOS", vdd);
+        r01s_entity_drive(enc, "AGND", R01S_LVL_L);
+        r01s_entity_drive(enc, "DGND", R01S_LVL_L);
+        r01s_entity_drive(enc, "ENCD", R01S_LVL_H);
+        r01s_entity_drive(enc, "STND", R01S_LVL_H);
+        r01s_entity_drive(enc, "SELECT", R01S_LVL_L);
+        r01s_entity_drive(enc, "VSYNC", R01S_LVL_H);
+        r01s_entity_eval(enc);
+    }
 }
 
 static void board_settle_n(R01sBoard *ctx, R01sIslandGroup *group, int passes) {
@@ -2267,10 +2280,14 @@ static void island_video_init(R01sIsland *island) {
     R01sIslandVideoImpl *impl = (R01sIslandVideoImpl *)island->impl;
     r01s_compositor_init(impl->comp, "UPLDV");
     r01s_at27c256r_init(impl->prom, "U24");
+    r01s_ad724_init(impl->ad724, "U725");
+    r01s_rca_jack_init(impl->j9, "J9", "RCJ-014");
     r01s_video_sink_init(impl->sink, "SCR1");
     r01s_video_sink_set_palette(impl->sink, video_sink_kit_palette);
     r01s_island_add_entity(island, r01s_compositor_entity(impl->comp));
     r01s_island_add_entity(island, r01s_at27c256r_entity(impl->prom));
+    r01s_island_add_entity(island, r01s_ad724_entity(impl->ad724));
+    r01s_island_add_entity(island, r01s_rca_jack_entity(impl->j9));
     r01s_island_add_entity(island, r01s_video_sink_entity(impl->sink));
 }
 
@@ -2281,7 +2298,9 @@ static void island_cart_init(R01sIsland *island) {
 static void island_apu_init(R01sIsland *island) {
     R01sIslandApuImpl *impl = (R01sIslandApuImpl *)island->impl;
     r01s_avr128db28_s2_init(impl->apu, "US2");
+    r01s_rca_jack_init(impl->j8, "J8", "RCJ-012");
     r01s_island_add_entity(island, r01s_avr128db28_s2_entity(impl->apu));
+    r01s_island_add_entity(island, r01s_rca_jack_entity(impl->j8));
 }
 
 static void island_mcu_lb_init(R01sIsland *island) {
@@ -3253,6 +3272,7 @@ static void board_reset(R01sIslandGroup *group) {
     r01s_entity_reset(r01s_bg_fetch_entity(ctx->bg_fetch_impl.fetch));
     r01s_entity_reset(r01s_compositor_entity(ctx->video_impl.comp));
     r01s_entity_reset(r01s_at27c256r_entity(ctx->video_impl.prom));
+    r01s_entity_reset(r01s_ad724_entity(ctx->video_impl.ad724));
     r01s_entity_reset(r01s_video_sink_entity(ctx->video_impl.sink));
     if (ctx->cart_impl.flash) {
         r01s_entity_reset(r01s_sst39sf040_entity(ctx->cart_impl.flash));
@@ -3479,9 +3499,12 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     board->bg_fetch_impl.fetch = &board->bg_fetch;
     board->video_impl.comp = &board->compositor;
     board->video_impl.prom = &board->color_prom;
+    board->video_impl.ad724 = &board->ad724;
+    board->video_impl.j9 = &board->j9;
     board->video_impl.sink = &board->video_sink;
     r01s_board_init_cart_hw(board);
     board->apu_impl.apu = &board->mcu_s2;
+    board->apu_impl.j8 = &board->j8;
     board->mcu_lb_impl.mcu_m = &board->mcu_m;
     board->mcu_lb_impl.mcu_s1 = &board->mcu_s1;
     board->mcu_lb_impl.sram = &board->linebuf;
@@ -3534,12 +3557,15 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
     {
         R01sEntity *comp_e = r01s_compositor_entity(&board->compositor);
         R01sEntity *prom_e = r01s_at27c256r_entity(&board->color_prom);
+        R01sEntity *enc_e = r01s_ad724_entity(&board->ad724);
         R01sEntity *sink_e = r01s_video_sink_entity(&board->video_sink);
         int x = 0;
         r01s_island_builder_mount_rel(b, comp_e, R01S_ISLAND_VIDEO, 0, 0);
         x += comp_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, prom_e, R01S_ISLAND_VIDEO, x, 0);
         x += prom_e->body_w + R01S_CHIP_GAP;
+        r01s_island_builder_mount_rel(b, enc_e, R01S_ISLAND_VIDEO, x, 0);
+        x += enc_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, sink_e, R01S_ISLAND_VIDEO, x, 0);
     }
     {

@@ -1,4 +1,4 @@
-"""Motherboard connectors (not in Tier H pin graph); wired where sim nets exist."""
+"""Motherboard connectors; RCA tips follow sim nets when present."""
 
 from __future__ import annotations
 
@@ -124,6 +124,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             for nc_pin in P.TRS_NC:
                 pin_connect(parts[ref], "", nc_pin, nc)
 
+    # RCA shells to GND. Tips come from the sim JSON (US2 PWM / U725 COMP).
     if gnd:
         for ref in ("J8", "J9"):
             if ref not in parts:
@@ -131,11 +132,22 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             for shell in ("1A", "1B", "1C"):
                 pin_connect(parts[ref], "", shell, gnd)
 
-    # RCA tip (pad 2); APU / AD724 not in Tier H JSON yet - distinct stub nets.
-    if "J8" in parts:
-        pin_connect(parts["J8"], "", "2", _ensure_net(nets_map, "AUDIO_OUT"))
-    if "J9" in parts:
-        pin_connect(parts["J9"], "", "2", _ensure_net(nets_map, "COMPOSITE_OUT"))
+    def _pin_on_net(part, num_or_name: str) -> bool:
+        for pin in getattr(part, "pins", []) or []:
+            if pin.net is None:
+                continue
+            if str(getattr(pin, "num", "")) == str(num_or_name):
+                return True
+            if str(getattr(pin, "name", "") or "") == str(num_or_name):
+                return True
+        return False
+
+    if "J8" in parts and not _pin_on_net(parts["J8"], "2"):
+        pwm = _find_net_by_node(nets_map, "US2", "AUDIO_PWM")
+        pin_connect(parts["J8"], "", "2", pwm if pwm is not None else _ensure_net(nets_map, "AUDIO_OUT"))
+    if "J9" in parts and not _pin_on_net(parts["J9"], "2"):
+        comp = _find_net_by_node(nets_map, "U725", "COMP")
+        pin_connect(parts["J9"], "", "2", comp if comp is not None else _ensure_net(nets_map, "COMPOSITE_OUT"))
 
     # J2 sync-capable RGB (docs/general/hardware.md): R/G/B + CSYNC/HSYNC pin 4, pin 5 GND or VSYNC.
     if "J2" in parts:

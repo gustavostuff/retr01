@@ -75,6 +75,16 @@ int main(void) {
                                           passive_by_refdes(&board, "R13"), "1"),
                 "U74 DOT into R13");
 
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_avr128db28_s2_entity(&board.mcu_s2), "AUDIO_PWM",
+                                          r01s_rca_jack_entity(&board.j8), "2"),
+                "J8 tip on MCU-S2 PWM");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP",
+                                          r01s_rca_jack_entity(&board.j9), "2"),
+                "J9 tip on AD724 COMP");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_rca_jack_entity(&board.j8), "1A",
+                                          r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J8 shell GND");
+
     r01s_island_builder_shutdown(&builder);
     return test_done("test_board_netlist");
 }
