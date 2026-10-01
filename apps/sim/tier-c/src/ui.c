@@ -1194,15 +1194,22 @@ static NsBreadboard *ui_breadboard(const R01aUi *ui) {
     return NULL;
 }
 
-static int count_pins_on_holes(const R01aUi *ui, const NsEntity *e, int dx, int dy) {
+/* holes = tips on exact holes. conflicts = extra same-chip pins on one strip. */
+static void score_shift_on_bb(const R01aUi *ui, const NsEntity *e, int dx, int dy, int *holes,
+                              int *conflicts) {
     int n;
     int count = 0;
+    int conf = 0;
     int pin_hi = entity_pin_hi(e);
-    int bi;
+    int keys[NS_MAX_PINS];
+    int nkey = 0;
+    int i;
+    int j;
 
     for (n = 1; n <= pin_hi; n++) {
         int tx;
         int ty;
+        int bi;
         if (!entity_tip_board(e, n, &tx, &ty)) {
             continue;
         }
@@ -1210,23 +1217,33 @@ static int count_pins_on_holes(const R01aUi *ui, const NsEntity *e, int dx, int 
         ty += dy;
         for (bi = 0; bi < ui->chip_count; bi++) {
             const NsEntity *be = ui->chips[bi];
-            NsPbHole h;
-            int hx;
-            int hy;
+            int strip;
             if (!be || be->visual != NS_ENTITY_VIS_BREADBOARD || be == e) {
                 continue;
             }
-            if (!ns_breadboard_hit_hole((const NsBreadboard *)(const void *)be, tx, ty, &h)) {
+            if (!ns_breadboard_tip_strip((const NsBreadboard *)be, tx, ty, &strip)) {
                 continue;
             }
-            ns_breadboard_hole_world((const NsBreadboard *)(const void *)be, h, &hx, &hy);
-            if (hx == tx && hy == ty) {
-                count++;
-                break;
+            if (nkey < NS_MAX_PINS) {
+                keys[nkey++] = bi * NS_PB_STRIPS + strip;
+            }
+            count++;
+            break;
+        }
+    }
+    for (i = 0; i < nkey; i++) {
+        for (j = i + 1; j < nkey; j++) {
+            if (keys[i] == keys[j]) {
+                conf++;
             }
         }
     }
-    return count;
+    if (holes) {
+        *holes = count;
+    }
+    if (conflicts) {
+        *conflicts = conf;
+    }
 }
 
 static int snap_chip_to_breadboard(R01aUi *ui, int chip_i) {
@@ -1234,6 +1251,7 @@ static int snap_chip_to_breadboard(R01aUi *ui, int chip_i) {
     int n;
     int bi;
     int best_count = 0;
+    int best_conf = NS_MAX_PINS;
     int best_dx = 0;
     int best_dy = 0;
     int pin_hi;
@@ -1260,6 +1278,7 @@ static int snap_chip_to_breadboard(R01aUi *ui, int chip_i) {
             int dx;
             int dy;
             int count;
+            int conf;
             if (!be || be->visual != NS_ENTITY_VIS_BREADBOARD) {
                 continue;
             }
@@ -1269,9 +1288,10 @@ static int snap_chip_to_breadboard(R01aUi *ui, int chip_i) {
             ns_breadboard_hole_world((const NsBreadboard *)(const void *)be, h, &hx, &hy);
             dx = hx - tx;
             dy = hy - ty;
-            count = count_pins_on_holes(ui, e, dx, dy);
-            if (count > best_count) {
+            score_shift_on_bb(ui, e, dx, dy, &count, &conf);
+            if (count > best_count || (count == best_count && conf < best_conf)) {
                 best_count = count;
+                best_conf = conf;
                 best_dx = dx;
                 best_dy = dy;
             }
@@ -1569,16 +1589,30 @@ static void draw_selection(SDL_Renderer *r, int x, int y, int w, int h, int sele
     }
 }
 
+static int dip_wide_row_span_draw(const NsEntity *e, int row_span) {
+    return row_span > 0 && e->pkg_exact_mm && e->pkg_wid_mm >= 13;
+}
+
 static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int selected) {
     int inset_a = ns_entity_dip_body_inset_across(e);
     int row_span = ns_entity_dip_row_span_px(e);
+    int wide = dip_wide_row_span_draw(e, row_span);
+    int pad = 0;
+    int horiz = ns_orient_is_horiz(e->orient);
     int bod_x = e->board_x + (ns_orient_is_horiz(e->orient) ? 0 : inset_a);
     int bod_y = e->board_y + (ns_orient_is_horiz(e->orient) ? inset_a : 0);
+    if (wide) {
+        pad = (row_span - (horiz ? e->body_h : e->body_w)) / 2;
+        if (pad < 0) {
+            pad = 0;
+        }
+        bod_x = e->board_x;
+        bod_y = e->board_y + pad;
+    }
     int x = board_sx(ui, bod_x);
     int y = board_sy(ui, bod_y);
     int i;
     int dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
-    int horiz = ns_orient_is_horiz(e->orient);
     Uint8 br = selected ? 40 : 28;
     Uint8 bg = selected ? 48 : 32;
     Uint8 bb = selected ? 36 : 28;
@@ -1624,24 +1658,48 @@ static void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int se
         }
         switch (e->orient) {
         case NS_ORIENT_90: {
-            int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w);
-            draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
+            if (wide) {
+                int edge = side_pin1 ? x : board_sx(ui, e->board_x + row_span - 1 - 2 * pin_tip_reach());
+                draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
+            } else {
+                int edge = side_pin1 ? x : (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w);
+                draw_dip_pad_v(r, y + along, edge, side_pin1, tint);
+            }
             break;
         }
         case NS_ORIENT_180: {
-            int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h);
-            draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
+            if (wide) {
+                int edge = side_pin1 ? board_sy(ui, e->board_y + row_span - 1 - 2 * pin_tip_reach()) : y;
+                draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
+            } else {
+                int edge = side_pin1 ? y : (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h);
+                draw_dip_pad_h(r, x + along, edge, !side_pin1, tint);
+            }
             break;
         }
         case NS_ORIENT_270: {
-            int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w) : x;
-            draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
+            if (wide) {
+                int edge = side_pin1 ? board_sx(ui, e->board_x + row_span - 1 - 2 * pin_tip_reach()) : x;
+                draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
+            } else {
+                int edge = side_pin1 ? (row_span > 0 ? board_sx(ui, bod_x + row_span - 1 - 2 * pin_tip_reach()) : x + e->body_w) : x;
+                draw_dip_pad_v(r, y + along, edge, !side_pin1, tint);
+            }
             break;
         }
         case NS_ORIENT_0:
         default: {
-            int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h) : y;
-            draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
+            if (wide) {
+                if (side_pin1) {
+                    draw_dip_pad_h(r, x + along, y, 0, tint);
+                } else {
+                    int edge = board_sy(ui, e->board_y + pad + row_span - 1 - 2 * pin_tip_reach());
+                    draw_dip_pad_h(r, x + along, edge, 1, tint);
+                }
+            } else {
+                int edge = side_pin1 ? (row_span > 0 ? board_sy(ui, bod_y + row_span - 1 - 2 * pin_tip_reach()) : y + e->body_h) : y;
+                draw_dip_pad_h(r, x + along, edge, side_pin1, tint);
+            }
             break;
         }
         }
@@ -2291,6 +2349,48 @@ static int hole_has_part(const R01aUi *ui, int wx, int wy) {
     return 0;
 }
 
+static int entity_is_part(const NsEntity *e) {
+    return e && e->visual != NS_ENTITY_VIS_BREADBOARD && e->visual != NS_ENTITY_VIS_DISPLAY;
+}
+
+static int chip_pin_on_hole(const R01aUi *ui, const NsBreadboard *bb, NsPbHole hole) {
+    int wx;
+    int wy;
+    int i;
+    int pi;
+    if (!ui || !bb) {
+        return -1;
+    }
+    ns_breadboard_hole_world(bb, hole, &wx, &wy);
+    for (i = 0; i < ui->chip_count; i++) {
+        const NsEntity *e = ui->chips[i];
+        if (!entity_is_part(e)) {
+            continue;
+        }
+        for (pi = 0; pi < e->pin_count; pi++) {
+            int tx;
+            int ty;
+            if (!entity_tip_board(e, e->pins[pi].number, &tx, &ty)) {
+                continue;
+            }
+            if (tx == wx && ty == wy) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+static int jumper_hole_free(const R01aUi *ui, const NsBreadboard *bb, NsPbHole hole) {
+    int wx;
+    int wy;
+    if (!ui || !bb || !ns_breadboard_hole_exists(hole)) {
+        return 0;
+    }
+    ns_breadboard_hole_world(bb, hole, &wx, &wy);
+    return !hole_has_part(ui, wx, wy);
+}
+
 static int ui_supply_rail_tip(const R01aUi *ui, int ax, int ay, int pos, int *gx, int *gy) {
     const NsBreadboard *bb1 = ui_bb1(ui);
     int best_d = -1;
@@ -2799,6 +2899,29 @@ static int pin_bb_strip(const R01aUi *ui, const NsEntity *e, int pin_index, cons
     return 0;
 }
 
+static int pin_shares_strip_with_sibling(const R01aUi *ui, const NsEntity *e, int pin_index) {
+    const NsBreadboard *bb;
+    int strip;
+    int i;
+    if (!pin_bb_strip(ui, e, pin_index, &bb, &strip)) {
+        return 0;
+    }
+    for (i = 0; i < e->pin_count; i++) {
+        const NsBreadboard *obb;
+        int os;
+        if (i == pin_index) {
+            continue;
+        }
+        if (!pin_bb_strip(ui, e, i, &obb, &os)) {
+            continue;
+        }
+        if (obb == bb && os == strip) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int pins_phys_connected(const R01aUi *ui, const R01aBoard *board, const NsEntity *a, int ap,
                               const NsEntity *b, int bp) {
     const NsBreadboard *bba;
@@ -2819,7 +2942,7 @@ static int pins_phys_connected(const R01aUi *ui, const R01aBoard *board, const N
     if (ia < 0 || ib < 0) {
         return 0;
     }
-    phys_gnet_build(parent, ui, board, bbs, nbb, 1);
+    phys_gnet_build(parent, ui, board, bbs, nbb, 0);
     return phys_g_find(parent, ia * NS_PB_STRIPS + sa) == phys_g_find(parent, ib * NS_PB_STRIPS + sb);
 }
 
@@ -2843,7 +2966,7 @@ static int pin_phys_on_hole_net(const R01aUi *ui, const R01aBoard *board, const 
     if (ia < 0 || ih < 0 || hs < 0 || hs >= NS_PB_STRIPS) {
         return 0;
     }
-    phys_gnet_build(parent, ui, board, bbs, nbb, 1);
+    phys_gnet_build(parent, ui, board, bbs, nbb, 0);
     return phys_g_find(parent, ia * NS_PB_STRIPS + ps) == phys_g_find(parent, ih * NS_PB_STRIPS + hs);
 }
 
@@ -2857,6 +2980,21 @@ static int rail_strip_ids(int pos, int *ids) {
         ids[1] = base + 3;
     }
     return 2;
+}
+
+static int phys_gnet_on_supply_rail(int *parent, int nbb, int g, int pos) {
+    int ids[2];
+    int nids = rail_strip_ids(pos, ids);
+    int i;
+    int k;
+    for (i = 0; i < nbb; i++) {
+        for (k = 0; k < nids; k++) {
+            if (phys_g_find(parent, i * NS_PB_STRIPS + ids[k]) == g) {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 static int pin_phys_on_powered_rail(const R01aUi *ui, const R01aBoard *board, const NsEntity *e, int pin_index,
@@ -2878,23 +3016,7 @@ static int pin_phys_on_powered_rail(const R01aUi *ui, const R01aBoard *board, co
     }
     phys_gnet_build(parent, ui, board, bbs, nbb, 0);
     pin_g = phys_g_find(parent, ia * NS_PB_STRIPS + ps);
-    {
-        int bi1 = phys_bb_index_ref(bbs, nbb, "BB1");
-        int k;
-        int lanes[2];
-        if (bi1 >= 0) {
-            lanes[0] = pos ? NS_PB_LANE_TOP_POS : NS_PB_LANE_TOP_NEG;
-            lanes[1] = pos ? NS_PB_LANE_BOT_POS : NS_PB_LANE_BOT_NEG;
-            for (k = 0; k < 2; k++) {
-                NsPbHole rh = {0, lanes[k]};
-                int rs = ns_breadboard_strip_id(rh);
-                if (phys_g_find(parent, bi1 * NS_PB_STRIPS + rs) == pin_g) {
-                    return 1;
-                }
-            }
-        }
-    }
-    return 0;
+    return phys_gnet_on_supply_rail(parent, nbb, pin_g, pos);
 }
 
 static int gnet_marked(int *seen, int *nseen, int max, int g) {
@@ -2923,7 +3045,6 @@ static int supply_air_src(const R01aUi *ui, const R01aBoard *board, const NsEnti
     int nbb;
     int ia;
     int pin_g;
-    int bi1;
     int i;
     int tx;
     int ty;
@@ -2940,19 +3061,8 @@ static int supply_air_src(const R01aUi *ui, const R01aBoard *board, const NsEnti
     if (g_out) {
         *g_out = pin_g;
     }
-    bi1 = phys_bb_index_ref(bbs, nbb, "BB1");
-    if (bi1 >= 0) {
-        int k;
-        int lanes[2];
-        lanes[0] = pos ? NS_PB_LANE_TOP_POS : NS_PB_LANE_TOP_NEG;
-        lanes[1] = pos ? NS_PB_LANE_BOT_POS : NS_PB_LANE_BOT_NEG;
-        for (k = 0; k < 2; k++) {
-            NsPbHole rh = {0, lanes[k]};
-            int rs = ns_breadboard_strip_id(rh);
-            if (phys_g_find(parent, bi1 * NS_PB_STRIPS + rs) == pin_g) {
-                return 1;
-            }
-        }
+    if (phys_gnet_on_supply_rail(parent, nbb, pin_g, pos)) {
+        return 1;
     }
     for (i = 0; i < nbb; i++) {
         int li;
@@ -3251,7 +3361,7 @@ static int jumper_guide_dest(const R01aUi *ui, const R01aBoard *board, int *dx, 
     if (bi < 0 || hs < 0 || hs >= NS_PB_STRIPS) {
         return 0;
     }
-    phys_gnet_build(parent, ui, board, bbs, nbb, 1);
+    phys_gnet_build(parent, ui, board, bbs, nbb, 0);
     g = phys_g_find(parent, bi * NS_PB_STRIPS + hs);
     on_rail = hole_is_neg_rail(ui->jumper_from) || hole_is_pos_rail(ui->jumper_from);
     if (kind == R01A_AIR_GND || kind == R01A_AIR_PWR) {
@@ -3487,7 +3597,9 @@ static void draw_pin_air_from(SDL_Renderer *r, const R01aUi *ui, const R01aBoard
                 continue;
             }
             if (pin_name_is_gnd(e->pins[pi].name) || pin_on_gnd_net(ui, e, pi)) {
-                saw_gnd = 1;
+                if (!hover_skip_pin_pair(ui, board, src_e, pin_i, e, pi)) {
+                    saw_gnd = 1;
+                }
                 continue;
             }
             if (hover_skip_pin_pair(ui, board, src_e, pin_i, e, pi)) {
@@ -3499,7 +3611,7 @@ static void draw_pin_air_from(SDL_Renderer *r, const R01aUi *ui, const R01aBoard
             draw_air_line(r, ui, ax, ay, bx, by, src_kind);
         }
     }
-    if (saw_gnd) {
+    if (saw_gnd && !pin_phys_on_powered_rail(ui, board, src_e, pin_i, 0)) {
         draw_hover_ground(r, ui, board, src_e, pin_i, ax, ay, seen, nseen);
     }
 }
@@ -3582,7 +3694,7 @@ static void draw_manual_pin_pulses(SDL_Renderer *r, const R01aUi *ui, const R01a
             continue;
         }
         if (on_hole[i] &&
-            (e->pins[i].level == NS_LVL_X || r01a_netlist_pin_shorted(e, i))) {
+            (pin_shares_strip_with_sibling(ui, e, i) || r01a_netlist_pin_shorted(e, i))) {
             /* Drawn in a later pass so jumper lines cannot cover the blink. */
             continue;
         } else if (on_hole[i]) {
@@ -3619,7 +3731,7 @@ static void draw_short_pin_pulses(SDL_Renderer *r, const R01aUi *ui) {
             if (!pin_bb_strip(ui, e, i, &pbb, &strip)) {
                 continue;
             }
-            if (e->pins[i].level != NS_LVL_X && !r01a_netlist_pin_shorted(e, i)) {
+            if (!pin_shares_strip_with_sibling(ui, e, i) && !r01a_netlist_pin_shorted(e, i)) {
                 continue;
             }
             if (!entity_tip_board(e, e->pins[i].number, &tx, &ty)) {
@@ -3652,6 +3764,10 @@ static void draw_entity(SDL_Renderer *r, R01aUi *ui, R01aBoard *board, NsEntity 
     }
     case NS_ENTITY_VIS_PIN_HDR:
         ns_pin_header_draw(r, e, board_sx(ui, e->board_x), board_sy(ui, e->board_y), selected);
+        if (e->refdes && e->refdes[0]) {
+            r01a_font_draw(r, board_sx(ui, e->board_x), board_sy(ui, e->board_y) - r01a_font_line_h() - 1, e->refdes,
+                           180, 185, 170);
+        }
         break;
     case NS_ENTITY_VIS_IC:
     default:
@@ -4949,6 +5065,12 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
         ui->drag_jumper_elbow = -1;
         chip_i = hit_top_chip(ui, lx, ly);
         bb = hit_breadboard(ui, board_mx, board_my, &hole);
+        if (bb) {
+            int pin_c = chip_pin_on_hole(ui, bb, hole);
+            if (pin_c >= 0) {
+                chip_i = pin_c;
+            }
+        }
         if (SDL_GetModState() & KMOD_CTRL) {
             int leg_c = -1;
             int leg_p = 0;
@@ -4962,29 +5084,6 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
                 stretch_resistor_leg(ui, (NsPassive *)ui->chips[leg_c], leg_p, board_mx, board_my);
                 return 1;
             }
-        }
-        if (ui->jumper_mode && ui->jumper_arm && bb) {
-            if (ui->jumper_bb == bb && ui->jumper_from.col == hole.col &&
-                ui->jumper_from.lane == hole.lane) {
-                ui->jumper_arm = 0;
-                ui->jumper_bb = NULL;
-            } else if (ui->jumper_bb) {
-                uint8_t cr;
-                uint8_t cg;
-                uint8_t cb;
-                jumper_color_for_holes(ui, board, ui->jumper_bb, ui->jumper_from, bb, hole, &cr, &cg, &cb);
-                {
-                    int n0 = board->jumper_count;
-                    if (r01a_board_jumper_add_across(board, ui->jumper_bb, ui->jumper_from, bb, hole, cr, cg,
-                                                    cb) &&
-                        board->jumper_count > n0) {
-                        undo_push_jmp_add(ui, &board->jumpers[board->jumper_count - 1]);
-                    }
-                }
-                ui->jumper_arm = 0;
-                ui->jumper_bb = NULL;
-            }
-            return 1;
         }
         {
             int ji = -1;
@@ -5051,10 +5150,34 @@ static int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx
                 return 1;
             }
         }
-        if (ui->jumper_mode && bb) {
-            ui->jumper_arm = 1;
-            ui->jumper_from = hole;
-            ui->jumper_bb = bb;
+        if (ui->jumper_mode && bb && jumper_hole_free(ui, bb, hole) &&
+            !entity_is_part(chip_i >= 0 ? ui->chips[chip_i] : NULL)) {
+            if (ui->jumper_arm) {
+                if (ui->jumper_bb == bb && ui->jumper_from.col == hole.col &&
+                    ui->jumper_from.lane == hole.lane) {
+                    ui->jumper_arm = 0;
+                    ui->jumper_bb = NULL;
+                } else if (ui->jumper_bb) {
+                    uint8_t cr;
+                    uint8_t cg;
+                    uint8_t cb;
+                    jumper_color_for_holes(ui, board, ui->jumper_bb, ui->jumper_from, bb, hole, &cr, &cg, &cb);
+                    {
+                        int n0 = board->jumper_count;
+                        if (r01a_board_jumper_add_across(board, ui->jumper_bb, ui->jumper_from, bb, hole, cr,
+                                                        cg, cb) &&
+                            board->jumper_count > n0) {
+                            undo_push_jmp_add(ui, &board->jumpers[board->jumper_count - 1]);
+                        }
+                    }
+                    ui->jumper_arm = 0;
+                    ui->jumper_bb = NULL;
+                }
+            } else {
+                ui->jumper_arm = 1;
+                ui->jumper_from = hole;
+                ui->jumper_bb = bb;
+            }
             return 1;
         }
         if (ui->jumper_arm) {

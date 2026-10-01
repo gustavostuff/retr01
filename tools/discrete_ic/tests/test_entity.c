@@ -36,9 +36,23 @@ int main(void) {
     expect_true(ns_entity_pin(&e, 1) != NULL, "pin 1");
     expect_true(ns_entity_pin(&e, 99) == NULL, "missing pin");
 
+    ns_entity_init(&e, &vt, "ATF22V10", "UPLDX");
+    ns_entity_set_dip_mm(&e, 24, 32, 8);
+    expect_true(ns_entity_dip_row_span_px(&e) == 20, "ATF22 row span 20 px (E/G + extra pitch)");
+    ns_entity_place(&e, 0, 0);
+    {
+        int tx;
+        int ty1;
+        int ty13;
+        expect_true(ns_entity_pin_tip_board(&e, 1, &tx, &ty1), "ATF22 pin 1 tip");
+        expect_true(ns_entity_pin_tip_board(&e, 13, &tx, &ty13), "ATF22 pin 13 tip");
+        expect_true(ty1 - ty13 == 20, "ATF22 opposing tips 20 px");
+    }
+
     ns_entity_init(&e, &vt, "AT27C256R", "U24");
     ns_entity_set_dip_mm(&e, 28, 37, 14);
-    expect_true(e.body_w == 37 * NS_PX_PER_MM && e.body_h == 14 * NS_PX_PER_MM, "28P6 exact body px");
+    expect_true(e.body_w == 37 * NS_PX_PER_MM && e.body_h == 14 * NS_PX_PER_MM - NS_DIP_WIDE_BODY_TRIM_PX,
+                "28P6 exact body px (plastic trimmed for pin rows)");
     expect_true(ns_entity_dip_row_span_px(&e) == 30, "28P6 row span 30 px (600 mil)");
     ns_entity_add_pin(&e, 1, "VPP", NS_PIN_PWR);
     ns_entity_add_pin(&e, 28, "VCC", NS_PIN_PWR);
@@ -47,7 +61,7 @@ int main(void) {
         int tx1, ty1, tx28, ty28;
         expect_true(ns_entity_pin_tip_board(&e, 1, &tx1, &ty1), "pin 1 tip");
         expect_true(ns_entity_pin_tip_board(&e, 28, &tx28, &ty28), "pin 28 tip");
-        expect_true(ty1 - ty28 == 30, "opposing pin tips 30 px apart");
+        expect_true(ty28 - ty1 == 30, "opposing pin tips 30 px apart (E/I rows)");
     }
 
     ns_entity_init(&e, &vt, "HDR", "J2");

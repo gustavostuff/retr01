@@ -51,6 +51,13 @@ int main(void) {
     NsPbHole a0_h = {20, NS_PB_LANE_F};
 
     r01a_board_init(&board);
+    expect_true(strcmp(r01a_netlist_bypass_ic("C1"), "U04") == 0, "C1 bypasses U04");
+    expect_true(strcmp(r01a_netlist_bypass_ic("C2"), "U74") == 0, "C2 bypasses U74");
+    expect_true(strcmp(r01a_netlist_bypass_ic("C3"), "UPLDX") == 0, "C3 bypasses UPLDX");
+    expect_true(strcmp(r01a_netlist_bypass_ic("C4"), "UPLDY") == 0, "C4 bypasses UPLDY");
+    expect_true(strcmp(r01a_netlist_bypass_ic("C5"), "U24") == 0, "C5 bypasses U24");
+    expect_true(r01a_netlist_bypass_ic("C6") == NULL, "C6 is a Pierce load, not bypass");
+    expect_true(strcmp(r01a_netlist_bypass_cap("U04"), "C1") == 0, "U04 bypass cap is C1");
     r01a_board_set_wire_mode(&board, R01A_WIRE_MANUAL);
     n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
     expect_true(n > 0, "unwired Manual reports opens");

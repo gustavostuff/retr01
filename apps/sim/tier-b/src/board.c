@@ -729,43 +729,53 @@ static int place_along(NsEntity *e, int *x, int y, int gap) {
     return bottom;
 }
 
-/* Same free cluster as Tier A. The Compositor and its cap sit aside until a layout loads. */
+/* Tier A clock and beams, plus the Compositor. Screen and one protoboard. */
 static void board_place_free(R01aBoard *board) {
-    const int origin_x = 40;
-    const int origin_y = 40;
-    const int gap = 12;
+    const int gap = 8;
     int x;
     int y;
-    int row0_h = 0;
-    int row0_right;
-    int row1_right;
-    int cluster_right;
+    int row_h;
     int bottom;
+    NsEntity *bb;
+    NsEntity *scr;
 
-    x = origin_x;
-    y = origin_y;
+    x = 8;
+    y = 8;
+    row_h = 0;
     bottom = place_along(r01a_osc_dot_entity(&board->osc_dot), &x, y, gap);
-    if (bottom - y > row0_h) {
-        row0_h = bottom - y;
+    if (bottom - y > row_h) {
+        row_h = bottom - y;
     }
-    row0_right = x - gap;
+    bottom = place_along(r01a_atf22v10_entity(&board->beam_x), &x, y, gap);
+    if (bottom - y > row_h) {
+        row_h = bottom - y;
+    }
+    bottom = place_along(r01a_atf22v10_entity(&board->beam_y), &x, y, gap);
+    if (bottom - y > row_h) {
+        row_h = bottom - y;
+    }
+    bottom = place_along(r01a_atf22v10_entity(&board->compositor), &x, y, gap);
+    if (bottom - y > row_h) {
+        row_h = bottom - y;
+    }
 
-    x = origin_x;
-    y = origin_y + row0_h + 16;
-    (void)place_along(r01a_atf22v10_entity(&board->beam_x), &x, y, gap);
-    (void)place_along(r01a_atf22v10_entity(&board->beam_y), &x, y, gap);
-    (void)place_along(r01a_at27c256r_entity(&board->prom), &x, y, gap);
-    (void)place_along(r01a_rgbs_hdr_entity(&board->rgbs), &x, y, gap);
-    row1_right = x - gap;
-    cluster_right = row0_right > row1_right ? row0_right : row1_right;
-    ns_entity_place(ns_video_sink_entity(&board->sink), cluster_right + 28, origin_y);
-    ns_entity_place(ns_breadboard_entity(&board->breadboard), origin_x, y + 72);
-    {
-        NsEntity *bb = ns_breadboard_entity(&board->breadboard);
-        ns_passive_bank_layout_grid(&board->passives, origin_x, bb->board_y + bb->body_h + 16, 6, 6);
+    x = 8;
+    y = 8 + row_h + 12;
+    row_h = 0;
+    bottom = place_along(r01a_at27c256r_entity(&board->prom), &x, y, gap);
+    if (bottom - y > row_h) {
+        row_h = bottom - y;
     }
-    /* New in Tier B. Kept off the Tier A cluster so an inherited layout does not cover it. */
-    ns_entity_place(r01a_atf22v10_entity(&board->compositor), cluster_right + 28, origin_y + 200);
+    bottom = place_along(r01a_rgbs_hdr_entity(&board->rgbs), &x, y, gap);
+    if (bottom - y > row_h) {
+        row_h = bottom - y;
+    }
+
+    scr = ns_video_sink_entity(&board->sink);
+    bb = ns_breadboard_entity(&board->breadboard);
+    ns_entity_place(scr, 8, y + row_h + 12);
+    ns_entity_place(bb, scr->board_x + scr->body_w + 16, scr->board_y);
+    ns_passive_bank_layout_grid(&board->passives, bb->board_x, bb->board_y + bb->body_h + 10, 6, 6);
 }
 
 void r01a_board_init(R01aBoard *board) {

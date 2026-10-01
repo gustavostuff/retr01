@@ -98,6 +98,8 @@ struct NsEntity {
 /* JEDEC 0.100" pin pitch = 2.54 mm -> round(2.54 * NS_PX_PER_MM) = 5 px.
  * Same lattice as breadboard: 1 px hole + 4 px gap. */
 #define NS_DIP_PIN_PITCH_PX ((254 * NS_PX_PER_MM + 50) / 100)
+/* 600 mil PDIP: molded E1 is narrower than pin-row span; trim drawn plastic so legs sit outside. */
+#define NS_DIP_WIDE_BODY_TRIM_PX 3
 /* Soft hint only. Draw centers the pin row in leftover body length. */
 #define NS_DIP_PIN_MARGIN_PX 2
 

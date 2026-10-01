@@ -36,4 +36,17 @@ typedef struct R01aNetIssue {
 int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out);
 const char *r01a_netlist_kind_label(int kind);
 
+#define R01A_BYPASS_N 5
+
+typedef struct R01aBypassPair {
+    const char *cap;
+    const char *ic;
+} R01aBypassPair;
+
+/* 100 nF bypass: C1 U04, C2 U74, C3 UPLDX, C4 UPLDY, C5 U24.
+ * Air overlay is pin 1 → that IC VCC only. Pin 2 is any GND. */
+extern const R01aBypassPair r01a_bypass_pairs[R01A_BYPASS_N];
+const char *r01a_netlist_bypass_ic(const char *cap_ref);
+const char *r01a_netlist_bypass_cap(const char *ic_ref);
+
 #endif

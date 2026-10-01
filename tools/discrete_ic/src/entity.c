@@ -116,6 +116,11 @@ void ns_entity_refresh_body(NsEntity *e) {
     }
     if (!e->pkg_exact_mm) {
         across = ns_dip_snap_across_px(across);
+    } else if (e->pkg_wid_mm >= 13) {
+        across -= NS_DIP_WIDE_BODY_TRIM_PX;
+        if (across < 1) {
+            across = 1;
+        }
     }
     if (!ns_orient_is_horiz(e->orient)) {
         e->body_w = across;
@@ -347,10 +352,18 @@ int ns_entity_dip_row_span_px(const NsEntity *e) {
     if (e->pkg_wid_mm >= 13) {
         return (1524 * NS_PX_PER_MM + 50) / 100;
     }
-    if (e->pkg_wid_mm <= 7) {
-        return (762 * NS_PX_PER_MM + 50) / 100;
+    {
+        int span300 = (762 * NS_PX_PER_MM + 50) / 100;
+        /* ATF22-class 8 mm body: one extra breadboard pitch vs 74HC (E-F -> E-G). */
+        if (e->pkg_wid_mm >= 8) {
+            span300 += NS_DIP_PIN_PITCH_PX;
+        }
+        return span300;
     }
-    return 0;
+}
+
+static int dip_wide_row_span_pkg(const NsEntity *e, int row_span) {
+    return row_span > 0 && e->pkg_exact_mm && e->pkg_wid_mm >= 13;
 }
 
 int ns_entity_dip_body_inset_across(const NsEntity *e) {
@@ -474,12 +487,24 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
     {
         int row_span = ns_entity_dip_row_span_px(e);
         int inset = ns_entity_dip_body_inset_across(e);
+        int wide = dip_wide_row_span_pkg(e, row_span);
+        int pad = 0;
         int bod_x = e->board_x + (ns_orient_is_horiz(e->orient) ? 0 : inset);
         int bod_y = e->board_y + (ns_orient_is_horiz(e->orient) ? inset : 0);
+        if (wide) {
+            pad = (row_span - (ns_orient_is_horiz(e->orient) ? e->body_h : e->body_w)) / 2;
+            if (pad < 0) {
+                pad = 0;
+            }
+            bod_x = e->board_x;
+            bod_y = e->board_y;
+        }
         switch (e->orient) {
         case NS_ORIENT_90:
             *tby = e->board_y + along;
-            if (row_span > 0) {
+            if (wide) {
+                *tbx = side_pin1 ? (bod_x + pad - 1 - reach) : (bod_x + pad + row_span - 1 - reach);
+            } else if (row_span > 0) {
                 *tbx = side_pin1 ? (bod_x - 1 - reach) : (bod_x + row_span - 1 - reach);
             } else {
                 *tbx = side_pin1 ? (e->board_x - 1 - reach) : (e->board_x + e->body_w + reach);
@@ -487,7 +512,9 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
             break;
         case NS_ORIENT_180:
             *tbx = e->board_x + along;
-            if (row_span > 0) {
+            if (wide) {
+                *tby = side_pin1 ? (bod_y + pad + row_span - 1 - reach) : (bod_y + pad - 1 - reach);
+            } else if (row_span > 0) {
                 *tby = side_pin1 ? (bod_y - 1 - reach) : (bod_y + row_span - 1 - reach);
             } else {
                 *tby = side_pin1 ? (e->board_y - 1 - reach) : (e->board_y + e->body_h + reach);
@@ -495,7 +522,9 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
             break;
         case NS_ORIENT_270:
             *tby = e->board_y + along;
-            if (row_span > 0) {
+            if (wide) {
+                *tbx = side_pin1 ? (bod_x + pad + row_span - 1 - reach) : (bod_x + pad - 1 - reach);
+            } else if (row_span > 0) {
                 *tbx = side_pin1 ? (bod_x + row_span - 1 - reach) : (bod_x - 1 - reach);
             } else {
                 *tbx = side_pin1 ? (e->board_x + e->body_w + reach) : (e->board_x - 1 - reach);
@@ -504,7 +533,9 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
         case NS_ORIENT_0:
         default:
             *tbx = e->board_x + along;
-            if (row_span > 0) {
+            if (wide) {
+                *tby = side_pin1 ? (bod_y + pad - 1 - reach) : (bod_y + pad + row_span - 1 - reach);
+            } else if (row_span > 0) {
                 *tby = side_pin1 ? (bod_y + row_span - 1 - reach) : (bod_y - 1 - reach);
             } else {
                 *tby = side_pin1 ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);

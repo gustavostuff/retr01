@@ -93,6 +93,40 @@ static NsEntity *ent(R01aBoard *b, const char *ref) {
     return r01a_board_entity_by_refdes(b, ref);
 }
 
+const R01aBypassPair r01a_bypass_pairs[R01A_BYPASS_N] = {
+    {"C1", "U04"},
+    {"C2", "U74"},
+    {"C3", "UPLDX"},
+    {"C4", "UPLDY"},
+    {"C5", "U24"},
+};
+
+const char *r01a_netlist_bypass_ic(const char *cap_ref) {
+    int i;
+    if (!cap_ref) {
+        return NULL;
+    }
+    for (i = 0; i < R01A_BYPASS_N; i++) {
+        if (strcmp(cap_ref, r01a_bypass_pairs[i].cap) == 0) {
+            return r01a_bypass_pairs[i].ic;
+        }
+    }
+    return NULL;
+}
+
+const char *r01a_netlist_bypass_cap(const char *ic_ref) {
+    int i;
+    if (!ic_ref) {
+        return NULL;
+    }
+    for (i = 0; i < R01A_BYPASS_N; i++) {
+        if (strcmp(ic_ref, r01a_bypass_pairs[i].ic) == 0) {
+            return r01a_bypass_pairs[i].cap;
+        }
+    }
+    return NULL;
+}
+
 static void build_auto(R01aBoard *b) {
     NsEntity *u04 = ent(b, "U04");
     NsEntity *u74 = ent(b, "U74");
@@ -106,11 +140,6 @@ static void build_auto(R01aBoard *b) {
     NsEntity *c6 = ent(b, "C6");
     NsEntity *c7 = ent(b, "C7");
     NsEntity *e1 = ent(b, "E1");
-    NsEntity *c1 = ent(b, "C1");
-    NsEntity *c2 = ent(b, "C2");
-    NsEntity *c3 = ent(b, "C3");
-    NsEntity *c4 = ent(b, "C4");
-    NsEntity *c5 = ent(b, "C5");
     int i;
     char iname[8];
     char aname[4];
@@ -135,20 +164,12 @@ static void build_auto(R01aBoard *b) {
     if (e1) {
         link_n(u04, "VCC", e1, "+");
     }
-    if (c1) {
-        link_n(u04, "VCC", c1, "1");
-    }
-    if (c2) {
-        link_n(u04, "VCC", c2, "1");
-    }
-    if (c3) {
-        link_n(u04, "VCC", c3, "1");
-    }
-    if (c4) {
-        link_n(u04, "VCC", c4, "1");
-    }
-    if (c5) {
-        link_n(u04, "VCC", c5, "1");
+    for (i = 0; i < R01A_BYPASS_N; i++) {
+        NsEntity *cap = ent(b, r01a_bypass_pairs[i].cap);
+        NsEntity *ic = ent(b, r01a_bypass_pairs[i].ic);
+        if (cap && ic) {
+            link_n(cap, "1", ic, "VCC");
+        }
     }
 
     /* GND rail distribution */
@@ -167,20 +188,12 @@ static void build_auto(R01aBoard *b) {
     if (e1) {
         link_n(u04, "GND", e1, "-");
     }
-    if (c1) {
-        link_n(u04, "GND", c1, "2");
-    }
-    if (c2) {
-        link_n(u04, "GND", c2, "2");
-    }
-    if (c3) {
-        link_n(u04, "GND", c3, "2");
-    }
-    if (c4) {
-        link_n(u04, "GND", c4, "2");
-    }
-    if (c5) {
-        link_n(u04, "GND", c5, "2");
+    for (i = 0; i < R01A_BYPASS_N; i++) {
+        NsEntity *cap = ent(b, r01a_bypass_pairs[i].cap);
+        NsEntity *ic = ent(b, r01a_bypass_pairs[i].ic);
+        if (cap && ic) {
+            link_n(cap, "2", ic, "GND");
+        }
     }
     if (c6) {
         link_n(u04, "GND", c6, "2");
