@@ -23,16 +23,16 @@ Retr01 does not rely on manual graphical schematic capture in KiCad Eeschema (`.
            |
            v (Import Netlist / Update PCB)
 [Physical KiCad PCB Layout]
-  apps/sim/tier-h/kicad/main-pcb/v_01/v_01.kicad_pcb
+  apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb
 ```
 
-Without a KiCad schematic sheet, the board file (`v_01.kicad_pcb`) still has to match the simulation pin graph (`retr01_tier_h.json`) with no missing or swapped connections. The comparison below is that check.
+Without a KiCad schematic sheet, `v_02.kicad_pcb` still has to match the simulation pin graph (`retr01_tier_h.json`) with no missing or swapped connections. The comparison below is that check.
 
 ---
 
 ## 2. Architecture of the automated netlist comparison tool
 
-A dedicated Python verification tool compares the virtual pin netlist (`retr01_tier_h.json`) directly against the physical board file (`v_01.kicad_pcb`).
+A dedicated Python verification tool compares the virtual pin netlist (`retr01_tier_h.json`) directly against the physical board file (`v_02.kicad_pcb`).
 
 ### Data structures being compared
 
@@ -47,7 +47,7 @@ A dedicated Python verification tool compares the virtual pin netlist (`retr01_t
      ]
    }
    ```
-2. **KiCad PCB file (`v_01.kicad_pcb`):**
+2. **KiCad PCB file (`v_02.kicad_pcb`):**
    A standard S-expression text file defining footprints, pads, and assigned net IDs:
    ```lisp
    (footprint "Retr01_Lib:DIP-40_W15.24mm"
@@ -77,7 +77,7 @@ The comparison logic is structured as a standalone verification script (`scripts
 ```python
 #!/usr/bin/env python3
 """
-Compares retr01_tier_h.json (sim netlist) against v_01.kicad_pcb (board file).
+Compares retr01_tier_h.json (sim netlist) against v_02.kicad_pcb (board file).
 Reports missing pins, net mismatches, open circuits, and unintentional shorts.
 """
 
@@ -208,7 +208,7 @@ A manual datasheet audit covers every counted IC package:
 Gerber export for a fab house follows this order:
 
 1. **Sim export:** `export_netlist.sh` regenerates `retr01_tier_h.json` and `retr01_prelim.net`.
-2. **Netlist import:** `retr01_prelim.net` is re-imported into `v_01.kicad_pcb` so upstream netlist edits are present.
+2. **Netlist import:** `retr01_prelim.net` is re-imported into `v_02.kicad_pcb` so upstream netlist edits are present.
 3. **Automated script comparison:** `scripts/verify_pcb_netlist.py` reports `PASS: 100% equivalence`.
 4. **KiCad DRC:** Pcbnew Design Rules Checker reports **0 unrouted nets** and **0 DRC errors**.
 5. **Physical 1:1 paper printout:** A 100% scale print of the layout is checked against real DIP sockets and jacks for lead spacing and drill sizes.

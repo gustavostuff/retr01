@@ -9,7 +9,7 @@
 3. `apps/sim/tier-h/src/board_netlist.c` (major digital buses in Tier H sim)
 4. Tier H sim canvas (visual cross-check, not fab sign-off)
 
-The KiCad tree today has a populated **`v_01.kicad_pcb`** and an empty **`v_01.kicad_sch`**. The intended flow is **schematic-first**: symbols and wires in Eeschema, then **Update PCB from Schematic** (F8). Skidl netlist import ([`tier-h-skidl-export.md`](../bringup/tier-h-skidl-export.md)) remains an optional cross-check, not the schematic source of truth.
+The KiCad tree has a populated **`v_02.kicad_pcb`** / **`v_02.kicad_pro`** under `apps/sim/tier-h/kicad/main-pcb/v_01/`. Schematic capture still targets that folder (empty **`v_01.kicad_sch`** until sheets exist). The intended flow is **schematic-first**: symbols and wires in Eeschema, then **Update PCB from Schematic** (F8). Skidl netlist import ([`tier-h-skidl-export.md`](../bringup/tier-h-skidl-export.md)) remains an optional cross-check, not the schematic source of truth.
 
 ---
 

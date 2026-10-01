@@ -14,7 +14,7 @@ Logical pad-board nets (DIP-8 physical pins depend on firmware pin map):
 
 | Net | Dir | What the net must provide |
 | --- | --- | --- |
-| **VCC** / **GND** | PWR | Tip = 5 V, Sleeve = GND on Switchcraft TRS |
+| **VCC** / **GND** | PWR | Tip = 5 V, Sleeve = GND on the TRS jack |
 | **DATA** | IO | Ring. Open-drain UART. Sense host polls |
 | **RESET#** | IN | ISP / reset (keep recoverable) |
 | **Button GPIOs** | IN | Local pad switches to GND (firmware-defined pins) |

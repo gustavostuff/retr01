@@ -68,7 +68,7 @@ Script behavior:
 - Maps quartz crystals **Y1-Y3** to HC-49/US vertical packages and instantiates the discrete clock network with **U04** (74HCU04) and **U74** (74HC74). Other motherboard ICs use **DIP / THT footprints** from `retr01_kicad/` except **U725 / AD724** (**SOIC-16** `Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`)
 - **J3/J4** CUI Devices **SJ1-3515N** 5-pin horizontal TRS jack (`Retr01_Lib:Jack_3.5mm_CUI_SJ1-3515N_Horizontal`), **J8/J9** RCA (**RCJ-012** / **RCJ-014**, footprint **`Retr01_Lib:CUI_RCJ-014`** from GameTank `avboard_tht2`), **J5/J6** arcade 1x10, **J2** 1x6 RGB/sync header, **J36** **`Retr01_Lib:EDAC_395_MoboSocket_2x18_2.54x5.08mm`** (2x18 THT + **`${KIPRJMOD}/library/Retr01_Lib.3dshapes/EDAC_395-036-520-201.wrl`**), **J1** GCT **DCJ200-10-A** horizontal barrel jack (see `retr01_kicad/tier_h_map.py` and `connectors.py`)
 - **J2** wiring (preliminary): pins 1-3 = PROM DAC guns after **R9-R11**. Pin 4 = **CSYNC** with **UPLDV** EQ (pin 14). Pins 5-6 = **GND** (RGBS default per [`hardware.md`](../general/hardware.md). RGBHV uses a mode jumper on pin 5 for **VSYNC** later). **U725 / AD724** stays on **`NC`** only (no video nets).
-- Custom footprints live in-repo at `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty`. **`export_netlist.sh` copies** that tree into `apps/sim/tier-h/kicad/main-pcb/v_01/library/Retr01_Lib.pretty` (no symlinks). The board **`fp-lib-table`** uses `${KIPRJMOD}/library/Retr01_Lib.pretty`. Re-import the netlist from **`v_01`** after export or KiCad may substitute stock footprints and drop **J3/J4** TRS / the second RCA.
+- Custom footprints live in-repo at `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty`. **`export_netlist.sh` copies** that tree into `apps/sim/tier-h/kicad/main-pcb/v_01/library/Retr01_Lib.pretty` (no symlinks). Both `v_01.kicad_pro` and `v_02.kicad_pro` live in that folder, so `${KIPRJMOD}` resolves. Re-import the netlist into **`v_02.kicad_pcb`** after export or KiCad may substitute stock footprints and drop **J3/J4** TRS / the second RCA.
 - Skips **SCR1** (sim LCD sink), and **PS1** sim PMIC pins remap to **J1**
 - Unused footprint pads (arcade headers, **U725**, TRS NC pads, crystal load pins, etc.) tie to net **`NC`** so Pcbnew netlist import does not warn on missing symbol pins
 
@@ -77,7 +77,7 @@ KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual e
 ### KiCad custom library and board
 
 - **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/` (3D offset/rotation live in each `.kicad_mod` `(model ...)` block).
-- **Board:** `apps/sim/tier-h/kicad/main-pcb/v_01/v_01.kicad_pcb` and `v_01.kicad_pro`. Open the project from **`v_01/`** so `${KIPRJMOD}` resolves.
+- **Board:** `apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb` and `v_02.kicad_pro`. Open the project from **`v_01/`** so `${KIPRJMOD}` resolves.
 - **Export copy:** `export_netlist.sh` copies the library tree into `v_01/library/` for KiCad (`fp-lib-table` -> `${KIPRJMOD}/library/Retr01_Lib.pretty`).
 
 Notable custom footprints: **J36** `EDAC_395_MoboSocket_2x18_2.54x5.08mm` (5.08 mm row spacing), **J3/J4** CUI SJ1-3515N horizontal jack, **J1** GCT DCJ200-10-A barrel jack, **J8/J9** `CUI_RCJ-014` / `CUI_RCJ-014_Audio`, **U725** narrow **SOIC-16** (trimmed silk from KiCad `Package_SO`). Supplier STEP sources for WRL regeneration are under `Retr01_Lib.3dshapes/_step_source/`. Colored WRLs use `scripts/step_colored_to_wrl.py` when needed.
