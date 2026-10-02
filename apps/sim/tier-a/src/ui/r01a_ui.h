@@ -3,6 +3,7 @@
 
 #include "r01a_board.h"
 
+#include "discrete_ic/breadboard.h"
 #include "discrete_ic/entity.h"
 #include "discrete_ic/passive.h"
 #include "discrete_ic/types.h"
@@ -38,6 +39,9 @@
 #define R01A_SEL_B 80
 #define R01A_HIST_MAX 64
 #define R01A_HIST_REF 16
+#define R01A_COPPER_TRACES 0
+#define R01A_BB_MAX 8
+#define R01A_JUMPER_COLORS 11
 
 typedef struct R01aTrace {
     int n;
@@ -101,6 +105,17 @@ typedef struct R01aUi {
     int dest_pin;
     int show_nets;
     int air_hard;
+    int bb_count;
+    NsBreadboard *bbs[R01A_BB_MAX];
+    int jumper_arm;
+    int jumper_mode;
+    int jumper_color_i;
+    NsPbHole jumper_from;
+    NsBreadboard *jumper_bb;
+    int selected_bb;
+    int drag_bb;
+    int drag_bb_from_x;
+    int drag_bb_from_y;
     R01aHistory hist;
 } R01aUi;
 
@@ -113,6 +128,7 @@ void canvas_zoom_by(R01aUi *ui, int delta, int lx, int ly);
 void pan_lock_point(R01aUi *ui, int gx, int gy, int lx, int ly);
 
 void bind_chips(R01aUi *ui, R01aBoard *board);
+void bind_breadboards(R01aUi *ui, R01aBoard *board);
 int snap_grid(int v);
 int snap_pin(int v);
 void move_entity(NsEntity *e, int bx, int by);
@@ -168,5 +184,19 @@ int hist_redo(R01aUi *ui);
 
 void rotate_selected(R01aUi *ui);
 int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx, int ly);
+
+void ui_sync_wire_mode(R01aUi *ui, R01aBoard *board);
+NsBreadboard *ui_bb_named(const R01aUi *ui, const char *ref);
+int hit_bb_body(const R01aUi *ui, int bx, int by, int *bb_i_out);
+NsBreadboard *hit_breadboard(const R01aUi *ui, int bx, int by, NsPbHole *hole);
+int chip_pin_on_hole(const R01aUi *ui, const NsBreadboard *bb, NsPbHole hole);
+void draw_breadboards(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board);
+void snap_chip_to_breadboard(R01aUi *ui, int chip_i);
+void snap_part_to_breadboard(R01aUi *ui, int chip_i);
+void jumper_wheel_color(R01aUi *ui, int delta);
+void jumper_arm_rgb(const R01aUi *ui, uint8_t *r, uint8_t *g, uint8_t *b);
+void draw_jumpers(SDL_Renderer *r, const R01aUi *ui, const R01aBoard *board);
+void jumpers_cancel(R01aUi *ui);
+int jumpers_try_click(R01aUi *ui, R01aBoard *board, int bx, int by, int chip_i);
 
 #endif

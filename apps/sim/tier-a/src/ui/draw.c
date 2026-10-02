@@ -215,8 +215,8 @@ static void draw_pad(SDL_Renderer *r, const R01aUi *ui, int cx, int cy, int hove
 void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int selected, int hover_pin) {
     int x = board_sx(ui, e->board_x);
     int y = board_sy(ui, e->board_y);
-    int bw = ic_body_w(e);
-    int bh = ic_body_h(e);
+    int bw = e->body_w;
+    int bh = e->body_h;
     int i;
     fill_rect(r, x, y, bw, bh, selected ? 56 : 40, selected ? 56 : 40, selected ? 56 : 40);
     if (selected) {
@@ -506,6 +506,21 @@ void draw_frame(R01aUi *ui, R01aBoard *board) {
     SDL_RenderClear(ui->rend);
     SDL_RenderSetScale(ui->rend, (float)canvas_zoom(ui), (float)canvas_zoom(ui));
 
+    /* Bottom → top: LCD, breadboards, parts, then wires/jumpers. */
+    for (rank = 0; rank < ui->chip_count; rank++) {
+        int ci = ui->chip_z[rank];
+        NsEntity *e;
+        if (ci < 0 || ci >= ui->chip_count) {
+            continue;
+        }
+        e = ui->chips[ci];
+        if (e && e->visual == NS_ENTITY_VIS_DISPLAY) {
+            draw_lcd(ui->rend, ui, (NsVideoSink *)e, ci == ui->selected);
+        }
+    }
+
+    draw_breadboards(ui->rend, ui, board);
+
     for (rank = 0; rank < ui->chip_count; rank++) {
         int ci = ui->chip_z[rank];
         NsEntity *e;
@@ -515,27 +530,30 @@ void draw_frame(R01aUi *ui, R01aBoard *board) {
             continue;
         }
         e = ui->chips[ci];
-        if (!e) {
+        if (!e || e->visual == NS_ENTITY_VIS_DISPLAY) {
             continue;
         }
         sel = ci == ui->selected;
         hp = (ci == ui->hover_chip) ? ui->hover_pin : -1;
-        if (e->visual == NS_ENTITY_VIS_DISPLAY) {
-            draw_lcd(ui->rend, ui, (NsVideoSink *)e, sel);
-        } else if (is_passive_glyph(e)) {
+        if (is_passive_glyph(e)) {
             draw_passive_glyph(ui->rend, ui, e, sel, hp);
         } else {
             draw_ic(ui->rend, ui, e, sel, hp);
         }
     }
 
+    draw_jumpers(ui->rend, ui, board);
     if (ui->show_nets) {
-        int mx;
-        int my;
-        draw_traces(ui->rend, ui);
         draw_air_wires(ui->rend, ui);
-        logic_to_board(ui, ui->mouse_lx, ui->mouse_ly, &mx, &my);
-        draw_arm(ui->rend, ui, mx, my);
+#if R01A_COPPER_TRACES
+        {
+            int mx;
+            int my;
+            draw_traces(ui->rend, ui);
+            logic_to_board(ui, ui->mouse_lx, ui->mouse_ly, &mx, &my);
+            draw_arm(ui->rend, ui, mx, my);
+        }
+#endif
     }
 
     SDL_RenderSetScale(ui->rend, 1.0f, 1.0f);

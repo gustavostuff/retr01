@@ -36,6 +36,8 @@ int r01a_ui_run(R01aBoard *board) {
     ui.dest_pin = -1;
     ui.zoom = 1;
     ui.show_nets = 1;
+    ui.selected_bb = -1;
+    ui.drag_bb = -1;
     r01a_board_set_wire_mode(board, R01A_WIRE_AUTO);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -78,9 +80,20 @@ int r01a_ui_run(R01aBoard *board) {
     dummy_air = ui.show_nets;
     (void)r01a_layout_load(R01A_LAYOUT_FILE, board, &ui.pan_x, &ui.pan_y, &ui.zoom, &dummy_air);
     ui.show_nets = dummy_air ? 1 : 0;
-    r01a_board_set_wire_mode(board, R01A_WIRE_AUTO);
+    ui.pan_x = snap_grid(ui.pan_x);
+    ui.pan_y = snap_grid(ui.pan_y);
     bind_chips(&ui, board);
+    bind_breadboards(&ui, board);
+    ui_sync_wire_mode(&ui, board);
     snap_placed_chips(&ui);
+    {
+        int bi;
+        for (bi = 0; bi < ui.bb_count; bi++) {
+            if (ui.bbs[bi]) {
+                move_entity(&ui.bbs[bi]->base, ui.bbs[bi]->base.board_x, ui.bbs[bi]->base.board_y);
+            }
+        }
+    }
     pin_net_build(&ui);
     hist_init(&ui);
 

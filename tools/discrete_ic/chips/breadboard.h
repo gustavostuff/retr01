@@ -11,19 +11,36 @@
  *
  * 63 terminal columns x 10 + 4 power rails (830-point class).
  *
- * Lattice: 1 px hole + 4 px gap = 5 px pitch (same as NS_DIP_PIN_PITCH_PX).
- * Trench gap is 2 pitches so E-to-F hole centers are 15 px (300 mil DIP tip span).
+ * Lattice (default): 1 px hole + 4 px gap = 5 px pitch.
+ * R01A_BB_3PX (tier A): 3×3 px holes, 3 px gap (6 px pitch); body W/H are multiples of 3 px
+ * so a grid-snapped board origin puts every hole center on the world 3 px lattice.
  */
 #define NS_PB_COLS 63
+#ifdef R01A_BB_3PX
+#define NS_PB_HOLE 3
+#define NS_PB_GAP 3
+#define NS_PB_PITCH (NS_PB_HOLE + NS_PB_GAP)
+#define NS_PB_MARGIN NS_PB_PITCH
+#define NS_PB_GAP_RAIL (NS_PB_PITCH * 2)
+#define NS_PB_GAP_TRENCH (NS_PB_PITCH * 2)
+#define NS_PB_HOLE_INSET ((NS_PB_PITCH - NS_PB_HOLE) / 2)
+#define NS_PB_RAIL_GROUP 5
+#define NS_PB_RAIL_GROUPS 10
+#define NS_PB_RAIL_GAP_COL 30
+#define NS_PB_RAIL_GAP_LEN 3
+#define NS_PB_RAIL_HALF (NS_PB_RAIL_GROUPS * (NS_PB_RAIL_GROUP + 1) / 2)
+#else
 #define NS_PB_HOLE 1
 #define NS_PB_GAP 4
 #define NS_PB_PITCH (NS_PB_HOLE + NS_PB_GAP)
 #define NS_PB_MARGIN NS_PB_PITCH
 #define NS_PB_GAP_RAIL NS_PB_PITCH
 #define NS_PB_GAP_TRENCH (NS_PB_PITCH * 2)
+#define NS_PB_HOLE_INSET 0
+#define NS_PB_RAIL_GROUP 4
+#endif
 #define NS_PB_RAIL_SEG 25
 #define NS_PB_RAIL_GAP_END (NS_PB_COLS - NS_PB_RAIL_SEG)
-#define NS_PB_RAIL_GROUP 4
 #define NS_PB_STRIPS (NS_PB_COLS * 2 + 8)
 
 enum {
@@ -74,5 +91,7 @@ int ns_breadboard_tip_strip(const NsBreadboard *bb, int wx, int wy, int *strip_o
 
 /* screen_x/y = screen position of entity top-left (after pan). */
 void ns_breadboard_draw(SDL_Renderer *r, const NsBreadboard *bb, int screen_x, int screen_y, int selected);
+void ns_breadboard_draw_power(SDL_Renderer *r, const NsBreadboard *bb, int screen_x, int screen_y, int selected,
+                              int pos_rail_power, int neg_rail_power);
 
 #endif

@@ -4,18 +4,12 @@
 #include "discrete_ic/breadboard.h"
 #include "discrete_ic/entity.h"
 
-static int lane_y(int lane) {
-    int y = NS_PB_MARGIN + lane * NS_PB_PITCH;
-    if (lane > NS_PB_LANE_TOP_NEG) {
-        y += NS_PB_GAP_RAIL;
-    }
-    if (lane > NS_PB_LANE_E) {
-        y += NS_PB_GAP_TRENCH;
-    }
-    if (lane > NS_PB_LANE_J) {
-        y += NS_PB_GAP_RAIL;
-    }
-    return y;
+static int hole_y(const NsBreadboard *bb, NsPbHole h) {
+    int wx;
+    int wy;
+    ns_breadboard_hole_world(bb, h, &wx, &wy);
+    (void)wx;
+    return wy;
 }
 
 static void place_pin_on_hole(NsEntity *e, int pin, const NsBreadboard *bb, NsPbHole h) {
@@ -45,12 +39,13 @@ int main(void) {
     r01a_atf22v10_init(&pld, "UPLDX", R01A_PLD_BEAM_X);
     ns_breadboard_init(&bb, "BB1");
     e = r01a_atf22v10_entity(&pld);
-    expect_true(ns_entity_dip_row_span_px(e) == 20, "ATF row span 20 px");
+    r01a_test_pitch_ic(e);
+    expect_true(ns_entity_dip_row_span_px(e) == NS_PB_PITCH * 2 + NS_PB_GAP_TRENCH, "ATF row span on tier-A bb");
 
     /* Straddle the trench: pin 1 on G, pin 13 on E. Opposite pins must not share a strip. */
     place_pin_on_hole(e, 1, &bb, hg);
-    expect_true(ns_entity_pin_tip_board(e, 1, &tx, &ty) && ty == lane_y(NS_PB_LANE_F + 1), "pin 1 on G");
-    expect_true(ns_entity_pin_tip_board(e, 13, &tx, &ty) && ty == lane_y(NS_PB_LANE_E), "pin 13 on E");
+    expect_true(ns_entity_pin_tip_board(e, 1, &tx, &ty) && ty == hole_y(&bb, hg), "pin 1 on G");
+    expect_true(ns_entity_pin_tip_board(e, 13, &tx, &ty) && ty == hole_y(&bb, he), "pin 13 on E");
     for (i = 1; i <= 24; i++) {
         int s;
         expect_true(ns_entity_pin_tip_board(e, i, &tx, &ty), "ATF pin tip");
@@ -69,9 +64,8 @@ int main(void) {
     {
         int s1 = -1;
         int s24 = -1;
-        expect_true(ns_entity_pin_tip_board(e, 1, &tx, &ty) && ty == lane_y(NS_PB_LANE_E),
-                    "same-side pin 1 on E");
-        expect_true(ns_entity_pin_tip_board(e, 24, &tx, &ty) && ty == lane_y(NS_PB_LANE_A),
+        expect_true(ns_entity_pin_tip_board(e, 1, &tx, &ty) && ty == hole_y(&bb, he), "same-side pin 1 on E");
+        expect_true(ns_entity_pin_tip_board(e, 24, &tx, &ty) && ty == hole_y(&bb, (NsPbHole){col, NS_PB_LANE_A}),
                     "same-side pin 24 on A");
         expect_true(ns_entity_pin_tip_board(e, 1, &tx, &ty) && ns_breadboard_tip_strip(&bb, tx, ty, &s1),
                     "pin 1 strip");

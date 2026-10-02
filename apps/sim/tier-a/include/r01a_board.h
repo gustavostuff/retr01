@@ -96,4 +96,10 @@ NsPassive *r01a_board_add_passive(R01aBoard *board, NsPassiveKind kind, const ch
 NsBreadboard *r01a_board_add_breadboard(R01aBoard *board, int x, int y);
 int r01a_board_remove_breadboard(R01aBoard *board, NsBreadboard *bb);
 
+void r01a_place_pin_on_hole(NsEntity *e, int pin, NsBreadboard *bb, NsPbHole h);
+int r01a_snap_entity_to_breadboard(NsEntity *e, NsBreadboard *bb);
+int r01a_snap_passive_to_breadboard(NsPassive *p, NsBreadboard *bb);
+void r01a_seat_passive_on_holes(NsPassive *p, NsBreadboard *bb, NsPbHole h1, NsPbHole h2);
+int r01a_breadboard_rail_power(const R01aBoard *board, const NsBreadboard *bb, int *pos_out, int *neg_out);
+
 #endif

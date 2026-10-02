@@ -567,12 +567,26 @@ static void board_plot(R01aBoard *b) {
     ns_video_sink_plot(&b->sink, x, y, idx);
 }
 
+static void board_pld_bench_power(R01aBoard *b) {
+    /* Beam PLDs keep bench VCC/GND/RES# in Manual; only signal pins use the breadboard. */
+    if (!b) {
+        return;
+    }
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "VCC", NS_LVL_H);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "GND", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "RES#", NS_LVL_H);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "VCC", NS_LVL_H);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "GND", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "RES#", NS_LVL_H);
+}
+
 static void board_settle(R01aBoard *b) {
     int p;
     if (b->wire_mode == R01A_WIRE_MANUAL) {
         board_float_external(b);
         for (p = 0; p < R01A_SETTLE_PASSES; p++) {
             board_bb_route(b);
+            board_pld_bench_power(b);
             board_eval_chips(b);
         }
         return;
@@ -592,12 +606,16 @@ void r01a_board_step(R01aBoard *board) {
     if (board->wire_mode == R01A_WIRE_MANUAL) {
         board_float_external(board);
         board_bb_route(board);
+        board_pld_bench_power(board);
         ns_entity_tick(r01a_sn74hcu04_entity(&board->u04));
         board_bb_route(board);
+        board_pld_bench_power(board);
         ns_entity_tick(r01a_sn74hc74_entity(&board->u74));
         board_bb_route(board);
+        board_pld_bench_power(board);
         ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
         board_bb_route(board);
+        board_pld_bench_power(board);
         ns_entity_tick(r01a_atf22v10_entity(&board->beam_y));
         board_settle(board);
         board_plot(board);
@@ -640,6 +658,17 @@ void r01a_board_step_dots(R01aBoard *board, uint32_t dots) {
 
 static void spawn_tier_a_passives(R01aBoard *b);
 
+#ifndef R01A_ENTITY_PITCH
+#define R01A_ENTITY_PITCH 6
+#endif
+
+static void tier_a_pitch_entity(NsEntity *e) {
+    if (e && e->visual == NS_ENTITY_VIS_IC) {
+        e->pkg_pitch_px = (uint8_t)R01A_ENTITY_PITCH;
+        ns_entity_refresh_body(e);
+    }
+}
+
 static void island_video_init(NsIsland *island) {
     R01aBoard *b = (R01aBoard *)island->impl;
     int i;
@@ -664,6 +693,11 @@ static void island_video_init(NsIsland *island) {
     for (i = 0; i < b->passives.count; i++) {
         ns_island_add_entity(island, &b->passives.parts[i].base);
     }
+    tier_a_pitch_entity(r01a_sn74hcu04_entity(&b->u04));
+    tier_a_pitch_entity(r01a_sn74hc74_entity(&b->u74));
+    tier_a_pitch_entity(r01a_atf22v10_entity(&b->beam_x));
+    tier_a_pitch_entity(r01a_atf22v10_entity(&b->beam_y));
+    tier_a_pitch_entity(r01a_at27c256r_entity(&b->prom));
 }
 
 static const NsIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
@@ -806,7 +840,11 @@ static void board_place_free(R01aBoard *board) {
     scr = ns_video_sink_entity(&board->sink);
     bb = ns_breadboard_entity(&board->breadboard);
     ns_entity_place(scr, 8, y + row_h + 12);
-    ns_entity_place(bb, -2400, -2400);
+    {
+        int bby = scr->board_y + scr->body_h + 12;
+        bby -= bby % 3;
+        ns_entity_place(bb, 0, bby);
+    }
     ns_passive_bank_layout_grid(&board->passives, 8, scr->board_y + scr->body_h + 12, 6, 6);
     /* Crystal stays with the clock chips. The grid above would park it with the other passives. */
     {

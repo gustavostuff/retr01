@@ -3,6 +3,7 @@
 #include "discrete_ic/breadboard.h"
 #include "discrete_ic/bus.h"
 #include "discrete_ic/passive.h"
+#include "discrete_ic/ui_passive_assets.h"
 #include "test_common.h"
 
 #include <string.h>
@@ -39,14 +40,12 @@ int main(void) {
     }
     ns_passive_set_orient(r, NS_ORIENT_0);
     {
-        int hx;
-        int hy;
-        int tx;
-        int ty;
-        ns_breadboard_hole_world(&board.breadboard, r1_h, &hx, &hy);
-        ns_passive_set_pivot(r, 0, 0);
-        expect_true(ns_passive_tip_board(r, 1, &tx, &ty), "R pin1");
-        ns_passive_set_pivot(r, hx - tx, hy - ty);
+        NsPbHole r2_h = {r1_h.col + 4, r1_h.lane};
+        int t2x;
+        int t2y;
+        r01a_seat_passive_on_holes(r, &board.breadboard, r1_h, r2_h);
+        expect_true(ns_passive_tip_board(r, 2, &t2x, &t2y), "R pin2 after seat");
+        expect_true(ns_breadboard_tip_strip(&board.breadboard, t2x, t2y, NULL), "R pin2 on hole");
     }
     expect_true(ns_passive_tip_board(r, 2, &t2x, &t2y), "R pin2");
     ns_entity_place(r01a_sn74hcu04_entity(&board.u04), 0, 0);

@@ -13,6 +13,10 @@ set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/discrete_ic")
 if(NOT TARGET discrete_ic)
   add_subdirectory("${DISCRETE_IC_DIR}" "${CMAKE_BINARY_DIR}/discrete_ic")
 endif()
+target_compile_definitions(discrete_ic PRIVATE R01A_BB_3PX=1)
+if(TARGET test_ns_entity)
+  target_compile_definitions(test_ns_entity PRIVATE R01A_BB_3PX=1)
+endif()
 
 set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
 set(SIM_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/../common")
@@ -25,6 +29,7 @@ add_library(retr01_sim_tier_a_core
   ${SIM_COMMON}/chips/at27c256r.c
   ${SIM_COMMON}/src/r01a_rgb_netlist.c
   src/board.c
+  src/r01a_bb_snap.c
   ${SIM_COMMON}/src/layout.c
   src/netlist.c
   ${R01_COMMON_DIR}/r01_kit_palette.c
@@ -37,6 +42,7 @@ target_include_directories(retr01_sim_tier_a_core PUBLIC
   ${SIM_COMMON}/chips
   ${R01_COMMON_DIR}
 )
+target_compile_definitions(retr01_sim_tier_a_core PRIVATE R01A_BB_3PX=1 R01A_ENTITY_PITCH=6)
 target_link_libraries(retr01_sim_tier_a_core PUBLIC discrete_ic)
 
 add_library(retr01_sim_tier_a_app
@@ -46,6 +52,8 @@ add_library(retr01_sim_tier_a_app
   src/ui/history.c
   src/ui/input.c
   src/ui/run.c
+  src/ui/bb_ui.c
+  src/ui/jumpers.c
   ${SIM_COMMON}/src/ui_font.c
 )
 target_include_directories(retr01_sim_tier_a_app PRIVATE
@@ -56,7 +64,7 @@ target_include_directories(retr01_sim_tier_a_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
   ${SIM_COMMON}/chips
 )
-target_compile_definitions(retr01_sim_tier_a_app PRIVATE
+target_compile_definitions(retr01_sim_tier_a_app PRIVATE R01A_BB_3PX=1
   "R01A_ASSETS_OTHER=\"${SIM_COMMON}/assets/other\""
   "R01A_LAYOUT_FILE=\"${CMAKE_CURRENT_SOURCE_DIR}/ui_layout.json\""
 )
@@ -80,6 +88,7 @@ function(r01a_unit_test name src)
     ${SIM_COMMON}/chips
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
+  target_compile_definitions(${name} PRIVATE R01A_BB_3PX=1)
   target_link_libraries(${name} PRIVATE retr01_sim_tier_a_core)
   add_test(NAME ${name} COMMAND ${name})
 endfunction()

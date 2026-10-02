@@ -19,56 +19,42 @@ static int sink_lit(const R01aBoard *board) {
     return 0;
 }
 
-static void place_pin_on_hole(NsEntity *e, int pin, const NsBreadboard *bb, NsPbHole h) {
-    int hx;
-    int hy;
-    int tx;
-    int ty;
-    ns_entity_place(e, 0, 0);
-    expect_true(ns_entity_pin_tip_board(e, pin, &tx, &ty), "pin tip");
-    ns_breadboard_hole_world(bb, h, &hx, &hy);
-    ns_entity_place(e, hx - tx, hy - ty);
-}
-
 static int hole_on_tip(const NsBreadboard *bb, int wx, int wy, NsPbHole *out) {
-    NsPbHole h;
-    int hx;
-    int hy;
-    if (!ns_breadboard_hit_hole(bb, wx, wy, &h)) {
-        return 0;
-    }
-    ns_breadboard_hole_world(bb, h, &hx, &hy);
-    if (hx != wx || hy != wy) {
-        return 0;
-    }
-    if (out) {
-        *out = h;
-    }
-    return 1;
+    return ns_breadboard_tip_strip(bb, wx, wy, NULL) && ns_breadboard_hit_hole(bb, wx, wy, out);
 }
 
 static int place_manual_clock(R01aBoard *board, NsPbHole *clk_out_h, NsPbHole *clk_in_h) {
     int col;
+    int clk_col;
     NsEntity *u04 = r01a_sn74hcu04_entity(&board->u04);
     NsEntity *bx = r01a_atf22v10_entity(&board->beam_x);
 
     r01a_board_jumper_clear(board);
-    for (col = 2; col < 20; col++) {
+    for (col = 2; col < NS_PB_COLS - 2; col++) {
         NsPbHole vcc_h = {col, NS_PB_LANE_E};
         NsPbHole vcc_found;
         NsPbHole y1_found;
         NsPbHole a1_found;
+        NsPbHole gnd_found;
         NsPbHole rail;
-        int vtx, vty, ytx, yty, atx, aty;
-        int s_vcc, s_y1, s_a1, s_clk, s_rail;
+        NsPbHole gnd_rail;
+        int vtx, vty, ytx, yty, atx, aty, gtx, gty;
+        int s_vcc, s_y1, s_a1, s_gnd, s_clk, s_rail, s_gnd_rail;
 
         if (!ns_breadboard_hole_exists(vcc_h)) {
             continue;
         }
-        place_pin_on_hole(u04, 14, &board->breadboard, vcc_h);
-        if (!ns_entity_pin_tip_board(u04, 14, &vtx, &vty) ||
-            !hole_on_tip(&board->breadboard, vtx, vty, &vcc_found)) {
-            continue;
+        {
+            int want = ns_breadboard_strip_id(vcc_h);
+            int got;
+            r01a_place_pin_on_hole(u04, 14, &board->breadboard, vcc_h);
+            if (!ns_entity_pin_tip_board(u04, 14, &vtx, &vty) ||
+                !ns_breadboard_tip_strip(&board->breadboard, vtx, vty, &got) || got != want) {
+                continue;
+            }
+            if (!hole_on_tip(&board->breadboard, vtx, vty, &vcc_found)) {
+                continue;
+            }
         }
         if (!ns_entity_pin_tip_board(u04, 2, &ytx, &yty) ||
             !hole_on_tip(&board->breadboard, ytx, yty, &y1_found)) {
@@ -78,32 +64,56 @@ static int place_manual_clock(R01aBoard *board, NsPbHole *clk_out_h, NsPbHole *c
             !hole_on_tip(&board->breadboard, atx, aty, &a1_found)) {
             continue;
         }
+        if (!ns_entity_pin_tip_board(u04, 7, &gtx, &gty) ||
+            !hole_on_tip(&board->breadboard, gtx, gty, &gnd_found)) {
+            continue;
+        }
         s_vcc = ns_breadboard_strip_id(vcc_found);
         s_y1 = ns_breadboard_strip_id(y1_found);
         s_a1 = ns_breadboard_strip_id(a1_found);
-        if (s_vcc == s_y1 || s_vcc == s_a1 || s_y1 == s_a1) {
+        s_gnd = ns_breadboard_strip_id(gnd_found);
+        if (s_vcc == s_y1 || s_vcc == s_a1 || s_y1 == s_a1 || s_gnd == s_vcc || s_gnd == s_y1) {
             continue;
         }
         rail.col = vcc_found.col;
         rail.lane = NS_PB_LANE_TOP_POS;
-        if (!ns_breadboard_hole_exists(rail)) {
+        gnd_rail.col = gnd_found.col;
+        gnd_rail.lane = NS_PB_LANE_TOP_NEG;
+        if (!ns_breadboard_hole_exists(rail) || !ns_breadboard_hole_exists(gnd_rail)) {
             continue;
         }
         s_rail = ns_breadboard_strip_id(rail);
-        if (s_rail == s_vcc || s_rail == s_y1) {
+        s_gnd_rail = ns_breadboard_strip_id(gnd_rail);
+        if (s_rail == s_vcc || s_rail == s_y1 || s_gnd_rail == s_gnd) {
             continue;
         }
-        r01a_board_jumper_clear(board);
-        if (!r01a_board_jumper_add(board, rail, vcc_found)) {
-            continue;
+        for (clk_col = 2; clk_col < NS_PB_COLS - 2; clk_col++) {
+            NsPbHole clk_h = {clk_col, NS_PB_LANE_F};
+            int ctx;
+            int cty;
+
+            if (!ns_breadboard_hole_exists(clk_h)) {
+                continue;
+            }
+            r01a_place_pin_on_hole(bx, 1, &board->breadboard, clk_h);
+            if (!ns_entity_pin_tip_board(bx, 1, &ctx, &cty) ||
+                !hole_on_tip(&board->breadboard, ctx, cty, clk_in_h)) {
+                continue;
+            }
+            s_clk = ns_breadboard_strip_id(*clk_in_h);
+            if (s_y1 == s_clk || s_vcc == s_clk || s_a1 == s_clk) {
+                continue;
+            }
+            r01a_board_jumper_clear(board);
+            if (!r01a_board_jumper_add(board, rail, vcc_found)) {
+                continue;
+            }
+            if (!r01a_board_jumper_add(board, gnd_rail, gnd_found)) {
+                continue;
+            }
+            *clk_out_h = y1_found;
+            return 1;
         }
-        place_pin_on_hole(bx, 1, &board->breadboard, *clk_in_h);
-        s_clk = ns_breadboard_strip_id(*clk_in_h);
-        if (s_y1 == s_clk || s_vcc == s_clk || s_a1 == s_clk) {
-            continue;
-        }
-        *clk_out_h = y1_found;
-        return 1;
     }
     return 0;
 }

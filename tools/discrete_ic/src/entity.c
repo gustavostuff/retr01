@@ -1,4 +1,8 @@
 #include "discrete_ic/entity.h"
+
+#ifdef R01A_BB_3PX
+#include "discrete_ic/breadboard.h"
+#endif
 #include "discrete_ic/passive.h"
 #include "discrete_ic/pin_header.h"
 
@@ -109,11 +113,30 @@ void ns_entity_refresh_body(NsEntity *e) {
         int half = e->dip_pins / 2;
         int pitch = e->pkg_pitch_px > 0 ? e->pkg_pitch_px : NS_DIP_PIN_PITCH_PX;
         int row = (half > 1) ? (half - 1) * pitch : 0;
+#ifdef R01A_BB_3PX
+        /* Margin = half pitch so pin tips sit on the 3 px hole lattice when the
+         * body origin is grid-aligned. Across matches row span (inset 0). */
+        {
+            int margin = NS_PB_PITCH / 2;
+            int min_along = row + 2 * margin;
+            int span = ns_entity_dip_row_span_px(e);
+            if (!e->pkg_exact_mm) {
+                along = min_along;
+            } else if (along < min_along) {
+                along = min_along;
+            }
+            if (span > 0) {
+                across = span;
+            }
+        }
+#else
         int min_along = row + 2 * NS_DIP_PIN_MARGIN_PX;
         if (along < min_along) {
             along = min_along;
         }
+#endif
     }
+#ifndef R01A_BB_3PX
     if (!e->pkg_exact_mm) {
         across = ns_dip_snap_across_px(across);
     } else if (e->pkg_wid_mm >= 13) {
@@ -122,6 +145,14 @@ void ns_entity_refresh_body(NsEntity *e) {
             across = 1;
         }
     }
+#else
+    if (e->pkg_exact_mm && e->pkg_wid_mm >= 13) {
+        int span = ns_entity_dip_row_span_px(e);
+        if (span > 0) {
+            across = span;
+        }
+    }
+#endif
     if (!ns_orient_is_horiz(e->orient)) {
         e->body_w = across;
         e->body_h = along;
@@ -345,7 +376,15 @@ static int pin_tip_reach(void) {
 }
 
 int ns_entity_dip_row_span_px(const NsEntity *e) {
-    if (!e || e->visual != NS_ENTITY_VIS_IC || !e->pkg_exact_mm || e->pkg_wid_mm <= 0) {
+    if (!e || e->visual != NS_ENTITY_VIS_IC) {
+        return 0;
+    }
+#ifdef R01A_BB_3PX
+    if (!e->pkg_exact_mm && e->dip_pins >= 4) {
+        return NS_PB_PITCH + NS_PB_GAP_TRENCH;
+    }
+#endif
+    if (!e->pkg_exact_mm || e->pkg_wid_mm <= 0) {
         return 0;
     }
     /* Microchip 28P6 / JEDEC 600 mil: row centers 15.24 mm apart (E), body E1 narrower. */
@@ -353,12 +392,19 @@ int ns_entity_dip_row_span_px(const NsEntity *e) {
         return (1524 * NS_PX_PER_MM + 50) / 100;
     }
     {
+#ifdef R01A_BB_3PX
+        if (e->pkg_wid_mm >= 8) {
+            return NS_PB_PITCH * 2 + NS_PB_GAP_TRENCH;
+        }
+        return NS_PB_PITCH + NS_PB_GAP_TRENCH;
+#else
         int span300 = (762 * NS_PX_PER_MM + 50) / 100;
         /* ATF22-class 8 mm body: one extra breadboard pitch vs 74HC (E-F -> E-G). */
         if (e->pkg_wid_mm >= 8) {
             span300 += NS_DIP_PIN_PITCH_PX;
         }
         return span300;
+#endif
     }
 }
 
@@ -402,10 +448,17 @@ static void dip_pin_pos(const NsEntity *e, int pin_num, int *along, int *side_pi
     idx = *side_pin1 ? (pin_num - 1) : (dip - pin_num);
     span = ns_orient_is_horiz(e->orient) ? e->body_w : e->body_h;
     row_span = (half > 1) ? (half - 1) * pitch : 0;
+#ifdef R01A_BB_3PX
+    /* Half-pitch origin so tips share the breadboard hole lattice. */
+    (void)span;
+    (void)row_span;
+    margin = NS_PB_PITCH / 2;
+#else
     margin = (span - row_span) / 2;
     if (margin < 1) {
         margin = 1;
     }
+#endif
     reverse = (e->orient == NS_ORIENT_180 || e->orient == NS_ORIENT_270);
     if (reverse) {
         *along = margin + (half > 0 ? (half - 1 - idx) : 0) * pitch;
@@ -486,6 +539,36 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
     dip_pin_pos(e, pin_num, &along, &side_pin1);
     {
         int row_span = ns_entity_dip_row_span_px(e);
+#ifdef R01A_BB_3PX
+        /* Tips on the hole lattice. Wide (600 mil) packages keep pin1 on the
+         * low-y side to match JEDEC notch orientation used by the non-3px path. */
+        if (row_span > 0) {
+            int wide = dip_wide_row_span_pkg(e, row_span);
+            int a0 = wide ? 0 : row_span;
+            int a1 = wide ? row_span : 0;
+            switch (e->orient) {
+            case NS_ORIENT_90:
+                *tby = e->board_y + along;
+                *tbx = side_pin1 ? (e->board_x + a1) : (e->board_x + a0);
+                break;
+            case NS_ORIENT_180:
+                *tbx = e->board_x + along;
+                *tby = side_pin1 ? (e->board_y + a0) : (e->board_y + a1);
+                break;
+            case NS_ORIENT_270:
+                *tby = e->board_y + along;
+                *tbx = side_pin1 ? (e->board_x + a0) : (e->board_x + a1);
+                break;
+            case NS_ORIENT_0:
+            default:
+                *tbx = e->board_x + along;
+                *tby = side_pin1 ? (e->board_y + a0) : (e->board_y + a1);
+                break;
+            }
+            return 1;
+        }
+#endif
+        {
         int inset = ns_entity_dip_body_inset_across(e);
         int wide = dip_wide_row_span_pkg(e, row_span);
         int pad = 0;
@@ -541,6 +624,7 @@ int ns_entity_pin_tip_board(const NsEntity *e, int pin_num, int *tbx, int *tby) 
                 *tby = side_pin1 ? (e->board_y + e->body_h + reach) : (e->board_y - 1 - reach);
             }
             break;
+        }
         }
     }
     return 1;

@@ -2,6 +2,7 @@
 
 #include "discrete_ic/island.h"
 #include "discrete_ic/island_group.h"
+#include "discrete_ic/breadboard.h"
 #include "discrete_ic/pin_header.h"
 
 #include <string.h>
@@ -51,16 +52,16 @@ void canvas_zoom_by(R01aUi *ui, int delta, int lx, int ly) {
     }
     logic_to_board(ui, lx, ly, &bx, &by);
     ui->zoom = z1;
-    ui->pan_x = bx - div_floor(lx, z1);
-    ui->pan_y = by - div_floor(ly, z1);
+    ui->pan_x = snap_grid(bx - div_floor(lx, z1));
+    ui->pan_y = snap_grid(by - div_floor(ly, z1));
 }
 
 /* Keep board point (gx, gy) under logical cursor (lx, ly). */
 
 void pan_lock_point(R01aUi *ui, int gx, int gy, int lx, int ly) {
     int z = canvas_zoom(ui);
-    ui->pan_x = gx - div_floor(lx, z);
-    ui->pan_y = gy - div_floor(ly, z);
+    ui->pan_x = snap_grid(gx - div_floor(lx, z));
+    ui->pan_y = snap_grid(gy - div_floor(ly, z));
 }
 
 void snap_octant(int x0, int y0, int x1, int y1, int *ox, int *oy) {
@@ -132,12 +133,14 @@ void move_entity(NsEntity *e, int bx, int by) {
     }
     bx = snap_grid(bx);
     by = snap_grid(by);
+    if (e->visual == NS_ENTITY_VIS_BREADBOARD) {
+        ns_entity_place(e, bx, by);
+        ns_breadboard_sync_body((NsBreadboard *)e);
+        return;
+    }
     if (e->visual == NS_ENTITY_VIS_PASSIVE) {
         NsPassive *p = (NsPassive *)e;
-        p->pivot_x += bx - e->board_x;
-        p->pivot_y += by - e->board_y;
-        e->board_x = bx;
-        e->board_y = by;
+        ns_passive_set_pivot(p, p->pivot_x + (bx - e->board_x), p->pivot_y + (by - e->board_y));
         return;
     }
     ns_entity_place(e, bx, by);
@@ -291,6 +294,10 @@ int pin_center(const NsEntity *e, int pin_index, int *cx, int *cy) {
         *cy = e->board_y + glyph_h(e) + 1;
         return 1;
     }
+    /* ICs: electrical tips (same lattice used by breadboard routing). */
+    if (e->visual == NS_ENTITY_VIS_IC) {
+        return ns_entity_pin_tip_board(e, e->pins[pin_index].number, cx, cy);
+    }
     num = e->pins[pin_index].number;
     dip = dip_count(e);
     if (num < 1 || num > dip || dip < 2) {
@@ -374,8 +381,17 @@ static int hit_chip_body(const NsEntity *e, int bx, int by) {
         return bx >= e->board_x && by >= e->board_y && bx < e->board_x + glyph_w(e) &&
                by < e->board_y + glyph_h(e);
     }
-    return bx >= e->board_x && by >= e->board_y && bx < e->board_x + ic_body_w(e) &&
-           by < e->board_y + ic_body_h(e);
+    {
+        int pin = 2;
+        int x0 = e->board_x;
+        int y0 = e->board_y;
+        int x1 = x0 + e->body_w;
+        int y1 = y0 + e->body_h;
+        if (ns_orient_is_horiz(e->orient)) {
+            return bx >= x0 && bx < x1 && by >= y0 - pin && by < y1 + pin;
+        }
+        return by >= y0 && by < y1 && bx >= x0 - pin && bx < x1 + pin;
+    }
 }
 
 int hit_top_chip(const R01aUi *ui, int bx, int by) {

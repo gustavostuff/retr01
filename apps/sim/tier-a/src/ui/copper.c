@@ -345,10 +345,15 @@ static int copper_reproduces_netlist(void) {
 }
 
 int screen_picture_live(const R01aUi *ui) {
+#if !R01A_COPPER_TRACES
+    (void)ui;
+    return 1;
+#else
     if (!ui->show_nets) {
         return 1;
     }
     return copper_reproduces_netlist();
+#endif
 }
 
 void nearest_open_partner(const R01aUi *ui, int chip, int pin, int *oc, int *op) {
@@ -562,7 +567,6 @@ static int trace_too_long(const R01aUi *ui, const R01aTrace *t) {
     int a;
     int b;
     int len_px = 0;
-    int sa;
     for (i = 0; i + 1 < t->n; i++) {
         len_px += seg_len_px(t->x[i], t->y[i], t->x[i + 1], t->y[i + 1]);
     }
@@ -593,24 +597,6 @@ static int trace_too_long(const R01aUi *ui, const R01aTrace *t) {
             if (lim > 0 && (len_px > lim * NS_PX_PER_MM ||
                             hop_too_long(g_pin_slots[slots[a]].entity, g_pin_slots[slots[a]].pin_index,
                                          g_pin_slots[slots[b]].entity, g_pin_slots[slots[b]].pin_index))) {
-                return 1;
-            }
-        }
-    }
-    sa = n > 0 ? slots[0] : trace_first_slot(ui, t);
-    if (sa < 0) {
-        return 0;
-    }
-    for (i = 0; i < g_pin_slot_count; i++) {
-        if (cu_root(i) != cu_root(sa)) {
-            continue;
-        }
-        for (b = i + 1; b < g_pin_slot_count; b++) {
-            if (cu_root(b) != cu_root(sa)) {
-                continue;
-            }
-            if (hop_too_long(g_pin_slots[i].entity, g_pin_slots[i].pin_index, g_pin_slots[b].entity,
-                             g_pin_slots[b].pin_index)) {
                 return 1;
             }
         }

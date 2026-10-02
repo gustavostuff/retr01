@@ -7,15 +7,8 @@
 
 #include <string.h>
 
-static void place_pin_on_hole(NsEntity *e, int pin, const NsBreadboard *bb, NsPbHole h) {
-    int hx;
-    int hy;
-    int tx;
-    int ty;
-    ns_entity_place(e, 0, 0);
-    expect_true(ns_entity_pin_tip_board(e, pin, &tx, &ty), "pin tip");
-    ns_breadboard_hole_world(bb, h, &hx, &hy);
-    ns_entity_place(e, hx - tx, hy - ty);
+static void place_pin_on_hole(NsEntity *e, int pin, NsBreadboard *bb, NsPbHole h) {
+    r01a_place_pin_on_hole(e, pin, bb, h);
 }
 
 static int has_kind(const R01aNetIssue *iss, int n, int kind) {
@@ -135,8 +128,8 @@ int main(void) {
     {
         NsBreadboard *bb2;
         NsEntity *prom = r01a_at27c256r_entity(&board.prom);
-        NsPbHole bb1_gnd = {50, NS_PB_LANE_TOP_NEG};
-        NsPbHole bb2_gnd_r = {50, NS_PB_LANE_TOP_NEG};
+        NsPbHole bb1_gnd = {48, NS_PB_LANE_TOP_NEG};
+        NsPbHole bb2_gnd_r = {48, NS_PB_LANE_TOP_NEG};
         NsPbHole bb2_gnd_l = {2, NS_PB_LANE_TOP_NEG};
         NsPbHole prom_h = {5, NS_PB_LANE_F};
         bb2 = r01a_board_add_breadboard(&board, 400, 40);
