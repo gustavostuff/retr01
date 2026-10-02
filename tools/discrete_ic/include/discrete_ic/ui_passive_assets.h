@@ -208,5 +208,22 @@ static const uint8_t NS_UI_PASSIVE_D_RGBA[NS_UI_PASSIVE_D_W * NS_UI_PASSIVE_D_H 
     0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
     0, 0, 0, 255, 0, 0, 0, 255, 81, 81, 81, 255, 81, 81, 81, 255, 81, 81, 81, 255, 0, 0, 0, 0,
 };
+/* Tier-A 3×3 lattice: tip spans must be multiples of the 6 px hole pitch. */
+#ifdef R01A_BB_3PX
+#undef NS_UI_PASSIVE_R_SPAN_PX
+#define NS_UI_PASSIVE_R_SPAN_PX 24
+#undef NS_UI_PASSIVE_CCAP_SPAN_PX
+#define NS_UI_PASSIVE_CCAP_SPAN_PX 6
+#undef NS_UI_PASSIVE_ECAP_SPAN_PX
+#define NS_UI_PASSIVE_ECAP_SPAN_PX 6
+#undef NS_UI_PASSIVE_OSC_SPAN_PX
+#define NS_UI_PASSIVE_OSC_SPAN_PX 6
+#undef NS_UI_PASSIVE_OSC4LEGS_SPAN_PX
+#define NS_UI_PASSIVE_OSC4LEGS_SPAN_PX 6
+#undef NS_UI_PASSIVE_OSC4LEGS_SPAN_Y
+#define NS_UI_PASSIVE_OSC4LEGS_SPAN_Y 18
+#undef NS_UI_PASSIVE_D_SPAN_PX
+#define NS_UI_PASSIVE_D_SPAN_PX 18
+#endif
 #endif
 

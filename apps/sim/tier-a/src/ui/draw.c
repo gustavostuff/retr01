@@ -234,13 +234,27 @@ void draw_ic(SDL_Renderer *r, const R01aUi *ui, const NsEntity *e, int selected,
 
 void draw_passive_glyph(SDL_Renderer *r, const R01aUi *ui, NsEntity *e, int selected, int hover_pin) {
     int i;
-    int w = glyph_w(e);
-    int h = glyph_h(e);
-    int x = board_sx(ui, e->board_x);
-    int y = board_sy(ui, e->board_y);
+    int w;
+    int h;
+    int x;
+    int y;
     Uint8 cr;
     Uint8 cg;
     Uint8 cb;
+    if (!e) {
+        return;
+    }
+    /* Compact board glyphs: body AABB for passives/headers, fixed mini-rects as fallback. */
+    if (e->visual == NS_ENTITY_VIS_PASSIVE || e->visual == NS_ENTITY_VIS_PIN_HDR ||
+        e->visual == NS_ENTITY_VIS_OSC) {
+        w = e->body_w > 0 ? e->body_w : glyph_w(e);
+        h = e->body_h > 0 ? e->body_h : glyph_h(e);
+    } else {
+        w = glyph_w(e);
+        h = glyph_h(e);
+    }
+    x = board_sx(ui, e->board_x);
+    y = board_sy(ui, e->board_y);
     entity_fill_rgb(e, &cr, &cg, &cb);
     fill_rect(r, x, y, w, h, cr, cg, cb);
     if (selected) {
@@ -310,6 +324,115 @@ void draw_legend(SDL_Renderer *r) {
         int iy = y + 2 + i * row_h;
         fill_rect(r, x + 3, iy + 2, 6, 6, rows[i].cr, rows[i].cg, rows[i].cb);
         r01a_font_draw(r, x + 12, iy, rows[i].lab, 210, 210, 210);
+    }
+}
+
+enum { R01A_CTX_BB = 0, R01A_CTX_COUNT = 1 };
+
+static const char *k_ctx_label[R01A_CTX_COUNT] = {"Add breadboard"};
+
+static int ctx_item_h(void) {
+    return r01a_font_line_h() + 6;
+}
+
+static int ctx_menu_w(void) {
+    int i;
+    int w = 0;
+    for (i = 0; i < R01A_CTX_COUNT; i++) {
+        int tw = r01a_font_text_width(k_ctx_label[i]);
+        if (tw > w) {
+            w = tw;
+        }
+    }
+    return w + 16;
+}
+
+static void ctx_menu_geom(const R01aUi *ui, int *x, int *y, int *w, int *h) {
+    int mw = ctx_menu_w();
+    int mh = ctx_item_h() * R01A_CTX_COUNT;
+    int mx = ui->ctx_lx;
+    int my = ui->ctx_ly;
+    if (mx + mw > NS_LOGIC_W - 4) {
+        mx = NS_LOGIC_W - 4 - mw;
+    }
+    if (my + mh > NS_LOGIC_H - 4) {
+        my = NS_LOGIC_H - 4 - mh;
+    }
+    if (mx < 4) {
+        mx = 4;
+    }
+    if (my < 4) {
+        my = 4;
+    }
+    if (x) {
+        *x = mx;
+    }
+    if (y) {
+        *y = my;
+    }
+    if (w) {
+        *w = mw;
+    }
+    if (h) {
+        *h = mh;
+    }
+}
+
+int ctx_hit_item(const R01aUi *ui, int lx, int ly) {
+    int x;
+    int y;
+    int w;
+    int h;
+    int item;
+    if (!ui || !ui->ctx_open) {
+        return -1;
+    }
+    ctx_menu_geom(ui, &x, &y, &w, &h);
+    if (lx < x || ly < y || lx >= x + w || ly >= y + h) {
+        return -1;
+    }
+    item = (ly - y) / ctx_item_h();
+    if (item < 0 || item >= R01A_CTX_COUNT) {
+        return -1;
+    }
+    return item;
+}
+
+void draw_ctx_menu(SDL_Renderer *r, const R01aUi *ui) {
+    int x;
+    int y;
+    int w;
+    int h;
+    int ih;
+    int i;
+    if (!r || !ui || !ui->ctx_open) {
+        return;
+    }
+    ctx_menu_geom(ui, &x, &y, &w, &h);
+    ih = ctx_item_h();
+    fill_rect(r, x, y, w, h, 18, 18, 24);
+    draw_rect(r, x, y, w, h, 120, 120, 140);
+    for (i = 0; i < R01A_CTX_COUNT; i++) {
+        int iy = y + i * ih;
+        if (ui->mouse_lx >= x && ui->mouse_lx < x + w && ui->mouse_ly >= iy &&
+            ui->mouse_ly < iy + ih) {
+            fill_rect(r, x + 1, iy + 1, w - 2, ih - 1, 40, 50, 70);
+        }
+        r01a_font_draw(r, x + 8, iy + 2, k_ctx_label[i], 230, 230, 200);
+    }
+}
+
+void ctx_apply(R01aUi *ui, R01aBoard *board, int item) {
+    if (!ui || !board) {
+        return;
+    }
+    if (item == R01A_CTX_BB) {
+        int x = snap_grid(ui->ctx_bx);
+        int y = snap_grid(ui->ctx_by);
+        if (r01a_board_add_breadboard(board, x, y)) {
+            bind_breadboards(ui, board);
+            hist_after(ui);
+        }
     }
 }
 
@@ -559,6 +682,7 @@ void draw_frame(R01aUi *ui, R01aBoard *board) {
     SDL_RenderSetScale(ui->rend, 1.0f, 1.0f);
     draw_mode_btn(ui->rend, ui);
     draw_legend(ui->rend);
+    draw_ctx_menu(ui->rend, ui);
     {
         char tip[96];
         fill_tooltip(ui, tip, sizeof(tip));

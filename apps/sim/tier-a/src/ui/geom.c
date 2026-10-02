@@ -143,6 +143,11 @@ void move_entity(NsEntity *e, int bx, int by) {
         ns_passive_set_pivot(p, p->pivot_x + (bx - e->board_x), p->pivot_y + (by - e->board_y));
         return;
     }
+    if (e->visual == NS_ENTITY_VIS_OSC) {
+        ns_entity_place(e, bx, by);
+        ns_osc4legs_sync_aabb(e);
+        return;
+    }
     ns_entity_place(e, bx, by);
 }
 
@@ -257,78 +262,13 @@ int glyph_h(const NsEntity *e) {
 }
 
 int pin_center(const NsEntity *e, int pin_index, int *cx, int *cy) {
-    int num;
-    int dip;
-    int half;
-    int side_pin1;
-    int idx;
-    int reverse;
-    int along;
     if (!e || pin_index < 0 || pin_index >= e->pin_count || !cx || !cy) {
         return 0;
     }
-    if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
-        int cols;
-        int rows;
-        int col;
-        int row;
-        header_grid(e, &cols, &rows);
-        col = pin_index % cols;
-        row = pin_index / cols;
-        *cx = e->board_x + R01A_HDR_PAD + R01A_PAD / 2 + col * R01A_HDR_CELL;
-        *cy = e->board_y + R01A_HDR_PAD + R01A_PAD / 2 + row * R01A_HDR_CELL;
-        return 1;
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        return ns_passive_tip_board((const NsPassive *)e, e->pins[pin_index].number, cx, cy);
     }
-    if (is_axial_passive(e)) {
-        int h = glyph_h(e);
-        *cy = e->board_y + (h / R01A_GRID) * (R01A_GRID / 2) + 1;
-        if ((pin_index & 1) == 0) {
-            *cx = e->board_x - 2;
-        } else {
-            *cx = e->board_x + glyph_w(e) + 1;
-        }
-        return 1;
-    }
-    if (is_passive_glyph(e)) {
-        *cx = e->board_x + 1 + pin_index * R01A_PAD_PITCH;
-        *cy = e->board_y + glyph_h(e) + 1;
-        return 1;
-    }
-    /* ICs: electrical tips (same lattice used by breadboard routing). */
-    if (e->visual == NS_ENTITY_VIS_IC) {
-        return ns_entity_pin_tip_board(e, e->pins[pin_index].number, cx, cy);
-    }
-    num = e->pins[pin_index].number;
-    dip = dip_count(e);
-    if (num < 1 || num > dip || dip < 2) {
-        return ns_entity_pin_tip_board(e, num, cx, cy);
-    }
-    half = dip / 2;
-    side_pin1 = num <= half;
-    idx = side_pin1 ? (num - 1) : (dip - num);
-    reverse = (e->orient == NS_ORIENT_180 || e->orient == NS_ORIENT_270);
-    along = 1 + (reverse ? ((half > 0 ? (half - 1 - idx) : 0) * R01A_PAD_PITCH)
-                         : (idx * R01A_PAD_PITCH));
-    switch (e->orient) {
-    case NS_ORIENT_90:
-        *cy = e->board_y + along;
-        *cx = side_pin1 ? (e->board_x - 2) : (e->board_x + ic_body_w(e) + 1);
-        break;
-    case NS_ORIENT_180:
-        *cx = e->board_x + along;
-        *cy = side_pin1 ? (e->board_y + ic_body_h(e) + 1) : (e->board_y - 2);
-        break;
-    case NS_ORIENT_270:
-        *cy = e->board_y + along;
-        *cx = side_pin1 ? (e->board_x + ic_body_w(e) + 1) : (e->board_x - 2);
-        break;
-    case NS_ORIENT_0:
-    default:
-        *cx = e->board_x + along;
-        *cy = side_pin1 ? (e->board_y + ic_body_h(e) + 1) : (e->board_y - 2);
-        break;
-    }
-    return 1;
+    return ns_entity_pin_tip_board(e, e->pins[pin_index].number, cx, cy);
 }
 
 static int pad_contains(int cx, int cy, int bx, int by) {
@@ -376,6 +316,15 @@ static int hit_chip_body(const NsEntity *e, int bx, int by) {
     if (e->visual == NS_ENTITY_VIS_DISPLAY) {
         return bx >= e->board_x && by >= e->board_y && bx < e->board_x + e->body_w &&
                by < e->board_y + e->body_h;
+    }
+    if (e->visual == NS_ENTITY_VIS_PASSIVE) {
+        return ns_passive_hit((const NsPassive *)e, bx, by);
+    }
+    if (e->visual == NS_ENTITY_VIS_PIN_HDR) {
+        return ns_pin_header_hit(e, bx, by);
+    }
+    if (e->visual == NS_ENTITY_VIS_OSC) {
+        return ns_osc4legs_hit(e, bx, by);
     }
     if (is_passive_glyph(e)) {
         return bx >= e->board_x && by >= e->board_y && bx < e->board_x + glyph_w(e) &&

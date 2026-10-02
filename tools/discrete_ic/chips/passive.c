@@ -106,7 +106,7 @@ static void r_axis(NsPkgOrient orient, int *ux, int *uy) {
 }
 
 static void r_default_tip(const NsPassive *p, int pin_num, int *wx, int *wy) {
-    const PassiveSprite *sp = sprite_for(NS_PASSIVE_R);
+    const PassiveSprite *sp = sprite_for(p->kind);
     int rx;
     int ry;
     if (pin_num == 1) {
@@ -132,7 +132,7 @@ int ns_passive_hit(const NsPassive *p, int bx, int by) {
     if (sprite_hit_at(sprite_for(p->kind), p->base.orient, p->pivot_x, p->pivot_y, bx, by)) {
         return 1;
     }
-    if (p->kind != NS_PASSIVE_R || (p->leg_ext[0] <= 0 && p->leg_ext[1] <= 0)) {
+    if (p->kind == NS_PASSIVE_OSC4LEGS || (p->leg_ext[0] <= 0 && p->leg_ext[1] <= 0)) {
         return 0;
     }
     r_axis(p->base.orient, &ux, &uy);
@@ -336,7 +336,7 @@ void ns_passive_sync_aabb(NsPassive *p) {
     }
     sp = sprite_for(p->kind);
     passive_aabb_about_pivot(sp, p->base.orient, &min_x, &min_y, &max_x, &max_y);
-    if (p->kind == NS_PASSIVE_R) {
+    if (p->kind != NS_PASSIVE_OSC4LEGS && (p->leg_ext[0] > 0 || p->leg_ext[1] > 0 || sp->span_px > 0)) {
         int ux;
         int uy;
         int tx;
@@ -428,7 +428,7 @@ int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy) {
     if (pin_num != 2 || sp->span_px == 0) {
         return 0;
     }
-    dx = sp->span_px + (p->kind == NS_PASSIVE_R ? p->leg_ext[1] : 0);
+    dx = sp->span_px + p->leg_ext[1];
     dy = 0;
     rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
     *wx = p->pivot_x + rx;
@@ -437,7 +437,7 @@ int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy) {
 }
 
 void ns_passive_set_leg_ext(NsPassive *p, int pin_num, int extra) {
-    if (!p || p->kind != NS_PASSIVE_R) {
+    if (!p || p->kind == NS_PASSIVE_OSC4LEGS) {
         return;
     }
     if (extra < 0) {
@@ -464,7 +464,7 @@ void ns_passive_set_leg_to(NsPassive *p, int pin_num, int wx, int wy) {
     int extra;
     int defx;
     int defy;
-    if (!p || p->kind != NS_PASSIVE_R || (pin_num != 1 && pin_num != 2)) {
+    if (!p || p->kind == NS_PASSIVE_OSC4LEGS || (pin_num != 1 && pin_num != 2)) {
         return;
     }
     r_axis(p->base.orient, &ux, &uy);

@@ -92,13 +92,51 @@ int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx, int l
             arm_cancel(ui);
         }
 #endif
-        ui->drag_pan = 1;
-        ui->drag_grab_bx = bx;
-        ui->drag_grab_by = by;
+        ui->ctx_open = 0;
+        ui->right_armed = 1;
+        ui->right_pan = 0;
+        ui->right_lx = lx;
+        ui->right_ly = ly;
         return 1;
     }
     if (e->type == SDL_MOUSEBUTTONUP && e->button.button == SDL_BUTTON_RIGHT) {
-        ui->drag_pan = 0;
+        ui->right_armed = 0;
+        if (ui->right_pan || ui->drag_pan) {
+            ui->right_pan = 0;
+            ui->drag_pan = 0;
+            return 1;
+        }
+        {
+            int ci = hit_top_chip(ui, bx, by);
+            int bb_i = -1;
+            if (ci < 0 && !hit_bb_body(ui, bx, by, &bb_i)) {
+                ui->ctx_open = 1;
+                ui->ctx_lx = lx;
+                ui->ctx_ly = ly;
+                ui->ctx_bx = bx;
+                ui->ctx_by = by;
+            } else {
+                ui->ctx_open = 0;
+            }
+        }
+        return 1;
+    }
+    if (e->type == SDL_MOUSEMOTION && ui->right_armed && !ui->right_pan) {
+        int dx = lx - ui->right_lx;
+        int dy = ly - ui->right_ly;
+        if (dx < 0) {
+            dx = -dx;
+        }
+        if (dy < 0) {
+            dy = -dy;
+        }
+        if (dx > 5 || dy > 5) {
+            ui->right_pan = 1;
+            ui->drag_pan = 1;
+            ui->ctx_open = 0;
+            ui->drag_grab_bx = bx;
+            ui->drag_grab_by = by;
+        }
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
@@ -135,6 +173,14 @@ int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx, int l
     if (e->type == SDL_MOUSEBUTTONDOWN && e->button.button == SDL_BUTTON_LEFT) {
         int ci = -1;
         SDL_Rect btn;
+        if (ui->ctx_open) {
+            int item = ctx_hit_item(ui, lx, ly);
+            ui->ctx_open = 0;
+            if (item >= 0) {
+                ctx_apply(ui, board, item);
+            }
+            return 1;
+        }
         mode_btn_rect(ui, &btn);
         if (lx >= btn.x && ly >= btn.y && lx < btn.x + btn.w && ly < btn.y + btn.h) {
             ui->show_nets = !ui->show_nets;
@@ -226,6 +272,10 @@ int handle_event(R01aUi *ui, R01aBoard *board, const SDL_Event *e, int lx, int l
     }
     if (e->type == SDL_KEYDOWN) {
         if (e->key.keysym.sym == SDLK_ESCAPE) {
+            if (ui->ctx_open) {
+                ui->ctx_open = 0;
+                return 1;
+            }
             if (ui->jumper_arm || ui->jumper_mode) {
                 jumpers_cancel(ui);
                 ui->jumper_mode = 0;

@@ -5,8 +5,13 @@
 
 #include <SDL.h>
 
-/* Male pin header: fused NxM plastic (5 px per pin cell), one level-colored pin pixel per cell. */
+/* Male pin header: fused NxM plastic, one level-colored pin pixel per cell.
+ * Cell size matches breadboard pitch so multi-pin headers seat on the hole lattice. */
+#ifdef R01A_BB_3PX
+#define NS_PIN_HDR_CELL_PX 6
+#else
 #define NS_PIN_HDR_CELL_PX 5
+#endif
 
 void ns_entity_set_pin_header(NsEntity *e, int cols, int rows);
 void ns_pin_header_grid(const NsEntity *e, int *cols, int *rows);

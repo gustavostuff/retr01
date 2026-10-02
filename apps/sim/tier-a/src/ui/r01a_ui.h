@@ -6,6 +6,7 @@
 #include "discrete_ic/breadboard.h"
 #include "discrete_ic/entity.h"
 #include "discrete_ic/passive.h"
+#include "discrete_ic/pin_header.h"
 #include "discrete_ic/types.h"
 #include "discrete_ic/video_sink.h"
 
@@ -29,8 +30,8 @@
 #define R01A_PAD 3
 #define R01A_PAD_GAP 3
 #define R01A_PAD_PITCH (R01A_PAD + R01A_PAD_GAP)
-#define R01A_HDR_PAD 3 /* plastic around each 3×3 header pin */
-#define R01A_HDR_CELL (R01A_PAD + 2 * R01A_HDR_PAD)
+#define R01A_HDR_CELL NS_PIN_HDR_CELL_PX
+#define R01A_HDR_PAD ((R01A_HDR_CELL - R01A_PAD) / 2)
 #define R01A_ZOOM_MAX 8
 #define R01A_HOP_BYPASS_MM 15
 #define R01A_HOP_FAST_MM 35
@@ -116,6 +117,15 @@ typedef struct R01aUi {
     int drag_bb;
     int drag_bb_from_x;
     int drag_bb_from_y;
+    int right_armed;
+    int right_pan;
+    int right_lx;
+    int right_ly;
+    int ctx_open;
+    int ctx_lx;
+    int ctx_ly;
+    int ctx_bx;
+    int ctx_by;
     R01aHistory hist;
 } R01aUi;
 
@@ -167,6 +177,9 @@ void draw_ants_line(SDL_Renderer *r, int x0, int y0, int x1, int y1, Uint32 now)
 void mode_btn_rect(const R01aUi *ui, SDL_Rect *rc);
 void draw_mode_btn(SDL_Renderer *r, const R01aUi *ui);
 void draw_legend(SDL_Renderer *r);
+void draw_ctx_menu(SDL_Renderer *r, const R01aUi *ui);
+int ctx_hit_item(const R01aUi *ui, int lx, int ly);
+void ctx_apply(R01aUi *ui, R01aBoard *board, int item);
 void fill_tooltip(const R01aUi *ui, char *out, size_t out_len);
 void draw_tooltip(SDL_Renderer *r, int lx, int ly, const char *text);
 void draw_lcd(SDL_Renderer *r, R01aUi *ui, NsVideoSink *sink, int selected);
