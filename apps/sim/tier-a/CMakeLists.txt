@@ -40,11 +40,17 @@ target_include_directories(retr01_sim_tier_a_core PUBLIC
 target_link_libraries(retr01_sim_tier_a_core PUBLIC discrete_ic)
 
 add_library(retr01_sim_tier_a_app
-  src/ui.c
+  src/ui/geom.c
+  src/ui/copper.c
+  src/ui/draw.c
+  src/ui/history.c
+  src/ui/input.c
+  src/ui/run.c
   ${SIM_COMMON}/src/ui_font.c
 )
 target_include_directories(retr01_sim_tier_a_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
   ${SIM_COMMON}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
