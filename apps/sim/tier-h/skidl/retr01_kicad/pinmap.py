@@ -293,6 +293,8 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "ARCADE_2x10": _nums(20),
     "CAB_PWR_RST": _nums(4),
     "SCALE_SW": _nums(2),
+    "SW_SLIDE": _nums(3),  # C&K OS SPDT; sim uses 1-2 (SPST power), pad 3 NC
+    "SW_TACT": _nums(2),  # 6mm tactile (pads 1/1 and 2/2)
     "AUDIO_OUT": _nums(2),  # RCJ: 1=center, 2=shell
     "COMPOSITE_OUT": _nums(2),
     "PPTC": _nums(2),

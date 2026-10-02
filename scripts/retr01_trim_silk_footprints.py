@@ -46,6 +46,8 @@ STOCK: list[tuple[str, str]] = [
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_1x06_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_1x10_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x10_P2.54mm_Vertical.kicad_mod"),
+    ("Button_Switch_THT.pretty", "SW_Slide_SPDT_Straight_CK_OS102011MS2Q.kicad_mod"),
+    ("Button_Switch_THT.pretty", "SW_PUSH_6mm_H5mm.kicad_mod"),
 ]
 
 FP_TEXT_REF = re.compile(

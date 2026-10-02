@@ -37,6 +37,8 @@ REFDES: dict[str, Res] = {
     "J8": ("RCJ-012", fp.RCA_AUDIO),
     "J9": ("RCJ-014", fp.RCA),
     "J36": ("CART_EDGE_36", fp.EDGE36_MOBO),
+    "SW1": ("SW_SLIDE", fp.SW_SLIDE),
+    "SW_RST": ("SW_TACT", fp.SW_TACT),
     "Y1": ("XTAL", fp.XTAL),
     "Y2": ("XTAL", fp.XTAL),
     "Y3": ("XTAL", fp.XTAL),
@@ -74,6 +76,8 @@ PART: dict[str, Res] = {
     "CCAP": ("C_100N", fp.C_CER),
     "ECAP": ("C_BULK", fp.C_ELEC),
     "R": ("R_33", fp.R_AX),
+    "SW-SLIDE": ("SW_SLIDE", fp.SW_SLIDE),
+    "SW-TACT": ("SW_TACT", fp.SW_TACT),
     "SPRITE_FETCH": ("ATF22V10", fp.DIP24),
     "INTEGRATION": ("ATF22V10", fp.DIP24),
 }
