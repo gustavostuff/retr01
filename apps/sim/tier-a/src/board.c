@@ -806,8 +806,8 @@ static void board_place_free(R01aBoard *board) {
     scr = ns_video_sink_entity(&board->sink);
     bb = ns_breadboard_entity(&board->breadboard);
     ns_entity_place(scr, 8, y + row_h + 12);
-    ns_entity_place(bb, scr->board_x + scr->body_w + 16, scr->board_y);
-    ns_passive_bank_layout_grid(&board->passives, bb->board_x, bb->board_y + bb->body_h + 10, 6, 6);
+    ns_entity_place(bb, -2400, -2400);
+    ns_passive_bank_layout_grid(&board->passives, 8, scr->board_y + scr->body_h + 12, 6, 6);
     /* Crystal stays with the clock chips. The grid above would park it with the other passives. */
     {
         NsEntity *y2 = passive_ref(board, "Y2");
