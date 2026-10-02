@@ -23,7 +23,7 @@ BOTTOM (front)     J3/J4 pads | J5 arcade | J7 cab
 
 | Zone | Name | Parts |
 |------|------|-------|
-| **Z1** | Top-left | U3, U130, SW_RST, E1, C2, C17 |
+| **Z1** | Top-left | U3, U130, E1, C2, C17 |
 | **CPU** | Top-center | U1, C1, directly above J36 |
 | **Z2** | Top-right | Clock island, PLDs, U24, DAC Rs, J2, U725, J9 |
 | **CART** | Center | J36 |
@@ -40,17 +40,10 @@ BOTTOM (front)     J3/J4 pads | J5 arcade | J7 cab
 
 | Pin | Destination |
 |-----|-------------|
-| Center (+) | SW1, then `+5V` rail, then E1(+) |
+| Center (+) | `+5V` rail, then E1(+) |
 | Sleeve / shunt | `GND` |
 
-### SW1, power switch (next to J1)
-
-| Pin | Destination |
-|-----|-------------|
-| 1 | J1 center |
-| 2 | `+5V` (feeds the board) |
-
-### E1, 220 uF bulk (next to J1 / SW1)
+### E1, 220 uF bulk (next to J1)
 
 | Pin | Destination |
 |-----|-------------|
@@ -118,6 +111,8 @@ View into the socket: **A** is one face, **B** is the opposite face.
 
 ### J7, cab power/reset 2x2 (near J5)
 
+Cab harness brings `+5V`, `GND`, and reset. No onboard power slide or reset tactile.
+
 | Pin | Net |
 |-----|-----|
 | 1 | `+5V` |
@@ -132,6 +127,7 @@ Layout (top view, pin 1 at top-left):
 3 (RESB)  4 (GND)
 ```
 
+Note: cab-side reset debounce / RC on the J7 RESB pin is deferred. U130 still holds the supervisor path.
 ---
 
 ## Central CPU
@@ -149,7 +145,7 @@ Location: top-center, above J36. Bypass **C1** at pin 8.
 | 33-26 | D0-D7 | SysRAM U3, cart D (33 ohm), UM data, U574 D |
 | 34 | RWB | Decode / PLDs |
 | 37 | PHI2 | Clock island (buffered 8 MHz) through **R12** 33 ohm |
-| 40 | RESB | U130 RESET#, R30 10k to `+5V`, SW_RST |
+| 40 | RESB | U130 RESET#, R30 10k to `+5V`, J7 pin 3 |
 | 4 | IRQB | Beam Y EQ / IRQ path |
 | 2 | RDY | UM `CPU_RDY` (OD) plus pull-up |
 
@@ -182,10 +178,6 @@ Location: next to U1 pin 40. Bypass **C17** at pin 2.
 | 1 | RESET# | CPU RESB |
 | 2 | VDD | `+5V` and **C17** |
 | 3 | VSS | `GND` |
-
-### SW_RST, reset button
-
-Location: near U130. Momentary contact to `GND` on RESB. The supervisor debounces the edge.
 
 ---
 
@@ -477,7 +469,7 @@ Crystal loads **C22/C23** (Y2), **C24/C25** (Y3), and **C26/C27** (Y1) sit at th
 
 1. Board outline and mounting holes
 2. J36 at center, then U1 above it
-3. J1 / SW1 / E1 at top-left. J2 / J8 / J9 on the top edge. J3-J5 / J7 at bottom-left
+3. J1 / E1 at top-left. J2 / J8 / J9 on the top edge. J3-J5 / J7 at bottom-left
 4. Zone 2 clock island, then PLDs, U24, DAC, encoder
 5. Zone 1 U3 and reset
 6. Zone 3 U6, three HC157, U574

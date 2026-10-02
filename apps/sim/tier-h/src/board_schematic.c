@@ -525,14 +525,12 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   static const char *const p2[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
   static const char *const p2_pin[8] = {"P2_RIGHT", "P2_LEFT", "P2_DOWN", "P2_UP", "P2_X", "P2_Y", "P2_COIN", "P2_START"};
   int i;
-  r01s_pin_netlist_link(nl, &io->j1, "1", &io->sw1, "1");
-  r01s_pin_netlist_link(nl, &io->sw1, "2", pwr, "VDD");
+  /* Barrel J1 feeds +5V directly. Cab power / reset are on J7 (no onboard SW1 / SW_RST). */
+  r01s_pin_netlist_link(nl, &io->j1, "1", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j1, "2", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->u130, "VDD", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->u130, "VSS", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->u130, "RESET#", cpu, "RESB");
-  r01s_pin_netlist_link(nl, &io->sw_rst, "1", cpu, "RESB");
-  r01s_pin_netlist_link(nl, &io->sw_rst, "2", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j2, "R", sink, "RIN");
   r01s_pin_netlist_link(nl, &io->j2, "G", sink, "GIN");
   r01s_pin_netlist_link(nl, &io->j2, "B", sink, "BIN");

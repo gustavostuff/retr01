@@ -237,15 +237,15 @@
 		(uuid "a7e4ce5c-98fb-48d0-9ff3-cdec8a457bcf")
 	)
 	(embedded_fonts no)
-	(model "${KICAD10_3DMODEL_DIR}/Connector_Audio.3dshapes/Jack_3.5mm_CUI_SJ1-3515N_Horizontal.step"
+	(model "${KIPRJMOD}/library/Retr01_Lib.3dshapes/Jack_3.5mm_CUI_SJ1-3515N_Horizontal.wrl"
 		(offset
-			(xyz 0 0 0)
+			(xyz -2 0 3)
 		)
 		(scale
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 0)
+			(xyz 90 0 90)
 		)
 	)
 )

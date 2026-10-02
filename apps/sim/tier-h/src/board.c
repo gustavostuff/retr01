@@ -375,7 +375,7 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         ih->letter = 'A';
         if (!group->powered) {
             ih->health = R01S_HEALTH_FAIL;
-            snprintf(ih->activity, sizeof(ih->activity), "power switch off");
+            snprintf(ih->activity, sizeof(ih->activity), "power off");
         } else if (!r01s_level_is_high(r01s_entity_sense(pwr, "VDD"))) {
             ih->health = R01S_HEALTH_FAIL;
             snprintf(ih->activity, sizeof(ih->activity), "5V rail missing");
@@ -3645,9 +3645,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, ee_e, R01S_ISLAND_CART_MOD, x, 0);
     }
     r01s_island_builder_mount_rel(b, &board->io.j1, R01S_ISLAND_POWER_CLK, 0, 48);
-    r01s_island_builder_mount_rel(b, &board->io.sw1, R01S_ISLAND_POWER_CLK, 32, 48);
-    r01s_island_builder_mount_rel(b, &board->io.u130, R01S_ISLAND_POWER_CLK, 52, 48);
-    r01s_island_builder_mount_rel(b, &board->io.sw_rst, R01S_ISLAND_POWER_CLK, 64, 48);
+    r01s_island_builder_mount_rel(b, &board->io.u130, R01S_ISLAND_POWER_CLK, 32, 48);
     r01s_island_builder_mount_rel(b, &board->io.j36, R01S_ISLAND_CART, 0, 0);
     r01s_island_builder_mount_rel(b, &board->io.j2, R01S_ISLAND_VIDEO, 0, 48);
     r01s_island_builder_mount_rel(b, r01s_rca_jack_entity(&board->j9), R01S_ISLAND_VIDEO, 16, 48);

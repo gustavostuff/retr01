@@ -146,7 +146,7 @@ The board is populated and tested in six discrete stages:
 
 Before populating any sockets or passives:
 1. Measure resistance between +5.0 V and GND planes. Resistance must read open circuit or greater than 1 Mohm.
-2. Solder power barrel jack J1, main filter capacitor E1, and power switch SW1.
+2. Solder power barrel jack J1 and main filter capacitor E1.
 3. Apply +5.0 V and measure voltage across every IC socket VCC/GND pin pair before soldering sockets.
 4. Solder all DIP sockets, bypass capacitors, resistor arrays, and discrete passives.
 

@@ -13,7 +13,7 @@
 #define R01S_ZONE_M 5
 #define R01S_ZONE_Z4 6
 #define R01S_ZONE_Z5 7
-#define R01S_ZONE_J8 8 /* rear edge: J1, SW1, J8, J9 */
+#define R01S_ZONE_J8 8 /* rear edge: J1, J8, J9 */
 #define R01S_ZONE_COUNT 9
 
 /* layer: 0 = GND (tin), 1 = noisy (red), 4 = quiet (blue). */

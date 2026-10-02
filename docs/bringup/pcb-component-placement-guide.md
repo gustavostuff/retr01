@@ -113,7 +113,6 @@ Houses system memory and the MCP130 reset supervisor.
 **Components:**
 - System RAM AS6C62256 (U3, DIP-28)
 - MCP130 Reset Supervisor (U130, TO-92)
-- Reset tactile pushbutton (SW_RST)
 - Bulk filter electrolytic capacitor E1 (220 uF near J1)
 - Decoupling capacitors: C2 (for U3), C17 (for U130)
 
@@ -264,7 +263,6 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | Connector | Label | Location on PCB | Purpose |
 | --- | --- | --- | --- |
 | **J1** | DC_IN | Top-Left rear edge | 5.0 V regulated DC barrel jack (center positive) |
-| **SW1** | POWER | Top-Left edge near J1 | Main system power slide switch |
 | **J8** | AUDIO | Top-Center rear edge | RCA mono/stereo audio line out |
 | **J9** | COMPOSITE | Top-Center rear edge | RCA composite video out (yellow) |
 | **J2** | RGBS_HDR | Top-Right rear edge | 6-pin 0.1 inch header for raw RGBS video |
@@ -278,7 +276,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 
 ## 7. Power routing and ground distribution
 
-1. **Power entry:** +5.0 V enters at J1 (Top-Left) through power switch SW1 into bulk electrolytic capacitor E1 (220 uF to 470 uF).
+1. **Power entry:** +5.0 V enters at J1 (Top-Left) into bulk electrolytic capacitor E1 (220 uF to 470 uF). Cab power and reset also land on J7.
 2. **Domain distribution:** Main VCC splits through four 2-pin isolation headers (JP_PWR1 through JP_PWR4) to allow progressive bring-up as specified in [`staged-pcb-bringup-guide.md`](staged-pcb-bringup-guide.md).
 3. **Decoupling proximity:** Every IC socket has a 0.1 uF low-ESR ceramic capacitor connected within 5 mm of its VCC pin according to the complete assignment in Section 8.
 4. **Unified ground:** Layers 2 and 3 are solid GND planes. Layers 1 and 4 carry their signals plus a GND fill, so all four layers have GND copper. The pours are not split into digital and analog regions. Net assignment is in `docs/general/hardware.md`.

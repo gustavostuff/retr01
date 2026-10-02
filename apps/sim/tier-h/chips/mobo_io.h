@@ -12,8 +12,6 @@ typedef struct R01sMoboIo {
     R01sEntity j5;
     R01sEntity j7;
     R01sEntity j36;
-    R01sEntity sw1;
-    R01sEntity sw_rst;
     R01sEntity u130;
 } R01sMoboIo;
 

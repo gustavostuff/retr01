@@ -2430,7 +2430,7 @@ void ui_pack_floor_plan(R01sUi *ui) {
         int x, y, w, h;
     } FloorZone;
     FloorZone zone[R01S_ZONE_COUNT];
-    static const char *const rear_order[] = {"J1", "SW1", "J8", "J9"};
+    static const char *const rear_order[] = {"J1", "J8", "J9"};
     int i;
     int ox = 16;
     int oy = 48;

@@ -32,6 +32,3 @@ TRS = f"{_R}:Jack_3.5mm_CUI_SJ1-3515N_Horizontal"
 # Edge-mount RCJ-01x (1A/1B/1C shell + pad 2 tip); from gametank avboard_tht2.
 RCA = "Retr01_Lib:CUI_RCJ-014"
 RCA_AUDIO = "Retr01_Lib:CUI_RCJ-014_Audio"
-# Power slide (C&K OS SPDT; sim wires pins 1-2 as SPST, pad 3 NC) + reset tactile.
-SW_SLIDE = f"{_R}:SW_Slide_SPDT_Straight_CK_OS102011MS2Q"
-SW_TACT = f"{_R}:SW_PUSH_6mm_H5mm"

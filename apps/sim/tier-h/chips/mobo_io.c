@@ -139,13 +139,11 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
     init_j5(&io->j5);
     init_j7(&io->j7);
     init_j36(&io->j36);
-    init_named_panel(&io->sw1, "SW-SLIDE", "SW1", 48, 32);
-    init_named_panel(&io->sw_rst, "SW-TACT", "SW_RST", 72, 32);
     init_u130(&io->u130);
 }
 
 void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
-    R01sEntity *list[10];
+    R01sEntity *list[8];
     int i;
     if (!io || !nl) {
         return;
@@ -157,10 +155,8 @@ void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
     list[4] = &io->j5;
     list[5] = &io->j7;
     list[6] = &io->j36;
-    list[7] = &io->sw1;
-    list[8] = &io->sw_rst;
-    list[9] = &io->u130;
-    for (i = 0; i < 10; i++) {
+    list[7] = &io->u130;
+    for (i = 0; i < 8; i++) {
         r01s_pin_netlist_register_entity(nl, list[i]);
     }
 }
