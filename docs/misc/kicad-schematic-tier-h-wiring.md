@@ -184,7 +184,7 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | **J2** | RGB + sync out | DAC R/G/B, CSYNC or HSYNC/VSYNC from **UPLDX/Y** and mode jumper |
 | **J3**, **J4** | TRS pads | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
 | **J5** | Arcade buttons | 2x10. GPIO from **US2**. GND on pins 17-20 |
-| **J7** | Cab power/reset | +5V, GND, **RESB** / reset |
+| **J7** | Cab power/reset 2x2 | +5V, GND, **RESB** / reset (pins 1-4) |
 | **J8** | Audio RCA | PWM / mix from **US2** |
 | **J9** | Composite RCA | **U725** output when populated |
 

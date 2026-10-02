@@ -116,7 +116,7 @@ View into the socket: **A** is one face, **B** is the opposite face.
 | Even 2-16 | P2 bits to US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6` |
 | 17-20 | `GND` |
 
-### J7, cab power/reset 1x4 (near J5)
+### J7, cab power/reset 2x2 (near J5)
 
 | Pin | Net |
 |-----|-----|
@@ -124,6 +124,13 @@ View into the socket: **A** is one face, **B** is the opposite face.
 | 2 | `GND` |
 | 3 | `RESET_N` / RESB path |
 | 4 | `GND` |
+
+Layout (top view, pin 1 at top-left):
+
+```text
+1 (+5V)   2 (GND)
+3 (RESB)  4 (GND)
+```
 
 ---
 

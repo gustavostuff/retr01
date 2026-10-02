@@ -33,7 +33,7 @@ REFDES: dict[str, Res] = {
     "J3": ("TRS_P1", fp.TRS),
     "J4": ("TRS_P2", fp.TRS),
     "J5": ("ARCADE_2x10", fp.HDR2x10),
-    "J7": ("CAB_PWR_RST", fp.HDR4),
+    "J7": ("CAB_PWR_RST", fp.HDR2x2),
     "J8": ("RCJ-012", fp.RCA_AUDIO),
     "J9": ("RCJ-014", fp.RCA),
     "J36": ("CART_EDGE_36", fp.EDGE36_MOBO),

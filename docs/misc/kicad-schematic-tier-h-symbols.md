@@ -45,7 +45,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **J2** | RGB + sync 1x6 | Connector symbol | 1x6 header |
 | **J3**, **J4** | TRS pad jacks | `Connector_Audio:AudioJack3_SwitchTR` | CUI SJ1-3515N horizontal |
 | **J5** | Arcade 2x10 | Pin header | 2x10 |
-| **J7** | Cabinet power/reset 1x4 | Pin header | 1x4 |
+| **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |
 | **J36** | Cart socket 2x18 | Custom | `EDAC_395_MoboSocket_2x18_2.54x5.08mm` |
 | **C1-C27**, **R1-R30**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |

@@ -245,7 +245,7 @@ Interfaces with external gamepads, arcade controls, and audio output.
 - MCU-S2 peripheral microcontroller (US2, AVR128DB28, SPDIP-28)
 - 2x 3.5 mm TRS controller jacks (J3, J4)
 - Arcade control header J5 (2x10)
-- Cabinet power/reset header J7 (1x4)
+- Cabinet power/reset header J7 (2x2)
 - RCA audio output jack J8 (top rear edge)
 - PWM from US2 pin PF1 runs to J8. The locked BOM has no extra audio filter capacitors.
 - Decoupling capacitor: C7 (for US2)
@@ -272,7 +272,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad |
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad |
 | **J5** | ARCADE | Bottom-Left edge near J4 | 2x10 pin header. Odd pins are Player 1, even pins are Player 2, pins 17-20 are GND |
-| **J7** | CAB_PWR | Bottom edge near J5 | 1x4 `+5V` / `GND` / `RESET_N` / `GND` |
+| **J7** | CAB_PWR | Bottom edge near J5 | 2x2 `+5V`/`GND` over `RESET_N`/`GND` |
 
 ---
 

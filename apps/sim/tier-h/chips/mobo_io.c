@@ -94,12 +94,14 @@ static void init_j5(R01sEntity *e) {
 }
 
 static void init_j7(R01sEntity *e) {
-    io_begin(e, "HDR-1x4", "J7");
+    /* 2x2 male: 1=+5V  2=GND
+                 3=RESB 4=GND */
+    io_begin(e, "CAB-PWR", "J7");
     io_pin(e, 1, "VCC");
     io_pin(e, 2, "GND1");
     io_pin(e, 3, "RESB");
     io_pin(e, 4, "GND2");
-    io_header(e, 1, 4);
+    io_header(e, 2, 2);
 }
 
 static void init_u130(R01sEntity *e) {
