@@ -140,3 +140,30 @@ def restore_rail_net_names(parts: Dict[str, object], nets_map: dict) -> None:
             net.name = "+5V"
         if nm.startswith("GND") and nm != "GND":
             net.name = "GND"
+
+    # Skidl sometimes leaves the main rail as NET_NNN after merges; pin anchors fix it.
+    v5 = nets_map.get("+5V")
+    gnd = nets_map.get("GND")
+    for net in list(_collect_nets(parts)):
+        for pin in list(getattr(net, "pins", []) or []):
+            part = getattr(pin, "part", None)
+            if part is None:
+                continue
+            ref = getattr(part, "ref", "")
+            num = str(getattr(pin, "num", ""))
+            if v5 is not None and net is not v5 and (
+                (ref == "U1" and num == "8") or (ref == "J1" and num == "1") or (ref == "J36" and num in ("3", "4"))
+            ):
+                for p in list(getattr(net, "pins", []) or []):
+                    p += v5
+                break
+            if gnd is not None and net is not gnd and (
+                (ref == "U1" and num == "21") or (ref == "J1" and num in ("2", "3")) or (ref == "J36" and num in ("1", "2", "35"))
+            ):
+                for p in list(getattr(net, "pins", []) or []):
+                    p += gnd
+                break
+    if v5 is not None:
+        v5.name = "+5V"
+    if gnd is not None:
+        gnd.name = "GND"

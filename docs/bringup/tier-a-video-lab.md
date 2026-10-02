@@ -56,7 +56,7 @@ The dot clock requires a clean 5.369318 MHz CMOS square wave. Three common optio
   - Each gun: **75.0 ohm** to GND -> ~**0.7 Vpp** at the RGB header (matches product DAC into ~75 ohm world)
 - Series **~33 ohm** on **DOT** if the oscillator edge is hot or the breadboard is noisy
 - Decoupling: **100 nF** at every IC VCC pin. Bulk **~220 uF** at 5 V entry
-- **1x6 (or 1x5) header** for **RGBS** to the monitor cable (see section 7)
+- **2x3 (or 1x6) header** for **RGBS** to the monitor cable (see section 7)
 - 5 V supply capable of a few hundred mA. Clean ground shared with monitor return where possible
 
 ### Optional
@@ -337,5 +337,5 @@ Index[5:0] <- DIP switches -or- f(X,Y) from PLDs
         |
         +-- CSYNC (Beam X)
         v
-   1x6 header -> RGB monitor (RGBS)
+   2x3 header -> RGB monitor (RGBS)
 ```

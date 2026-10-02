@@ -24,6 +24,7 @@ TO92 = f"{_R}:TO-92_Inline"
 
 BARREL = f"{_R}:BarrelJack_GCT_DCJ200-10-A_Horizontal"
 HDR2x2 = f"{_R}:PinHeader_2x02_P2.54mm_Vertical"
+HDR2x3 = f"{_R}:PinHeader_2x03_P2.54mm_Vertical"
 HDR6 = f"{_R}:PinHeader_1x06_P2.54mm_Vertical"
 HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"
 HDR2x10 = f"{_R}:PinHeader_2x10_P2.54mm_Vertical"

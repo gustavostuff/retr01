@@ -66,14 +66,17 @@ static void init_j36(R01sEntity *e) {
 }
 
 static void init_j2(R01sEntity *e) {
-    io_begin(e, "HDR-1x6", "J2");
+    /* 2x3 male: 1=R  2=G
+                 3=B  4=SYNC
+                 5=GND1 6=GND2 */
+    io_begin(e, "HDR-2x3", "J2");
     io_pin(e, 1, "R");
     io_pin(e, 2, "G");
     io_pin(e, 3, "B");
     io_pin(e, 4, "SYNC");
     io_pin(e, 5, "GND1");
     io_pin(e, 6, "GND2");
-    io_header(e, 1, 6);
+    io_header(e, 2, 3);
 }
 
 /* 2x10 IDC. Odd pins are Player 1, even pins are Player 2. Last two rows are GND. */

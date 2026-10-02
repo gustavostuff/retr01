@@ -68,7 +68,7 @@ View into the socket: **A** is one face, **B** is the opposite face.
 
 **R14-R23** (33 ohm cart dampers) sit in line between the motherboard buses and the J36 pins.
 
-### J2, RGBS header (rear, top-right), Zone 2
+### J2, RGBS header 2x3 (rear, top-right), Zone 2
 
 | Pin | Net |
 |-----|-----|
@@ -78,6 +78,14 @@ View into the socket: **A** is one face, **B** is the opposite face.
 | 4 | CSYNC or HSYNC (mode jumper) |
 | 5 | GND or VSYNC |
 | 6 | `GND` |
+
+Layout (top view, pin 1 at top-left):
+
+```text
+1 (R)     2 (G)
+3 (B)     4 (SYNC)
+5 (GND)   6 (GND)
+```
 
 ### J8, audio RCA (rear), driven from Zone 5
 

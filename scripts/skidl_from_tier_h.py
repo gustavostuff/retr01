@@ -217,7 +217,22 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
 
     buf = StringIO()
     generate_netlist(file_=buf)
-    return buf.getvalue()
+    # Skidl 2.3 sometimes emits the +5V rail as NET_NNN despite net.name="+5V".
+    out = buf.getvalue()
+    import re as _re
+
+    for m in _re.finditer(r'\(net\s+\(code\s+\d+\)\s+\(name\s+"(NET_\d+)"\)', out):
+        name = m.group(1)
+        start = m.end()
+        nxt = _re.search(r"\n\s*\(net\s+\(code|\n\s*\)\s*$", out[start:])
+        chunk = out[start : start + (nxt.start() if nxt else 8000)]
+        if _re.search(
+            r'\(node\b[\s\S]*?\(ref\s+"U1"\)[\s\S]*?\(pin\s+"8"\)',
+            chunk,
+        ):
+            out = out.replace(f'(name "{name}")', '(name "+5V")', 1)
+            break
+    return out
 
 
 def main() -> None:

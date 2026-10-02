@@ -373,7 +373,7 @@ Cart and pad PCBs are **2-layer**.
 | Ref | Locked |
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
-| J2 | 1x6 RGB + sync (table above) |
+| J2 | 2x3 RGB + sync (table above) |
 | J3/J4 | CUI Devices **SJ1-3515N** 5-pin horizontal TRS |
 | J5 | 2x10 arcade |
 | J7 | 2x2 power/reset |

@@ -59,12 +59,15 @@ MOBO_COUNTED_IC_REFDES = frozenset(
 
 
 def _flash_to_j36() -> dict[str, str]:
+    """Map cart-flash silicon pads onto J36.
+
+    A0-A13 / D / OE# / WE# / power only. Do **not** remap flash A14-A18: those
+    cart pins are MAP-driven (JSON already has J36 B13-B17). The sim still ties
+    flash A14/A15 to CPU_A14/A15, so remapping them would short CPU onto MAP.
+    """
     out: dict[str, str] = {}
     for i in range(14):
         out[P.FLASH_A[i]] = P.cart_a(i + 4)
-    for i, edge_n in enumerate(range(13, 18)):
-        bit = 14 + i
-        out[P.FLASH_A[bit]] = P.cart_b(edge_n)
     for i in range(8):
         out[P.FLASH_D[i]] = P.cart_b(i + 4)
     out[P.FLASH_OE] = P.cart_b(12)
@@ -96,7 +99,9 @@ def normalize_export_node(ref: str, pin_name: str, pin_num: int) -> Optional[Nod
     """Return mobo refdes/pin for Skidl, or None to drop."""
     if ref in SKIP_REFDES:
         return None
-    if pin_name in _SKIP_PIN_NAMES or pin_num > 28 or pin_num < 1:
+    # Do not clamp by pin count here: U1/J36/UM are 36–40 pin parts. Bad nodes
+    # are dropped via SKIP_REFDES and per-part remap tables below.
+    if pin_name in _SKIP_PIN_NAMES or pin_num < 1:
         return None
     sn = str(pin_num)
     if ref == "U40":

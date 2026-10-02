@@ -249,13 +249,14 @@ C1, C2 = "1", "2"
 # OSC cans - Abracon ACH half-size DIP-8 (KiCad Oscillator_DIP-8 pads 1/4/5/8)
 OSC_OE, OSC_GND, OSC_OUT, OSC_VDD = "1", "4", "5", "8"
 
-# Cart edge 36 - A1..A18 = 1..18, B1..B18 = 19..36
+# Cart edge 36 - interleaved to match mobo_io + EDAC footprint
+# (A1=1,B1=2,A2=3,B2=4,...,A18=35,B18=36). hardware.md "pin N" = contact pair N.
 def cart_a(n: int) -> str:
-    return str(n)  # A1=1 .. A18=18
+    return str(2 * n - 1)  # A1=1 .. A18=35
 
 
 def cart_b(n: int) -> str:
-    return str(18 + n)  # B1=19 .. B18=36
+    return str(2 * n)  # B1=2 .. B18=36
 
 
 # ---------------------------------------------------------------------------

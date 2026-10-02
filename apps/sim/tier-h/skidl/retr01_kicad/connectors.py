@@ -95,9 +95,9 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J7", "4"),
             ("J1", "2"),
             ("J1", "3"),
-            ("J36", "1"),
-            ("J36", "18"),
-            ("J36", "19"),
+            ("J36", "1"),   # A1 GND
+            ("J36", "2"),   # B1 GND
+            ("J36", "35"),  # A18 GND
         ):
             if ref in parts:
                 pin_connect(parts[ref], "", pin, gnd)
@@ -108,8 +108,8 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J7", "1"),
             ("J3", P.TRS_TIP),
             ("J4", P.TRS_TIP),
-            ("J36", "2"),
-            ("J36", "20"),
+            ("J36", "3"),  # A2 VCC
+            ("J36", "4"),  # B2 VCC
         ):
             if ref in parts:
                 pin_connect(parts[ref], "", pin, v5)

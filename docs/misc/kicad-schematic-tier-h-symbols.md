@@ -42,7 +42,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |
 | **J1** | Barrel 5 V | `Connector:Barrel_Jack` | GCT DCJ200-10-A class |
-| **J2** | RGB + sync 1x6 | Connector symbol | 1x6 header |
+| **J2** | RGB + sync 2x3 | Connector symbol | 2x3 header |
 | **J3**, **J4** | TRS pad jacks | `Connector_Audio:AudioJack3_SwitchTR` | CUI SJ1-3515N horizontal |
 | **J5** | Arcade 2x10 | Pin header | 2x10 |
 | **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
