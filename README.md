@@ -14,7 +14,7 @@ Hardware remains in active development/design. Software, tooling, and documentat
 
 ## Graphics
 
-The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers, as stared above. The result is a sharp image with a simple hardware pipeline.
+The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers, as stated above. The result is a sharp image with a simple hardware pipeline.
 
 Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state + some special/extra screens, PRG, BGM, etc). All within a 512KB cartridge.
 
