@@ -10,31 +10,31 @@ Hardware remains in active development/design. Software, tooling, and documentat
 
 1. **NES: readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Those limits are on purpose. They keep the graphics simple, make pixel art easier to work with, and give every color choice more weight.
 2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
-3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays understandable instead of hiding behind an FPGA. It applies those ideas to a simple tile-based background and CHR system built around high-level _game entities_ rather than raw sprites, with clear VRAM windows and camera logic, all aimed at new games.
+3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays understandable instead of hiding behind an FPGA. It applies those ideas to a simple tile-based background and CHR system built around high-level _game entities_ rather than raw sprites, with clear VRAM windows and camera logic.
 
 ## Graphics
 
-The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers. The result is a sharp image with a simple hardware pipeline.
+The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers, as stared above. The result is a sharp image with a simple hardware pipeline.
 
-Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state). All within a 512KB cartridge.
+Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state + some special/extra screens, PRG, BGM, etc). All within a 512KB cartridge.
 
 Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus on game logic instead of pushing every pixel.
 
 ## Audio
 
-Retr01 uses 8 channels shared between BGM and SFX. Channels are fully independent, so a jump or shot does not temporarily mute a BGM channel.
+Retr01 uses 8 channels shared between BGM and SFX. Channels are fully independent, so a jump or shot does not temporarily mute a BGM channel (this was a inherent limitation of the NES, for instance).
 
-The game program writes notes and a helper chip (an AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
+PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
 
 ## Hardware
 
-The design uses one compact, mostly through-hole main board with ~17 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is, the same PCB can be populated as a console (using 3.5mm TRS ports for gamepads and RCA connectors for composite and audio) or as an arcade board (RGBS/RGBHV output + pin headers for microswitches).
+The design uses a compact, mostly THT main system board with ~17 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is, the same PCB can be populated as a console (using 3.5mm TRS ports for pads and audio/composite RCA connectors) or as an arcade board (RGBS/RGBHV output + pin headers for arcade stick and buttons).
 
-As for the cartridge, it's a simple and small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold finders per side.
+As for the cartridge, it's a small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold fingers per side.
 
-Game pads are planned to use 3 wires (3.5mm TRS connections, as mentioned above, so any audio aux cable can be used), and a serial protocol for communication (using an ATtiny). Everything officially supported as both THT and SMT! (with one exception: the chip to generate composite video).
+Game pads are planned to use a 3-wire connection through any regular male to male audio aux cable (TRS ports on both the main PCB and the pads PCB). A serial protocol + ATtiny chips (on the pads board) will take care of communications.
 
-Note: the main motherboard uses the 160x100mm Standard Eurocard 3U format (DIN 41494 / IEC 60297).
+Note: the main motherboard uses the 160x100mm Standard Eurocard 3U format (DIN 41494 / IEC 60297). Very standard, very cute size.
 
 ## Software pieces
 
