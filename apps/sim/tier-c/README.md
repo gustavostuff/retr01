@@ -27,9 +27,7 @@ Everything from Tier B stays. New jumpers (see bring-up doc section 8):
 - **Beam Y** `VBLANK` -> **US1** `VBL` (optional debug / RUN)
 - **C8** on **US1** VCC; decoupling on **U41** / **U573** as in BOM
 
-**Auto** mode includes these links so the LCD demo runs without extra jumpers. **Manual** mode requires the same routes on the protoboards. The sim still runs the lab fill into **U41** memory each VBlank (firmware behavior), while encode only locks when the routed netlist matches Auto.
-
-First launch loads Tier B’s saved layout if Tier C has no `ui_layout.json` yet. Place **US1**, **U573**, and **U41** beside the Compositor cluster.
+The sim uses the same island window as Tier A and Tier B. Those links are in the soft netlist, so the LCD demo runs without jumpers. **US1**, **U573**, and **U41** start on the DIGITAL island. Placement saves to `island_layout.json`.
 
 ## Build
 
@@ -41,4 +39,4 @@ ctest --test-dir apps/sim/tier-c/build --output-on-failure
 
 Repo: `./scripts/build-all.sh` installs `bin/sim-tier-c`. `./scripts/sim-tier-c.sh` runs it.
 
-Controls match Tier A/B. See [tier-a/README.md](../tier-a/README.md).
+Controls match Tier A. See [tier-a/README.md](../tier-a/README.md).

@@ -45,30 +45,50 @@ target_include_directories(retr01_sim_tier_a_core PUBLIC
 target_compile_definitions(retr01_sim_tier_a_core PRIVATE R01A_BB_3PX=1 R01A_ENTITY_PITCH=6)
 target_link_libraries(retr01_sim_tier_a_core PUBLIC discrete_ic)
 
+set(TIER_H "${CMAKE_CURRENT_SOURCE_DIR}/../tier-h")
+set(R01_FW_COMMON_DIR "${R01_COMMON_DIR}/fw")
+add_library(retr01_sim_tier_a_lab STATIC ${SIM_COMMON}/src/lab_sim.c)
+target_include_directories(retr01_sim_tier_a_lab PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/chips
+  ${SIM_COMMON}/include
+  ${SIM_COMMON}/chips
+)
+target_link_libraries(retr01_sim_tier_a_lab PUBLIC retr01_sim_tier_a_core)
 add_library(retr01_sim_tier_a_app
-  src/ui/geom.c
-  src/ui/copper.c
-  src/ui/draw.c
-  src/ui/history.c
-  src/ui/input.c
-  src/ui/run.c
-  src/ui/bb_ui.c
-  src/ui/jumpers.c
-  ${SIM_COMMON}/src/ui_font.c
+  ${SIM_COMMON}/src/lab_host.c
+  ${SIM_COMMON}/src/lab_ui_stubs.c
+  ${TIER_H}/src/ui.c
+  ${TIER_H}/src/ui_font.c
+  ${TIER_H}/src/ui_draw_chip.c
+  ${TIER_H}/src/ui_placement.c
+  ${TIER_H}/src/ui_draw.c
+  ${TIER_H}/src/ui_input.c
+  ${TIER_H}/src/ui_pin_net.c
+  ${TIER_H}/src/ui_layout.c
+  ${TIER_H}/src/ui_button.c
+  ${TIER_H}/src/airwire.c
+  ${TIER_H}/src/gamepad.c
 )
 target_include_directories(retr01_sim_tier_a_app PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+  ${TIER_H}/src
+  ${TIER_H}/include
+  ${TIER_H}/chips
+  ${SIM_COMMON}/include
   ${SIM_COMMON}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
   ${SIM_COMMON}/chips
+  ${R01_COMMON_DIR}
+  ${R01_FW_COMMON_DIR}
 )
-target_compile_definitions(retr01_sim_tier_a_app PRIVATE R01A_BB_3PX=1
-  "R01A_ASSETS_OTHER=\"${SIM_COMMON}/assets/other\""
-  "R01A_LAYOUT_FILE=\"${CMAKE_CURRENT_SOURCE_DIR}/ui_layout.json\""
+target_compile_definitions(retr01_sim_tier_a_app PRIVATE
+  "R01A_LAB_TITLE=\"Retr01 Tier A\""
+  "R01A_ISLAND_LAYOUT=\"${CMAKE_CURRENT_SOURCE_DIR}/island_layout.json\""
+  "R01S_ASSETS_DIR=\"${SIM_COMMON}/assets/other\""
+  "R01S_ASSETS_PNG_DIR=\"${SIM_COMMON}/assets/png\""
 )
-target_link_libraries(retr01_sim_tier_a_app PUBLIC retr01_sim_tier_a_core PkgConfig::SDL2 PkgConfig::FREETYPE)
+target_link_libraries(retr01_sim_tier_a_app PUBLIC retr01_sim_tier_a_lab retr01_sim_tier_a_core PkgConfig::SDL2 PkgConfig::FREETYPE)
 
 add_executable(retr01_sim_tier_a ${SIM_COMMON}/src/main.c)
 target_include_directories(retr01_sim_tier_a PRIVATE

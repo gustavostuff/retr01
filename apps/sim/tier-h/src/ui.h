@@ -154,6 +154,10 @@ typedef struct R01sUi {
     int ctx_x;          /* menu anchor in logic space */
     int ctx_y;
     int layout_compact; /* 1 = pack chips like a PCB (no island frames) */
+    /* Lab hosts (tiers A-C): keep island frames, and paint every non-GND wire green. */
+    int prefer_islands;
+    int air_green_only;
+    R01sPinNetlist *pin_net; /* When set, air wires use this instead of the tier-H board. */
     /* Snapshot of island-mode geometry while compact (restored on toggle off). */
     int layout_saved;
     /* Island-mode chip positions relative to island board_x/board_y. */

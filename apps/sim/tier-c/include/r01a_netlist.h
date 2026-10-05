@@ -34,6 +34,7 @@ typedef struct R01aNetIssue {
 
 /* Physical vs Auto netlist. Jumpers and strips are hard ties. Resistors are not. */
 int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out);
+void r01a_netlist_fill_pins(R01aBoard *board);
 const char *r01a_netlist_kind_label(int kind);
 /* 1 if the last check reported this pin in a short. */
 int r01a_netlist_pin_shorted(const NsEntity *e, int pin_index);

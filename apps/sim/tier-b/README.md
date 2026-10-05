@@ -2,7 +2,7 @@
 
 Isolated hardware lab for [docs/bringup/tier-b-video-lab.md](../../../docs/bringup/tier-b-video-lab.md). The board recipe and netlist stay in this folder. Clocks, PROM, the layout loader, the font, and the PNG chrome come from [`apps/sim/common/`](../common/). Bench and sim are **RGBS-only** (no AD724/FSC composite path). Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/).
 
-Auto mode runs the priority picture with no jumpers. Manual mode inherits the Tier A breadboard layout (`apps/sim/tier-a/ui_layout.json`) on first launch: same part positions and the same jumpers. Tier B's own `ui_layout.json` is written on quit and used after that. The Compositor is the only part that layout does not already place. In Manual, the LCD stays blank while the netlist check reports any open or short, and pins named in a short pulse red and black.
+The window matches Tier A and Tier H: a DIGITAL island and an ANALOG island, green air wires, no protoboard and no manual wire mode. `UPLDC` sits on DIGITAL with the beam PLDs. Placement saves to this folder's `island_layout.json`.
 
 ## Additions (not in Tier A)
 
@@ -13,7 +13,6 @@ Auto mode runs the priority picture with no jumpers. Manual mode inherits the Ti
 | Priority: sprite box (kit 63) over BG1 bars over BG0 bands. BG1 cell 2 is kit 0, so the Y bands show through | `include/r01a_raster.h` |
 | Count bits into the Compositor: Beam X `X5` `X6` `X7` `HBLANK`, Beam Y `Y5` `Y6` `Y7` `VBLANK` | PLD pinouts |
 | Safe stubs on the Compositor: `PHI2` tied low, `RWB` tied high. `IO20`-`IO23` driven 0 (MAP stand-ins, no cart) | Auto netlist |
-| First launch loads the Tier A layout (three boards, positions, jumpers) | `src/ui.c` |
 | Tests `test_compositor`, `test_tier_b_priority`, `test_tier_b_seat` | `tests/` |
 
 Sprite box is X cells 3-4 and Y cells 2-3 (32-dot cells). That is X 96-159, Y 64-127.
@@ -24,14 +23,13 @@ Sprite box is X cells 3-4 and Y cells 2-3 (32-dot cells). That is X 96-159, Y 64
 | --- | --- |
 | Beam X drives `INDEX[5:0]` straight to the PROM | Beam X drives count bits only. Index comes from `UPLDC` |
 | Method B bars on every active X cell, including cell 2 (kit 55) | Cell 2 is kit 0 so BG0 shows through. The other bar indices are unchanged |
-| Default code cluster is one empty breadboard | Same default cluster. A saved Tier A layout supplies BB2, BB3, positions, and jumpers |
 | Window title "Retr01 Tier A" | "Retr01 Tier B" |
 
-Unchanged from Tier A: DOT, Beam X/Y raster and sync, PROM kit image, resistor DAC, LCD (RGBS sink), Auto/Manual routing, jumper editing. Sync still does not go through the Compositor.
+Unchanged from Tier A: DOT, Beam X/Y raster and sync, PROM kit image, resistor DAC, LCD (RGBS sink), and the island UI. Sync still does not go through the Compositor.
 
 ## Additional wiring
 
-Power, clocks, sync, the DAC, and the PROM control jumpers stay as in Tier A. The bring-up delta (`docs/bringup/tier-b-video-lab.md` section 7) is the new work:
+On the bench, power, clocks, sync, the DAC, and the PROM jumpers stay as in Tier A. The sim already ties the same nets. The bring-up delta (`docs/bringup/tier-b-video-lab.md` section 7) is the new work:
 
 - Seat `UPLDC` on the existing boards. Decoupling stays the Tier A set (`C1`-`C7` and `E1`). |
 - Beam X pins 14-19 are no longer `INDEX[5:0]` (they are `X5` `X6` `X7` and three unused pins). The six Tier A index jumpers into PROM `A[5:0]` have to move to the Compositor's `INDEX[5:0]`.

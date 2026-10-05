@@ -1,14 +1,14 @@
 # Retr01 Tier A sim
 
-Isolated hardware lab for [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md). Discrete ICs share one VIDEO LAB sim group. Parts sit free on the board canvas (no island frame). Method B color bars on the virtual screen (256x240 CRT field, 1x default with overscan).
+Isolated hardware lab for [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md). The window uses the Tier H board view: a DIGITAL island and an ANALOG island. Method B color bars on the virtual screen (256x240 CRT field).
 
 Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/). Palette SoT: [`apps/common/r01_kit_palette.c`](../../common/r01_kit_palette.c). Chips, font, and board chrome that both labs use live in [`apps/sim/common/`](../common/). Overlay font is Proggy Tiny.
 
 ## Parts
 
-DOT canned oscillator (4-leg OSC4LEGS sprite, DIP-14 can: pin 14 VDD / 8 clock / 1 OE# / 7 GND), Beam X and Beam Y (ATF22V10 shells), AT27C256R kit PROM, **J2** 1x6 male pin header (procedural black strip, level-colored pin pixels), LCD sink (256x240 RGBS field), nano protoboard.
+DOT canned oscillator (4-leg OSC4LEGS sprite, DIP-14 can: pin 14 VDD / 8 clock / 1 OE# / 7 GND), Beam X and Beam Y (ATF22V10 shells), AT27C256R kit PROM, **J2** 1x6 male pin header, LCD sink (256x240 RGBS field). Clocks, PLDs, and the PROM sit on DIGITAL. The DAC resistors, J2, and the screen sit on ANALOG.
 
-Passives from the Tier A lab: 100 nF decoupling, 220 uF bulk, R3G3B2 DAC resistors (4.00k / 2.00k / 1.00k and 75 ohm loads), 33 ohm series on DOT. Resistors show 4-band EIA color codes from their ohm value. Electrolytic caps name the pivot lead - and the other lead +. Diodes name the pivot lead A and the other K. Right-click empty board to add more passives or another protoboard.
+Passives from the Tier A lab: 100 nF decoupling, 220 uF bulk, R3G3B2 DAC resistors (4.00k / 2.00k / 1.00k and 75 ohm loads), 33 ohm series on DOT. Resistors show 4-band EIA color codes from their ohm value.
 
 No CPU, cart, AVRs, VRAM, or Compositor.
 
@@ -76,18 +76,11 @@ A first bench that can program its own chips lands around **USD 110-150**. Skip 
 
 W65C02S, AVR128DB28, AS6C62256, 74HC157 / 573 / 574, SST39SF040, 24C64, ATtiny85, an 8 MHz PHI2 oscillator, Adafruit's UPDI Friend, MCP130 supervisor. A scope is the useful extra for first light.
 
-## Wire modes
+## Sim
 
-| Mode | Wiring |
-| --- | --- |
-| Auto | Soft netlist (virtual wires). Color bars without placing jumpers. |
-| Manual | No virtual wires. A pin conducts only when its tip sits on a breadboard strip, including strips joined by jumpers or by resistors, also across protoboards. Caps occupy holes and do not pass DC. DIP pads draw gray. A 1 px pulse on each tip: black/green if that pin is on a hole, orange if the part is only partly seated, black/red (faster) if two pins of the same part share a strip or jumper. The lab runs once the Auto netlist is on the protoboard. Manual mode lists netlist faults at the top-left: open Auto links, unseated pins, and hard shorts (5 V to GND, data or clock to a rail, two data nets tied). Jumpers and strips are hard ties. Resistors are not. |
+The window is the Tier H board view: two islands, green air wires, no protoboard. **DIGITAL** holds clocks, PLDs, the color PROM, decoupling, the DOT series resistor, and the feedback resistor. **ANALOG** holds the DAC ladder (`R1`-`R11`), the RGBS header, and the screen. Power is one `+5V` net. GND air wires are never drawn. A hop past the Tier H length limit blinks red and black.
 
-BB1 + and - rails supply 5 V (positive lanes) and GND (negative lanes), top and bottom. The painted gap on a rail is visual. Each + or - lane is one bus. Extra protoboards have none until a jumper reaches a BB1 rail of that polarity. Auto binds VDD/GND on chip pins without breadboard work. In Manual, VDD, GND, clocks, and the rest need breadboard connections, including those BB1 rails. OSC OE# may float (not low). PROM CE#/OE# must be tied low. The LCD is blank until that protoboard netlist encodes.
-
-Pin hover draws a line from that pin to Auto-net partners on other parts. Space toggles those lines between hover only and always on. The line pulses from fully transparent to a net color: red power, green data, cyan clock, black ground. Pins on the ground net (GND/AGND/DGND, PROM CE#/OE# and unused A[13:6], 75 ohm DAC loads) route to a nearby BB1 negative-rail hole. Hovering a GND rail hole on BB1 draws the same lines out to those pins. Hovering a positive rail hole on BB1 draws lines to the 5 V net (VDD/VCC, oscillator OE#, PLD RES#, PROM VPP/PGM#). Extra protoboard rails are isolated and do not show those lines. A line is omitted once that link already exists on a breadboard strip or jumper.
-
-Part positions, breadboard jumpers, pan, zoom, air-wire visibility, and Auto/Manual are written to `ui_layout.json` on quit and restored on the next launch.
+Placement, pan, zoom, and the air-wire view are written to `island_layout.json` on quit.
 
 ## Build
 
@@ -105,28 +98,17 @@ While running, each UI frame advances a short DOT burst under a wall-clock budge
 
 | Key | Action |
 | --- | --- |
-| Auto/Manual (top-left) | Toggle soft netlist vs breadboard routing |
-| A | Same as the Auto/Manual button |
-| J | Toggle jumper placement. Click hole A, then hole B, on the same protoboard or two different ones. Wheel cycles color after A, or on a selected jumper. While hole A is armed, a marching-ants 2-elbow line runs from the cursor to the remaining Auto-net destination. |
-| Click a jumper | Select. Drag an end to another hole. Drag an elbow to reroute. Delete/Backspace removes selected jumpers. |
-| Click a breadboard | Select. Delete/Backspace removes selected protoboards and their jumpers. |
-| X | Clear jumpers |
-| Hover a pin | Line to Auto-net partners, or to BB1 GND rail. Pulses transparent to red (power), green (data), cyan (clock), or black (ground). Omits links already on a strip or jumper |
-| Hover a GND rail hole | On a BB1 negative rail: pulsing black lines to ground-net IC and passive pins still missing a strip or jumper |
-| Hover a VDD rail hole | On a BB1 positive rail: pulsing red lines to 5 V-net IC and passive pins still missing a strip or jumper |
-| Right-click empty board | Add resistor, cap, diode, or breadboard |
-| Left-drag | Move a part (Shift-click adds to the selection). ICs and passives snap to holes. |
-| Ctrl+drag resistor tip | Stretch that lead along the body axis. The seating pulse sits at the new end. Snaps to holes. |
-| Drag empty board | Marquee select |
-| Middle-drag / right-drag / wheel | Pan |
-| Ctrl+wheel | Integer zoom of the board canvas (1x to 8x). Wheel up zooms in. The board point under the cursor stays put. |
-| Shift+arrows | Pan |
-| R | Rotate selected DIP or breadboard 90 deg CW |
-| Double-click screen | Toggle LCD 1x (centered playfield, black overscan) / 2x (fill) |
-| Space | Toggle air wires always on vs hover only |
-| Enter / Return | Pause / resume. Same in Manual and Auto. Manual LCD stays blank until the protoboard matches the Auto netlist and encode can lock. |
-| . | Single DOT half-step while paused |
+| Space | Show every green air wire, then hide them until a part is hovered |
+| Hover a part | When wires are hidden, draw that part's green air wires. GND stays hidden |
+| Left-drag | Move a part or an island |
+| Island corner | Resize that island |
+| Right-click chip | Rotate |
+| R | Rotate selected part |
+| Ctrl+wheel | Zoom |
+| Shift+arrows / wheel / middle-drag | Pan |
+| Double-click screen | Toggle screen scale |
+| P | Pause / resume |
+| . | Single step while paused |
 | Ctrl+R | Reset |
-| Ctrl+Z / Ctrl+Y | Undo / redo board or part moves, resistor lead stretch, jumper create, and deletes |
-| Ctrl+F | Toggle fullscreen |
-| Esc | Cancel jumper arm/mode, then quit |
+| S | Save placement now |
+| Esc | Quit (also saves `island_layout.json`) |

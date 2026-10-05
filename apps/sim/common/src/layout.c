@@ -210,9 +210,10 @@ static void apply_part(R01aBoard *board, const char *id, int x, int y, NsPkgOrie
 
 int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pan_y, int zoom, int air_always) {
     FILE *f;
-    const NsIsland *island;
     int i;
     int first;
+    int ii;
+    int nisland;
 
     if (!path || !board) {
         return -1;
@@ -223,7 +224,6 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
     if (zoom > 8) {
         zoom = 8;
     }
-    island = ns_island_group_at(r01a_board_group((R01aBoard *)board), 0);
     f = fopen(path, "w");
     if (!f) {
         return -1;
@@ -237,7 +237,12 @@ int r01a_layout_save(const char *path, const R01aBoard *board, int pan_x, int pa
     fprintf(f, "  \"wire_mode\": \"%s\",\n", board->wire_mode == R01A_WIRE_MANUAL ? "manual" : "auto");
     fprintf(f, "  \"parts\": [\n");
     first = 1;
-    if (island) {
+    nisland = ns_island_group_count(r01a_board_group((R01aBoard *)board));
+    for (ii = 0; ii < nisland; ii++) {
+        const NsIsland *island = ns_island_group_at(r01a_board_group((R01aBoard *)board), ii);
+        if (!island) {
+            continue;
+        }
         for (i = 0; i < island->entity_count; i++) {
             const NsEntity *e = island->entities[i];
             int px = 0;

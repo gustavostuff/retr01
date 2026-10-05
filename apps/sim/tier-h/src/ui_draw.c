@@ -164,14 +164,39 @@ static int islands_strip_hit(const R01sUi *ui, int lx, int ly) {
     return -1;
 }
 
+static R01sVideoSink *ui_screen_sink(const R01sUi *ui) {
+    int i;
+    if (!ui) {
+        return NULL;
+    }
+    for (i = 0; i < ui->chip_count; i++) {
+        R01sEntity *e = ui->chips[i];
+        if (!e || !e->part || strcmp(e->part, "SCREEN_SINK") != 0) {
+            continue;
+        }
+        return (R01sVideoSink *)(e->impl ? e->impl : (void *)e);
+    }
+    return NULL;
+}
+
 int ui_lcd_scale_2x(const R01sUi *ui) {
     R01sBoard *board = ui ? r01s_board_from_group(ui->group) : NULL;
-    return board ? r01s_video_sink_scale_2x(&board->video_sink) : 0;
+    R01sVideoSink *sink;
+    if (board) {
+        return r01s_video_sink_scale_2x(&board->video_sink);
+    }
+    sink = ui_screen_sink(ui);
+    return sink ? r01s_video_sink_scale_2x(sink) : 0;
 }
 
 int ui_screen_render_mode(const R01sUi *ui) {
     R01sBoard *board = ui ? r01s_board_from_group(ui->group) : NULL;
-    return board ? r01s_video_sink_render_mode(&board->video_sink) : R01S_VIDEO_RENDER_DEFAULT;
+    R01sVideoSink *sink;
+    if (board) {
+        return r01s_video_sink_render_mode(&board->video_sink);
+    }
+    sink = ui_screen_sink(ui);
+    return sink ? r01s_video_sink_render_mode(sink) : R01S_VIDEO_RENDER_DEFAULT;
 }
 
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
@@ -182,12 +207,14 @@ void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
         return;
     }
     board = r01s_board_from_group(ui->group);
-    if (!board) {
+    sink = board ? &board->video_sink : ui_screen_sink(ui);
+    if (!sink) {
         return;
     }
-    sink = &board->video_sink;
     r01s_video_sink_set_scale_2x(sink, scale_2x ? 1 : 0);
-    r01s_bg_fetch_set_scale_2x(&board->bg_fetch, scale_2x ? 1 : 0);
+    if (board) {
+        r01s_bg_fetch_set_scale_2x(&board->bg_fetch, scale_2x ? 1 : 0);
+    }
     memset(touched, 0, sizeof(touched));
     {
         int i;
@@ -238,10 +265,10 @@ void ui_set_screen_render_mode(R01sUi *ui, int mode) {
         return;
     }
     board = r01s_board_from_group(ui->group);
-    if (!board) {
+    sink = board ? &board->video_sink : ui_screen_sink(ui);
+    if (!sink) {
         return;
     }
-    sink = &board->video_sink;
     r01s_video_sink_set_render_mode(sink, mode);
     snprintf(ui->status, sizeof(ui->status), "SCREEN %s", labels[mode]);
 }
@@ -1211,6 +1238,35 @@ uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player) {
     return r01s_gamepad_encode(&ui->gamepad[player]);
 }
 
+static void draw_island_frames(SDL_Renderer *r, const R01sUi *ui) {
+    int rank;
+    int n;
+    if (!ui || !ui->group || ui->layout_compact) {
+        return;
+    }
+    n = ui->island_z_count > 0 ? ui->island_z_count : r01s_island_group_count(ui->group);
+    for (rank = 0; rank < n; rank++) {
+        int ii = (rank < ui->island_z_count) ? (int)ui->island_z_order[rank] : rank;
+        const R01sIsland *island = r01s_island_group_at(ui->group, ii);
+        int x;
+        int y;
+        const char *title;
+        if (!island || island->board_w < 2 || island->board_h < 2) {
+            continue;
+        }
+        x = ui_board_sx(ui, island->board_x);
+        y = ui_board_sy(ui, island->board_y);
+        fill_rect(r, x, y, island->board_w, island->board_h, R01S_ISLAND_OK_R, R01S_ISLAND_OK_G, R01S_ISLAND_OK_B);
+        draw_rect(r, x, y, island->board_w, island->board_h, 180, 220, 170);
+        fill_rect(r, x + island->board_w - R01S_ISLAND_RESIZE_HANDLE, y + island->board_h - R01S_ISLAND_RESIZE_HANDLE,
+                  R01S_ISLAND_RESIZE_HANDLE, R01S_ISLAND_RESIZE_HANDLE, 220, 230, 180);
+        title = island->title ? island->title : "";
+        if (title[0] && island->board_w > 8) {
+            font_draw(r, x + 4, y + 2, title, 230, 240, 210);
+        }
+    }
+}
+
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
     int rank;
@@ -1220,6 +1276,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     SDL_RenderSetClipRect(r, &view_clip);
     SDL_RenderSetScale(r, (float)ui_zoom(ui), (float)ui_zoom(ui));
+    draw_island_frames(r, ui);
 
     if (ui->floor_on) {
         static const Uint8 zr[R01S_ZONE_COUNT] = {70, 140, 40, 110, 30, 150, 120, 130, 90};

@@ -34,6 +34,8 @@ typedef struct R01aNetIssue {
 
 /* Physical vs Auto netlist. Jumpers and strips are hard ties. Resistors are not. */
 int r01a_netlist_check(R01aBoard *board, R01aNetIssue *out, int max_out);
+/* Copy the Auto links into board->pin_net and name the single +5V and GND nets. */
+void r01a_netlist_fill_pins(R01aBoard *board);
 const char *r01a_netlist_kind_label(int kind);
 
 #define R01A_BYPASS_N 5

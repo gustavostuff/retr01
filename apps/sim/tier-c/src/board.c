@@ -1,4 +1,5 @@
 #include "r01a_board.h"
+#include "r01a_lab_parts.h"
 #include "s1_lab.h"
 
 #include "discrete_ic/breadboard.h"
@@ -687,7 +688,14 @@ void r01a_board_step_dots(R01aBoard *board, uint32_t dots) {
 
 static void spawn_tier_a_passives(R01aBoard *b);
 
-static void island_video_init(NsIsland *island) {
+static void add_on_island(NsIsland *island, NsEntity *e, int analog) {
+    if (!island || !e || r01a_part_on_analog_island(e) != analog) {
+        return;
+    }
+    ns_island_add_entity(island, e);
+}
+
+static void island_digital_init(NsIsland *island) {
     R01aBoard *b = (R01aBoard *)island->impl;
     int i;
     r01a_osc_dot_init(&b->osc_dot, "Y2");
@@ -704,24 +712,35 @@ static void island_video_init(NsIsland *island) {
     ns_breadboard_init(&b->breadboard, "BB1");
     ns_video_sink_init(&b->sink, "SCR1");
     ns_video_sink_set_palette(&b->sink, kit_palette);
-    ns_island_add_entity(island, ns_breadboard_entity(&b->breadboard));
-    ns_island_add_entity(island, r01a_osc_dot_entity(&b->osc_dot));
-    ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_x));
-    ns_island_add_entity(island, r01a_atf22v10_entity(&b->beam_y));
-    ns_island_add_entity(island, r01a_atf22v10_entity(&b->compositor));
-    ns_island_add_entity(island, r01a_avr128db28_s1_entity(&b->mcu_s1));
-    ns_island_add_entity(island, r01a_sn74hc573_entity(&b->field_latch));
-    ns_island_add_entity(island, r01a_as6c62256_entity(&b->field_sram));
-    ns_island_add_entity(island, r01a_at27c256r_entity(&b->prom));
-    ns_island_add_entity(island, r01a_rgbs_hdr_entity(&b->rgbs));
-    ns_island_add_entity(island, ns_video_sink_entity(&b->sink));
+    add_on_island(island, ns_breadboard_entity(&b->breadboard), 0);
+    add_on_island(island, r01a_osc_dot_entity(&b->osc_dot), 0);
+    add_on_island(island, r01a_atf22v10_entity(&b->beam_x), 0);
+    add_on_island(island, r01a_atf22v10_entity(&b->beam_y), 0);
+    add_on_island(island, r01a_atf22v10_entity(&b->compositor), 0);
+    add_on_island(island, r01a_avr128db28_s1_entity(&b->mcu_s1), 0);
+    add_on_island(island, r01a_sn74hc573_entity(&b->field_latch), 0);
+    add_on_island(island, r01a_as6c62256_entity(&b->field_sram), 0);
+    add_on_island(island, r01a_at27c256r_entity(&b->prom), 0);
+    add_on_island(island, r01a_rgbs_hdr_entity(&b->rgbs), 0);
+    add_on_island(island, ns_video_sink_entity(&b->sink), 0);
     spawn_tier_a_passives(b);
     for (i = 0; i < b->passives.count; i++) {
-        ns_island_add_entity(island, &b->passives.parts[i].base);
+        add_on_island(island, &b->passives.parts[i].base, 0);
     }
 }
 
-static const NsIslandVTable ISLAND_VIDEO_VT = {island_video_init, NULL, NULL, NULL, NULL};
+static void island_analog_init(NsIsland *island) {
+    R01aBoard *b = (R01aBoard *)island->impl;
+    int i;
+    add_on_island(island, r01a_rgbs_hdr_entity(&b->rgbs), 1);
+    add_on_island(island, ns_video_sink_entity(&b->sink), 1);
+    for (i = 0; i < b->passives.count; i++) {
+        add_on_island(island, &b->passives.parts[i].base, 1);
+    }
+}
+
+static const NsIslandVTable ISLAND_DIGITAL_VT = {island_digital_init, NULL, NULL, NULL, NULL};
+static const NsIslandVTable ISLAND_ANALOG_VT = {island_analog_init, NULL, NULL, NULL, NULL};
 
 static void group_reset(NsIslandGroup *group) {
     R01aBoard *b = (R01aBoard *)group->impl;
@@ -882,24 +901,20 @@ void r01a_board_init(R01aBoard *board) {
     ns_island_builder_init(&board->builder);
     b = &board->builder;
     ns_island_builder_bind(b, &BOARD_GROUP_VT, board);
-    if (ns_island_builder_add(b, &ISLAND_VIDEO_VT, "ISLAND C  VIDEO LAB", 0, 0, 1, 1, board) < 0) {
+    if (ns_island_builder_add(b, &ISLAND_DIGITAL_VT, "DIGITAL", 16, 16, 560, 360, board) < 0) {
         return;
     }
-    ns_island_builder_mount(b, ns_breadboard_entity(&board->breadboard), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_osc_dot_entity(&board->osc_dot), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_x), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_atf22v10_entity(&board->beam_y), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_atf22v10_entity(&board->compositor), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_avr128db28_s1_entity(&board->mcu_s1), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_sn74hc573_entity(&board->field_latch), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_as6c62256_entity(&board->field_sram), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_at27c256r_entity(&board->prom), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, r01a_rgbs_hdr_entity(&board->rgbs), R01A_ISLAND_VIDEO, 0, 0);
-    ns_island_builder_mount(b, ns_video_sink_entity(&board->sink), R01A_ISLAND_VIDEO, 0, 0);
+    if (ns_island_builder_add(b, &ISLAND_ANALOG_VT, "ANALOG", 600, 16, 480, 360, board) < 0) {
+        return;
+    }
     {
-        int i;
-        for (i = 0; i < board->passives.count; i++) {
-            ns_island_builder_mount(b, &board->passives.parts[i].base, R01A_ISLAND_VIDEO, 0, 0);
+        int ii;
+        for (ii = 0; ii < b->island_count; ii++) {
+            NsIsland *island = &b->islands[ii];
+            int ei;
+            for (ei = 0; ei < island->entity_count; ei++) {
+                ns_island_builder_mount(b, island->entities[ei], ii, 0, 0);
+            }
         }
     }
     ns_island_builder_finish(b);
@@ -1076,19 +1091,25 @@ void r01a_board_jumper_clear(R01aBoard *board) {
 }
 
 NsEntity *r01a_board_entity_by_refdes(R01aBoard *board, const char *refdes) {
-    NsIsland *island;
-    int i;
+    NsIslandGroup *group;
+    int n;
+    int s;
     if (!board || !refdes || !refdes[0]) {
         return NULL;
     }
-    island = ns_island_group_at_mut(r01a_board_group(board), 0);
-    if (!island) {
-        return NULL;
-    }
-    for (i = 0; i < island->entity_count; i++) {
-        NsEntity *e = island->entities[i];
-        if (e && e->refdes && strcmp(e->refdes, refdes) == 0) {
-            return e;
+    group = r01a_board_group(board);
+    n = group ? ns_island_group_count(group) : 0;
+    for (s = 0; s < n; s++) {
+        NsIsland *island = ns_island_group_at_mut(group, s);
+        int i;
+        if (!island) {
+            continue;
+        }
+        for (i = 0; i < island->entity_count; i++) {
+            NsEntity *e = island->entities[i];
+            if (e && e->refdes && strcmp(e->refdes, refdes) == 0) {
+                return e;
+            }
         }
     }
     return NULL;

@@ -12,13 +12,15 @@
 #include "discrete_ic/breadboard.h"
 #include "discrete_ic/island_builder.h"
 #include "discrete_ic/passive.h"
+#include "discrete_ic/pin_netlist.h"
 #include "discrete_ic/video_sink.h"
 
 #include <stdint.h>
 
 enum {
-    R01A_ISLAND_VIDEO = 0,
-    R01A_ISLAND_COUNT = 1
+    R01A_ISLAND_DIGITAL = 0,
+    R01A_ISLAND_ANALOG = 1,
+    R01A_ISLAND_COUNT = 2
 };
 
 #define R01A_WIRE_AUTO 0
@@ -55,6 +57,7 @@ typedef struct R01aBoard {
     NsBreadboard extra_bb[R01A_BB_EXTRA_MAX];
     int extra_bb_count;
     NsPassiveBank passives;
+    NsPinNetlist pin_net;
     NsIslandBuilder builder;
     R01aJumper jumpers[R01A_JUMPER_MAX];
     int jumper_count;

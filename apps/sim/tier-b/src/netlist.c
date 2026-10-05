@@ -6,6 +6,7 @@
 #include "discrete_ic/island.h"
 #include "discrete_ic/island_group.h"
 #include "discrete_ic/passive.h"
+#include "discrete_ic/pin_netlist.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -96,11 +97,16 @@ static int pin_add_name(NsEntity *e, const char *name) {
     return pin_add(e, idx);
 }
 
+static NsPinNetlist *g_pins;
+
 static void link_n(NsEntity *a, const char *an, NsEntity *b, const char *bn) {
     int sa = pin_add_name(a, an);
     int sb = pin_add_name(b, bn);
     if (sa >= 0 && sb >= 0) {
         pin_union(sa, sb);
+    }
+    if (g_pins && a && b && an && bn) {
+        ns_pin_netlist_link(g_pins, a, an, b, bn);
     }
 }
 
@@ -119,7 +125,10 @@ static void build_auto(R01aBoard *b) {
     char iname[8];
     char aname[4];
     g_nslot = 0;
+    g_pins = &b->pin_net;
+    ns_pin_netlist_clear(g_pins);
     if (!y2 || !bx || !by || !comp || !u24 || !j2) {
+        g_pins = NULL;
         return;
     }
     link_n(y2, "VDD", y2, "OE#");
@@ -168,6 +177,16 @@ static void build_auto(R01aBoard *b) {
                                  ent(b, "R3"), ent(b, "R4"), ent(b, "R5"), ent(b, "R6"),
                                  ent(b, "R7"), ent(b, "R8"), ent(b, "R9"), ent(b, "R10"),
                                  ent(b, "R11"));
+    ns_pin_netlist_name_net(g_pins, y2, "VDD", "+5V");
+    ns_pin_netlist_name_net(g_pins, y2, "GND", "GND");
+    g_pins = NULL;
+}
+
+void r01a_netlist_fill_pins(R01aBoard *board) {
+    if (!board) {
+        return;
+    }
+    build_auto(board);
 }
 
 static int name_gnd(const char *n) {

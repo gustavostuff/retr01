@@ -710,7 +710,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     }
 
     /* Apply island-mode geometry (frames first, then island-relative chips). */
-    if (ui->layout_saved && !mode_compact) {
+    if (ui->layout_saved && (ui->prefer_islands || !mode_compact)) {
         r01s_ui_load_island_layout(ui, file_version);
     }
 
@@ -796,17 +796,22 @@ int r01s_ui_layout_load(R01sUi *ui) {
             }
             r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
         }
-    } else if (ui->layout_saved) {
+    } else if (ui->layout_saved && !ui->prefer_islands) {
         /* Was islands layout: pack to compact for the UI. */
         ui_apply_compact_layout(ui);
         ui_save_compact_layout(ui);
+    } else if (ui->prefer_islands) {
+        ui->layout_compact = 0;
+        ui->floor_on = 0;
     } else if (ui->compact_saved) {
         ui_restore_compact_layout(ui);
     } else {
         ui_apply_compact_layout(ui);
         ui_save_compact_layout(ui);
     }
-    ui->layout_compact = 1;
+    if (!ui->prefer_islands) {
+        ui->layout_compact = 1;
+    }
     for (i = 0; i < ui->chip_count; i++) {
         R01sEntity *e = ui->chips[i];
         if (e && e->visual == R01S_ENTITY_VIS_BREADBOARD) {

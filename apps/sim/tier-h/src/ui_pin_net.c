@@ -18,6 +18,9 @@ static R01sPinNetlist *ui_board_pin_net(const R01sUi *ui) {
     if (!ui || !ui->group) {
         return NULL;
     }
+    if (ui->pin_net) {
+        return ui->pin_net;
+    }
     board = r01s_board_from_group(ui->group);
     return board ? &board->pin_netlist : NULL;
 }
@@ -1021,6 +1024,10 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
             continue;
         }
         r01s_air_style(air_net_label(nl, root), ends, n, &style);
+        /* Lab tiers keep the length limits, then draw every signal wire in the noisy green. */
+        if (ui->air_green_only && style.layer != R01S_AIR_LAYER_GND) {
+            style.layer = R01S_AIR_LAYER_NOISY;
+        }
         /* GND is one net in the pin list. The four-layer pour covers it, so it is not drawn. */
         if (style.layer == R01S_AIR_LAYER_GND) {
             continue;

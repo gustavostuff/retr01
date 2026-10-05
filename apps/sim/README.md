@@ -5,5 +5,5 @@ Bring-up labs as isolated trees. Each tier has its own board recipe and does not
 | Lab | Path | Goal |
 | --- | --- | --- |
 | Tier A | [tier-a/](tier-a/) | Beam + color PROM + virtual screen (color bars) |
-| Tier B | [tier-b/](tier-b/) | Compositor priority over the Tier A color path. Parts seated on three breadboards |
+| Tier B | [tier-b/](tier-b/) | Compositor priority over the Tier A color path |
 | Tier H | [tier-h/](tier-h/) | Imported full-board sim. Soft `$7Fxx` and AT27C256R. AD724 is not in this tree yet |
