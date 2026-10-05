@@ -149,6 +149,30 @@ static void logic_from_window(SDL_Window *win, int scale, int win_x, int win_y, 
     *ly = (win_y - oy) / scale;
 }
 
+/* Write view state a moment after the last edit. Quit still saves immediately. */
+static void autosave_layout(R01sUi *ui) {
+    static Uint32 armed_ms;
+    Uint32 now;
+    if (!ui || !ui->group || !ui->layout_dirty) {
+        armed_ms = 0;
+        return;
+    }
+    now = SDL_GetTicks();
+    if (armed_ms == 0) {
+        armed_ms = now;
+        return;
+    }
+    if ((Uint32)(now - armed_ms) < 500u) {
+        return;
+    }
+    if (r01s_ui_layout_save(ui) != 0) {
+        fprintf(stderr, "layout: autosave failed\n");
+        armed_ms = now;
+        return;
+    }
+    armed_ms = 0;
+}
+
 static void present(SDL_Renderer *ren, SDL_Texture *target, SDL_Window *win, int *scale_io) {
     int ww, wh, scale, draw_w, draw_h;
     SDL_Rect dst;
@@ -285,6 +309,10 @@ int r01a_ui_run(struct R01aBoard *board) {
     if (ui.air_wires != R01S_AIR_VIEW_NONE) {
         ui.air_wires = R01S_AIR_VIEW_ALL;
     }
+    if (ui.present_scale >= 1 && ui.present_scale <= R01S_ZOOM_MAX) {
+        scale = ui.present_scale;
+        SDL_SetWindowSize(win, R01S_LOGIC_W * scale, R01S_LOGIC_H * scale);
+    }
 
     while (!quit) {
         SDL_Event ev;
@@ -352,6 +380,13 @@ int r01a_ui_run(struct R01aBoard *board) {
         r01s_ui_draw(&ui, ren);
         SDL_SetRenderTarget(ren, NULL);
         present(ren, target, win, &scale);
+        if (ui.present_scale < 1) {
+            ui.present_scale = scale;
+        } else if (scale != ui.present_scale) {
+            ui.present_scale = scale;
+            ui.layout_dirty = 1;
+        }
+        autosave_layout(&ui);
     }
 
     if (r01s_ui_layout_save(&ui) != 0) {

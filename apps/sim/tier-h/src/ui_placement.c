@@ -307,9 +307,6 @@ void move_chip_drag(R01sUi *ui, int chip_i, int board_mx, int board_my) {
         r01s_entity_place(e, nx, ny);
     }
     clamp_chip(ui, e, ui->chip_island[chip_i]);
-    if (!ui->floor_on && (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PASSIVE)) {
-        ui_chip_snap_to_breadboard(ui, chip_i);
-    }
     ui->layout_dirty = 1;
 }
 
@@ -674,6 +671,8 @@ static void ui_chip_place_rel(R01sUi *ui, int chip_i, int rx, int ry) {
     clamp_chip_in_island(ui, e, ui->chip_island[chip_i]);
 }
 
+static void place_part_at(R01sEntity *e, int nx, int ny);
+
 /* Place at exact island-relative coords -- used for faithful load (no clamp/grow). */
 static void ui_chip_place_rel_exact(R01sUi *ui, int chip_i, int rx, int ry) {
     R01sEntity *e;
@@ -686,7 +685,16 @@ static void ui_chip_place_rel_exact(R01sUi *ui, int chip_i, int rx, int ry) {
     if (!e || !island) {
         return;
     }
-    r01s_entity_place(e, island->board_x + rx, island->board_y + ry);
+    if (e->visual == R01S_ENTITY_VIS_IC) {
+        r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[chip_i]);
+    } else if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        r01s_passive_set_orient((R01sPassive *)(void *)e, (R01sPkgOrient)ui->save_chip_orient[chip_i]);
+    } else if (e->visual == R01S_ENTITY_VIS_BREADBOARD) {
+        e->orient = (R01sPkgOrient)ui->save_chip_orient[chip_i];
+        r01s_breadboard_sync_body((R01sBreadboard *)(void *)e);
+    }
+    /* Passives draw from the pivot. Moving only board_x leaves them where they spawned. */
+    place_part_at(e, island->board_x + rx, island->board_y + ry);
 }
 
 void r01s_ui_snapshot_island_layout(R01sUi *ui) {

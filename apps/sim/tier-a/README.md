@@ -99,7 +99,8 @@ While running, each UI frame advances a short DOT burst under a wall-clock budge
 | Key | Action |
 | --- | --- |
 | Space | Show every green air wire, then hide them until a part is hovered |
-| Hover a part | When wires are hidden, draw that part's green air wires. GND stays hidden |
+| Hover a part | When wires are hidden, draw that part's green air wires. GND stays hidden. The package or pin under the pointer picks up a light green tint |
+| Hover an IC pin | `refdes  number  name  level` (Z, L, H, or X) |
 | Left-drag | Move a part or an island |
 | Island corner | Resize that island |
 | Right-click chip | Rotate |

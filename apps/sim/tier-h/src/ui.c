@@ -19,6 +19,8 @@ int r01s_ui_init(R01sUi *ui) {
     }
     memset(ui, 0, sizeof(*ui));
     ui->selected = -1;
+    ui->hover_chip = -1;
+    ui->hover_pin = -1;
     ui->drag_chip = -1;
     ui->drag_island = -1;
     ui->resize_island = -1;

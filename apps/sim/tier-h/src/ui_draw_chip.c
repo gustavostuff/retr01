@@ -214,14 +214,64 @@ static void ui_pin_pivot_rgb(int kind, Uint8 *pr, Uint8 *pg, Uint8 *pb) {
     }
 }
 
-/* rot: 0=N (sprite as-is), 1=E, 2=S, 3=W.
- * tint=NULL draws pin.png RGB as-is. Otherwise opaque pixels use (tr,tg,tb).
- * (dx,dy) is where the sprite origin (OX,OY) lands after rotation. */
-static void blit_pin_rot(SDL_Renderer *r, int dx, int dy, int rot, const Uint8 *tint_rgb) {
+/* Very light green over the sprite's own color. */
+static void hover_green(Uint8 *r, Uint8 *g, Uint8 *b) {
+    *r = (Uint8)((*r * 65 + 140 * 35) / 100);
+    *g = (Uint8)((*g * 65 + 255 * 35) / 100);
+    *b = (Uint8)((*b * 65 + 175 * 35) / 100);
+}
+
+static void pin_sprite_box(int rot, int *org_x, int *org_y, int *ow, int *oh) {
     int w = R01S_UI_PIN_W;
     int h = R01S_UI_PIN_H;
     int ox0 = R01S_UI_PIN_OX;
     int oy0 = R01S_UI_PIN_OY;
+    if (rot == 1 || rot == 3) {
+        *ow = h;
+        *oh = w;
+    } else {
+        *ow = w;
+        *oh = h;
+    }
+    if (rot == 0) {
+        *org_x = ox0;
+        *org_y = oy0;
+    } else if (rot == 1) {
+        *org_x = h - 1 - oy0;
+        *org_y = ox0;
+    } else if (rot == 2) {
+        *org_x = w - 1 - ox0;
+        *org_y = h - 1 - oy0;
+    } else {
+        *org_x = oy0;
+        *org_y = w - 1 - ox0;
+    }
+}
+
+static void pin_sprite_src(int rot, int ox, int oy, int *sx, int *sy) {
+    int w = R01S_UI_PIN_W;
+    int h = R01S_UI_PIN_H;
+    if (rot == 0) {
+        *sx = ox;
+        *sy = oy;
+    } else if (rot == 1) {
+        *sx = oy;
+        *sy = h - 1 - ox;
+    } else if (rot == 2) {
+        *sx = w - 1 - ox;
+        *sy = h - 1 - oy;
+    } else {
+        *sx = w - 1 - oy;
+        *sy = ox;
+    }
+}
+
+/* rot: 0=N (sprite as-is), 1=E, 2=S, 3=W.
+ * tint=NULL draws pin.png RGB as-is. Otherwise opaque pixels use (tr,tg,tb).
+ * (dx,dy) is where the sprite origin (OX,OY) lands after rotation.
+ * hover mixes a light green into those pixels. */
+static void blit_pin_rot(SDL_Renderer *r, int dx, int dy, int rot, const Uint8 *tint_rgb, int hover) {
+    int w = R01S_UI_PIN_W;
     int sx, sy, ox, oy, ow, oh;
     int tl_x, tl_y;
     int org_x, org_y;
@@ -229,62 +279,57 @@ static void blit_pin_rot(SDL_Renderer *r, int dx, int dy, int rot, const Uint8 *
     if (!r) {
         return;
     }
-    if (rot == 1 || rot == 3) {
-        ow = h;
-        oh = w;
-    } else {
-        ow = w;
-        oh = h;
-    }
-    /* Origin in rotated dest space (from top-left of rotated sprite).
-     * Must match the sx/sy maps below (90 CW vs 90 CCW are not mirrors of each other). */
-    if (rot == 0) {
-        org_x = ox0;
-        org_y = oy0;
-    } else if (rot == 1) {
-        /* 90 CW: tip (OX,OY) -> (H-1-OY, OX) */
-        org_x = h - 1 - oy0;
-        org_y = ox0;
-    } else if (rot == 2) {
-        org_x = w - 1 - ox0;
-        org_y = h - 1 - oy0;
-    } else {
-        /* 90 CCW: tip (OX,OY) -> (OY, W-1-OX) */
-        org_x = oy0;
-        org_y = w - 1 - ox0;
-    }
+    pin_sprite_box(rot, &org_x, &org_y, &ow, &oh);
     tl_x = dx - org_x;
     tl_y = dy - org_y;
     for (oy = 0; oy < oh; oy++) {
         for (ox = 0; ox < ow; ox++) {
             const uint8_t *p;
-            if (rot == 0) {
-                sx = ox;
-                sy = oy;
-            } else if (rot == 1) {
-                /* 90 deg CW: dest(ox,oy) <- src(oy, h-1-ox) */
-                sx = oy;
-                sy = h - 1 - ox;
-            } else if (rot == 2) {
-                sx = w - 1 - ox;
-                sy = h - 1 - oy;
-            } else {
-                /* 90 deg CCW: dest(ox,oy) <- src(w-1-oy, ox) */
-                sx = w - 1 - oy;
-                sy = ox;
-            }
+            Uint8 cr;
+            Uint8 cg;
+            Uint8 cb;
+            pin_sprite_src(rot, ox, oy, &sx, &sy);
             p = R01S_UI_PIN_RGBA + ((size_t)sy * (size_t)w + (size_t)sx) * 4u;
             if (p[3] == 0) {
                 continue;
             }
             if (tint_rgb) {
-                SDL_SetRenderDrawColor(r, tint_rgb[0], tint_rgb[1], tint_rgb[2], 255);
+                cr = tint_rgb[0];
+                cg = tint_rgb[1];
+                cb = tint_rgb[2];
             } else {
-                SDL_SetRenderDrawColor(r, p[0], p[1], p[2], 255);
+                cr = p[0];
+                cg = p[1];
+                cb = p[2];
             }
+            if (hover) {
+                hover_green(&cr, &cg, &cb);
+            }
+            SDL_SetRenderDrawColor(r, cr, cg, cb, 255);
             SDL_RenderDrawPoint(r, tl_x + ox, tl_y + oy);
         }
     }
+}
+
+static int pin_sprite_hit(int tip_sx, int tip_sy, int rot, int lx, int ly) {
+    int org_x;
+    int org_y;
+    int ow;
+    int oh;
+    int ox;
+    int oy;
+    int sx;
+    int sy;
+    const uint8_t *p;
+    pin_sprite_box(rot, &org_x, &org_y, &ow, &oh);
+    ox = lx - (tip_sx - org_x);
+    oy = ly - (tip_sy - org_y);
+    if (ox < 0 || oy < 0 || ox >= ow || oy >= oh) {
+        return 0;
+    }
+    pin_sprite_src(rot, ox, oy, &sx, &sy);
+    p = R01S_UI_PIN_RGBA + ((size_t)sy * (size_t)R01S_UI_PIN_W + (size_t)sx) * 4u;
+    return p[3] != 0;
 }
 
 static void blit_pin_pivot(SDL_Renderer *r, int tip_sx, int tip_sy, int pivot_kind) {
@@ -306,34 +351,34 @@ static int pin_tip_reach(void) {
  * body so pins meet the package edge-to-edge with no overlap.
  * tint_rgb=NULL keeps pin.png colors. pivot_kind paints tip pixel after blit. */
 static void draw_dip_pad_h(SDL_Renderer *r, int px, int body_edge_y, int outward_down, const Uint8 *tint_rgb,
-                           int pivot_kind) {
+                           int pivot_kind, int hover) {
     int reach = pin_tip_reach();
     int tip_y;
     if (outward_down) {
         /* body_edge_y is exclusive bottom (y + h). Base at that row. */
         tip_y = body_edge_y + reach;
-        blit_pin_rot(r, px, tip_y, 2, tint_rgb);
+        blit_pin_rot(r, px, tip_y, 2, tint_rgb, hover);
         blit_pin_pivot(r, px, tip_y, pivot_kind);
     } else {
         /* body_edge_y is inclusive top. Base at edge - 1. */
         tip_y = body_edge_y - 1 - reach;
-        blit_pin_rot(r, px, tip_y, 0, tint_rgb);
+        blit_pin_rot(r, px, tip_y, 0, tint_rgb, hover);
         blit_pin_pivot(r, px, tip_y, pivot_kind);
     }
 }
 
 static void draw_dip_pad_v(SDL_Renderer *r, int py, int body_edge_x, int outward_left, const Uint8 *tint_rgb,
-                           int pivot_kind) {
+                           int pivot_kind, int hover) {
     int reach = pin_tip_reach();
     int tip_x;
     if (outward_left) {
         tip_x = body_edge_x - 1 - reach;
-        blit_pin_rot(r, tip_x, py, 3, tint_rgb);
+        blit_pin_rot(r, tip_x, py, 3, tint_rgb, hover);
         blit_pin_pivot(r, tip_x, py, pivot_kind);
     } else {
         /* body_edge_x is exclusive right (x + w). Base at that col. */
         tip_x = body_edge_x + reach;
-        blit_pin_rot(r, tip_x, py, 1, tint_rgb);
+        blit_pin_rot(r, tip_x, py, 1, tint_rgb, hover);
         blit_pin_pivot(r, tip_x, py, pivot_kind);
     }
 }
@@ -372,9 +417,9 @@ static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity 
             tint_rgb = tint;
         }
         if (side_left) {
-            draw_dip_pad_v(r, py, x, 1, tint_rgb, pivot);
+            draw_dip_pad_v(r, py, x, 1, tint_rgb, pivot, 0);
         } else {
-            draw_dip_pad_v(r, py, x + e->body_w, 0, tint_rgb, pivot);
+            draw_dip_pad_v(r, py, x + e->body_w, 0, tint_rgb, pivot, 0);
         }
     }
 }
@@ -585,6 +630,58 @@ int ui_chip_pin_tip_board(const R01sEntity *e, int pin_num, int *tbx, int *tby) 
     return 1;
 }
 
+static int dip_pin_rot(const R01sEntity *e, int side_pin1);
+
+/* Package pin whose pin.png covers zoom-divided screen (zx, zy), or -1. */
+static int ic_pin_index_at(const R01sUi *ui, const R01sEntity *e, int zx, int zy) {
+    int dip;
+    int i;
+    if (!ui || !e || e->visual != R01S_ENTITY_VIS_IC) {
+        return -1;
+    }
+    dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
+    for (i = 0; i < e->pin_count; i++) {
+        int num = e->pins[i].number;
+        int along;
+        int side_pin1;
+        int tbx;
+        int tby;
+        if (num < 1 || num > dip) {
+            continue;
+        }
+        if (!ui_chip_pin_tip_board(e, num, &tbx, &tby)) {
+            continue;
+        }
+        ui_chip_dip_pin_pos(e, num, &along, &side_pin1);
+        (void)along;
+        if (pin_sprite_hit(ui_board_sx(ui, tbx), ui_board_sy(ui, tby), dip_pin_rot(e, side_pin1), zx, zy)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int ui_ic_hover_pin(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
+    if (!ui || !e) {
+        return -1;
+    }
+    return ic_pin_index_at(ui, e, ui_div_floor(lx, ui_zoom(ui)), ui_div_floor(ly, ui_zoom(ui)));
+}
+
+static int dip_pin_rot(const R01sEntity *e, int side_pin1) {
+    switch (e->orient) {
+    case R01S_ORIENT_90:
+        return side_pin1 ? 3 : 1;
+    case R01S_ORIENT_180:
+        return side_pin1 ? 0 : 2;
+    case R01S_ORIENT_270:
+        return side_pin1 ? 1 : 3;
+    case R01S_ORIENT_0:
+    default:
+        return side_pin1 ? 2 : 0;
+    }
+}
+
 int ui_chip_pin_screen_center(const R01sUi *ui, const R01sEntity *e, int pin_index, int *sx, int *sy) {
     int num;
     int tbx;
@@ -630,24 +727,32 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
             tint_rgb = tint;
             pivot = R01S_UI_PIN_PIVOT_NONE;
         }
-        switch (e->orient) {
-        case R01S_ORIENT_90:
-            draw_dip_pad_v(r, y + along, side_pin1 ? x : (x + e->body_w), side_pin1, tint_rgb, pivot);
-            break;
-        case R01S_ORIENT_180:
-            draw_dip_pad_h(r, x + along, side_pin1 ? y : (y + e->body_h), !side_pin1, tint_rgb, pivot);
-            break;
-        case R01S_ORIENT_270:
-            draw_dip_pad_v(r, y + along, side_pin1 ? (x + e->body_w) : x, !side_pin1, tint_rgb, pivot);
-            break;
-        case R01S_ORIENT_0:
-        default:
-            draw_dip_pad_h(r, x + along, side_pin1 ? (y + e->body_h) : y, side_pin1, tint_rgb, pivot);
-            break;
+        {
+            int pin_hover = ui && ui->hover_pin == i && ui->hover_chip >= 0 && ui->hover_chip < ui->chip_count &&
+                            ui->chips[ui->hover_chip] == e;
+            switch (e->orient) {
+            case R01S_ORIENT_90:
+                draw_dip_pad_v(r, y + along, side_pin1 ? x : (x + e->body_w), side_pin1, tint_rgb, pivot, pin_hover);
+                break;
+            case R01S_ORIENT_180:
+                draw_dip_pad_h(r, x + along, side_pin1 ? y : (y + e->body_h), !side_pin1, tint_rgb, pivot, pin_hover);
+                break;
+            case R01S_ORIENT_270:
+                draw_dip_pad_v(r, y + along, side_pin1 ? (x + e->body_w) : x, !side_pin1, tint_rgb, pivot, pin_hover);
+                break;
+            case R01S_ORIENT_0:
+            default:
+                draw_dip_pad_h(r, x + along, side_pin1 ? (y + e->body_h) : y, side_pin1, tint_rgb, pivot, pin_hover);
+                break;
+            }
         }
     }
 
     ui_chip_body_rgb(e, selected, &br, &bg, &bb);
+    if (ui && ui->hover_pin < 0 && ui->hover_chip >= 0 && ui->hover_chip < ui->chip_count &&
+        ui->chips[ui->hover_chip] == e) {
+        hover_green(&br, &bg, &bb);
+    }
     fill_rect(r, x, y, e->body_w, e->body_h, br, bg, bb);
     if (selected) {
         draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
@@ -700,6 +805,118 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
             }
         }
     }
+}
+
+static int filled_at(int lx, int ly, int x, int y, int w, int h) {
+    return w > 0 && h > 0 && lx >= x && ly >= y && lx < x + w && ly < y + h;
+}
+
+static int rgba_opaque_at(const uint8_t *rgba, int w, int h, int ox, int oy, int lx, int ly) {
+    int sx;
+    int sy;
+    const uint8_t *p;
+    if (!rgba) {
+        return 0;
+    }
+    sx = lx - ox;
+    sy = ly - oy;
+    if (sx < 0 || sy < 0 || sx >= w || sy >= h) {
+        return 0;
+    }
+    p = rgba + ((size_t)sy * (size_t)w + (size_t)sx) * 4u;
+    return p[3] != 0;
+}
+
+/* Same placement as draw_glyph_pins. Opaque pin.png pixels only. */
+static int glyph_pins_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
+    int x = ui_board_sx(ui, e->board_x);
+    int li = 0;
+    int ri = 0;
+    int i;
+    int reach = pin_tip_reach();
+    for (i = 0; i < e->pin_count; i++) {
+        int side_left;
+        int idx;
+        int py;
+        int tip_x;
+        int rot;
+        if (e->pins[i].dir == R01S_PIN_PWR || e->pins[i].dir == R01S_PIN_NC) {
+            continue;
+        }
+        side_left = (e->pins[i].dir == R01S_PIN_IN || e->pins[i].dir == R01S_PIN_IO) ? 1 : 0;
+        if (side_left) {
+            idx = li++;
+        } else {
+            idx = ri++;
+        }
+        py = e->board_y + 5 + idx * 5;
+        if (py > e->board_y + e->body_h - 3) {
+            py = e->board_y + e->body_h - 3;
+        }
+        py = ui_board_sy(ui, py);
+        if (side_left) {
+            tip_x = x - 1 - reach;
+            rot = 3;
+        } else {
+            tip_x = x + e->body_w + reach;
+            rot = 1;
+        }
+        if (pin_sprite_hit(tip_x, py, rot, lx, ly)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* lx, ly are zoom-divided screen coords, matching the draw. */
+int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
+    int x;
+    int y;
+    if (!ui || !e) {
+        return 0;
+    }
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        int bx = lx - R01S_UI_VIEW_X + ui->pan_x;
+        int by = ly - R01S_UI_VIEW_Y + ui->pan_y;
+        return r01s_passive_hit((const R01sPassive *)(const void *)e, bx, by);
+    }
+    x = ui_board_sx(ui, e->board_x);
+    y = ui_board_sy(ui, e->board_y);
+    if (e->visual == R01S_ENTITY_VIS_IC) {
+        if (ic_pin_index_at(ui, e, lx, ly) >= 0) {
+            return 1;
+        }
+        return filled_at(lx, ly, x, y, e->body_w, e->body_h);
+    }
+    if (e->visual == R01S_ENTITY_VIS_PWR) {
+        int ix = x + (e->body_w - R01S_UI_BATTERY_W) / 2;
+        int iy = y + 2;
+        if (rgba_opaque_at(R01S_UI_BATTERY_RGBA, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H, ix, iy, lx, ly)) {
+            return 1;
+        }
+        return glyph_pins_hit(ui, e, lx, ly);
+    }
+    if (e->visual == R01S_ENTITY_VIS_OSC) {
+        int ix = x + (e->body_w - R01S_UI_OSC_W) / 2;
+        int iy = y + (e->body_h - R01S_UI_OSC_H) / 2 - 2;
+        if (rgba_opaque_at(R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, ix, iy, lx, ly)) {
+            return 1;
+        }
+        return glyph_pins_hit(ui, e, lx, ly);
+    }
+    if (e->visual == R01S_ENTITY_VIS_DISPLAY && e->part && strcmp(e->part, "SCREEN_SINK") == 0) {
+        const R01sVideoSink *sink = (const R01sVideoSink *)(e->impl ? e->impl : (void *)e);
+        int lcd_w = 0;
+        int lcd_h = 0;
+        if (sink) {
+            r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
+        }
+        if (filled_at(lx, ly, x, y, lcd_w, lcd_h)) {
+            return 1;
+        }
+        return glyph_pins_hit(ui, e, lx, ly);
+    }
+    return filled_at(lx, ly, x, y, e->body_w, e->body_h);
 }
 
 void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {

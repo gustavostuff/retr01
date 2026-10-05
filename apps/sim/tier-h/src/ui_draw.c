@@ -199,10 +199,9 @@ int ui_screen_render_mode(const R01sUi *ui) {
     return sink ? r01s_video_sink_render_mode(sink) : R01S_VIDEO_RENDER_DEFAULT;
 }
 
-void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
+void ui_set_lcd_scale_value(R01sUi *ui, int scale_2x) {
     R01sBoard *board;
     R01sVideoSink *sink;
-    uint8_t touched[R01S_MAX_ISLANDS];
     if (!ui) {
         return;
     }
@@ -214,6 +213,21 @@ void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
     r01s_video_sink_set_scale_2x(sink, scale_2x ? 1 : 0);
     if (board) {
         r01s_bg_fetch_set_scale_2x(&board->bg_fetch, scale_2x ? 1 : 0);
+    }
+}
+
+void ui_set_lcd_scale(R01sUi *ui, int scale_2x) {
+    R01sBoard *board;
+    R01sVideoSink *sink;
+    uint8_t touched[R01S_MAX_ISLANDS];
+    if (!ui) {
+        return;
+    }
+    ui_set_lcd_scale_value(ui, scale_2x);
+    board = r01s_board_from_group(ui->group);
+    sink = board ? &board->video_sink : ui_screen_sink(ui);
+    if (!sink) {
+        return;
     }
     memset(touched, 0, sizeof(touched));
     {
@@ -552,6 +566,46 @@ static void draw_tooltip(SDL_Renderer *r, int lx, int ly, const char *text) {
     font_draw(r, box_x + pad, box_y + pad, text, 0, 0, 0);
 }
 
+static const char *pin_level_name(int level) {
+    switch (level) {
+    case R01S_LVL_L:
+        return "L";
+    case R01S_LVL_H:
+        return "H";
+    case R01S_LVL_X:
+        return "X";
+    default:
+        return "Z";
+    }
+}
+
+static void ui_update_hover(R01sUi *ui) {
+    int chip_i = -1;
+    Uint32 buttons;
+    if (!ui) {
+        return;
+    }
+    ui->hover_chip = -1;
+    ui->hover_pin = -1;
+    if (ui->drag_chip >= 0 || ui->drag_island >= 0 || ui->resize_island >= 0 || ui->drag_pan || ui->box_sel ||
+        ui->floor_drag >= 0 || ui->floor_resize >= 0) {
+        return;
+    }
+    buttons = SDL_GetMouseState(NULL, NULL);
+    if (buttons & (SDL_BUTTON(SDL_BUTTON_LEFT) | SDL_BUTTON(SDL_BUTTON_RIGHT) | SDL_BUTTON(SDL_BUTTON_MIDDLE))) {
+        return;
+    }
+    if (hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL) != 1) {
+        return;
+    }
+    if (chip_i < 0 || chip_i >= ui->chip_count || !ui->chips[chip_i] ||
+        ui->chips[chip_i]->visual != R01S_ENTITY_VIS_IC) {
+        return;
+    }
+    ui->hover_chip = chip_i;
+    ui->hover_pin = ui_ic_hover_pin(ui, ui->chips[chip_i], ui->mouse_lx, ui->mouse_ly);
+}
+
 static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
     int chip_i = -1;
     int island_i = -1;
@@ -562,6 +616,22 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         return;
     }
     out[0] = '\0';
+
+    if (ui->hover_pin >= 0 && ui->hover_chip >= 0 && ui->hover_chip < ui->chip_count) {
+        const R01sEntity *e = ui->chips[ui->hover_chip];
+        const R01sPin *pin;
+        if (e && ui->hover_pin < e->pin_count) {
+            pin = &e->pins[ui->hover_pin];
+            if (pin->name && pin->name[0]) {
+                snprintf(out, out_len, "%s  %d  %s  %s", e->refdes ? e->refdes : "IC", pin->number, pin->name,
+                         pin_level_name(pin->level));
+            } else {
+                snprintf(out, out_len, "%s  %d  %s", e->refdes ? e->refdes : "IC", pin->number,
+                         pin_level_name(pin->level));
+            }
+            return;
+        }
+    }
 
     if ((SDL_GetModState() & KMOD_CTRL) && ui_logic_in_view(ui->mouse_lx, ui->mouse_ly) &&
         hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
@@ -1295,6 +1365,7 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
         }
     }
 
+    ui_update_hover(ui);
     /* UI is compact-only. Islands stay in the sim group for tests / bring-up. */
     n_chips = ui->chip_z_count;
     if (n_chips <= 0) {

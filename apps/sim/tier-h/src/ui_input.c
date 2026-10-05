@@ -61,63 +61,8 @@ static int hit_filled(int lx, int ly, int x, int y, int w, int h) {
     return w > 0 && h > 0 && lx >= x && lx < x + w && ly >= y && ly < y + h;
 }
 
-static int near_point(int lx, int ly, int tx, int ty, int r) {
-    int dx = lx - tx;
-    int dy = ly - ty;
-    if (dx < 0) {
-        dx = -dx;
-    }
-    if (dy < 0) {
-        dy = -dy;
-    }
-    return dx <= r && dy <= r;
-}
-
-/* Body matches the drawn rect. Pin stubs are the 3px glyphs just outside it. */
-static int hit_ic(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
-    int x = ui_board_sx(ui, e->board_x);
-    int y = ui_board_sy(ui, e->board_y);
-    int dip;
-    int n;
-    if (hit_filled(lx, ly, x, y, e->body_w, e->body_h)) {
-        return 1;
-    }
-    dip = e->dip_pins > 0 ? e->dip_pins : e->pin_count;
-    for (n = 1; n <= dip; n++) {
-        int tbx;
-        int tby;
-        if (!ui_chip_pin_tip_board(e, n, &tbx, &tby)) {
-            continue;
-        }
-        if (near_point(lx, ly, ui_board_sx(ui, tbx), ui_board_sy(ui, tby), 2)) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
-    int x;
-    int y;
-    if (!ui || !e) {
-        return 0;
-    }
-    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
-        int bx = lx - R01S_UI_VIEW_X + ui->pan_x;
-        int by = ly - R01S_UI_VIEW_Y + ui->pan_y;
-        return r01s_passive_hit((const R01sPassive *)(const void *)e, bx, by);
-    }
-    x = ui_board_sx(ui, e->board_x);
-    y = ui_board_sy(ui, e->board_y);
-    if (e->visual == R01S_ENTITY_VIS_IC) {
-        return hit_ic(ui, e, lx, ly);
-    }
-    if (e->visual == R01S_ENTITY_VIS_PWR || e->visual == R01S_ENTITY_VIS_OSC ||
-        e->visual == R01S_ENTITY_VIS_DISPLAY) {
-        /* Side pin stubs only. Top and bottom stay on the body. */
-        return lx >= x - 3 && lx < x + e->body_w + 3 && ly >= y && ly < y + e->body_h;
-    }
-    return hit_filled(lx, ly, x, y, e->body_w, e->body_h);
+    return ui_part_image_hit(ui, e, lx, ly);
 }
 
 static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
@@ -384,17 +329,23 @@ static int entity_is_screen_sink(const R01sEntity *e) {
     return e && e->visual == R01S_ENTITY_VIS_DISPLAY && e->part && strcmp(e->part, "SCREEN_SINK") == 0;
 }
 
-static int hit_chip_in_island(const R01sUi *ui, int island_index, int lx, int ly) {
-    int i;
-    for (i = ui->chip_count - 1; i >= 0; i--) {
-        if (ui->chip_island[i] != (uint8_t)island_index) {
+/* Front-most drawn chip whose image contains the point, or -1. */
+static int hit_chip_front(const R01sUi *ui, int lx, int ly) {
+    int rank;
+    int n_chips = ui->chip_z_count;
+    if (n_chips <= 0) {
+        n_chips = ui->chip_count;
+    }
+    for (rank = n_chips - 1; rank >= 0; rank--) {
+        int ci = (rank < ui->chip_z_count) ? (int)ui->chip_z_order[rank] : rank;
+        if (ci < 0 || ci >= ui->chip_count) {
             continue;
         }
-        if (ui_chip_hidden(ui, ui->chips[i])) {
+        if (ui_chip_hidden(ui, ui->chips[ci])) {
             continue;
         }
-        if (ui->chips[i] && hit_chip(ui, ui->chips[i], lx, ly)) {
-            return i;
+        if (ui->chips[ci] && hit_chip(ui, ui->chips[ci], lx, ly)) {
+            return ci;
         }
     }
     return -1;
@@ -425,16 +376,25 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
     ly = ui_div_floor(ly, ui_zoom(ui));
 
     if (ui->group && !ui->layout_compact) {
+        int chip_i = hit_chip_front(ui, lx, ly);
+        /* Parts are drawn above island fills, so the image wins over the frame. */
+        if (chip_i >= 0) {
+            if (chip_out) {
+                *chip_out = chip_i;
+            }
+            if (island_out) {
+                *island_out = (int)ui->chip_island[chip_i];
+            }
+            return 1;
+        }
         nstack = island_hit_stack(ui, stack, R01S_MAX_ISLANDS);
         for (s = 0; s < nstack; s++) {
             int ii = stack[s];
             const R01sIsland *island = r01s_island_group_at(ui->group, ii);
             int corner;
-            int chip_i;
             if (!island || !hit_island_frame(ui, island, lx, ly)) {
                 continue;
             }
-            /* This island fully occludes anything behind it. */
             corner = hit_island_resize(ui, island, lx, ly);
             if (corner >= 0) {
                 if (island_out) {
@@ -444,16 +404,6 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
                     *corner_out = corner;
                 }
                 return 3;
-            }
-            chip_i = hit_chip_in_island(ui, ii, lx, ly);
-            if (chip_i >= 0) {
-                if (chip_out) {
-                    *chip_out = chip_i;
-                }
-                if (island_out) {
-                    *island_out = ii;
-                }
-                return 1;
             }
             if (island_out) {
                 *island_out = ii;
@@ -948,10 +898,9 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                              ui->chips[chip_i]->refdes ? ui->chips[chip_i]->refdes : "?");
                     return 1;
                 }
-                if (ui->layout_compact) {
-                    r01s_ui_chip_z_raise(ui, chip_i);
-                    ui->layout_dirty = 1;
-                } else if (island_i >= 0) {
+                r01s_ui_chip_z_raise(ui, chip_i);
+                ui->layout_dirty = 1;
+                if (!ui->layout_compact && island_i >= 0) {
                     r01s_ui_island_z_raise(ui, island_i);
                 }
                 if (ui->layout_compact && shift) {

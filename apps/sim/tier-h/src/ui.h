@@ -124,6 +124,8 @@ typedef struct R01sUi {
     int floor_h[R01S_ZONE_COUNT];
     int mouse_lx; /* last logic-space mouse (for tooltips) */
     int mouse_ly;
+    int hover_chip; /* chip under the pointer, or -1. Cleared while dragging. */
+    int hover_pin;  /* IC pin index under the pointer, or -1 */
     int tip_stable_mx; /* mouse position when hover timer last reset */
     int tip_stable_my;
     Uint32 tip_show_at; /* SDL tick before tooltip may appear */

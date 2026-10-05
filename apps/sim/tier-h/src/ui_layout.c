@@ -176,6 +176,7 @@ int r01s_ui_layout_save(R01sUi *ui) {
     fprintf(f, "  \"zoom\": %d,\n", ui_zoom(ui));
     fprintf(f, "  \"air_wires\": %d,\n", ui->air_wires);
     fprintf(f, "  \"present_scale\": %d,\n", ui->present_scale);
+    fprintf(f, "  \"lcd_2x\": %d,\n", ui_lcd_scale_2x(ui) ? 1 : 0);
     fprintf(f, "  \"floor_on\": %d,\n", ui->floor_on ? 1 : 0);
     fprintf(f, "  \"floor\": [\n");
     first = 1;
@@ -451,6 +452,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int zoom = 1;
     int air_wires = -1;
     int present_scale = 0;
+    int lcd_2x = -1;
     int floor_on = -1;
     int islands_strip_x = R01S_UI_ISLANDS_STRIP_DEFAULT_X;
     int islands_strip_y = R01S_UI_ISLANDS_STRIP_DEFAULT_Y;
@@ -526,6 +528,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     json_int_after(buf, "\"zoom\"", &zoom);
     json_int_after(buf, "\"air_wires\"", &air_wires);
     json_int_after(buf, "\"present_scale\"", &present_scale);
+    json_int_after(buf, "\"lcd_2x\"", &lcd_2x);
     json_int_after(buf, "\"floor_on\"", &floor_on);
     json_int_after(buf, "\"islands_strip_x\"", &islands_strip_x);
     json_int_after(buf, "\"islands_strip_y\"", &islands_strip_y);
@@ -709,6 +712,10 @@ int r01s_ui_layout_load(R01sUi *ui) {
         }
     }
 
+    /* Body size has to match the saved screen before frames and chips land. */
+    if (lcd_2x == 0 || lcd_2x == 1) {
+        ui_set_lcd_scale_value(ui, lcd_2x);
+    }
     /* Apply island-mode geometry (frames first, then island-relative chips). */
     if (ui->layout_saved && (ui->prefer_islands || !mode_compact)) {
         r01s_ui_load_island_layout(ui, file_version);
@@ -731,7 +738,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
             ui->air_wires = air_wires;
         }
     }
-    if (present_scale == 1 || present_scale == 2) {
+    if (present_scale >= 1 && present_scale <= R01S_ZOOM_MAX) {
         ui->present_scale = present_scale;
     }
     if (floor_on == 0 || floor_on == 1) {

@@ -129,6 +129,12 @@ void ui_pack_floor_plan(R01sUi *ui);
 void floor_zone_drag_begin(R01sUi *ui, int zone);
 void floor_zone_drag_to(R01sUi *ui, int zone, int board_mx, int board_my);
 int ui_lcd_scale_2x(const R01sUi *ui);
+/* Sink scale only. Does not refit island frames. */
+void ui_set_lcd_scale_value(R01sUi *ui, int scale_2x);
+/* IC pin under logic-space (lx, ly), or -1. Package pins only. */
+int ui_ic_hover_pin(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
+/* Opaque drawn pixels. lx, ly are zoom-divided screen coords. */
+int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
 int ui_screen_render_mode(const R01sUi *ui);
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x);
 void ui_set_screen_render_mode(R01sUi *ui, int mode);
