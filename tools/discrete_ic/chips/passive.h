@@ -7,9 +7,11 @@
 
 /*
  * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D). UI sprites only.
- * Filename KIND_x_y.png is the canvas pivot. 2-pin parts: pin 1 = pivot, pin 2 at +span.
- * OSC4LEGS (DIP-14 metal can): pivot = pin 14 VDD. Pin 8 OUT, pin 1 OE#, pin 7 GND.
- * Polarized: ECAP pin 1 is - (pivot), pin 2 is +. Diode pin 1 is A (pivot), pin 2 is K.
+ * Pin pixels live in tools/discrete_ic/assets/passives/pin_map.json.
+ * The first pin is the rotation pivot. Air wires end on those pixels.
+ * OSC4LEGS (DIP-14 metal can): pivot = pin 14 VDD, then pin 8 OUT, pin 1 OE#, pin 7 GND.
+ * Polarized parts mark the second pin negative: ECAP pin 1 is +, pin 2 is -.
+ * Diode pin 1 is A (pivot), pin 2 is K.
  */
 
 typedef enum NsPassiveKind {
@@ -31,7 +33,7 @@ typedef struct NsPassive {
     NsEntity base;
     NsPassiveKind kind;
     int polarized; /* 1 = ECAP or diode */
-    int pivot_x;   /* filename pivot tip in board canvas coords */
+    int pivot_x;   /* first pin_map pin, in board canvas coords */
     int pivot_y;
     int leg_ext[2]; /* extra px beyond default tips (pin 1, pin 2). Resistors only. */
     char value[NS_PASSIVE_VALUE_LEN];
@@ -55,13 +57,13 @@ void ns_passive_set_orient(NsPassive *p, NsPkgOrient orient);
 void ns_passive_set_leg_ext(NsPassive *p, int pin_num, int extra);
 void ns_passive_set_leg_to(NsPassive *p, int pin_num, int wx, int wy);
 
-/* Opaque PNG pixel at board (bx,by), after rotation about the filename pivot. */
+/* Whole PNG rectangle at board (bx,by), after rotation about the first pin. */
 int ns_passive_hit(const NsPassive *p, int bx, int by);
 
 /* Tip of pin_num in board canvas coords. OSC4LEGS uses DIP-14 can numbers. */
 int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy);
 
-/* screen_pivot_* = pan-adjusted board coords of the filename pivot. */
+/* screen_pivot_* = pan-adjusted board coords of the first pin. */
 void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, int screen_pivot_y,
                        int selected);
 void ns_passive_draw_kind(SDL_Renderer *r, NsPassiveKind kind, NsPkgOrient orient, int screen_pivot_x,

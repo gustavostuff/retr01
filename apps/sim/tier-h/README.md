@@ -43,7 +43,7 @@ Motherboard passives from [`docs/passive_bom.md`](../../docs/passive_bom.md): **
 | **R** | DAC + 33 ohm series + pull-ups + crystal feedback | 32 total. Only 11 are video DAC |
 | **D** | Art present | Not spawned (not on this BOM) |
 
-Sprites: `app/assets/png/passives/` (nano `scaled_down`). Pivot from filename `KIND_x_y.png`. Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c` per [`docs/bringup/schematic-netlist-tier-h.md`](../../docs/bringup/schematic-netlist-tier-h.md)). Breadboard strip merge and bus settle through passives are still TODO.
+Sprites: `tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c` per [`docs/bringup/schematic-netlist-tier-h.md`](../../docs/bringup/schematic-netlist-tier-h.md)). Breadboard strip merge and bus settle through passives are still TODO.
 
 **Preliminary Skidl export (not fab-ready):** [`skidl/export_netlist.sh`](skidl/export_netlist.sh) or `export_tier_h_netlist` + [`scripts/skidl_from_tier_h.py`](../../../scripts/skidl_from_tier_h.py). Outputs under [`skidl/`](skidl/). See [`docs/bringup/tier-h-skidl-export.md`](../../../docs/bringup/tier-h-skidl-export.md). Illustrative only; motherboard PCB is not ready for production.
 

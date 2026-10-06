@@ -6,34 +6,42 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Pin pixels from tools/discrete_ic/assets/passives/pin_map.json.
+ * pins[0] is the rotation pivot. negative (JSON) is index 1 for ECAP and D. */
+typedef struct PassivePinDef {
+    int number;
+    int x;
+    int y;
+    const char *name;
+} PassivePinDef;
+
 typedef struct PassiveSprite {
     const uint8_t *rgba;
     int w;
     int h;
     int piv_x;
     int piv_y;
-    int span_px;
-    int span_y;
+    int pin_count;
+    PassivePinDef pins[4];
 } PassiveSprite;
 
 static const PassiveSprite *sprite_for(NsPassiveKind kind);
 
 static const PassiveSprite k_sprites[NS_PASSIVE_KIND_COUNT] = {
-    {NS_UI_PASSIVE_R_RGBA, NS_UI_PASSIVE_R_W, NS_UI_PASSIVE_R_H, NS_UI_PASSIVE_R_PIV_X,
-     NS_UI_PASSIVE_R_PIV_Y, NS_UI_PASSIVE_R_SPAN_PX, NS_UI_PASSIVE_R_SPAN_Y},
-    {NS_UI_PASSIVE_CCAP_RGBA, NS_UI_PASSIVE_CCAP_W, NS_UI_PASSIVE_CCAP_H, NS_UI_PASSIVE_CCAP_PIV_X,
-     NS_UI_PASSIVE_CCAP_PIV_Y, NS_UI_PASSIVE_CCAP_SPAN_PX, NS_UI_PASSIVE_CCAP_SPAN_Y},
-    {NS_UI_PASSIVE_ECAP_RGBA, NS_UI_PASSIVE_ECAP_W, NS_UI_PASSIVE_ECAP_H, NS_UI_PASSIVE_ECAP_PIV_X,
-     NS_UI_PASSIVE_ECAP_PIV_Y, NS_UI_PASSIVE_ECAP_SPAN_PX, NS_UI_PASSIVE_ECAP_SPAN_Y},
-    {NS_UI_PASSIVE_OSC_RGBA, NS_UI_PASSIVE_OSC_W, NS_UI_PASSIVE_OSC_H, NS_UI_PASSIVE_OSC_PIV_X,
-     NS_UI_PASSIVE_OSC_PIV_Y, NS_UI_PASSIVE_OSC_SPAN_PX, NS_UI_PASSIVE_OSC_SPAN_Y},
-    {NS_UI_PASSIVE_OSC4LEGS_RGBA, NS_UI_PASSIVE_OSC4LEGS_W, NS_UI_PASSIVE_OSC4LEGS_H,
-     NS_UI_PASSIVE_OSC4LEGS_PIV_X, NS_UI_PASSIVE_OSC4LEGS_PIV_Y, NS_UI_PASSIVE_OSC4LEGS_SPAN_PX,
-     NS_UI_PASSIVE_OSC4LEGS_SPAN_Y},
-    {NS_UI_PASSIVE_D_RGBA, NS_UI_PASSIVE_D_W, NS_UI_PASSIVE_D_H, NS_UI_PASSIVE_D_PIV_X,
-     NS_UI_PASSIVE_D_PIV_Y, NS_UI_PASSIVE_D_SPAN_PX, NS_UI_PASSIVE_D_SPAN_Y},
-    {NS_UI_PASSIVE_OSC_RGBA, NS_UI_PASSIVE_OSC_W, NS_UI_PASSIVE_OSC_H, NS_UI_PASSIVE_OSC_PIV_X,
-     NS_UI_PASSIVE_OSC_PIV_Y, NS_UI_PASSIVE_OSC_SPAN_PX, NS_UI_PASSIVE_OSC_SPAN_Y},
+    {NS_UI_PASSIVE_R_RGBA, NS_UI_PASSIVE_R_W, NS_UI_PASSIVE_R_H, 0, 2, 2,
+     {{1, 0, 2, "1"}, {2, 20, 2, "2"}}},
+    {NS_UI_PASSIVE_CCAP_RGBA, NS_UI_PASSIVE_CCAP_W, NS_UI_PASSIVE_CCAP_H, 2, 12, 2,
+     {{1, 2, 12, "1"}, {2, 7, 12, "2"}}},
+    {NS_UI_PASSIVE_ECAP_RGBA, NS_UI_PASSIVE_ECAP_W, NS_UI_PASSIVE_ECAP_H, 2, 19, 2,
+     {{1, 2, 19, "+"}, {2, 7, 19, "-"}}},
+    {NS_UI_PASSIVE_OSC_RGBA, NS_UI_PASSIVE_OSC_W, NS_UI_PASSIVE_OSC_H, 4, 11, 2,
+     {{1, 4, 11, "1"}, {2, 9, 11, "2"}}},
+    {NS_UI_PASSIVE_OSC4LEGS_RGBA, NS_UI_PASSIVE_OSC4LEGS_W, NS_UI_PASSIVE_OSC4LEGS_H, 4, 0, 4,
+     {{14, 4, 0, "VDD"}, {8, 9, 0, "OUT"}, {1, 4, 15, "OE#"}, {7, 9, 15, "GND"}}},
+    {NS_UI_PASSIVE_D_RGBA, NS_UI_PASSIVE_D_W, NS_UI_PASSIVE_D_H, 0, 2, 2,
+     {{1, 0, 2, "A"}, {2, 15, 2, "K"}}},
+    {NS_UI_PASSIVE_OSC_RGBA, NS_UI_PASSIVE_OSC_W, NS_UI_PASSIVE_OSC_H, 4, 11, 2,
+     {{1, 4, 11, "1"}, {2, 9, 11, "2"}}},
 };
 
 static const NsEntityVTable k_passive_vt = {NULL, NULL, NULL, NULL};
@@ -54,15 +62,28 @@ static void rot_cw_delta(int dx, int dy, int steps, int *ox, int *oy) {
     *oy = y;
 }
 
-static int sprite_hit_at(const PassiveSprite *sp, NsPkgOrient orient, int piv_x, int piv_y, int bx, int by) {
+static const PassivePinDef *pin_by_number(const PassiveSprite *sp, int number) {
+    int i;
+    if (!sp) {
+        return NULL;
+    }
+    for (i = 0; i < sp->pin_count; i++) {
+        if (sp->pins[i].number == number) {
+            return &sp->pins[i];
+        }
+    }
+    return NULL;
+}
+
+/* Whole PNG rectangle after rotation about pins[0]. Transparent pixels count. */
+static int sprite_rect_hit(const PassiveSprite *sp, NsPkgOrient orient, int piv_x, int piv_y, int bx, int by) {
     int dx;
     int dy;
     int rx;
     int ry;
     int sx;
     int sy;
-    const uint8_t *px;
-    if (!sp || !sp->rgba) {
+    if (!sp || sp->w < 1 || sp->h < 1) {
         return 0;
     }
     dx = bx - piv_x;
@@ -70,11 +91,29 @@ static int sprite_hit_at(const PassiveSprite *sp, NsPkgOrient orient, int piv_x,
     rot_cw_delta(dx, dy, (4 - ((int)orient & 3)) & 3, &rx, &ry);
     sx = rx + sp->piv_x;
     sy = ry + sp->piv_y;
-    if (sx < 0 || sy < 0 || sx >= sp->w || sy >= sp->h) {
-        return 0;
+    return sx >= 0 && sy >= 0 && sx < sp->w && sy < sp->h;
+}
+
+/* Unit step from pin 1 toward pin 2 in unrotated PNG space. */
+static void lead_axis_local(const PassiveSprite *sp, int *ux, int *uy) {
+    int dx = 1;
+    int dy = 0;
+    if (sp && sp->pin_count >= 2) {
+        dx = sp->pins[1].x - sp->pins[0].x;
+        dy = sp->pins[1].y - sp->pins[0].y;
     }
-    px = sp->rgba + ((size_t)sy * (size_t)sp->w + (size_t)sx) * 4u;
-    return px[3] != 0;
+    if (dy == 0 && dx != 0) {
+        *ux = dx > 0 ? 1 : -1;
+        *uy = 0;
+        return;
+    }
+    if (dx == 0 && dy != 0) {
+        *ux = 0;
+        *uy = dy > 0 ? 1 : -1;
+        return;
+    }
+    *ux = 1;
+    *uy = 0;
 }
 
 static int chebyshev_to_seg(int px, int py, int ax, int ay, int bx, int by, int half) {
@@ -101,20 +140,24 @@ static int chebyshev_to_seg(int px, int py, int ax, int ay, int bx, int by, int 
     return (dx > dy ? dx : dy) <= half;
 }
 
-static void r_axis(NsPkgOrient orient, int *ux, int *uy) {
-    rot_cw_delta(1, 0, (int)orient, ux, uy);
+static void r_axis(const NsPassive *p, int *ux, int *uy) {
+    int lx;
+    int ly;
+    lead_axis_local(sprite_for(p->kind), &lx, &ly);
+    rot_cw_delta(lx, ly, (int)p->base.orient, ux, uy);
 }
 
 static void r_default_tip(const NsPassive *p, int pin_num, int *wx, int *wy) {
     const PassiveSprite *sp = sprite_for(p->kind);
+    const PassivePinDef *pin = pin_by_number(sp, pin_num);
     int rx;
     int ry;
-    if (pin_num == 1) {
+    if (!pin) {
         *wx = p->pivot_x;
         *wy = p->pivot_y;
         return;
     }
-    rot_cw_delta(sp->span_px, 0, (int)p->base.orient, &rx, &ry);
+    rot_cw_delta(pin->x - sp->piv_x, pin->y - sp->piv_y, (int)p->base.orient, &rx, &ry);
     *wx = p->pivot_x + rx;
     *wy = p->pivot_y + ry;
 }
@@ -129,13 +172,13 @@ int ns_passive_hit(const NsPassive *p, int bx, int by) {
     if (!p) {
         return 0;
     }
-    if (sprite_hit_at(sprite_for(p->kind), p->base.orient, p->pivot_x, p->pivot_y, bx, by)) {
+    if (sprite_rect_hit(sprite_for(p->kind), p->base.orient, p->pivot_x, p->pivot_y, bx, by)) {
         return 1;
     }
     if (p->kind == NS_PASSIVE_OSC4LEGS || (p->leg_ext[0] <= 0 && p->leg_ext[1] <= 0)) {
         return 0;
     }
-    r_axis(p->base.orient, &ux, &uy);
+    r_axis(p, &ux, &uy);
     if (p->leg_ext[0] > 0) {
         r_default_tip(p, 1, &x0, &y0);
         x1 = x0 - ux * p->leg_ext[0];
@@ -286,45 +329,51 @@ void ns_passive_bank_clear(NsPassiveBank *bank) {
     }
 }
 
+static void expand_aabb(int rx, int ry, int *min_x, int *min_y, int *max_x, int *max_y, int *first) {
+    if (*first) {
+        *min_x = *max_x = rx;
+        *min_y = *max_y = ry;
+        *first = 0;
+        return;
+    }
+    if (rx < *min_x) {
+        *min_x = rx;
+    }
+    if (ry < *min_y) {
+        *min_y = ry;
+    }
+    if (rx > *max_x) {
+        *max_x = rx;
+    }
+    if (ry > *max_y) {
+        *max_y = ry;
+    }
+}
+
+/* Axis-aligned bounds of the full PNG rectangle, rotated about pins[0]. */
 static void passive_aabb_about_pivot(const PassiveSprite *sp, NsPkgOrient orient, int *min_x, int *min_y,
                                      int *max_x, int *max_y) {
-    int sx, sy;
+    int corners[4][2];
+    int i;
     int first = 1;
     *min_x = *min_y = 0;
     *max_x = *max_y = 0;
-    for (sy = 0; sy < sp->h; sy++) {
-        for (sx = 0; sx < sp->w; sx++) {
-            const uint8_t *px = sp->rgba + ((size_t)sy * (size_t)sp->w + (size_t)sx) * 4u;
-            int dx, dy, rx, ry;
-            if (px[3] == 0) {
-                continue;
-            }
-            dx = sx - sp->piv_x;
-            dy = sy - sp->piv_y;
-            rot_cw_delta(dx, dy, (int)orient, &rx, &ry);
-            if (first) {
-                *min_x = *max_x = rx;
-                *min_y = *max_y = ry;
-                first = 0;
-            } else {
-                if (rx < *min_x) {
-                    *min_x = rx;
-                }
-                if (ry < *min_y) {
-                    *min_y = ry;
-                }
-                if (rx > *max_x) {
-                    *max_x = rx;
-                }
-                if (ry > *max_y) {
-                    *max_y = ry;
-                }
-            }
-        }
+    if (!sp || sp->w < 1 || sp->h < 1) {
+        return;
     }
-    if (first) {
-        *min_x = *min_y = 0;
-        *max_x = *max_y = 0;
+    corners[0][0] = 0;
+    corners[0][1] = 0;
+    corners[1][0] = sp->w - 1;
+    corners[1][1] = 0;
+    corners[2][0] = 0;
+    corners[2][1] = sp->h - 1;
+    corners[3][0] = sp->w - 1;
+    corners[3][1] = sp->h - 1;
+    for (i = 0; i < 4; i++) {
+        int rx;
+        int ry;
+        rot_cw_delta(corners[i][0] - sp->piv_x, corners[i][1] - sp->piv_y, (int)orient, &rx, &ry);
+        expand_aabb(rx, ry, min_x, min_y, max_x, max_y, &first);
     }
 }
 
@@ -336,40 +385,19 @@ void ns_passive_sync_aabb(NsPassive *p) {
     }
     sp = sprite_for(p->kind);
     passive_aabb_about_pivot(sp, p->base.orient, &min_x, &min_y, &max_x, &max_y);
-    if (p->kind != NS_PASSIVE_OSC4LEGS && (p->leg_ext[0] > 0 || p->leg_ext[1] > 0 || sp->span_px > 0)) {
-        int ux;
-        int uy;
-        int tx;
-        int ty;
-        r_axis(p->base.orient, &ux, &uy);
-        tx = -ux * p->leg_ext[0];
-        ty = -uy * p->leg_ext[0];
-        if (tx < min_x) {
-            min_x = tx;
-        }
-        if (ty < min_y) {
-            min_y = ty;
-        }
-        if (tx > max_x) {
-            max_x = tx;
-        }
-        if (ty > max_y) {
-            max_y = ty;
-        }
-        tx = ux * (sp->span_px + p->leg_ext[1]);
-        ty = uy * (sp->span_px + p->leg_ext[1]);
-        if (tx < min_x) {
-            min_x = tx;
-        }
-        if (ty < min_y) {
-            min_y = ty;
-        }
-        if (tx > max_x) {
-            max_x = tx;
-        }
-        if (ty > max_y) {
-            max_y = ty;
-        }
+    if (p->kind != NS_PASSIVE_OSC4LEGS && sp->pin_count >= 2 &&
+        (p->leg_ext[0] > 0 || p->leg_ext[1] > 0)) {
+        int lx;
+        int ly;
+        int rx;
+        int ry;
+        int first = 0;
+        lead_axis_local(sp, &lx, &ly);
+        rot_cw_delta(-lx * p->leg_ext[0], -ly * p->leg_ext[0], (int)p->base.orient, &rx, &ry);
+        expand_aabb(rx, ry, &min_x, &min_y, &max_x, &max_y, &first);
+        rot_cw_delta((sp->pins[1].x - sp->piv_x) + lx * p->leg_ext[1],
+                     (sp->pins[1].y - sp->piv_y) + ly * p->leg_ext[1], (int)p->base.orient, &rx, &ry);
+        expand_aabb(rx, ry, &min_x, &min_y, &max_x, &max_y, &first);
     }
     p->base.board_x = p->pivot_x + min_x;
     p->base.board_y = p->pivot_y + min_y;
@@ -402,34 +430,33 @@ void ns_passive_set_orient(NsPassive *p, NsPkgOrient orient) {
 
 int ns_passive_tip_board(const NsPassive *p, int pin_num, int *wx, int *wy) {
     const PassiveSprite *sp;
+    const PassivePinDef *pin;
     int dx;
     int dy;
+    int lx;
+    int ly;
     int rx;
     int ry;
     if (!p || !wx || !wy || pin_num < 1) {
         return 0;
     }
     sp = sprite_for(p->kind);
-    if (sp->span_y != 0) {
-        if (!osc4_delta(pin_num, &dx, &dy)) {
-            return 0;
-        }
-        rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
-        *wx = p->pivot_x + rx;
-        *wy = p->pivot_y + ry;
-        return 1;
-    }
-    if (pin_num == 1) {
-        rot_cw_delta(-p->leg_ext[0], 0, (int)p->base.orient, &rx, &ry);
-        *wx = p->pivot_x + rx;
-        *wy = p->pivot_y + ry;
-        return 1;
-    }
-    if (pin_num != 2 || sp->span_px == 0) {
+    pin = pin_by_number(sp, pin_num);
+    if (!pin) {
         return 0;
     }
-    dx = sp->span_px + p->leg_ext[1];
-    dy = 0;
+    dx = pin->x - sp->piv_x;
+    dy = pin->y - sp->piv_y;
+    if (p->kind != NS_PASSIVE_OSC4LEGS && sp->pin_count >= 2) {
+        lead_axis_local(sp, &lx, &ly);
+        if (pin_num == sp->pins[0].number) {
+            dx -= lx * p->leg_ext[0];
+            dy -= ly * p->leg_ext[0];
+        } else if (pin_num == sp->pins[1].number) {
+            dx += lx * p->leg_ext[1];
+            dy += ly * p->leg_ext[1];
+        }
+    }
     rot_cw_delta(dx, dy, (int)p->base.orient, &rx, &ry);
     *wx = p->pivot_x + rx;
     *wy = p->pivot_y + ry;
@@ -467,7 +494,7 @@ void ns_passive_set_leg_to(NsPassive *p, int pin_num, int wx, int wy) {
     if (!p || p->kind == NS_PASSIVE_OSC4LEGS || (pin_num != 1 && pin_num != 2)) {
         return;
     }
-    r_axis(p->base.orient, &ux, &uy);
+    r_axis(p, &ux, &uy);
     r_default_tip(p, pin_num, &defx, &defy);
     dx = wx - defx;
     dy = wy - defy;
@@ -497,19 +524,20 @@ NsPassive *ns_passive_bank_add(NsPassiveBank *bank, NsPassiveKind kind, const ch
     p->polarized = (kind == NS_PASSIVE_ECAP || kind == NS_PASSIVE_D) ? 1 : 0;
     p->base.orient = NS_ORIENT_0;
     if (kind == NS_PASSIVE_OSC4LEGS) {
-        ns_entity_add_pin(&p->base, 1, "OE#", NS_PIN_IN);
-        ns_entity_add_pin(&p->base, 7, "GND", NS_PIN_PWR);
-        ns_entity_add_pin(&p->base, 8, "OUT", NS_PIN_OUT);
-        ns_entity_add_pin(&p->base, 14, "VDD", NS_PIN_IN);
-    } else if (kind == NS_PASSIVE_ECAP) {
-        ns_entity_add_pin(&p->base, 1, "-", NS_PIN_IO);
-        ns_entity_add_pin(&p->base, 2, "+", NS_PIN_IO);
-    } else if (kind == NS_PASSIVE_D) {
-        ns_entity_add_pin(&p->base, 1, "A", NS_PIN_IO);
-        ns_entity_add_pin(&p->base, 2, "K", NS_PIN_IO);
+        static const int order[] = {1, 7, 8, 14};
+        static const NsPinDir dirs[] = {NS_PIN_IN, NS_PIN_PWR, NS_PIN_OUT, NS_PIN_IN};
+        const PassiveSprite *sp = sprite_for(kind);
+        int i;
+        for (i = 0; i < 4; i++) {
+            const PassivePinDef *pin = pin_by_number(sp, order[i]);
+            ns_entity_add_pin(&p->base, order[i], pin ? pin->name : "?", dirs[i]);
+        }
     } else {
-        ns_entity_add_pin(&p->base, 1, "1", NS_PIN_IO);
-        ns_entity_add_pin(&p->base, 2, "2", NS_PIN_IO);
+        const PassiveSprite *sp = sprite_for(kind);
+        int i;
+        for (i = 0; i < sp->pin_count; i++) {
+            ns_entity_add_pin(&p->base, sp->pins[i].number, sp->pins[i].name, NS_PIN_IO);
+        }
     }
     ns_passive_set_pivot(p, 0, 0);
     return p;
@@ -584,15 +612,20 @@ void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, in
     ns_passive_draw_ex(r, p->kind, p->base.orient, p->value, screen_pivot_x, screen_pivot_y, 0);
     if (p->kind == NS_PASSIVE_R && (p->leg_ext[0] > 0 || p->leg_ext[1] > 0)) {
         sp = sprite_for(NS_PASSIVE_R);
-        r_axis(p->base.orient, &ux, &uy);
+        r_axis(p, &ux, &uy);
         SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
         if (p->leg_ext[0] > 0) {
             SDL_RenderDrawLine(r, screen_pivot_x, screen_pivot_y, screen_pivot_x - ux * p->leg_ext[0],
                                screen_pivot_y - uy * p->leg_ext[0]);
         }
-        if (p->leg_ext[1] > 0) {
-            int x0 = screen_pivot_x + ux * sp->span_px;
-            int y0 = screen_pivot_y + uy * sp->span_px;
+        if (p->leg_ext[1] > 0 && sp->pin_count >= 2) {
+            int rx;
+            int ry;
+            int x0;
+            int y0;
+            rot_cw_delta(sp->pins[1].x - sp->piv_x, sp->pins[1].y - sp->piv_y, (int)p->base.orient, &rx, &ry);
+            x0 = screen_pivot_x + rx;
+            y0 = screen_pivot_y + ry;
             SDL_RenderDrawLine(r, x0, y0, x0 + ux * p->leg_ext[1], y0 + uy * p->leg_ext[1]);
         }
     }
@@ -607,31 +640,13 @@ void ns_passive_draw(SDL_Renderer *r, const NsPassive *p, int screen_pivot_x, in
 
 static int osc4_delta(int pin_num, int *dx, int *dy) {
     const PassiveSprite *sp = sprite_for(NS_PASSIVE_OSC4LEGS);
-    if (!dx || !dy) {
+    const PassivePinDef *pin = pin_by_number(sp, pin_num);
+    if (!dx || !dy || !pin) {
         return 0;
     }
-    /* Filename pivot is pin 14 (top-left, VDD). Top-right 8, bottom-left 1, bottom-right 7. */
-    if (pin_num == 14) {
-        *dx = 0;
-        *dy = 0;
-        return 1;
-    }
-    if (pin_num == 8) {
-        *dx = sp->span_px;
-        *dy = 0;
-        return 1;
-    }
-    if (pin_num == 1) {
-        *dx = 0;
-        *dy = sp->span_y;
-        return 1;
-    }
-    if (pin_num == 7) {
-        *dx = sp->span_px;
-        *dy = sp->span_y;
-        return 1;
-    }
-    return 0;
+    *dx = pin->x - sp->piv_x;
+    *dy = pin->y - sp->piv_y;
+    return 1;
 }
 
 static void osc4_aabb(NsPkgOrient orient, int *min_x, int *min_y, int *max_x, int *max_y) {
@@ -710,7 +725,7 @@ int ns_osc4legs_hit(const NsEntity *e, int bx, int by) {
     osc4_aabb(e->orient, &min_x, &min_y, &max_x, &max_y);
     p1x = e->board_x - min_x;
     p1y = e->board_y - min_y;
-    return sprite_hit_at(sprite_for(NS_PASSIVE_OSC4LEGS), e->orient, p1x, p1y, bx, by);
+    return sprite_rect_hit(sprite_for(NS_PASSIVE_OSC4LEGS), e->orient, p1x, p1y, bx, by);
 }
 
 static void add_n(NsPassiveBank *bank, NsPassiveKind kind, const char *prefix, int *seq,

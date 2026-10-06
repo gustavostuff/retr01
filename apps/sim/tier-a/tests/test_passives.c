@@ -219,11 +219,7 @@ int main(void) {
         {
             int tx = 0;
             int ty = 0;
-#ifdef R01A_BB_3PX
-            int tip2 = 24 + 10;
-#else
             int tip2 = 20 + 10;
-#endif
             expect_true(ns_passive_tip_board(&a, 2, &tx, &ty), "R stretch pin2 tip");
             expect_true(tx == tip2 && ty == 0, "R stretch pin2 at span+extra");
             expect_true(ns_passive_hit(&a, tip2, 0), "R stretch lead hit");

@@ -65,6 +65,21 @@ static int hit_chip(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     return ui_part_image_hit(ui, e, lx, ly);
 }
 
+/* Selected passives draw a 1px gold rect outside the PNG. It scales with zoom. */
+static int hit_selected_outline(const R01sUi *ui, const R01sEntity *e, int ci, int lx, int ly) {
+    int x;
+    int y;
+    if (!e || e->visual != R01S_ENTITY_VIS_PASSIVE) {
+        return 0;
+    }
+    if (ci != ui->selected && (ci < 0 || !ui->chip_sel[ci])) {
+        return 0;
+    }
+    x = ui_board_sx(ui, e->board_x);
+    y = ui_board_sy(ui, e->board_y);
+    return hit_filled(lx, ly, x - 1, y - 1, e->body_w + 2, e->body_h + 2);
+}
+
 static int hit_island_frame(const R01sUi *ui, const R01sIsland *island, int lx, int ly) {
     int x = ui_board_sx(ui, island->board_x);
     int y = ui_board_sy(ui, island->board_y);
@@ -344,7 +359,8 @@ static int hit_chip_front(const R01sUi *ui, int lx, int ly) {
         if (ui_chip_hidden(ui, ui->chips[ci])) {
             continue;
         }
-        if (ui->chips[ci] && hit_chip(ui, ui->chips[ci], lx, ly)) {
+        if (ui->chips[ci] && (hit_chip(ui, ui->chips[ci], lx, ly) ||
+                              hit_selected_outline(ui, ui->chips[ci], ci, lx, ly))) {
             return ci;
         }
     }
@@ -428,7 +444,8 @@ int hit_board_top(const R01sUi *ui, int lx, int ly, int *chip_out, int *island_o
             if (ui_chip_hidden(ui, ui->chips[ci])) {
                 continue;
             }
-            if (ui->chips[ci] && hit_chip(ui, ui->chips[ci], lx, ly)) {
+            if (ui->chips[ci] && (hit_chip(ui, ui->chips[ci], lx, ly) ||
+                                  hit_selected_outline(ui, ui->chips[ci], ci, lx, ly))) {
                 if (chip_out) {
                     *chip_out = ci;
                 }
@@ -461,7 +478,10 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
             ui_tip_reset(ui, logic_x, logic_y);
         }
     }
-    if (ui_logic_in_view(logic_x, logic_y)) {
+    /* An in-progress drag keeps following the cursor past the canvas edge and
+     * through the letterbox. Leaving board_mx at 0 there jumps the part. */
+    if (ui_logic_in_view(logic_x, logic_y) || ui->drag_chip >= 0 || ui->drag_island >= 0 ||
+        ui->resize_island >= 0 || ui->box_sel || ui->floor_drag >= 0 || ui->floor_resize >= 0) {
         ui_logic_to_board(ui, logic_x, logic_y, &board_mx, &board_my);
     }
     if (e->type == SDL_MOUSEMOTION && !ui->drag_chip && !ui->box_sel && !ui->drag_pan) {

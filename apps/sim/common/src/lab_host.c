@@ -145,8 +145,9 @@ static void logic_from_window(SDL_Window *win, int scale, int win_x, int win_y, 
     draw_h = R01S_LOGIC_H * scale;
     ox = (ww - draw_w) / 2;
     oy = (wh - draw_h) / 2;
-    *lx = (win_x - ox) / scale;
-    *ly = (win_y - oy) / scale;
+    /* Floor division: the black margin must not alias onto logic pixel 0. */
+    *lx = ui_div_floor(win_x - ox, scale);
+    *ly = ui_div_floor(win_y - oy, scale);
 }
 
 /* Write view state a moment after the last edit. Quit still saves immediately. */

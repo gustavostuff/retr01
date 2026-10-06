@@ -1344,8 +1344,10 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, R01S_BOARD_BG_R, R01S_BOARD_BG_G, R01S_BOARD_BG_B);
 
-    SDL_RenderSetClipRect(r, &view_clip);
+    /* Scale first. SetClipRect stores the rect multiplied by the current scale,
+     * and SetScale does not update a clip that was set earlier. */
     SDL_RenderSetScale(r, (float)ui_zoom(ui), (float)ui_zoom(ui));
+    SDL_RenderSetClipRect(r, &view_clip);
     draw_island_frames(r, ui);
 
     if (ui->floor_on) {

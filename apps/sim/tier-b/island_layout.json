@@ -1,0 +1,63 @@
+{
+  "version": 4,
+  "mode": "islands",
+  "pan_x": 384,
+  "pan_y": 0,
+  "zoom": 1,
+  "air_wires": 0,
+  "present_scale": 2,
+  "lcd_2x": 1,
+  "floor_on": 0,
+  "floor": [
+    {"i": 0, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 1, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 2, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 3, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 4, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 5, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 6, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 7, "x": 0, "y": 0, "w": 0, "h": 0},
+    {"i": 8, "x": 0, "y": 0, "w": 0, "h": 0}
+  ],
+  "islands_strip_x": 8,
+  "islands_strip_y": 8,
+  "legend_strip_x": 8,
+  "legend_strip_y": 32,
+  "wave_monitor_x": 336,
+  "wave_monitor_y": 240,
+  "islands": [
+    {"i": 0, "x": 445, "y": 35, "w": 185, "h": 215, "z": 0},
+    {"i": 1, "x": 665, "y": 25, "w": 355, "h": 275, "z": 1}
+  ],
+  "island_chips": [
+    {"id": "Y2", "island": 0, "rx": 10, "ry": 16, "orient": "0"},
+    {"id": "UPLDX", "island": 0, "rx": 23, "ry": 32, "orient": "0"},
+    {"id": "UPLDY", "island": 0, "rx": 27, "ry": 113, "orient": "0"},
+    {"id": "UPLDC", "island": 0, "rx": 32, "ry": 77, "orient": "0"},
+    {"id": "U24", "island": 0, "rx": 99, "ry": 39, "orient": "0"},
+    {"id": "C1", "island": 0, "rx": 51, "ry": 173, "orient": "0"},
+    {"id": "C2", "island": 0, "rx": 87, "ry": 168, "orient": "0"},
+    {"id": "C3", "island": 0, "rx": 115, "ry": 171, "orient": "0"},
+    {"id": "C4", "island": 0, "rx": 138, "ry": 176, "orient": "0"},
+    {"id": "C5", "island": 0, "rx": 80, "ry": 193, "orient": "0"},
+    {"id": "C6", "island": 0, "rx": 109, "ry": 192, "orient": "0"},
+    {"id": "E1", "island": 0, "rx": 34, "ry": 151, "orient": "0"},
+    {"id": "R12", "island": 0, "rx": 15, "ry": 89, "orient": "90"},
+    {"id": "J2", "island": 1, "rx": 16, "ry": 16, "orient": "0"},
+    {"id": "SCR1", "island": 1, "rx": 86, "ry": 18, "orient": "0"},
+    {"id": "R1", "island": 1, "rx": 29, "ry": 163, "orient": "0"},
+    {"id": "R2", "island": 1, "rx": 28, "ry": 152, "orient": "0"},
+    {"id": "R3", "island": 1, "rx": 27, "ry": 143, "orient": "0"},
+    {"id": "R4", "island": 1, "rx": 26, "ry": 133, "orient": "0"},
+    {"id": "R5", "island": 1, "rx": 22, "ry": 125, "orient": "0"},
+    {"id": "R6", "island": 1, "rx": 24, "ry": 189, "orient": "0"},
+    {"id": "R7", "island": 1, "rx": 25, "ry": 198, "orient": "0"},
+    {"id": "R8", "island": 1, "rx": 25, "ry": 210, "orient": "0"},
+    {"id": "R9", "island": 1, "rx": 51, "ry": 174, "orient": "0"},
+    {"id": "R10", "island": 1, "rx": 59, "ry": 186, "orient": "0"},
+    {"id": "R11", "island": 1, "rx": 59, "ry": 212, "orient": "0"}
+  ],
+  "compact_chips": [
+
+  ]
+}

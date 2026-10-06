@@ -1,8 +1,8 @@
 #ifndef DISCRETE_IC_UI_PASSIVE_ASSETS_H
 #define DISCRETE_IC_UI_PASSIVE_ASSETS_H
 #include <stdint.h>
-/* Embedded passives from app/assets/png/passives (nano scaled_down).
- * Filename KIND_px_py.png: pivot is (px,py), not a marker in the PNG. */
+/* Embedded passives from tools/discrete_ic/assets/passives (nano scaled_down).
+ * Rotation pivot and pin pixels are in pin_map.json, not the filename. */
 #define NS_UI_PASSIVE_R_W 21
 #define NS_UI_PASSIVE_R_H 5
 #define NS_UI_PASSIVE_R_PIV_X 0

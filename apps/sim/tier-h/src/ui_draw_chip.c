@@ -318,18 +318,11 @@ static int pin_sprite_hit(int tip_sx, int tip_sy, int rot, int lx, int ly) {
     int oh;
     int ox;
     int oy;
-    int sx;
-    int sy;
-    const uint8_t *p;
     pin_sprite_box(rot, &org_x, &org_y, &ow, &oh);
     ox = lx - (tip_sx - org_x);
     oy = ly - (tip_sy - org_y);
-    if (ox < 0 || oy < 0 || ox >= ow || oy >= oh) {
-        return 0;
-    }
-    pin_sprite_src(rot, ox, oy, &sx, &sy);
-    p = R01S_UI_PIN_RGBA + ((size_t)sy * (size_t)R01S_UI_PIN_W + (size_t)sx) * 4u;
-    return p[3] != 0;
+    /* Whole pin.png rectangle. Transparent corners still start a drag. */
+    return ox >= 0 && oy >= 0 && ox < ow && oy < oh;
 }
 
 static void blit_pin_pivot(SDL_Renderer *r, int tip_sx, int tip_sy, int pivot_kind) {
@@ -811,23 +804,7 @@ static int filled_at(int lx, int ly, int x, int y, int w, int h) {
     return w > 0 && h > 0 && lx >= x && ly >= y && lx < x + w && ly < y + h;
 }
 
-static int rgba_opaque_at(const uint8_t *rgba, int w, int h, int ox, int oy, int lx, int ly) {
-    int sx;
-    int sy;
-    const uint8_t *p;
-    if (!rgba) {
-        return 0;
-    }
-    sx = lx - ox;
-    sy = ly - oy;
-    if (sx < 0 || sy < 0 || sx >= w || sy >= h) {
-        return 0;
-    }
-    p = rgba + ((size_t)sy * (size_t)w + (size_t)sx) * 4u;
-    return p[3] != 0;
-}
-
-/* Same placement as draw_glyph_pins. Opaque pin.png pixels only. */
+/* Same placement as draw_glyph_pins. Whole pin.png rectangle. */
 static int glyph_pins_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     int x = ui_board_sx(ui, e->board_x);
     int li = 0;
@@ -891,7 +868,9 @@ int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     if (e->visual == R01S_ENTITY_VIS_PWR) {
         int ix = x + (e->body_w - R01S_UI_BATTERY_W) / 2;
         int iy = y + 2;
-        if (rgba_opaque_at(R01S_UI_BATTERY_RGBA, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H, ix, iy, lx, ly)) {
+        /* Black plate is drawn under the PNG; transparent PNG pixels still grab. */
+        if (filled_at(lx, ly, x, y, e->body_w, e->body_h) ||
+            filled_at(lx, ly, ix, iy, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H)) {
             return 1;
         }
         return glyph_pins_hit(ui, e, lx, ly);
@@ -899,7 +878,8 @@ int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
     if (e->visual == R01S_ENTITY_VIS_OSC) {
         int ix = x + (e->body_w - R01S_UI_OSC_W) / 2;
         int iy = y + (e->body_h - R01S_UI_OSC_H) / 2 - 2;
-        if (rgba_opaque_at(R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, ix, iy, lx, ly)) {
+        if (filled_at(lx, ly, x, y, e->body_w, e->body_h) ||
+            filled_at(lx, ly, ix, iy, R01S_UI_OSC_W, R01S_UI_OSC_H)) {
             return 1;
         }
         return glyph_pins_hit(ui, e, lx, ly);

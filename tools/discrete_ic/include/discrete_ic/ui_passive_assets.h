@@ -1,8 +1,8 @@
 #ifndef DISCRETE_IC_UI_PASSIVE_ASSETS_H
 #define DISCRETE_IC_UI_PASSIVE_ASSETS_H
 #include <stdint.h>
-/* Embedded passives from app/assets/png/passives (nano scaled_down).
- * Filename KIND_px_py.png: pivot is (px,py), not a marker in the PNG. */
+/* Embedded passives from tools/discrete_ic/assets/passives (nano scaled_down).
+ * Rotation pivot and pin pixels are in pin_map.json, not the filename. */
 #define NS_UI_PASSIVE_R_W 21
 #define NS_UI_PASSIVE_R_H 5
 #define NS_UI_PASSIVE_R_PIV_X 0
@@ -208,22 +208,5 @@ static const uint8_t NS_UI_PASSIVE_D_RGBA[NS_UI_PASSIVE_D_W * NS_UI_PASSIVE_D_H 
     0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
     0, 0, 0, 255, 0, 0, 0, 255, 81, 81, 81, 255, 81, 81, 81, 255, 81, 81, 81, 255, 0, 0, 0, 0,
 };
-/* Tier-A 3×3 lattice: tip spans must be multiples of the 6 px hole pitch. */
-#ifdef R01A_BB_3PX
-#undef NS_UI_PASSIVE_R_SPAN_PX
-#define NS_UI_PASSIVE_R_SPAN_PX 24
-#undef NS_UI_PASSIVE_CCAP_SPAN_PX
-#define NS_UI_PASSIVE_CCAP_SPAN_PX 6
-#undef NS_UI_PASSIVE_ECAP_SPAN_PX
-#define NS_UI_PASSIVE_ECAP_SPAN_PX 6
-#undef NS_UI_PASSIVE_OSC_SPAN_PX
-#define NS_UI_PASSIVE_OSC_SPAN_PX 6
-#undef NS_UI_PASSIVE_OSC4LEGS_SPAN_PX
-#define NS_UI_PASSIVE_OSC4LEGS_SPAN_PX 6
-#undef NS_UI_PASSIVE_OSC4LEGS_SPAN_Y
-#define NS_UI_PASSIVE_OSC4LEGS_SPAN_Y 18
-#undef NS_UI_PASSIVE_D_SPAN_PX
-#define NS_UI_PASSIVE_D_SPAN_PX 18
-#endif
 #endif
 

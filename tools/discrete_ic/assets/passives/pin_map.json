@@ -1,0 +1,31 @@
+{
+	"passives": {
+		"OSC4LEGS.png": {
+			"pins": [[4, 0], [9, 0], [4, 15], [9, 15]],
+			"numbers": [14, 8, 1, 7],
+			"names": ["VDD", "OUT", "OE#", "GND"]
+		},
+		"OSC.png": {
+			"pins": [[4, 11], [9, 11]]
+		},
+		"GROUND.png": {
+			"pins": [[7, 4]]
+		},
+		"R.png": {
+			"pins": [[0, 2], [20, 2]]
+		},
+		"ECAP.png": {
+			"pins": [[2, 19], [7, 19]],
+			"names": ["+", "-"],
+			"negative": 1
+		},
+		"D.png": {
+			"pins": [[0, 2], [15, 2]],
+			"names": ["A", "K"],
+			"negative": 1
+		},
+		"CCAP.png": {
+			"pins": [[2, 12], [7, 12]]
+		}
+	}
+}

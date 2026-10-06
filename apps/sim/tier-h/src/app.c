@@ -52,8 +52,9 @@ static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx,
     draw_h = R01S_LOGIC_H * scale;
     ox = (ww - draw_w) / 2;
     oy = (wh - draw_h) / 2;
-    *lx = (win_x - ox) / scale;
-    *ly = (win_y - oy) / scale;
+    /* Floor division: the black margin must not alias onto logic pixel 0. */
+    *lx = ui_div_floor(win_x - ox, scale);
+    *ly = ui_div_floor(win_y - oy, scale);
 }
 
 static void app_autosave_layout(R01sApp *app);
