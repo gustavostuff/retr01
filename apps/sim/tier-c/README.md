@@ -25,7 +25,7 @@ Everything from Tier B stays. New jumpers (see bring-up doc section 8):
 - **US1** `ALE` -> **U573** `LE`; **US1** `/WE` -> **U41** `WE#`
 - **U41** `CE#` low, beam **`OE#`** vs S1 **`/WE`** mutually exclusive (same as product)
 - **Beam Y** `VBLANK` -> **US1** `VBL` (optional debug / RUN)
-- **C8** on **US1** VCC; decoupling on **U41** / **U573** as in BOM
+- **C6** on **US1** VCC, **C7** on **U573**, **C8** on **U41**; plus the Tier B set **C1**-**C5** and bulk **E1**
 
 The sim uses the same island window as Tier A and Tier B. Those links are in the soft netlist, so the LCD demo runs without jumpers. **US1**, **U573**, and **U41** start on the DIGITAL island. Placement saves to `island_layout.json`.
 

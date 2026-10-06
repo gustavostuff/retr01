@@ -401,6 +401,9 @@ void ui_sel_from_box(R01sUi *ui, int additive) {
     }
     for (i = 0; i < ui->chip_count; i++) {
         const R01sEntity *e = ui->chips[i];
+        if (!e || ui_chip_hidden(ui, e) || e->visual == R01S_ENTITY_VIS_BREADBOARD) {
+            continue;
+        }
         if (!chip_board_intersects_box(e, ui->box_bx0, ui->box_by0, ui->box_bx1, ui->box_by1)) {
             continue;
         }
@@ -536,6 +539,25 @@ void move_selection_drag(R01sUi *ui, int board_mx, int board_my) {
         if (ui->chips[i] && (ui->chips[i]->visual == R01S_ENTITY_VIS_IC ||
                              ui->chips[i]->visual == R01S_ENTITY_VIS_PASSIVE)) {
             ui_chip_snap_to_breadboard(ui, i);
+        }
+        if (ui->chips[i]) {
+            clamp_chip(ui, ui->chips[i], ui->chip_island[i]);
+        }
+    }
+    if (!ui->layout_compact) {
+        uint8_t grown[R01S_MAX_ISLANDS];
+        memset(grown, 0, sizeof(grown));
+        for (i = 0; i < ui->chip_count; i++) {
+            int isl;
+            if (!ui->chip_sel[i]) {
+                continue;
+            }
+            isl = ui->chip_island[i];
+            if (isl < 0 || isl >= R01S_MAX_ISLANDS || grown[isl]) {
+                continue;
+            }
+            grown[isl] = 1;
+            ui_expand_island_to_chips(ui, isl);
         }
     }
     ui->layout_dirty = 1;

@@ -594,12 +594,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 ui->ctx_chip = chip_i;
                 ui->ctx_x = logic_x;
                 ui->ctx_y = logic_y;
-                if (ui->layout_compact) {
-                    if (!ui->chip_sel[chip_i]) {
-                        ui_sel_set_one(ui, chip_i);
-                    } else {
-                        ui->selected = chip_i;
-                    }
+                if (!ui->chip_sel[chip_i]) {
+                    ui_sel_set_one(ui, chip_i);
                 } else {
                     ui->selected = chip_i;
                 }
@@ -682,7 +678,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
         return 1;
     }
     if (e->type == SDL_MOUSEMOTION && ui->drag_chip >= 0) {
-        if (ui->layout_compact && ui_sel_count(ui) > 1) {
+        if (ui_sel_count(ui) > 1 && ui->drag_chip < ui->chip_count && ui->chip_sel[ui->drag_chip]) {
             move_selection_drag(ui, board_mx, board_my);
         } else {
             move_chip_drag(ui, ui->drag_chip, board_mx, board_my);
@@ -923,12 +919,12 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                 if (!ui->layout_compact && island_i >= 0) {
                     r01s_ui_island_z_raise(ui, island_i);
                 }
-                if (ui->layout_compact && shift) {
+                if (shift) {
                     ui_sel_toggle(ui, chip_i);
                     snprintf(ui->status, sizeof(ui->status), "selected %d", ui_sel_count(ui));
                     return 1;
                 }
-                if (ui->layout_compact && ui->chip_sel[chip_i] && ui_sel_count(ui) > 1) {
+                if (ui->chip_sel[chip_i] && ui_sel_count(ui) > 1) {
                     /* Drag whole selection; keep multi-select. */
                     ui->selected = chip_i;
                     ui->drag_chip = chip_i;
@@ -940,12 +936,7 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                     snprintf(ui->status, sizeof(ui->status), "drag %d chips", ui_sel_count(ui));
                     return 1;
                 }
-                if (ui->layout_compact) {
-                    ui_sel_set_one(ui, chip_i);
-                } else {
-                    ui_sel_clear(ui);
-                    ui->selected = chip_i;
-                }
+                ui_sel_set_one(ui, chip_i);
                 ui->drag_chip = chip_i;
                 ui->drag_grab_bx = board_mx - ui->chips[chip_i]->board_x;
                 ui->drag_grab_by = board_my - ui->chips[chip_i]->board_y;
@@ -956,6 +947,13 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                          ui->chips[chip_i]->refdes ? ui->chips[chip_i]->refdes : "?",
                          ui->chips[chip_i]->part ? ui->chips[chip_i]->part : "?",
                          ui->chips[chip_i]->pin_count);
+                return 1;
+            }
+            if (kind == 2 && island_i >= 0 && shift) {
+                /* Shift+drag on the island fill: marquee, not move the frame. */
+                ui->box_sel = 1;
+                ui->box_bx0 = ui->box_bx1 = board_mx;
+                ui->box_by0 = ui->box_by1 = board_my;
                 return 1;
             }
             if (kind == 2 && island_i >= 0) {
@@ -969,8 +967,8 @@ int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_
                          island && island->title ? island->title : "ISLAND");
                 return 1;
             }
-            /* Compact empty board: start marquee select. */
-            if (ui->layout_compact) {
+            /* Empty board, or Shift on a miss: start marquee select. */
+            if (ui->layout_compact || shift) {
                 if (!shift) {
                     ui_sel_clear(ui);
                 }

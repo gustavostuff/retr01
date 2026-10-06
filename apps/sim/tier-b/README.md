@@ -31,7 +31,7 @@ Unchanged from Tier A: DOT, Beam X/Y raster and sync, PROM kit image, resistor D
 
 On the bench, power, clocks, sync, the DAC, and the PROM jumpers stay as in Tier A. The sim already ties the same nets. The bring-up delta (`docs/bringup/tier-b-video-lab.md` section 7) is the new work:
 
-- Seat `UPLDC` on the existing boards. Decoupling stays the Tier A set (`C1`-`C7` and `E1`). |
+- Seat `UPLDC` on the existing boards. Decoupling is one 100 nF per IC (`C1` Y2, `C2` UPLDX, `C3` UPLDY, `C4` UPLDC, `C5` U24) plus bulk `E1`. |
 - Beam X pins 14-19 are no longer `INDEX[5:0]` (they are `X5` `X6` `X7` and three unused pins). The six Tier A index jumpers into PROM `A[5:0]` have to move to the Compositor's `INDEX[5:0]`.
 - New jumpers: DOT to Compositor CLK, `HBLANK` and `X5`-`X7` from Beam X, `VBLANK` and `Y5`-`Y7` from Beam Y, Compositor VCC/GND/RES#, `PHI2` to GND, `RWB` to 5 V.
 

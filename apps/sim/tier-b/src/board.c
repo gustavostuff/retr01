@@ -722,7 +722,7 @@ static void spawn_tier_a_passives(R01aBoard *b) {
     int e_seq = 1;
     int r_seq = 1;
     ns_passive_bank_clear(&b->passives);
-    add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 6);
+    add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 5);
     add_passives(&b->passives, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);
     /* DAC R then G then B, then 75 ohm loads, then DOT series. */
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "4.00k", 1);

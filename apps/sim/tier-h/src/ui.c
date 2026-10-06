@@ -68,8 +68,8 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
         return 0;
     }
 
-    /* Compact multi-select: rotate every selected IC / breadboard about pin 1 tip. */
-    if (ui->layout_compact) {
+    /* Multi-select: rotate every selected IC / passive about pin 1 tip. */
+    if (ui_sel_count(ui) > 0) {
         for (i = 0; i < ui->chip_count; i++) {
             R01sEntity *te;
             int tip_x = 0;

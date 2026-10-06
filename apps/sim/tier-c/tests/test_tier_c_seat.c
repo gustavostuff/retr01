@@ -10,7 +10,9 @@ int main(void) {
     expect_true(r01a_avr128db28_s1_entity(&board.mcu_s1) != NULL, "S1 is present");
     expect_true(r01a_as6c62256_entity(&board.field_sram) != NULL, "field SRAM is present");
     expect_true(r01a_sn74hc573_entity(&board.field_latch) != NULL, "field latch is present");
-    expect_true(r01a_board_entity_by_refdes(&board, "C8") != NULL, "S1 decoupling cap");
+    expect_true(r01a_board_entity_by_refdes(&board, "C8") != NULL, "field SRAM decoupling cap");
+    expect_true(r01a_board_entity_by_refdes(&board, "C6") != NULL, "S1 decoupling cap");
+    expect_true(r01a_board_entity_by_refdes(&board, "E1") != NULL, "bulk cap");
     r01a_board_shutdown(&board);
     return test_done("test_tier_c_seat");
 }

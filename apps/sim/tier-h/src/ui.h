@@ -72,8 +72,8 @@ typedef struct R01sUi {
     uint8_t chip_island[R01S_BOARD_MAX_CHIPS];
     int chip_count;
     int selected; /* primary index or -1 (compat / status) */
-    uint8_t chip_sel[R01S_BOARD_MAX_CHIPS]; /* compact multi-select */
-    int box_sel; /* 1 = dragging marquee in compact mode */
+    uint8_t chip_sel[R01S_BOARD_MAX_CHIPS]; /* Shift+click / marquee multi-select */
+    int box_sel; /* 1 = dragging a marquee (compact empty, or Shift on an island) */
     int box_bx0, box_by0, box_bx1, box_by1; /* board-space marquee */
     int sel_drag_ox, sel_drag_oy; /* board mouse at multi-drag start */
     int sel_start_x[R01S_BOARD_MAX_CHIPS];

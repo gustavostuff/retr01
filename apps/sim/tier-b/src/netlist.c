@@ -114,6 +114,44 @@ static NsEntity *ent(R01aBoard *b, const char *ref) {
     return r01a_board_entity_by_refdes(b, ref);
 }
 
+static const char *pin_named_or(NsEntity *e, const char *first, const char *second) {
+    if (e && first && ns_entity_pin_named_const(e, first)) {
+        return first;
+    }
+    return second;
+}
+
+/* One 100 nF at each IC VCC, plus E1 bulk. Spare ceramics were dropped. */
+static const struct {
+    const char *cap;
+    const char *ic;
+} k_bypass[] = {
+    {"C1", "Y2"},
+    {"C2", "UPLDX"},
+    {"C3", "UPLDY"},
+    {"C4", "UPLDC"},
+    {"C5", "U24"},
+};
+
+static void link_bypass(R01aBoard *b) {
+    NsEntity *e1 = ent(b, "E1");
+    NsEntity *rail = ent(b, "Y2");
+    int i;
+    if (e1 && rail) {
+        link_n(rail, "VDD", e1, "+");
+        link_n(rail, "GND", e1, "-");
+    }
+    for (i = 0; i < (int)(sizeof(k_bypass) / sizeof(k_bypass[0])); i++) {
+        NsEntity *cap = ent(b, k_bypass[i].cap);
+        NsEntity *ic = ent(b, k_bypass[i].ic);
+        if (!cap || !ic) {
+            continue;
+        }
+        link_n(cap, "1", ic, pin_named_or(ic, "VCC", "VDD"));
+        link_n(cap, "2", ic, pin_named_or(ic, "GND", "VSS"));
+    }
+}
+
 static void build_auto(R01aBoard *b) {
     NsEntity *y2 = ent(b, "Y2");
     NsEntity *bx = ent(b, "UPLDX");
@@ -177,6 +215,7 @@ static void build_auto(R01aBoard *b) {
                                  ent(b, "R3"), ent(b, "R4"), ent(b, "R5"), ent(b, "R6"),
                                  ent(b, "R7"), ent(b, "R8"), ent(b, "R9"), ent(b, "R10"),
                                  ent(b, "R11"));
+    link_bypass(b);
     ns_pin_netlist_name_net(g_pins, y2, "VDD", "+5V");
     ns_pin_netlist_name_net(g_pins, y2, "GND", "GND");
     g_pins = NULL;
