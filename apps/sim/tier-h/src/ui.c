@@ -101,6 +101,9 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
             } else if (te->visual == R01S_ENTITY_VIS_PASSIVE) {
                 r01s_passive_set_orient((R01sPassive *)(void *)te, r01s_orient_next_cw(te->orient));
                 ui_chip_snap_to_breadboard(ui, i);
+            } else if (te->visual == R01S_ENTITY_VIS_OSC) {
+                ns_osc4legs_set_orient(te, r01s_orient_next_cw(te->orient));
+                ui_chip_snap_to_breadboard(ui, i);
             } else if (te->visual == R01S_ENTITY_VIS_BREADBOARD) {
                 te->orient = r01s_orient_next_cw(te->orient);
                 r01s_breadboard_sync_body((R01sBreadboard *)(void *)te);
@@ -158,6 +161,9 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
             ui_chip_snap_to_breadboard(ui, idx);
         } else if (te->visual == R01S_ENTITY_VIS_PASSIVE) {
             r01s_passive_set_orient((R01sPassive *)(void *)te, r01s_orient_next_cw(te->orient));
+            ui_chip_snap_to_breadboard(ui, idx);
+        } else if (te->visual == R01S_ENTITY_VIS_OSC) {
+            ns_osc4legs_set_orient(te, r01s_orient_next_cw(te->orient));
             ui_chip_snap_to_breadboard(ui, idx);
         } else if (te->visual == R01S_ENTITY_VIS_BREADBOARD) {
             te->orient = r01s_orient_next_cw(te->orient);

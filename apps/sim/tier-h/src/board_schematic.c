@@ -144,7 +144,7 @@ static void tie_gnd(R01sPinNetlist *nl, R01sEntity *pwr, R01sEntity *ic,
   }
 }
 
-/* Visual ratsnest copies this table in air_bypass_vcc (ui_pin_net.c). */
+/* Bypass cap pin 1 to IC VCC, pin 2 to GND. UI stars non-IC rail pins to the 5V/GND symbols. */
 static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
   static const struct {
     const char *cap;
@@ -171,9 +171,17 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
 static void apply_bulk(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   R01sEntity *e1 = passive_entity(board, "E1");
+  R01sEntity *v5 = passive_entity(board, "5V");
+  R01sEntity *gnd = passive_entity(board, "GND");
   if (e1) {
     r01s_pin_netlist_link(nl, e1, "+", pwr, "VDD");
     r01s_pin_netlist_link(nl, e1, "-", pwr, "GND");
+  }
+  if (v5) {
+    r01s_pin_netlist_link(nl, v5, "5V", pwr, "VDD");
+  }
+  if (gnd) {
+    r01s_pin_netlist_link(nl, gnd, "GND", pwr, "GND");
   }
 }
 

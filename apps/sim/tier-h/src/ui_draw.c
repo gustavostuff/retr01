@@ -525,12 +525,17 @@ void ui_chip_body_rgb(const R01sEntity *e, int selected, Uint8 *r, Uint8 *g, Uin
 }
 
 int ui_chip_hidden(const R01sUi *ui, const R01sEntity *e) {
-    (void)ui;
     if (!e) {
         return 1;
     }
-    /* Power / OSC stay in the sim netlist but are not drawn or hit-tested. */
-    return e->visual == R01S_ENTITY_VIS_PWR || e->visual == R01S_ENTITY_VIS_OSC;
+    /* Battery PS1 stays in the netlist. OSC cans stay hidden on Tier H. */
+    if (e->visual == R01S_ENTITY_VIS_PWR) {
+        return 1;
+    }
+    if (e->visual == R01S_ENTITY_VIS_OSC && (!ui || !ui->air_green_only)) {
+        return 1;
+    }
+    return 0;
 }
 
 /* Drawn after chips so title/status stay above packages. */

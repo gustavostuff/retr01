@@ -59,12 +59,22 @@ void pin_level_rgb(R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *p
     }
 }
 
-void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg,
-                     Uint8 *pb) {
-    (void)ui;
-    (void)lvl;
-    (void)dir;
+void ui_chip_pin_rgb(const R01sUi *ui, const R01sEntity *e, int pin_index, Uint8 *pr, Uint8 *pg, Uint8 *pb) {
+    int rail;
     if (!pr || !pg || !pb) {
+        return;
+    }
+    rail = ui_pin_rail_kind(ui, e, pin_index);
+    if (rail == 1) {
+        *pr = R01S_UI_PIN_VCC_R;
+        *pg = R01S_UI_PIN_VCC_G;
+        *pb = R01S_UI_PIN_VCC_B;
+        return;
+    }
+    if (rail == 2) {
+        *pr = R01S_UI_PIN_GND_R;
+        *pg = R01S_UI_PIN_GND_G;
+        *pb = R01S_UI_PIN_GND_B;
         return;
     }
     *pr = R01S_UI_PIN_GRAY_R;
@@ -406,7 +416,7 @@ static void draw_glyph_pins(SDL_Renderer *r, const R01sUi *ui, const R01sEntity 
         if (manual) {
             tint_rgb = NULL;
         } else {
-            ui_chip_pin_rgb(ui, e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+            ui_chip_pin_rgb(ui, e, i, &tint[0], &tint[1], &tint[2]);
             tint_rgb = tint;
         }
         if (side_left) {
@@ -468,18 +478,34 @@ static void draw_pwr_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *
 }
 
 static void draw_osc_glyph(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, int selected) {
-    int x = ui_board_sx(ui, e->board_x);
-    int y = ui_board_sy(ui, e->board_y);
-    int img_w = R01S_UI_OSC_W;
-    int img_h = R01S_UI_OSC_H;
-    int ix = x + (e->body_w - img_w) / 2;
-    int iy = y + (e->body_h - img_h) / 2 - 2;
-    draw_glyph_pins(r, ui, e, e->board_x, e->board_y);
-    fill_rect(r, x, y, e->body_w, e->body_h, 0, 0, 0);
-    if (selected) {
-        draw_rect(r, x, y, e->body_w, e->body_h, 255, 220, 80);
+    int px;
+    int py;
+    int i;
+    if (!e) {
+        return;
     }
-    blit_rgba_scaled(r, ix, iy, R01S_UI_OSC_RGBA, R01S_UI_OSC_W, R01S_UI_OSC_H, 1);
+    if (!ns_osc4legs_chip_tip(e, 14, &px, &py)) {
+        px = e->board_x;
+        py = e->board_y;
+    }
+    ns_passive_draw_kind(r, NS_PASSIVE_OSC4LEGS, e->orient, ui_board_sx(ui, px), ui_board_sy(ui, py), selected);
+    for (i = 0; i < e->pin_count; i++) {
+        int tbx;
+        int tby;
+        Uint8 tint[3];
+        int num = e->pins[i].number;
+        int rot;
+        int pin_hover;
+        if (!ns_osc4legs_chip_tip(e, num, &tbx, &tby)) {
+            continue;
+        }
+        ui_chip_pin_rgb(ui, e, i, &tint[0], &tint[1], &tint[2]);
+        rot = ((num == 14 || num == 8) ? 0 : 2);
+        rot = (rot + (int)e->orient) & 3;
+        pin_hover = ui && ui->hover_pin == i && ui->hover_chip >= 0 && ui->hover_chip < ui->chip_count &&
+                    ui->chips[ui->hover_chip] == e;
+        blit_pin_rot(r, ui_board_sx(ui, tbx), ui_board_sy(ui, tby), rot, tint, pin_hover);
+    }
 }
 
 static void draw_button_glyph(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
@@ -591,6 +617,9 @@ int ui_chip_pin_tip_board(const R01sEntity *e, int pin_num, int *tbx, int *tby) 
     }
     if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
         return r01s_passive_tip_board((const R01sPassive *)(const void *)e, pin_num, tbx, tby);
+    }
+    if (e->visual == R01S_ENTITY_VIS_OSC) {
+        return ns_osc4legs_chip_tip(e, pin_num, tbx, tby);
     }
     if (e->visual == R01S_ENTITY_VIS_PIN_HDR) {
         return ns_pin_header_pin_tip_board(e, pin_num, tbx, tby);
@@ -716,7 +745,7 @@ static void draw_chip(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *e, in
         if (manual) {
             tint_rgb = NULL;
         } else {
-            ui_chip_pin_rgb(ui, e->pins[i].level, e->pins[i].dir, &tint[0], &tint[1], &tint[2]);
+            ui_chip_pin_rgb(ui, e, i, &tint[0], &tint[1], &tint[2]);
             tint_rgb = tint;
             pivot = R01S_UI_PIN_PIVOT_NONE;
         }
@@ -876,13 +905,9 @@ int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
         return glyph_pins_hit(ui, e, lx, ly);
     }
     if (e->visual == R01S_ENTITY_VIS_OSC) {
-        int ix = x + (e->body_w - R01S_UI_OSC_W) / 2;
-        int iy = y + (e->body_h - R01S_UI_OSC_H) / 2 - 2;
-        if (filled_at(lx, ly, x, y, e->body_w, e->body_h) ||
-            filled_at(lx, ly, ix, iy, R01S_UI_OSC_W, R01S_UI_OSC_H)) {
-            return 1;
-        }
-        return glyph_pins_hit(ui, e, lx, ly);
+        int bx = lx - R01S_UI_VIEW_X + ui->pan_x;
+        int by = ly - R01S_UI_VIEW_Y + ui->pan_y;
+        return ns_osc4legs_hit(e, bx, by);
     }
     if (e->visual == R01S_ENTITY_VIS_DISPLAY && e->part && strcmp(e->part, "SCREEN_SINK") == 0) {
         const R01sVideoSink *sink = (const R01sVideoSink *)(e->impl ? e->impl : (void *)e);

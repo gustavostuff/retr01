@@ -6,6 +6,7 @@
 #include "retr01_sim/board_netlist.h"
 #include "retr01_sim/bus.h"
 #include "breadboard.h"
+#include "passive.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +24,82 @@ static R01sPinNetlist *ui_board_pin_net(const R01sUi *ui) {
     }
     board = r01s_board_from_group(ui->group);
     return board ? &board->pin_netlist : NULL;
+}
+
+static int pin_name_is_vcc(const char *n) {
+    return n && (strcmp(n, "VCC") == 0 || strcmp(n, "VDD") == 0 || strcmp(n, "APOS") == 0 ||
+                 strcmp(n, "DPOS") == 0 || strcmp(n, "+5V") == 0 || strcmp(n, "5V") == 0);
+}
+
+static int pin_name_is_gnd_rail(const char *n) {
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "VSS") == 0 || strcmp(n, "AGND") == 0 ||
+                 strcmp(n, "DGND") == 0);
+}
+
+static NsPassiveKind air_passive_kind(const R01sEntity *e) {
+    if (!e || e->visual != R01S_ENTITY_VIS_PASSIVE) {
+        return (NsPassiveKind)-1;
+    }
+    return ((const NsPassive *)(const void *)e)->kind;
+}
+
+/* 1 = +5V net, 2 = GND net, 0 = other. Named nets win over pin names (RES# on +5V is red). */
+int ui_pin_rail_kind(const R01sUi *ui, const R01sEntity *e, int pin_index) {
+    R01sPinNetlist *nl;
+    int i;
+    int slot = -1;
+    int root;
+    const char *pname;
+
+    if (!e || pin_index < 0 || pin_index >= e->pin_count) {
+        return 0;
+    }
+    pname = e->pins[pin_index].name;
+    nl = ui_board_pin_net(ui);
+    if (nl) {
+        for (i = 0; i < nl->slot_count; i++) {
+            if (nl->slots[i].entity == e && nl->slots[i].pin_index == pin_index) {
+                slot = i;
+                break;
+            }
+        }
+        if (slot >= 0) {
+            root = r01s_pin_netlist_root(nl, slot);
+            for (i = 0; i < nl->slot_count; i++) {
+                if (r01s_pin_netlist_root(nl, i) != root) {
+                    continue;
+                }
+                if (nl->net_name[i][0]) {
+                    if (strcmp(nl->net_name[i], "+5V") == 0 || strcmp(nl->net_name[i], "5V") == 0) {
+                        return 1;
+                    }
+                    if (strcmp(nl->net_name[i], "GND") == 0) {
+                        return 2;
+                    }
+                }
+            }
+            for (i = 0; i < nl->slot_count; i++) {
+                NsPassiveKind kind;
+                if (r01s_pin_netlist_root(nl, i) != root) {
+                    continue;
+                }
+                kind = air_passive_kind(nl->slots[i].entity);
+                if (kind == NS_PASSIVE_5V) {
+                    return 1;
+                }
+                if (kind == NS_PASSIVE_GND) {
+                    return 2;
+                }
+            }
+        }
+    }
+    if (pin_name_is_vcc(pname)) {
+        return 1;
+    }
+    if (pin_name_is_gnd_rail(pname)) {
+        return 2;
+    }
+    return 0;
 }
 
 /* Manual mode: schematic peer only "lives" when both tips sit on the same BB strip. */
@@ -603,7 +680,7 @@ static void ui_draw_pin_wire_pair(SDL_Renderer *r, const R01sUi *ui, int chip_i,
     if (!ui_chip_pin_screen_center(ui, peer, peer_pin, &x1, &y1)) {
         return;
     }
-    ui_chip_pin_rgb(ui, src->pins[pin_i].level, src->pins[pin_i].dir, &cr, &cg, &cb);
+    ui_chip_pin_rgb(ui, src, pin_i, &cr, &cg, &cb);
     ui_draw_pin_wire(r, src, x0, y0, peer, x1, y1, cr, cg, cb);
 }
 
@@ -941,34 +1018,14 @@ static int air_collect_net(const R01sUi *ui, const R01sPinNetlist *nl, int root,
     return n;
 }
 
-/* Decoupling cap pin 1 always draws to this IC supply. Keep in step with apply_bypass. */
-static int air_bypass_vcc(const char *cap, const char **ic, const char **vcc) {
-    static const struct {
-        const char *cap;
-        const char *ic;
-        const char *vcc;
-    } rows[] = {
-        {"C1", "U1", "VDD"},     {"C2", "U3", "VCC"},     {"C3", "U6", "VCC"},
-        {"C4", "U41", "VCC"},    {"C5", "UM", "VDD"},     {"C6", "US1", "VDD"},
-        {"C7", "US2", "VDD"},    {"C8", "UPLDX", "VCC"},  {"C9", "UPLDY", "VCC"},
-        {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},   {"C12", "U7B", "VCC"},
-        {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"},  {"C15", "U574", "VCC"},
-        {"C16", "U24", "VCC"},   {"C17", "U130", "VDD"},  {"C18", "U725", "APOS"},
-        {"C19", "U04", "VCC"},
-        {"C20", "U74", "VCC"},
-    };
-    int i;
-    if (!cap || !ic || !vcc) {
-        return 0;
-    }
-    for (i = 0; i < (int)(sizeof(rows) / sizeof(rows[0])); i++) {
-        if (strcmp(cap, rows[i].cap) == 0) {
-            *ic = rows[i].ic;
-            *vcc = rows[i].vcc;
-            return 1;
-        }
-    }
-    return 0;
+/* IC / canned OSC / hidden battery: rail pins use color, not air wires. */
+static int air_is_ic_like(const R01sEntity *e) {
+    return e && (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_OSC ||
+                 e->visual == R01S_ENTITY_VIS_PWR);
+}
+
+static int air_is_rail_symbol(const R01sEntity *e, NsPassiveKind kind) {
+    return air_passive_kind(e) == kind;
 }
 
 static void air_paint_hop(SDL_Renderer *r, const R01sEntity *only, const R01sAirStyle *style,
@@ -992,7 +1049,8 @@ static void air_paint_hop(SDL_Renderer *r, const R01sEntity *only, const R01sAir
     ui_draw_air_segment(r, sx[a], sy[a], sx[b], sy[b], cr, cg, cb, alpha);
 }
 
-static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *only) {
+static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *only,
+                             const R01sEntity *rail_hover) {
     R01sPinNetlist *nl = ui_board_pin_net(ui);
     unsigned char seen[NS_PIN_NETLIST_MAX];
     int i;
@@ -1028,9 +1086,46 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
         if (ui->air_green_only && style.layer != R01S_AIR_LAYER_GND) {
             style.layer = R01S_AIR_LAYER_NOISY;
         }
-        /* GND is one net in the pin list. The four-layer pour covers it, so it is not drawn. */
-        if (style.layer == R01S_AIR_LAYER_GND) {
-            continue;
+        {
+            int mi;
+            int rail = 0;
+            if (style.pwr) {
+                rail = 1;
+            } else if (style.layer == R01S_AIR_LAYER_GND) {
+                rail = 2;
+            } else {
+                for (mi = 0; mi < n; mi++) {
+                    if (air_is_rail_symbol(own[mi], NS_PASSIVE_5V)) {
+                        rail = 1;
+                    } else if (air_is_rail_symbol(own[mi], NS_PASSIVE_GND)) {
+                        rail = 2;
+                    }
+                }
+            }
+            /* +5V and GND: star to the single 5V / GND symbol, only while that part is hovered. */
+            if (rail) {
+                NsPassiveKind want = (rail == 1) ? NS_PASSIVE_5V : NS_PASSIVE_GND;
+                int hub = -1;
+                if (!rail_hover) {
+                    continue;
+                }
+                for (mi = 0; mi < n; mi++) {
+                    if (air_is_rail_symbol(own[mi], want)) {
+                        hub = mi;
+                        break;
+                    }
+                }
+                if (hub < 0) {
+                    continue;
+                }
+                for (mi = 0; mi < n; mi++) {
+                    if (mi == hub || air_is_ic_like(own[mi]) || air_is_rail_symbol(own[mi], want)) {
+                        continue;
+                    }
+                    air_paint_hop(r, rail_hover, &style, pts, ends, own, sx, sy, hub, mi);
+                }
+                continue;
+            }
         }
         if (ui->air_wires == R01S_AIR_VIEW_L1 && style.layer != R01S_AIR_LAYER_NOISY) {
             continue;
@@ -1038,76 +1133,30 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
         if (ui->air_wires == R01S_AIR_VIEW_L4 && style.layer != R01S_AIR_LAYER_QUIET) {
             continue;
         }
-        {
-            int use[R01S_AIR_PT_MAX];
-            int map[R01S_AIR_PT_MAX];
-            R01sAirPt mpts[R01S_AIR_PT_MAX];
-            int fa[32];
-            int fb[32];
-            int nf = 0;
-            int m = 0;
-            int mi;
-
-            for (mi = 0; mi < n; mi++) {
-                use[mi] = 1;
-            }
-            /* Hold each bypass cap out of the +5V tree and draw it to its own IC. */
-            if (style.pwr) {
-                for (mi = 0; mi < n; mi++) {
-                    const char *ic = NULL;
-                    const char *vcc = NULL;
-                    int ib;
-                    if (!air_bypass_vcc(ends[mi].refdes, &ic, &vcc) || strcmp(ends[mi].pin, "1") != 0) {
-                        continue;
-                    }
-                    use[mi] = 0;
-                    for (ib = 0; ib < n; ib++) {
-                        if (strcmp(ends[ib].refdes, ic) == 0 && strcmp(ends[ib].pin, vcc) == 0) {
-                            if (nf < 32) {
-                                fa[nf] = mi;
-                                fb[nf] = ib;
-                                nf++;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            for (mi = 0; mi < n; mi++) {
-                if (!use[mi]) {
-                    continue;
-                }
-                mpts[m] = pts[mi];
-                map[m] = mi;
-                m++;
-            }
-            ns = (m >= 2) ? r01s_air_mst(mpts, m, seg, m - 1) : 0;
-            for (k = 0; k < ns; k++) {
-                air_paint_hop(r, only, &style, pts, ends, own, sx, sy, map[seg[k].a], map[seg[k].b]);
-            }
-            for (k = 0; k < nf; k++) {
-                air_paint_hop(r, only, &style, pts, ends, own, sx, sy, fa[k], fb[k]);
-            }
+        ns = (n >= 2) ? r01s_air_mst(pts, n, seg, n - 1) : 0;
+        for (k = 0; k < ns; k++) {
+            air_paint_hop(r, only, &style, pts, ends, own, sx, sy, seg[k].a, seg[k].b);
         }
     }
 }
 
 void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui) {
     const R01sEntity *only = NULL;
+    const R01sEntity *rail_hover = NULL;
     int chip_i = -1;
 
     if (!ui || !r) {
         return;
     }
-    if (ui->air_wires == R01S_AIR_VIEW_NONE) {
-        if (hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL) != 1 || chip_i < 0 ||
-            chip_i >= ui->chip_count) {
-            return;
-        }
-        only = ui->chips[chip_i];
-        if (!only) {
-            return;
-        }
+    if (hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
+        chip_i < ui->chip_count) {
+        rail_hover = ui->chips[chip_i];
     }
-    ui_draw_air_trees(r, ui, only);
+    if (ui->air_wires == R01S_AIR_VIEW_NONE) {
+        if (!rail_hover) {
+            return;
+        }
+        only = rail_hover;
+    }
+    ui_draw_air_trees(r, ui, only, rail_hover);
 }

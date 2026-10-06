@@ -41,6 +41,8 @@
     {"id": "C4", "island": 0, "rx": 138, "ry": 176, "orient": "0"},
     {"id": "C5", "island": 0, "rx": 80, "ry": 193, "orient": "0"},
     {"id": "E1", "island": 0, "rx": 75, "ry": 140, "orient": "0"},
+    {"id": "5V", "island": 0, "rx": 0, "ry": 0, "orient": "0"},
+    {"id": "GND", "island": 0, "rx": 0, "ry": 0, "orient": "0"},
     {"id": "R12", "island": 0, "rx": 15, "ry": 89, "orient": "90"},
     {"id": "J2", "island": 1, "rx": 15, "ry": 94, "orient": "0"},
     {"id": "SCR1", "island": 1, "rx": 86, "ry": 18, "orient": "0"},

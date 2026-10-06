@@ -150,6 +150,12 @@ static NsPassiveKind kind_parse(const char *s) {
     if (strcmp(s, "XTAL") == 0) {
         return NS_PASSIVE_XTAL;
     }
+    if (strcmp(s, "5V") == 0) {
+        return NS_PASSIVE_5V;
+    }
+    if (strcmp(s, "GROUND") == 0) {
+        return NS_PASSIVE_GND;
+    }
     return (NsPassiveKind)-1;
 }
 

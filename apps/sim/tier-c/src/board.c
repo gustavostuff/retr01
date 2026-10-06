@@ -797,6 +797,8 @@ static void spawn_tier_a_passives(R01aBoard *b) {
     ns_passive_bank_clear(&b->passives);
     add_passives(&b->passives, NS_PASSIVE_CCAP, "C", &c_seq, "100nF", 8);
     add_passives(&b->passives, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);
+    ns_passive_bank_add(&b->passives, NS_PASSIVE_5V, "5V", "");
+    ns_passive_bank_add(&b->passives, NS_PASSIVE_GND, "GND", "");
     /* DAC R then G then B, then 75 ohm loads, then DOT series. */
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "4.00k", 1);
     add_passives(&b->passives, NS_PASSIVE_R, "R", &r_seq, "2.00k", 1);
@@ -1128,6 +1130,10 @@ static const char *passive_ref_prefix(NsPassiveKind kind) {
         return "Y";
     case NS_PASSIVE_D:
         return "D";
+    case NS_PASSIVE_5V:
+        return "V";
+    case NS_PASSIVE_GND:
+        return "G";
     default:
         return "P";
     }

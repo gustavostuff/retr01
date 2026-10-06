@@ -141,6 +141,16 @@ static void link_bypass(R01aBoard *b) {
         link_n(rail, "VDD", e1, "+");
         link_n(rail, "GND", e1, "-");
     }
+    {
+        NsEntity *v5 = ent(b, "5V");
+        NsEntity *gndp = ent(b, "GND");
+        if (v5 && rail) {
+            link_n(rail, "VDD", v5, "5V");
+        }
+        if (gndp && rail) {
+            link_n(rail, "GND", gndp, "GND");
+        }
+    }
     for (i = 0; i < (int)(sizeof(k_bypass) / sizeof(k_bypass[0])); i++) {
         NsEntity *cap = ent(b, k_bypass[i].cap);
         NsEntity *ic = ent(b, k_bypass[i].ic);

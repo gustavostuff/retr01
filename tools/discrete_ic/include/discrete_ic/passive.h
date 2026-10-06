@@ -6,13 +6,14 @@
 #include <SDL.h>
 
 /*
- * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D). Canvas sprites + pin netlist nodes.
+ * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D / 5V / GND). Canvas sprites + pin netlist nodes.
  * Bus settle / analog behavior is not modeled yet (null entity vtable).
  * Pin pixels live in tools/discrete_ic/assets/passives/pin_map.json.
  * The first pin is the rotation pivot. Air wires end on those pixels.
  * OSC4LEGS (DIP-14 metal can): pivot = pin 14 VDD, then pin 8 OUT, pin 1 OE#, pin 7 GND.
  * Polarized parts mark the second pin negative: ECAP pin 1 is +, pin 2 is -.
  * Diode pin 1 is A (pivot), pin 2 is K.
+ * One 5V symbol and one GND symbol per board; their pins sit on the +5V / GND nets.
  */
 
 typedef enum NsPassiveKind {
@@ -23,6 +24,8 @@ typedef enum NsPassiveKind {
     NS_PASSIVE_OSC4LEGS,
     NS_PASSIVE_D,
     NS_PASSIVE_XTAL,
+    NS_PASSIVE_5V,
+    NS_PASSIVE_GND,
     NS_PASSIVE_KIND_COUNT
 } NsPassiveKind;
 

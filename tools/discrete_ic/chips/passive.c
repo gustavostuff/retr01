@@ -42,6 +42,10 @@ static const PassiveSprite k_sprites[NS_PASSIVE_KIND_COUNT] = {
      {{1, 0, 2, "A"}, {2, 15, 2, "K"}}},
     {NS_UI_PASSIVE_OSC_RGBA, NS_UI_PASSIVE_OSC_W, NS_UI_PASSIVE_OSC_H, 4, 11, 2,
      {{1, 4, 11, "1"}, {2, 9, 11, "2"}}},
+    {NS_UI_PASSIVE_5V_RGBA, NS_UI_PASSIVE_5V_W, NS_UI_PASSIVE_5V_H, 2, 1, 1,
+     {{1, 2, 1, "5V"}}},
+    {NS_UI_PASSIVE_GND_RGBA, NS_UI_PASSIVE_GND_W, NS_UI_PASSIVE_GND_H, 7, 4, 1,
+     {{1, 7, 4, "GND"}}},
 };
 
 static const NsEntityVTable k_passive_vt = {NULL, NULL, NULL, NULL};
@@ -318,6 +322,10 @@ const char *ns_passive_kind_name(NsPassiveKind kind) {
         return "D";
     case NS_PASSIVE_XTAL:
         return "XTAL";
+    case NS_PASSIVE_5V:
+        return "5V";
+    case NS_PASSIVE_GND:
+        return "GROUND";
     default:
         return "?";
     }
@@ -534,9 +542,10 @@ NsPassive *ns_passive_bank_add(NsPassiveBank *bank, NsPassiveKind kind, const ch
         }
     } else {
         const PassiveSprite *sp = sprite_for(kind);
+        NsPinDir dir = (kind == NS_PASSIVE_5V || kind == NS_PASSIVE_GND) ? NS_PIN_PWR : NS_PIN_IO;
         int i;
         for (i = 0; i < sp->pin_count; i++) {
-            ns_entity_add_pin(&p->base, sp->pins[i].number, sp->pins[i].name, NS_PIN_IO);
+            ns_entity_add_pin(&p->base, sp->pins[i].number, sp->pins[i].name, dir);
         }
     }
     ns_passive_set_pivot(p, 0, 0);
@@ -750,7 +759,7 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     }
     ns_passive_bank_clear(bank);
 
-    /* Ordered: XTAL, CCAP, ECAP, R. No diodes on this BOM. */
+    /* Ordered: XTAL, CCAP, ECAP, rail symbols, R. No diodes on this BOM. */
     add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "8.000MHz", 1);
     add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "21.47727MHz", 1);
     add_n(bank, NS_PASSIVE_XTAL, "Y", &y_seq, "3.579545MHz", 1);
@@ -761,6 +770,8 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     add_n(bank, NS_PASSIVE_CCAP, "C", &c_seq, "22pF", 6);
 
     add_n(bank, NS_PASSIVE_ECAP, "E", &e_seq, "220uF", 1);
+    ns_passive_bank_add(bank, NS_PASSIVE_5V, "5V", "");
+    ns_passive_bank_add(bank, NS_PASSIVE_GND, "GND", "");
 
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "4.00k", 2);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "2.00k", 3);

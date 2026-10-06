@@ -78,7 +78,7 @@ W65C02S, AVR128DB28, AS6C62256, 74HC157 / 573 / 574, SST39SF040, 24C64, ATtiny85
 
 ## Sim
 
-The window is the Tier H board view: two islands, green air wires, no protoboard. **DIGITAL** holds clocks, PLDs, the color PROM, decoupling, the DOT series resistor, and the feedback resistor. **ANALOG** holds the DAC ladder (`R1`-`R11`), the RGBS header, and the screen. Power is one `+5V` net. GND air wires are never drawn. A hop past the Tier H length limit blinks red and black.
+The window is the Tier H board view: two islands, green air wires, no protoboard. **DIGITAL** holds clocks, PLDs, the color PROM, decoupling, the DOT series resistor, and the feedback resistor. **ANALOG** holds the DAC ladder (`R1`-`R11`), the RGBS header, and the screen. Power is one `+5V` net. IC pins on `+5V` are red and GND pins are black. Air wires to the single `5V` and `GND` symbols appear when that part is hovered. A hop past the Tier H length limit blinks red and black.
 
 Placement, pan, zoom, and the air-wire view are written to `island_layout.json` on quit.
 

@@ -39,7 +39,7 @@ int main(void) {
     memset(&board, 0, sizeof(board));
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
-    expect_true(board.passives.count == 62, "passive BOM count");
+    expect_true(board.passives.count == 64, "passive BOM count");
     nl = &board.pin_netlist;
     passive_pins = passive_slots(&board);
     expect_true(passive_pins >= 122, "passive pins registered in netlist");
@@ -58,6 +58,12 @@ int main(void) {
                 "C1 bypass to U1 VDD");
     expect_true(r01s_pin_netlist_same_net(nl, c1, "2", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "C1 bypass to GND");
+    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "5V"), "5V",
+                                          r01s_pwr5v_entity(&board.pwr), "VDD"),
+                "5V symbol on +5V");
+    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "GND"), "GND",
+                                          r01s_pwr5v_entity(&board.pwr), "GND"),
+                "GND symbol on GND");
     expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "R12"), "2",
                                           r01s_w65c02s_entity(&board.cpu), "PHI2"),
                 "R12 series to CPU PHI2");

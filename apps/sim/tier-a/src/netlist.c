@@ -173,6 +173,12 @@ static void build_auto(R01aBoard *b) {
     if (e1) {
         link_n(u04, "VCC", e1, "+");
     }
+    {
+        NsEntity *v5 = ent(b, "5V");
+        if (v5) {
+            link_n(u04, "VCC", v5, "5V");
+        }
+    }
     for (i = 0; i < R01A_BYPASS_N; i++) {
         NsEntity *cap = ent(b, r01a_bypass_pairs[i].cap);
         NsEntity *ic = ent(b, r01a_bypass_pairs[i].ic);
@@ -196,6 +202,12 @@ static void build_auto(R01aBoard *b) {
     link_n(u04, "GND", u04, "6A");
     if (e1) {
         link_n(u04, "GND", e1, "-");
+    }
+    {
+        NsEntity *gndp = ent(b, "GND");
+        if (gndp) {
+            link_n(u04, "GND", gndp, "GND");
+        }
     }
     for (i = 0; i < R01A_BYPASS_N; i++) {
         NsEntity *cap = ent(b, r01a_bypass_pairs[i].cap);

@@ -31,6 +31,12 @@ typedef struct R01sBoard R01sBoard;
 #define R01S_UI_PIN_GRAY_R 188
 #define R01S_UI_PIN_GRAY_G 186
 #define R01S_UI_PIN_GRAY_B 176
+#define R01S_UI_PIN_VCC_R 210
+#define R01S_UI_PIN_VCC_G 48
+#define R01S_UI_PIN_VCC_B 48
+#define R01S_UI_PIN_GND_R 18
+#define R01S_UI_PIN_GND_G 18
+#define R01S_UI_PIN_GND_B 18
 
 #define R01S_UI_STATUS_ROW_H 16
 #define R01S_UI_TOOLTIP_DELAY_MS 400
@@ -152,7 +158,8 @@ void ui_tip_reset(R01sUi *ui, int mx, int my);
 void ui_chip_dip_pin_pos(const R01sEntity *e, int pin_num, int *along, int *side_pin1);
 int ui_chip_pin_tip_board(const R01sEntity *e, int pin_num, int *tbx, int *tby);
 int ui_chip_pin_screen_center(const R01sUi *ui, const R01sEntity *e, int pin_index, int *sx, int *sy);
-void ui_chip_pin_rgb(const R01sUi *ui, R01sLevel lvl, R01sPinDir dir, Uint8 *pr, Uint8 *pg, Uint8 *pb);
+void ui_chip_pin_rgb(const R01sUi *ui, const R01sEntity *e, int pin_index, Uint8 *pr, Uint8 *pg, Uint8 *pb);
+int ui_pin_rail_kind(const R01sUi *ui, const R01sEntity *e, int pin_index);
 /* Translate IC so as many package pin tips as possible land on breadboard holes. */
 int ui_chip_snap_to_breadboard(R01sUi *ui, int chip_i);
 void ui_sel_snap_to_breadboard(R01sUi *ui);
