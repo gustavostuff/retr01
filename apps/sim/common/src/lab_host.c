@@ -196,6 +196,9 @@ static void present(SDL_Renderer *ren, SDL_Texture *target, SDL_Window *win, int
     SDL_RenderClear(ren);
     SDL_RenderCopy(ren, target, NULL, &dst);
     SDL_RenderPresent(ren);
+    if (!(SDL_GetWindowFlags(win) & SDL_WINDOW_SHOWN)) {
+        SDL_ShowWindow(win);
+    }
 }
 
 static void sim_frame(struct R01aBoard *board) {
@@ -263,9 +266,33 @@ int r01a_ui_run(struct R01aBoard *board) {
     snprintf(ui.status, sizeof(ui.status),
              "SPACE wires: all, hidden. Hover a part when hidden. Ctrl+wheel zoom. P pause.");
 
+    group = r01a_lab_group(board);
+    r01s_ui_bind_group(&ui, group);
+    ui.pin_net = r01a_lab_pins(board);
+    layout_two_islands(r01a_lab_builder(board));
+    mount_chips(&ui, r01a_lab_builder(board));
+    if (r01s_ui_layout_load(&ui) != 0) {
+        ui.layout_compact = 0;
+        ui.floor_on = 0;
+    }
+    ui.prefer_islands = 1;
+    ui.air_green_only = 1;
+    ui.layout_compact = 0;
+    ui.floor_on = 0;
+    if (ui.air_wires != R01S_AIR_VIEW_NONE) {
+        ui.air_wires = R01S_AIR_VIEW_ALL;
+    }
+    /* Ctrl+1 / Ctrl+2 window scale. Size the hidden window once; do not resize after map. */
+    if (ui.present_scale == 1 || ui.present_scale == 2) {
+        scale = ui.present_scale;
+    } else {
+        scale = 2;
+        ui.present_scale = 2;
+    }
+
     win = SDL_CreateWindow(R01A_LAB_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                            R01S_LOGIC_W * scale, R01S_LOGIC_H * scale,
-                           SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+                           SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
     if (!win) {
         fprintf(stderr, "window: %s\n", SDL_GetError());
         r01s_ui_shutdown(&ui);
@@ -293,27 +320,6 @@ int r01a_ui_run(struct R01aBoard *board) {
         return 1;
     }
     SDL_SetTextureScaleMode(target, SDL_ScaleModeNearest);
-
-    group = r01a_lab_group(board);
-    r01s_ui_bind_group(&ui, group);
-    ui.pin_net = r01a_lab_pins(board);
-    layout_two_islands(r01a_lab_builder(board));
-    mount_chips(&ui, r01a_lab_builder(board));
-    if (r01s_ui_layout_load(&ui) != 0) {
-        ui.layout_compact = 0;
-        ui.floor_on = 0;
-    }
-    ui.prefer_islands = 1;
-    ui.air_green_only = 1;
-    ui.layout_compact = 0;
-    ui.floor_on = 0;
-    if (ui.air_wires != R01S_AIR_VIEW_NONE) {
-        ui.air_wires = R01S_AIR_VIEW_ALL;
-    }
-    if (ui.present_scale >= 1 && ui.present_scale <= R01S_ZOOM_MAX) {
-        scale = ui.present_scale;
-        SDL_SetWindowSize(win, R01S_LOGIC_W * scale, R01S_LOGIC_H * scale);
-    }
 
     while (!quit) {
         SDL_Event ev;
@@ -381,9 +387,8 @@ int r01a_ui_run(struct R01aBoard *board) {
         r01s_ui_draw(&ui, ren);
         SDL_SetRenderTarget(ren, NULL);
         present(ren, target, win, &scale);
-        if (ui.present_scale < 1) {
-            ui.present_scale = scale;
-        } else if (scale != ui.present_scale) {
+        if ((SDL_GetWindowFlags(win) & SDL_WINDOW_SHOWN) && (scale == 1 || scale == 2) &&
+            scale != ui.present_scale) {
             ui.present_scale = scale;
             ui.layout_dirty = 1;
         }
