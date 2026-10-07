@@ -1461,8 +1461,10 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
 
     draw_wave_monitor(r, ui);
 
-    draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);
-    draw_controller_overlay(r, 1, &ui->gamepad[1], ui->input_mode);
+    if (r01s_board_from_group(ui->group)) {
+        draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);
+        draw_controller_overlay(r, 1, &ui->gamepad[1], ui->input_mode);
+    }
 
     if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {
         const char *item = "ROTATE 90 CW";
