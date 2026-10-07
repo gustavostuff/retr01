@@ -72,6 +72,7 @@ Script behavior:
 - Custom footprints live in-repo at `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty`. **`export_netlist.sh` copies** that tree into `apps/sim/tier-h/kicad/main-pcb/v_01/library/Retr01_Lib.pretty` (no symlinks). Both `v_01.kicad_pro` and `v_02.kicad_pro` live in that folder, so `${KIPRJMOD}` resolves. Re-import the netlist into **`v_02.kicad_pcb`** after export or KiCad may substitute stock footprints and drop **J3/J4** TRS / the second RCA.
 - Skips **SCR1** (sim LCD sink) and the UI **5V** / **GND** rail symbols. **PS1** sim PMIC pins remap to **J1**
 - Unused footprint pads (arcade headers, **U725**, TRS NC pads, crystal load pins, etc.) tie to net **`NC`** so Pcbnew netlist import does not warn on missing symbol pins
+- Netlist nodes carry datasheet pin names (`pinfunction`) and KiCad pintypes. Package **VCC** / **GND** pads are `power_in`. **U74** PRE# / CLR# use net `U74_PRE_CLR#` (strapped to VCC in `DIP-14_W7.62mm_74HC74`). Spare **U04** inputs use net `U04_SPARE_IN` (strapped to GND in `DIP-14_W7.62mm_74HCU04`).
 
 KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual experiment. Symbols and footprints require replacement and reconciliation against the schematic source of truth.
 

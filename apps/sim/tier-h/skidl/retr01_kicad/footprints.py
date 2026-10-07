@@ -12,6 +12,8 @@ DIP20 = f"{_R}:DIP-20_W7.62mm"
 DIP16 = f"{_R}:DIP-16_W7.62mm"
 SOIC16 = f"{_R}:SOIC-16_3.9x9.9mm_P1.27mm"
 DIP14 = f"{_R}:DIP-14_W7.62mm"
+DIP14_74HC74 = f"{_R}:DIP-14_W7.62mm_74HC74"
+DIP14_74HCU04 = f"{_R}:DIP-14_W7.62mm_74HCU04"
 DIP8 = f"{_R}:DIP-8_W7.62mm"
 
 C_CER = f"{_R}:C_Disc_D5.0mm_W2.5mm_P5.00mm"

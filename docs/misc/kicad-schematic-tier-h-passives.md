@@ -99,7 +99,7 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 | U04 pin 9 (4A) | U04 pin 6 (3Y) |
 | U04 pin 8 (4Y) | **R12** pin 1 (PHI2 to U1) |
 
-Unused U04 inputs pin 11 (5A) and pin 13 (6A) tie to GND.
+Unused U04 inputs pin 11 (5A) and pin 13 (6A) sit on `U04_SPARE_IN`, strapped to GND in the U04 footprint.
 
 ### Y3 (3.579545 MHz, AD724 FSC)
 

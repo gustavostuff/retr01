@@ -41,7 +41,7 @@ Clock inverter. Bypass **C19** at pin 14.
 | 3 to 4 | DOT buffer | U74 clock input |
 | 5 to 6 | PHI2 Pierce | Y1 |
 | 9 to 8 | PHI2 buffer | **PHI2** net (then R12 to CPU) |
-| 11,13 | spare inputs | `GND` |
+| 11,13 | spare inputs | `U04_SPARE_IN`, strapped to GND in the U04 footprint |
 | 10,12 | spare outs | NC |
 
 ---
@@ -52,9 +52,11 @@ DOT divider. Bypass **C20** at pin 14.
 
 | Stage | Pins | Net |
 |-------|------|-----|
+| VCC | 14 | `+5V` and **C20** |
+| GND | 7 | `GND` |
 | FF1 | CLK=3, Q=5, /Q=6 into D=2 | 21 MHz to 10.7 MHz |
 | FF2 | CLK=11, Q=9, /Q=8 into D=12 | **DOT** (about 5.37 MHz) |
-| PRE#/CLR# | 1,4,10,13 | `+5V` |
+| PRE# / CLR# | 1, 4, 10, 13 | `U74_PRE_CLR#`, strapped to VCC in the U74 footprint |
 
 DOT leaves through **R13** 33 ohm toward Beam X ([ics.md](ics.md) UPLDX).
 

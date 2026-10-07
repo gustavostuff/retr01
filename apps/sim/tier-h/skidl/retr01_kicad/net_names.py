@@ -52,6 +52,13 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U1", "39"): "CPU_PHI2O",
     ("U1", "40"): "CPU_RES#",
 
+    ("U74", "1"): "U74_PRE_CLR#",
+    ("U74", "4"): "U74_PRE_CLR#",
+    ("U74", "10"): "U74_PRE_CLR#",
+    ("U74", "13"): "U74_PRE_CLR#",
+    ("U04", "11"): "U04_SPARE_IN",
+    ("U04", "13"): "U04_SPARE_IN",
+
     # Cartridge edge connector (J36) — interleaved A/B (mobo_io + EDAC footprint)
     ("J36", "5"): "CART_SDA",
     ("J36", "6"): "CART_SCL",
@@ -221,6 +228,8 @@ _PRESERVED_NETS = frozenset(
         "HSYNC",
         "VSYNC",
         "PHI2",
+        "U74_PRE_CLR#",
+        "U04_SPARE_IN",
     }
 )
 

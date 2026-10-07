@@ -12,11 +12,13 @@ apply_pinmap_extras()
 
 try:
     from skidl import KICAD, Part, Pin, SKIDL, lib_search_paths
+    from skidl.pin import pin_types
 except ImportError:  # pragma: no cover
     KICAD = None  # type: ignore
     Part = None  # type: ignore
     Pin = None  # type: ignore
     SKIDL = None  # type: ignore
+    pin_types = None  # type: ignore
     lib_search_paths = {}  # type: ignore
 
 KICAD_SYMBOL_DIR = Path("/usr/share/kicad/symbols")
@@ -63,16 +65,43 @@ def _pin_num(n: str):
         return n
 
 
+_PWRIN_NAMES = {
+    "VCC",
+    "VDD",
+    "VDDIO2",
+    "AVDD",
+    "APOS",
+    "DPOS",
+    "+5V",
+    "5V",
+    "GND",
+    "GND2",
+    "VSS",
+    "AGND",
+    "DGND",
+}
+
+
+def _pin_func(name: str):
+    if pin_types is None:
+        return None
+    n = (name or "").upper()
+    if n in _PWRIN_NAMES:
+        return pin_types.PWRIN
+    return pin_types.UNSPEC
+
+
 def _skidl_pins(mpn: str, numbers: Sequence[str]) -> List:
     aliases = KICAD_ALIASES.get(mpn, {})
     pins = []
     for n in numbers:
         num = _pin_num(n)
-        alias = aliases.get(n)
-        if alias and alias != n:
-            pins.append(Pin(num=num, name=n, aliases=[alias]))
-        else:
-            pins.append(Pin(num=num, name=n))
+        name = aliases.get(n) or n
+        kwargs = {"num": num, "name": name}
+        func = _pin_func(name)
+        if func is not None:
+            kwargs["func"] = func
+        pins.append(Pin(**kwargs))
     return pins
 
 

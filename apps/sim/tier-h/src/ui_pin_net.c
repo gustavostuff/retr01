@@ -27,13 +27,14 @@ static R01sPinNetlist *ui_board_pin_net(const R01sUi *ui) {
 }
 
 static int pin_name_is_vcc(const char *n) {
-    return n && (strcmp(n, "VCC") == 0 || strcmp(n, "VDD") == 0 || strcmp(n, "APOS") == 0 ||
-                 strcmp(n, "DPOS") == 0 || strcmp(n, "+5V") == 0 || strcmp(n, "5V") == 0);
+    return n && (strcmp(n, "VCC") == 0 || strcmp(n, "VDD") == 0 || strcmp(n, "VDDIO2") == 0 ||
+                 strcmp(n, "AVDD") == 0 || strcmp(n, "APOS") == 0 || strcmp(n, "DPOS") == 0 ||
+                 strcmp(n, "+5V") == 0 || strcmp(n, "5V") == 0);
 }
 
 static int pin_name_is_gnd_rail(const char *n) {
-    return n && (strcmp(n, "GND") == 0 || strcmp(n, "VSS") == 0 || strcmp(n, "AGND") == 0 ||
-                 strcmp(n, "DGND") == 0);
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "GND2") == 0 || strcmp(n, "VSS") == 0 ||
+                 strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
 }
 
 static NsPassiveKind air_passive_kind(const R01sEntity *e) {
@@ -43,56 +44,15 @@ static NsPassiveKind air_passive_kind(const R01sEntity *e) {
     return ((const NsPassive *)(const void *)e)->kind;
 }
 
-/* 1 = +5V net, 2 = GND net, 0 = other. Named nets win over pin names (RES# on +5V is red). */
+/* 1 = package +5V pin, 2 = package GND pin, 0 = other.
+ * Pull-ups (PRE#, RES#, OE#) may sit on the +5V net. They are not VCC pads. */
 int ui_pin_rail_kind(const R01sUi *ui, const R01sEntity *e, int pin_index) {
-    R01sPinNetlist *nl;
-    int i;
-    int slot = -1;
-    int root;
     const char *pname;
-
+    (void)ui;
     if (!e || pin_index < 0 || pin_index >= e->pin_count) {
         return 0;
     }
     pname = e->pins[pin_index].name;
-    nl = ui_board_pin_net(ui);
-    if (nl) {
-        for (i = 0; i < nl->slot_count; i++) {
-            if (nl->slots[i].entity == e && nl->slots[i].pin_index == pin_index) {
-                slot = i;
-                break;
-            }
-        }
-        if (slot >= 0) {
-            root = r01s_pin_netlist_root(nl, slot);
-            for (i = 0; i < nl->slot_count; i++) {
-                if (r01s_pin_netlist_root(nl, i) != root) {
-                    continue;
-                }
-                if (nl->net_name[i][0]) {
-                    if (strcmp(nl->net_name[i], "+5V") == 0 || strcmp(nl->net_name[i], "5V") == 0) {
-                        return 1;
-                    }
-                    if (strcmp(nl->net_name[i], "GND") == 0) {
-                        return 2;
-                    }
-                }
-            }
-            for (i = 0; i < nl->slot_count; i++) {
-                NsPassiveKind kind;
-                if (r01s_pin_netlist_root(nl, i) != root) {
-                    continue;
-                }
-                kind = air_passive_kind(nl->slots[i].entity);
-                if (kind == NS_PASSIVE_5V) {
-                    return 1;
-                }
-                if (kind == NS_PASSIVE_GND) {
-                    return 2;
-                }
-            }
-        }
-    }
     if (pin_name_is_vcc(pname)) {
         return 1;
     }
@@ -1020,14 +980,27 @@ static int air_collect_net(const R01sUi *ui, const R01sPinNetlist *nl, int root,
     return n;
 }
 
-/* IC / canned OSC / hidden battery: rail pins use color, not air wires. */
-static int air_is_ic_like(const R01sEntity *e) {
-    return e && (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_OSC ||
-                 e->visual == R01S_ENTITY_VIS_PWR);
-}
-
 static int air_is_rail_symbol(const R01sEntity *e, NsPassiveKind kind) {
     return air_passive_kind(e) == kind;
+}
+
+static int air_end_package_rail(const char *pin) {
+    if (pin_name_is_vcc(pin)) {
+        return 1;
+    }
+    if (pin_name_is_gnd_rail(pin)) {
+        return 2;
+    }
+    return 0;
+}
+
+static int air_end_is_bypass_passive(const R01sEntity *e) {
+    NsPassiveKind kind;
+    if (!e || e->visual != R01S_ENTITY_VIS_PASSIVE) {
+        return 0;
+    }
+    kind = air_passive_kind(e);
+    return kind != NS_PASSIVE_5V && kind != NS_PASSIVE_GND;
 }
 
 static void air_paint_hop(SDL_Renderer *r, const R01sEntity *only, const R01sAirStyle *style,
@@ -1104,13 +1077,12 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
                     }
                 }
             }
-            /* +5V and GND: star to the single 5V / GND symbol, only while that part is hovered. */
+            /* Package VCC/GND pads use pin color, no air. Signal pins tied to a rail
+             * (PRE#, spare inverter inputs) star to the 5V / GND symbol. +5V pull-ups
+             * draw in the always-on view. GND ties and bypass caps stay hover-only. */
             if (rail) {
                 NsPassiveKind want = (rail == 1) ? NS_PASSIVE_5V : NS_PASSIVE_GND;
                 int hub = -1;
-                if (!rail_hover) {
-                    continue;
-                }
                 for (mi = 0; mi < n; mi++) {
                     if (air_is_rail_symbol(own[mi], want)) {
                         hub = mi;
@@ -1121,10 +1093,19 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
                     continue;
                 }
                 for (mi = 0; mi < n; mi++) {
-                    if (mi == hub || air_is_ic_like(own[mi]) || air_is_rail_symbol(own[mi], want)) {
+                    int need_hover;
+                    if (mi == hub || air_is_rail_symbol(own[mi], want)) {
                         continue;
                     }
-                    air_paint_hop(r, rail_hover, &style, pts, ends, own, sx, sy, hub, mi);
+                    if (air_end_package_rail(ends[mi].pin)) {
+                        continue;
+                    }
+                    need_hover = (rail == 2) || air_end_is_bypass_passive(own[mi]);
+                    if (need_hover && !rail_hover) {
+                        continue;
+                    }
+                    air_paint_hop(r, need_hover ? rail_hover : only, &style, pts, ends, own, sx, sy,
+                                  hub, mi);
                 }
                 continue;
             }

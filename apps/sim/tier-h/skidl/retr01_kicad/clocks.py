@@ -94,9 +94,13 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     # 74HC74 Stage 1: divide 21.477 MHz by 2 -> 10.738 MHz
     clk_10m = _ensure_net(nets_map, "CLK_10M")
     clk_10m_inv = _ensure_net(nets_map, "CLK_10M_INV")
+    u74_pre_clr = _ensure_net(nets_map, "U74_PRE_CLR#")
     if "U74" in parts:
-        pin_connect(parts["U74"], "", "1", v5)           # 1CLR#
-        pin_connect(parts["U74"], "", "4", v5)           # 1PRE#
+        for pin in parts["U74"].pins:
+            if str(getattr(pin, "num", "")) in ("1", "4", "10", "13"):
+                pin.disconnect()
+        pin_connect(parts["U74"], "", "1", u74_pre_clr)  # 1CLR#
+        pin_connect(parts["U74"], "", "4", u74_pre_clr)  # 1PRE#
         pin_connect(parts["U74"], "", "3", clk_21m)      # 1CLK
         pin_connect(parts["U74"], "", "2", clk_10m_inv)  # 1D
         pin_connect(parts["U74"], "", "6", clk_10m_inv)  # 1/Q
@@ -104,8 +108,8 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
 
         # 74HC74 Stage 2: divide 10.738 MHz by 2 -> 5.369 MHz DOT clock
         dot_inv = _ensure_net(nets_map, "DOT_INV")
-        pin_connect(parts["U74"], "", "10", v5)          # 2PRE#
-        pin_connect(parts["U74"], "", "13", v5)          # 2CLR#
+        pin_connect(parts["U74"], "", "10", u74_pre_clr) # 2PRE#
+        pin_connect(parts["U74"], "", "13", u74_pre_clr) # 2CLR#
         pin_connect(parts["U74"], "", "11", clk_10m)     # 2CLK
         pin_connect(parts["U74"], "", "12", dot_inv)     # 2D
         pin_connect(parts["U74"], "", "8", dot_inv)      # 2/Q
@@ -125,9 +129,13 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         pin_connect(parts["U04"], "", "9", xtal_cpu_out)
         pin_connect(parts["U04"], "", "8", phi2)
         # Spare gates 5 and 6: tie inputs inactive (GND), outputs NC
-        pin_connect(parts["U04"], "", "11", gnd)         # 5A
+        u04_spare = _ensure_net(nets_map, "U04_SPARE_IN")
+        for pin in parts["U04"].pins:
+            if str(getattr(pin, "num", "")) in ("11", "13"):
+                pin.disconnect()
+        pin_connect(parts["U04"], "", "11", u04_spare)   # 5A
         pin_connect(parts["U04"], "", "10", nc)          # 5Y
-        pin_connect(parts["U04"], "", "13", gnd)         # 6A
+        pin_connect(parts["U04"], "", "13", u04_spare)   # 6A
         pin_connect(parts["U04"], "", "12", nc)          # 6Y
     if "Y1" in parts:
         pin_connect(parts["Y1"], "", "1", xtal_cpu_in)
