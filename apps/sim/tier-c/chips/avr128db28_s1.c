@@ -1,5 +1,6 @@
 #include "avr128db28_s1.h"
 
+#include "avr128db28_pins.h"
 #include "discrete_ic/bus.h"
 
 #include <string.h>
@@ -41,34 +42,36 @@ void r01a_avr128db28_s1_init(R01aAvr128db28S1 *chip, const char *refdes) {
     ns_entity_init(&chip->base, &MCU_S1_VT, "AVR128DB28", refdes ? refdes : "US1");
     chip->base.impl = chip;
 
-    ns_entity_add_pin(&chip->base, 1, "RESET#", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 2, "AD0", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 3, "AD1", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 4, "AD2", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 5, "AD3", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 6, "AD4", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 7, "AD5", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 8, "AD6", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 9, "AD7", NS_PIN_IO);
-    ns_entity_add_pin(&chip->base, 10, "VCC", NS_PIN_PWR);
-    ns_entity_add_pin(&chip->base, 11, "GND", NS_PIN_PWR);
-    ns_entity_add_pin(&chip->base, 12, "A8", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 13, "A9", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 14, "A10", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 15, "A11", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 16, "A12", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 17, "A13", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 18, "A14", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 19, "SPI_MOSI", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 20, "SPI_MISO", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 21, "SPI_SCK", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 22, "/SS_S1", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 23, "ALE", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 24, "/WE", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 25, "S1_RDY", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 26, "VBL", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 27, "RUN", NS_PIN_OUT);
-    ns_entity_add_pin(&chip->base, 28, "UPDI", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA7, "AD7", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PC0, "A8", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PC1, "A9", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PC2, "A10", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PC3, "A11", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_VDDIO2, "VDDIO2", NS_PIN_PWR);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD1, "A12", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD2, "A13", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD3, "A14", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD4, "SPI_MOSI", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD5, "SPI_MISO", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD6, "SPI_SCK", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PD7, "/SS_S1", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, R01S_AVR_AVDD, "AVDD", NS_PIN_PWR);
+    ns_entity_add_pin(&chip->base, R01S_AVR_GND1, "GND", NS_PIN_PWR);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PF0, "ALE", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PF1, "/WE", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PF6, "S1_RDY", NS_PIN_OUT);
+    ns_entity_add_pin(&chip->base, R01S_AVR_UPDI, "UPDI", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, R01S_AVR_VDD, "VDD", NS_PIN_PWR);
+    ns_entity_add_pin(&chip->base, R01S_AVR_GND2, "GND2", NS_PIN_PWR);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA0, "AD0", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA1, "AD1", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA2, "AD2", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA3, "AD3", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA4, "AD4", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA5, "AD5", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_PA6, "AD6", NS_PIN_IO);
+    ns_entity_add_pin(&chip->base, R01S_AVR_SIM_VBL, "VBL", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, R01S_AVR_SIM_RUN, "RUN", NS_PIN_OUT);
     ns_entity_set_dip_mm(&chip->base, 28, 35, 8);
     ns_entity_reset(&chip->base);
 }

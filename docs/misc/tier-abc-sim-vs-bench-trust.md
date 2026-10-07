@@ -103,20 +103,28 @@ Bring-up §8 uses `A[14:8]` wording; hardware and sim use **A8-A14** (seven line
 
 ## 4. Logical pin names vs silicon pinout
 
-Sim ICs use **DIP pin numbers** on the package graphic plus **functional net names** (`AD0`, `INDEX3`, `LE`). Those names match Retr01 nets in `docs/general/hardware.md`, not always the Microchip pin names on the AVR128DB28 SPDIP.
+Sim ICs use **DIP pad numbers** on the package graphic plus **functional net names** (`AD0`, `INDEX3`, `LE`). Those names match Retr01 nets in `docs/general/hardware.md`. AVR128DB28 pads match the SPDIP-28 map in [`docs/ic_behavior/AVR128DB28.md`](../ic_behavior/AVR128DB28.md).
 
-Example (MCU-S1 product freeze vs Tier C sim shell):
+MCU-S1 (US1) pad map:
 
-| Retr01 net | AVR port (hardware.md) | Sim US1 pin label |
+| Retr01 net | AVR port | US1 pad |
 | --- | --- | --- |
-| AD0-AD7 | PA0-PA7 | Pins 2-9 `AD0`-`AD7` |
-| A8-A11 | PC0-PC3 | Pins 12-15 `A8`-`A11` |
-| A12-A14 | PD1-PD3 | Pins 16-18 `A12`-`A14` |
-| ALE, `/WE` | PF0, PF1 | Pins 23, 24 |
-| SPI, `/SS_S1` | PD4-PD7 | Pins 19-22 |
-| VBL | (from Beam PLD) | Pin 26 |
+| AD0-AD6 | PA0-PA6 | 22-28 |
+| AD7 | PA7 | 1 |
+| A8-A11 | PC0-PC3 | 2-5 |
+| VDDIO2 | VDDIO2 | 6 |
+| A12-A14 | PD1-PD3 | 7-9 |
+| SPI, `/SS_S1` | PD4-PD7 | 10-13 |
+| AVDD | AVDD | 14 |
+| GND | GND | 15 |
+| ALE, `/WE` | PF0, PF1 | 16, 17 |
+| S1_RDY | PF6 | 18 |
+| UPDI | UPDI | 19 |
+| VDD | VDD | 20 |
+| GND2 | GND2 | 21 |
+| VBL | sim-only | no package pad |
 
-For breadboard work, **trust the Retr01 net names and Auto air wires** in Tier C. UPDI programming still uses **physical pin 19** on the real chip (`docs/ic_behavior/AVR128DB28.md`).
+For breadboard work, **trust the Retr01 net names, pad numbers, and Auto air wires** in Tier C. UPDI programming uses **physical pin 19**.
 
 ATF22V10 sim pin names (`X5`, `INDEX2`, `HWRAP`, and similar) match the lab split documented in bring-up and README files. They are **not** a 1:1 map to every CUPL pin assignment until JEDEC is frozen.
 

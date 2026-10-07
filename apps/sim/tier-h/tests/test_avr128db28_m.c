@@ -30,6 +30,18 @@ int main(void) {
     expect_true(r01s_entity_pin_named(e, "/SS_S1") != NULL, "SoT /SS_S1");
     expect_true(r01s_entity_pin_named(e, "CPU_A_SAMPLE") != NULL, "SoT CPU_A_SAMPLE");
     expect_true(r01s_entity_pin_named(e, "SEL_SOFT2") != NULL, "SoT SEL_SOFT2");
+    expect_true(r01s_entity_pin_named(e, "VDD") != NULL &&
+                   r01s_entity_pin_named(e, "VDD")->number == 20,
+               "VDD pad 20");
+    expect_true(r01s_entity_pin_named(e, "VDDIO2") != NULL &&
+                   r01s_entity_pin_named(e, "VDDIO2")->number == 6,
+               "VDDIO2 pad 6");
+    expect_true(r01s_entity_pin_named(e, "AVDD") != NULL &&
+                   r01s_entity_pin_named(e, "AVDD")->number == 14,
+               "AVDD pad 14");
+    expect_true(r01s_entity_pin_named(e, "GND2") != NULL &&
+                   r01s_entity_pin_named(e, "GND2")->number == 21,
+               "GND2 pad 21");
 
     /* Soft SEL A-sample then SEL_SOFT2 rise -> $7F40. */
     {

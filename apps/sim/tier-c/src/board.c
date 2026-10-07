@@ -134,7 +134,8 @@ static uint64_t route_geom_hash(const R01aBoard *b, const NsIsland *island) {
 }
 
 static int pin_name_is_gnd(const char *n) {
-    return n && (strcmp(n, "GND") == 0 || strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "GND2") == 0 || strcmp(n, "VSS") == 0 ||
+                 strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
 }
 
 static int pin_skip_route(const NsEntity *e, const NsPin *p) {
@@ -509,7 +510,11 @@ static void board_bind_rails(R01aBoard *b) {
     drive_vdd(r01a_atf22v10_entity(&b->compositor), "RES#", NS_LVL_H);
     drive_vdd(r01a_atf22v10_entity(&b->compositor), "PHI2", NS_LVL_L);
     drive_vdd(r01a_atf22v10_entity(&b->compositor), "RWB", NS_LVL_H);
-    drive_vdd(r01a_avr128db28_s1_entity(&b->mcu_s1), "VCC", vdd);
+    drive_vdd(r01a_avr128db28_s1_entity(&b->mcu_s1), "VDD", vdd);
+    drive_vdd(r01a_avr128db28_s1_entity(&b->mcu_s1), "VDDIO2", vdd);
+    drive_vdd(r01a_avr128db28_s1_entity(&b->mcu_s1), "AVDD", vdd);
+    drive_vdd(r01a_avr128db28_s1_entity(&b->mcu_s1), "GND", NS_LVL_L);
+    drive_vdd(r01a_avr128db28_s1_entity(&b->mcu_s1), "GND2", NS_LVL_L);
     drive_vdd(r01a_sn74hc573_entity(&b->field_latch), "VCC", vdd);
     drive_vdd(r01a_sn74hc573_entity(&b->field_latch), "OE#", NS_LVL_L);
     drive_vdd(r01a_as6c62256_entity(&b->field_sram), "VCC", vdd);

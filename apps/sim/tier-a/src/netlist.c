@@ -286,12 +286,13 @@ void r01a_netlist_fill_pins(R01aBoard *board) {
 }
 
 static int name_gnd(const char *n) {
-    return n && (strcmp(n, "GND") == 0 || strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "GND2") == 0 || strcmp(n, "VSS") == 0 ||
+                 strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
 }
 
 static int name_vdd(const char *n) {
-    return n && (strcmp(n, "VDD") == 0 || strcmp(n, "VCC") == 0 || strcmp(n, "APOS") == 0 ||
-                 strcmp(n, "DPOS") == 0);
+    return n && (strcmp(n, "VDD") == 0 || strcmp(n, "VCC") == 0 || strcmp(n, "VDDIO2") == 0 ||
+                 strcmp(n, "AVDD") == 0 || strcmp(n, "APOS") == 0 || strcmp(n, "DPOS") == 0);
 }
 
 static int name_clk(const char *n) {

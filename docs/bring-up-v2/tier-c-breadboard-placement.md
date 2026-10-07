@@ -57,7 +57,7 @@ Bus discipline (spacing will not fix a logic overlap): AD hi-Z outside owned wri
 | US1 | AVR128DB28 MCU-S1 | Field |
 | U573 | 74HC573 | Field |
 | U41 | AS6C62256-55 field SRAM | Field |
-| C7, C8, ... | 100 nF at US1, U573, U41 VCC | Field |
+| C7, C8, ... | 100 nF at US1 VDD, U573 VCC, U41 VCC | Field |
 
 Optional 74HC574 (scroll X) is not required for the lab if scroll stays hardwired to 0.
 
@@ -71,8 +71,8 @@ Video INDEX, DOT, sync, PROM, and DAC stay as in A/B.
 
 | Net | Pins |
 |-----|------|
-| `+5V` | US1 VCC (and VDDIO2 / AVDD tied to 5 V per hardware), U573 VCC, U41 VCC |
-| `GND` | US1 GND pins, U573 GND, U41 VSS, U41 CE# |
+| `+5V` | US1 VDD, VDDIO2, AVDD; U573 VCC; U41 VCC |
+| `GND` | US1 GND, GND2; U573 GND; U41 VSS; U41 CE# |
 
 Bypass: one 100 nF at each VCC pin cluster, within a few cm.
 

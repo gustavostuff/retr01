@@ -4,7 +4,7 @@
   "pan_x": 382,
   "pan_y": 4,
   "zoom": 1,
-  "air_wires": 3,
+  "air_wires": 0,
   "present_scale": 2,
   "lcd_2x": 1,
   "floor_on": 0,
@@ -26,17 +26,17 @@
   "wave_monitor_x": 100,
   "wave_monitor_y": 73,
   "islands": [
-    {"i": 0, "x": 400, "y": 25, "w": 200, "h": 245, "z": 0},
-    {"i": 1, "x": 605, "y": 25, "w": 350, "h": 285, "z": 1}
+    {"i": 0, "x": 400, "y": 25, "w": 200, "h": 245, "z": 1},
+    {"i": 1, "x": 605, "y": 25, "w": 350, "h": 285, "z": 0}
   ],
   "island_chips": [
     {"id": "Y2", "island": 0, "rx": 19, "ry": 144, "orient": "0"},
     {"id": "UPLDX", "island": 0, "rx": 38, "ry": 21, "orient": "0"},
     {"id": "UPLDY", "island": 0, "rx": 111, "ry": 19, "orient": "0"},
     {"id": "UPLDC", "island": 0, "rx": 126, "ry": 114, "orient": "0"},
-    {"id": "US1", "island": 0, "rx": 87, "ry": 172, "orient": "0"},
-    {"id": "U573", "island": 0, "rx": 82, "ry": 116, "orient": "0"},
-    {"id": "U41", "island": 0, "rx": 101, "ry": 142, "orient": "0"},
+    {"id": "US1", "island": 0, "rx": 22, "ry": 148, "orient": "180"},
+    {"id": "U573", "island": 0, "rx": 74, "ry": 122, "orient": "0"},
+    {"id": "U41", "island": 0, "rx": 103, "ry": 144, "orient": "0"},
     {"id": "U24", "island": 0, "rx": 116, "ry": 73, "orient": "0"},
     {"id": "C1", "island": 0, "rx": 68, "ry": 198, "orient": "0"},
     {"id": "C2", "island": 0, "rx": 84, "ry": 198, "orient": "0"},

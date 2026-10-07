@@ -59,7 +59,7 @@ void r01a_ad724_init(R01aAd724 *chip, const char *refdes) {
     ns_entity_add_pin(&chip->base, 1, "STND", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 2, "AGND", NS_PIN_PWR);
     ns_entity_add_pin(&chip->base, 3, "FIN", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 4, "APOS", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, 4, "APOS", NS_PIN_PWR);
     ns_entity_add_pin(&chip->base, 5, "ENCD", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 6, "RIN", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 7, "GIN", NS_PIN_IN);
@@ -69,7 +69,7 @@ void r01a_ad724_init(R01aAd724 *chip, const char *refdes) {
     ns_entity_add_pin(&chip->base, 11, "LUMA", NS_PIN_OUT);
     ns_entity_add_pin(&chip->base, 12, "SELECT", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 13, "DGND", NS_PIN_PWR);
-    ns_entity_add_pin(&chip->base, 14, "DPOS", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, 14, "DPOS", NS_PIN_PWR);
     ns_entity_add_pin(&chip->base, 15, "VSYNC", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 16, "HSYNC", NS_PIN_IN);
     ns_entity_set_dip(&chip->base, 16);

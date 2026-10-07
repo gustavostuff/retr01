@@ -133,7 +133,8 @@ static uint64_t route_geom_hash(const R01aBoard *b, const NsIsland *island) {
 }
 
 static int pin_name_is_gnd(const char *n) {
-    return n && (strcmp(n, "GND") == 0 || strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "GND2") == 0 || strcmp(n, "VSS") == 0 ||
+                 strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
 }
 
 static int pin_skip_route(const NsEntity *e, const NsPin *p) {

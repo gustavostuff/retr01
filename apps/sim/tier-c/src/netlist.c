@@ -240,8 +240,11 @@ static void build_auto(R01aBoard *b) {
         char qn[4];
         char an[4];
         if (s1 && u573 && u41) {
-            link_n(y2, "VDD", s1, "VCC");
+            link_n(y2, "VDD", s1, "VDD");
+            link_n(y2, "VDD", s1, "VDDIO2");
+            link_n(y2, "VDD", s1, "AVDD");
             link_n(y2, "GND", s1, "GND");
+            link_n(y2, "GND", s1, "GND2");
             link_n(y2, "VDD", u573, "VCC");
             link_n(y2, "GND", u573, "GND");
             link_n(y2, "VDD", u573, "OE#");
@@ -283,12 +286,13 @@ void r01a_netlist_fill_pins(R01aBoard *board) {
 }
 
 static int name_gnd(const char *n) {
-    return n && (strcmp(n, "GND") == 0 || strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
+    return n && (strcmp(n, "GND") == 0 || strcmp(n, "GND2") == 0 || strcmp(n, "VSS") == 0 ||
+                 strcmp(n, "AGND") == 0 || strcmp(n, "DGND") == 0);
 }
 
 static int name_vdd(const char *n) {
-    return n && (strcmp(n, "VDD") == 0 || strcmp(n, "VCC") == 0 || strcmp(n, "APOS") == 0 ||
-                 strcmp(n, "DPOS") == 0);
+    return n && (strcmp(n, "VDD") == 0 || strcmp(n, "VCC") == 0 || strcmp(n, "VDDIO2") == 0 ||
+                 strcmp(n, "AVDD") == 0 || strcmp(n, "APOS") == 0 || strcmp(n, "DPOS") == 0);
 }
 
 static int name_clk(const char *n) {
