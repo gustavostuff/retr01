@@ -103,7 +103,7 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 **AD724** is on the motherboard BOM (one of the **19**). Solder the **SOIC-16** part on **U725** with local bypass (**C18**) and the datasheet coupling network when the composite path is populated. Hand-solder or reflow is fine for a single narrow SOIC.
 
-It accepts **CSYNC or separate HSYNC+VSYNC**, which matches the dual-sync J2 header. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+It accepts **CSYNC or separate HSYNC+VSYNC**, which matches J2 carrying all three syncs. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
 RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
@@ -327,27 +327,31 @@ Prefer programming PLDs and the color PROM **before** they go into the motherboa
 
 ## Video out / sync header
 
-Analog RGB from the PROM DAC always. Sync is flexible on **one** header footprint so cabinets and SCART-style cables can pick a mode without a second connector family.
+Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all live on **one** 2x4 header so RGBS and RGBHV cables pick a story without a mode jumper or a second connector family.
 
 ### J2 sync-capable RGB header (locked with AD724)
 
-| Pin | RGBS / CSYNC mode | RGBHV mode |
-| --- | --- | --- |
-| 1 | Red | Red |
-| 2 | Green | Green |
-| 3 | Blue | Blue |
-| 4 | CSYNC | HSYNC |
-| 5 | GND | VSYNC |
-| 6 | GND | GND |
+2x4 male, 2.54 mm. KiCad numbering, pin 1 at top-left:
 
-Mode select (solder jumper or 1x3 header next to J2):
+```text
+1 (R)       2 (G)
+3 (B)       4 (CSYNC)
+5 (HSYNC)   6 (VSYNC)
+7 (GND)     8 (GND)
+```
 
-| Mode | Beam PLD drives | Encoder / cable notes |
-| --- | --- | --- |
-| **CSYNC** | Pin 4 = composite sync. Pin 5 tied to GND at the jumper | AD724 CSYNC input |
-| **H/V** | Pin 4 = HSYNC, pin 5 = VSYNC | AD724 H+V inputs |
+| Pin | Net |
+| --- | --- |
+| 1 | Red |
+| 2 | Green |
+| 3 | Blue |
+| 4 | CSYNC |
+| 5 | HSYNC |
+| 6 | VSYNC |
+| 7 | GND |
+| 8 | GND |
 
-Same pins, same connector body. Cable or jumper chooses the story. CSYNC and H/V meanings never share pin 4 at once.
+**RGBS** cables use R/G/B + CSYNC + GND. **RGBHV** cables use R/G/B + HSYNC + VSYNC + GND. AD724 on **U725** can take CSYNC (HSYNC pin, VSYNC held) or the separate H/V pair from the same header.
 
 **Composite:** AD724 -> J9 RCA. An S-video pair can hang off AD724 Y/C later if those pads are needed.
 
@@ -373,7 +377,7 @@ Cart and pad PCBs are **2-layer**.
 | Ref | Locked |
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
-| J2 | 2x3 RGB + sync (table above) |
+| J2 | 2x4 RGB + CSYNC/HSYNC/VSYNC (table above) |
 | J3/J4 | CUI Devices **SJ1-3515N** 5-pin horizontal TRS |
 | J5 | 2x10 arcade |
 | J7 | 2x2 power/reset |

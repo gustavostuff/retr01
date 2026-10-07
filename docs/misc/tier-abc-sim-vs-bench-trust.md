@@ -59,7 +59,9 @@ The following tables compare **Auto** links in sim to **bring-up docs**. Refdes 
 | --- | --- | --- | --- |
 | DOT -> Beam X CLK, series R | Y2 DOT -> R12 -> UPLDX CLK | Same intent | **High** for topology |
 | Beam X HWRAP -> Beam Y CLK | Linked | Line tick from X | **High** |
-| Beam X CSYNC -> J2 CSYNC | Linked | **J2 pin 4** CSYNC (RGBS) | **High** for sync topology |
+| Beam X CSYNC -> J2 CSYNC | Linked | **J2 pin 4** CSYNC | **High** for sync topology |
+| Beam X HSYNC -> J2 HSYNC | Linked | **J2 pin 5** HSYNC | **High** for sync topology |
+| Beam Y VSYNC -> J2 VSYNC | Linked | **J2 pin 6** VSYNC | **High** for sync topology |
 | Beam X INDEX[5:0] -> PROM A[5:0] | Linked | Tier A Method B in bring-up | **High** for lab Method B |
 | PROM A[13:6] -> GND | Linked via Y2 GND | Required | **High** |
 | PROM CE#, OE# -> GND | Linked | Lab hard-enable | **High** |

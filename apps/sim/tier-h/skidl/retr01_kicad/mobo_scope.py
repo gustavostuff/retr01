@@ -17,6 +17,8 @@ SKIP_REFDES = frozenset(
     {
         "?",
         "SCR1",
+        "5V",  # UI rail symbol, not a PCB part (power enters at J1)
+        "GND",  # UI rail symbol, not a PCB part
         "PAD",
         "UPAD1",
         "UPAD2",

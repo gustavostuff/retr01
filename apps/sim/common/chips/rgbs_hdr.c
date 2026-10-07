@@ -33,9 +33,11 @@ void r01a_rgbs_hdr_init(R01aRgbsHdr *hdr, const char *refdes) {
     ns_entity_add_pin(&hdr->base, 2, "G", NS_PIN_IN);
     ns_entity_add_pin(&hdr->base, 3, "B", NS_PIN_IN);
     ns_entity_add_pin(&hdr->base, 4, "CSYNC", NS_PIN_IN);
-    ns_entity_add_pin(&hdr->base, 5, "GND", NS_PIN_PWR);
-    ns_entity_add_pin(&hdr->base, 6, "GND2", NS_PIN_PWR);
-    ns_entity_set_pin_header(&hdr->base, 2, 3);
+    ns_entity_add_pin(&hdr->base, 5, "HSYNC", NS_PIN_IN);
+    ns_entity_add_pin(&hdr->base, 6, "VSYNC", NS_PIN_IN);
+    ns_entity_add_pin(&hdr->base, 7, "GND", NS_PIN_PWR);
+    ns_entity_add_pin(&hdr->base, 8, "GND2", NS_PIN_PWR);
+    ns_entity_set_pin_header(&hdr->base, 2, 4);
     ns_entity_reset(&hdr->base);
 }
 

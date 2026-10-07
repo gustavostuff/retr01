@@ -154,7 +154,8 @@ If macrocells allow, register `INDEX` on **DOT** so PROM address is stable for a
 
 ```text
 Beam X -- raster / CSYNC ---> (as Tier A) ---> RGBS header pin 4
-Beam Y -- VSYNC -----------> (as Tier A) ---> RGBS header pin 5 (RGBHV only)
+Beam X -- HSYNC -----------> (as Tier A) ---> RGBS header pin 5
+Beam Y -- VSYNC -----------> (as Tier A) ---> RGBS header pin 6
 
 Beam X,Y counts / blank ---> Compositor
 Test patterns (X bars, Y bands, DIP, box) ---> Compositor

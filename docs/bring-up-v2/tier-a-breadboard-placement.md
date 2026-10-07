@@ -63,7 +63,7 @@ Rails: bridge +5 V and GND on both sides of each board in use. Extra boards stay
 | UPLDX | ATF22V10 Beam X | Beam |
 | UPLDY | ATF22V10 Beam Y | Beam |
 | U24 | AT27C256R | Analog out |
-| J2 | 2x3 RGBS header | Analog out |
+| J2 | 2x4 RGBS header | Analog out |
 | C1-C5 | 100 nF | At U04, U74, UPLDX, UPLDY, U24 |
 | C6, C7 | ~20 pF | Y2 loads |
 | E1 | ~220 uF | 5 V entry |

@@ -15,7 +15,7 @@ DOT clock -> Beam PLDs (raster + sync) -> 6-bit color index
                                     R3G3B2 resistor DAC (~0.7 Vpp RGB)
                                               |
                                               v
-                         J2-style header: R, G, B, CSYNC (+ GND) -> monitor
+                         J2-style header: R, G, B, CSYNC, HSYNC, VSYNC (+ GND) -> monitor
 ```
 
 **SoT:** `docs/general/hardware.md` (J2 RGBS pinout), `docs/general/video-graphics.md`, `docs/general/palette/`, `docs/ic_behavior/ATF22V10.md`, `docs/ic_behavior/AT27C256R.md`.
@@ -56,7 +56,7 @@ The dot clock requires a clean 5.369318 MHz CMOS square wave. Three common optio
   - Each gun: **75.0 ohm** to GND -> ~**0.7 Vpp** at the RGB header (matches product DAC into ~75 ohm world)
 - Series **~33 ohm** on **DOT** if the oscillator edge is hot or the breadboard is noisy
 - Decoupling: **100 nF** at every IC VCC pin. Bulk **~220 uF** at 5 V entry
-- **2x3 (or 1x6) header** for **RGBS** to the monitor cable (see section 7)
+- **2x4 header** for **RGBS / RGBHV** to the monitor cable (see section 7)
 - 5 V supply capable of a few hundred mA. Clean ground shared with monitor return where possible
 
 ### Optional
@@ -99,7 +99,7 @@ If any of those fail, fix that layer before adding S1, VRAM, or a CPU.
 
 1. **PLDs and the color PROM are programmed before first power-up**, with the CPU-side bus absent. Blank PLDs and a random PROM make debugging impossible.
 2. **Unused PROM address lines A[14:6] (and any unused) tie to GND.** Only A[5:0] carry the color index for 64 entries.
-3. **Sync mode is explicit.** Default breadboard lab: **RGBS** = R/G/B + **CSYNC** on one wire (matches product **J2** default). **RGBHV** (separate H and V) is optional if the monitor requires it; never drive two meanings on one pin.
+3. **Sync mode is explicit.** Product **J2** carries CSYNC, HSYNC, and VSYNC together. Default breadboard lab: **RGBS** = R/G/B + **CSYNC**. **RGBHV** uses HSYNC and VSYNC on the same header; never drive two meanings on one pin.
 4. **Analog island stays short:** PROM -> DAC resistors -> RGB header. Keep digital switching noise off that path as much as breadboard allows.
 5. **Bring-up order is solid color first** (fixed index), then color bars, then spatial patterns. One change at a time.
 6. **DOT, CSYNC (or H/V), and one RGB gun are scoped** before blaming the monitor.
@@ -225,18 +225,20 @@ Preview RGB (8-bit, not PROM bytes), GIMP/Aseprite palettes, and the C SoT live 
 
 ## 7. RGBS output (J2-style lab header)
 
-Match the product **J2** default (**RGBS / CSYNC** mode) from `docs/general/hardware.md`:
+Match product **J2** from `docs/general/hardware.md` (2x4, all three syncs present):
 
 | Pin | Lab net | Source |
 | --- | --- | --- |
 | 1 | **R** | Red DAC node (after 75 ohm load) |
 | 2 | **G** | Green DAC node |
 | 3 | **B** | Blue DAC node |
-| 4 | **CSYNC** | Beam X CSYNC (or HSYNC if the monitor wants separate H/V - see below) |
-| 5 | **GND** | Common ground (RGBS default: pin 5 = GND) |
-| 6 | **GND** | Second ground pin |
+| 4 | **CSYNC** | Beam X CSYNC |
+| 5 | **HSYNC** | Beam X HSYNC |
+| 6 | **VSYNC** | Beam Y VSYNC |
+| 7 | **GND** | Common ground |
+| 8 | **GND** | Second ground pin |
 
-**RGBHV (optional):** If the monitor has no CSYNC input, use pin 4 = **HSYNC** (Beam X), pin 5 = **VSYNC** (Beam Y), and wire grounds as required. That mirrors the product J2 mode jumper; the breadboard can use a jumper wire instead of a solder bridge.
+**RGBS:** R/G/B + CSYNC + GND. **RGBHV:** R/G/B + HSYNC + VSYNC + GND. The breadboard header carries both; the cable picks the story.
 
 **Cable:** Use a known-good **RGBS** (or SCART/RGB with sync on composite sync pin) cable. Termination is usually **75 ohm** per gun at the monitor; the DAC network is designed for that load.
 
@@ -337,5 +339,5 @@ Index[5:0] <- DIP switches -or- f(X,Y) from PLDs
         |
         +-- CSYNC (Beam X)
         v
-   2x3 header -> RGB monitor (RGBS)
+   2x4 header -> RGB monitor (RGBS or RGBHV)
 ```

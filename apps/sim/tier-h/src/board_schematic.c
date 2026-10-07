@@ -542,6 +542,9 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, &io->j2, "R", sink, "RIN");
   r01s_pin_netlist_link(nl, &io->j2, "G", sink, "GIN");
   r01s_pin_netlist_link(nl, &io->j2, "B", sink, "BIN");
+  r01s_pin_netlist_link(nl, &io->j2, "CSYNC", r01s_ad724_entity(&board->ad724), "HSYNC");
+  r01s_pin_netlist_name_net(nl, &io->j2, "HSYNC", "HSYNC");
+  r01s_pin_netlist_name_net(nl, &io->j2, "VSYNC", "VSYNC");
   r01s_pin_netlist_link(nl, &io->j2, "GND1", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j2, "GND2", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j3, "TIP", pwr, "VDD");

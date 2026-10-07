@@ -46,6 +46,7 @@ int main(void) {
     expect_true(strstr(json, "\"U725\"") != NULL, "AD724 in export");
     expect_true(strstr(json, "COMPOSITE_OUT") != NULL, "composite net name");
     expect_true(strstr(json, "AUDIO_OUT") != NULL, "audio net name");
+    expect_true(strstr(json, "HDR-2x4") != NULL, "J2 2x4 header in export");
     expect_true(strstr(json, "\"+5V\"") != NULL, "named +5V rail");
     r01s_island_builder_shutdown(&builder);
     return test_done("test_export_netlist");

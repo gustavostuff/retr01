@@ -6,7 +6,7 @@ Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/). Palette SoT: [`apps
 
 ## Parts
 
-DOT canned oscillator (4-leg OSC4LEGS sprite, DIP-14 can: pin 14 VDD / 8 clock / 1 OE# / 7 GND), Beam X and Beam Y (ATF22V10 shells), AT27C256R kit PROM, **J2** 1x6 male pin header, LCD sink (256x240 RGBS field). Clocks, PLDs, and the PROM sit on DIGITAL. The DAC resistors, J2, and the screen sit on ANALOG.
+DOT canned oscillator (4-leg OSC4LEGS sprite, DIP-14 can: pin 14 VDD / 8 clock / 1 OE# / 7 GND), Beam X and Beam Y (ATF22V10 shells), AT27C256R kit PROM, **J2** 2x4 male pin header, LCD sink (256x240 RGBS field). Clocks, PLDs, and the PROM sit on DIGITAL. The DAC resistors, J2, and the screen sit on ANALOG.
 
 Passives from the Tier A lab: 100 nF decoupling, 220 uF bulk, R3G3B2 DAC resistors (4.00k / 2.00k / 1.00k and 75 ohm loads), 33 ohm series on DOT. Resistors show 4-band EIA color codes from their ohm value.
 
@@ -27,7 +27,7 @@ Each price is one piece, rough USD, about September 2026. Shipping and tax are e
 | 1 | **AT27C256R-45**, PDIP-28, 600 mil | `~$3` | Color PROM. **OTP.** A wrong image means a new chip. A spare is another `~$3`. |
 | 1 | 28-pin DIP socket, 0.6 inch | `~$1` | For the PROM |
 | 1 | 5 V canned CMOS oscillator, **5.369318 MHz** | `~$4` | DOT. Not a bare crystal. Less common than 8 MHz / colorburst cans. |
-| 1 | **1x6** (2.54 mm) header + RGBS cable or adapter | `~$5` | J2-style R/G/B/CSYNC/GND to monitor or capture card |
+| 1 | **2x4** (2.54 mm) header + RGBS/RGBHV cable or adapter | `~$5` | J2-style R/G/B/CSYNC/HSYNC/VSYNC/GND to monitor or capture card |
 | 3 | Solderless breadboards | `~$6` | The wired Tier A sim uses three. The bring-up doc does not lock a count |
 | 1 | Jumper-wire set | `~$8` | Solid core, long enough to cross boards |
 | 1 | Regulated **5 V** supply, a few hundred mA | `~$8` | Plus a way to land 5 V and GND on one breadboard's rails |

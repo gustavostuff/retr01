@@ -204,6 +204,8 @@ static void build_auto(R01aBoard *b) {
     link_n(ent(b, "R12"), "2", comp, "CLK");
     link_n(bx, "HWRAP", by, "CLK");
     link_n(bx, "CSYNC", j2, "CSYNC");
+    link_n(bx, "HSYNC", j2, "HSYNC");
+    link_n(by, "VSYNC", j2, "VSYNC");
     link_n(bx, "HBLANK", comp, "HBLANK");
     link_n(bx, "X5", comp, "X5");
     link_n(bx, "X6", comp, "X6");

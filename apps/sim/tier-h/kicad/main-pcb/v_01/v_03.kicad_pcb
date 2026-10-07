@@ -212,7 +212,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "FFtuam3okJ"
+		(property "SKiDL Tag" "VWALnndjvz"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -238,7 +238,7 @@
 				)
 			)
 		)
-		(path "/63f04115-1256-5256-88ad-7c08ea64b935")
+		(path "/bbfdb033-694d-5933-a29c-9d6b1168b455")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -390,7 +390,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "vZkh5YshaQ"
+		(property "SKiDL Tag" "yglaXBuP7a"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -416,7 +416,7 @@
 				)
 			)
 		)
-		(path "/c5778918-5638-57e9-8e0b-7554a48d033d")
+		(path "/0cfcd86a-e869-516a-94f7-084e44b00be1")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -568,7 +568,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "M_Kkp5TIzi"
+		(property "SKiDL Tag" "YqXHsB1FAd"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -594,7 +594,7 @@
 				)
 			)
 		)
-		(path "/6fb25178-baed-5c0e-9910-08a56fb7067f")
+		(path "/f46779da-f5a6-5ec7-9683-1b284b807dc7")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -775,7 +775,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "wz1mly89XO"
+		(property "SKiDL Tag" "AGhsspBn4w"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -801,7 +801,7 @@
 				)
 			)
 		)
-		(path "/49a312f1-60ec-5bc9-9439-ec9aeadd8564")
+		(path "/ea029b1e-5e32-5409-871d-91d9bfdb9059")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -953,7 +953,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "B5LfSHwj28"
+		(property "SKiDL Tag" "1rulxdo9bI"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -979,7 +979,7 @@
 				)
 			)
 		)
-		(path "/1fc5dfe9-c505-503b-b171-6d68310d64e1")
+		(path "/5e883702-ae0d-5506-8f39-7605518a208f")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -1218,7 +1218,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "96c4564d-47bd-46d9-a8f5-33f0e02676d9")
 		)
@@ -1387,7 +1387,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "c8piqDTF4u"
+		(property "SKiDL Tag" "mzU7l7t2ZK"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1413,7 +1413,7 @@
 				)
 			)
 		)
-		(path "/1236cb59-9fde-53c5-8b88-24368081f8ee")
+		(path "/2e270573-99e8-5c1a-bf2f-013df29c977d")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -1593,7 +1593,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "KUOS_cvXoG"
+		(property "SKiDL Tag" "cjjR6TFhaf"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1619,7 +1619,7 @@
 				)
 			)
 		)
-		(path "/c592358b-1407-5a68-865c-4d9d2740102c")
+		(path "/10bcfc49-2fbe-5f6d-a765-2938e1eded5d")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -1844,7 +1844,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "nYggnJJr1K"
+		(property "SKiDL Tag" "voqWrZm1rl"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1870,7 +1870,7 @@
 				)
 			)
 		)
-		(path "/9ce2c230-8ee6-530f-b2e2-2b6606327ad5")
+		(path "/e8eddadc-e9ef-5fd3-8f63-852e7780ee9e")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -2022,7 +2022,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "htERtOCMMv"
+		(property "SKiDL Tag" "CWUxsXkYoR"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -2048,7 +2048,7 @@
 				)
 			)
 		)
-		(path "/09d83feb-5486-5d20-baa3-5aef56cdc31a")
+		(path "/23c35ea8-3870-5277-8124-f7eac7777a00")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -2200,7 +2200,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "tzSAdb2Zr0"
+		(property "SKiDL Tag" "mVJPb3Vy2N"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -2226,7 +2226,7 @@
 				)
 			)
 		)
-		(path "/95bff2e9-0e9e-53a5-81d3-e8701e1f7352")
+		(path "/72c4fdb6-f2a8-54cc-a9c0-50e174896b7c")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -2778,7 +2778,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "CART_WE#1")
+			(net "CART_WE#_1")
 			(pintype "UNSPECIFIED")
 			(uuid "5ca15498-881a-4be6-9602-ed6978155a9c")
 		)
@@ -2857,7 +2857,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "N0mnAewwKl"
+		(property "SKiDL Tag" "EJMpmyq9y6"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -2883,7 +2883,7 @@
 				)
 			)
 		)
-		(path "/975369b9-2ec5-5602-bcff-8b865ce6362c")
+		(path "/cb2b0d2d-e876-59e9-a70a-0eb43e72b892")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -3035,7 +3035,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "7NSuDmPGPl"
+		(property "SKiDL Tag" "eSKs6gu8za"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3061,7 +3061,7 @@
 				)
 			)
 		)
-		(path "/e7ede150-7f5c-5c87-a63b-f401fbcc116e")
+		(path "/7c314ee9-3752-5708-8e20-9fcbed567cb6")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -3429,7 +3429,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "Bz90IMmUVL"
+		(property "SKiDL Tag" "C7r0a6uUot"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3455,7 +3455,7 @@
 				)
 			)
 		)
-		(path "/6dbddb42-0006-56ec-851c-734eadc1b836")
+		(path "/0262ce85-c5da-5702-99f6-1df917930e0f")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -3518,7 +3518,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "CART_WE#_1")
+			(net "CART_WE#")
 			(pintype "UNSPECIFIED")
 			(uuid "ac9067ea-6b26-49de-b51b-a881ae90b345")
 		)
@@ -3528,7 +3528,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "CART_WE#1")
+			(net "CART_WE#_1")
 			(pintype "UNSPECIFIED")
 			(uuid "fd840146-8a6a-419d-b9d6-5586635b0717")
 		)
@@ -3599,7 +3599,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "wFRkkl2frb"
+		(property "SKiDL Tag" "_e5V3VfV7L"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3625,7 +3625,7 @@
 				)
 			)
 		)
-		(path "/c0f902fd-ab6e-5630-a4d5-7db44efc27e1")
+		(path "/60096615-c831-5cf3-9ed4-dc5bbbdc90f7")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -3944,7 +3944,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "D1LuhRXxa5"
+		(property "SKiDL Tag" "9JqvTkAtzq"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3970,7 +3970,7 @@
 				)
 			)
 		)
-		(path "/243df608-a01a-5b2b-a4c6-da0c126d75bb")
+		(path "/7a6fc8ce-74d9-5d1f-92eb-e35407689758")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -4122,7 +4122,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "6orQdaWf1G"
+		(property "SKiDL Tag" "8OhRLlnsJA"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4148,7 +4148,7 @@
 				)
 			)
 		)
-		(path "/7b778f05-0eb7-5257-a12d-d29c3fa5feab")
+		(path "/6df500ba-7a1c-5d9c-81c9-7ece88022b11")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -4436,7 +4436,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "kL4lFjZxCl"
+		(property "SKiDL Tag" "fv14XpIctm"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4462,7 +4462,7 @@
 				)
 			)
 		)
-		(path "/bb4f1a5d-cdf8-5ab6-9fd2-e5201864c3c7")
+		(path "/8e719e41-f082-51ca-8be0-6e7139cb93a2")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -4643,7 +4643,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "8KTfqio36i"
+		(property "SKiDL Tag" "1BXvgJYDN_"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4669,7 +4669,7 @@
 				)
 			)
 		)
-		(path "/89692613-4f25-5f68-8709-46958f39ef03")
+		(path "/944960c6-0b65-5a4c-a6d7-c46d0e1f6c93")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -4821,7 +4821,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "4yieGKuvml"
+		(property "SKiDL Tag" "_0firiEOVs"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4847,7 +4847,7 @@
 				)
 			)
 		)
-		(path "/641715f6-045c-51df-8508-7509fa471327")
+		(path "/a077e600-06b6-551a-8ea9-f736b6aca2db")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -4999,7 +4999,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "tK6o1Qkvve"
+		(property "SKiDL Tag" "7daO3QEznN"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -5025,7 +5025,7 @@
 				)
 			)
 		)
-		(path "/fe767618-7d3a-560f-9262-ef4dabb7c46f")
+		(path "/31f9c9d2-5d12-5cb8-96a0-5457d6485019")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -5296,7 +5296,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_J5_P13_TO_US2_P28")
+			(net "SIG_US2_P28_TO_J5_P13")
 			(pintype "UNSPECIFIED")
 			(uuid "650c5f9b-13cb-44a3-9585-425ad4ba3245")
 		)
@@ -5326,7 +5326,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_US2_P18_TO_J5_P16")
+			(net "SIG_J5_P16_TO_US2_P18")
 			(pintype "UNSPECIFIED")
 			(uuid "8135d171-07e5-4f1d-a08c-713dd8c4e2e3")
 		)
@@ -5445,7 +5445,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "9BL38gZnhd"
+		(property "SKiDL Tag" "EuZ0vN2jT2"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -5471,7 +5471,7 @@
 				)
 			)
 		)
-		(path "/8e4302d7-1c7b-5f53-8ae1-b17230e5dc94")
+		(path "/91fa340c-ce62-589a-a15a-ea5b60af2558")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -5563,7 +5563,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "XTAL_DOT_IN")
+			(net "XTAL_21M_IN")
 			(pintype "UNSPECIFIED")
 			(uuid "0b7a507e-9d01-4c9b-a47f-1ecb7b5914d6")
 		)
@@ -5645,7 +5645,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "YFc4fAoB2j"
+		(property "SKiDL Tag" "lWgscXkTwc"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -5671,7 +5671,7 @@
 				)
 			)
 		)
-		(path "/53f0ba90-79b7-5d8d-a90e-b113b6dde7e8")
+		(path "/97defd96-3115-5f60-804d-189e1f008a7a")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -5822,7 +5822,7 @@
 			(drill oval 2 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "PAD1_DATA")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "81221bcf-97d5-449d-89b6-e925ef133ad2")
 		)
@@ -5832,7 +5832,7 @@
 			(drill oval 2 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "0ab71ff3-3a7e-4dab-ade4-a986a81d1872")
 		)
@@ -5862,7 +5862,7 @@
 			(drill oval 2 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "1a7411e1-b466-48ce-b76c-21188c488536")
 		)
@@ -6048,7 +6048,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "WM3bN7A3Qa"
+		(property "SKiDL Tag" "kGetQawTzF"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -6074,7 +6074,7 @@
 				)
 			)
 		)
-		(path "/7ee7fcc8-edce-516e-9370-0f763327b12a")
+		(path "/0f6b81e2-e02b-5393-8910-4a34e77df9d1")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -6255,7 +6255,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "j8BJ8YMX5c"
+		(property "SKiDL Tag" "tCadd98N49"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -6281,7 +6281,7 @@
 				)
 			)
 		)
-		(path "/8fbe2c0e-fcdd-5af4-8521-a91baea8f703")
+		(path "/450a5282-9749-5cc9-b870-39f5e14c190c")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -6440,7 +6440,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U41_P12_BUS")
+			(net "SIG_U573_P3_BUS")
 			(pintype "UNSPECIFIED")
 			(uuid "0a7cd01f-8bbe-478a-ab9a-4e662e1da803")
 		)
@@ -6490,7 +6490,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_US1_P28_BUS")
+			(net "SIG_U41_P18_BUS")
 			(pintype "UNSPECIFIED")
 			(uuid "7d730d55-294d-4fe1-bcdb-24c26ad47f15")
 		)
@@ -6796,7 +6796,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "ahE_jpl_oD"
+		(property "SKiDL Tag" "16ZMGb5vmF"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -6822,7 +6822,7 @@
 				)
 			)
 		)
-		(path "/598cad34-dd2c-525f-a352-cb7f5cbb9c76")
+		(path "/10ef6175-24fb-53c1-8dfc-3fa08b515cbd")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -7047,7 +7047,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "HThtW6AAfp"
+		(property "SKiDL Tag" "4oJmaNIThd"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7073,7 +7073,7 @@
 				)
 			)
 		)
-		(path "/8c9b9b30-2434-5e2e-9bc1-3658bf468dd8")
+		(path "/857badc7-192c-5817-8637-58b73cb69cd5")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -7254,7 +7254,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "kTMIgZIz4l"
+		(property "SKiDL Tag" "Rl84DMuPZR"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7280,7 +7280,7 @@
 				)
 			)
 		)
-		(path "/5014d12c-fb05-507c-96f3-ad17aebde03c")
+		(path "/6f8a4593-fc9c-5463-8cb5-d133776e9409")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -7432,7 +7432,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "IarovGEH5L"
+		(property "SKiDL Tag" "TwSv2T1s12"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7458,7 +7458,7 @@
 				)
 			)
 		)
-		(path "/029b732c-0ad1-5037-99eb-faec5199b617")
+		(path "/825c1672-9c11-588a-a336-8f19a033c4f1")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -7597,7 +7597,7 @@
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(roundrect_rratio 0.15625)
-			(net "XTAL_DOT_IN")
+			(net "XTAL_21M_IN")
 			(pintype "UNSPECIFIED")
 			(uuid "9254764e-4d9e-4e42-8dc9-843081ec6ae0")
 		)
@@ -7687,7 +7687,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "c6d680b6-53c4-4b20-a144-b3c40f5eb286")
 		)
@@ -7707,7 +7707,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "0fad6775-0110-4c2d-aabc-87b1b004c1ea")
 		)
@@ -7806,7 +7806,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "2fhzeyfcT7"
+		(property "SKiDL Tag" "JMbm6uzdjC"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7832,7 +7832,7 @@
 				)
 			)
 		)
-		(path "/8ee7b802-3f17-54c4-957c-019ac0ea06e4")
+		(path "/9ddacda3-d058-58ac-b195-50cd53c1f3ec")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -8013,7 +8013,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "skLHF0nn5I"
+		(property "SKiDL Tag" "Df0ed3vsom"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8039,7 +8039,7 @@
 				)
 			)
 		)
-		(path "/4c486b63-2788-5382-8a51-f0ae4ee360df")
+		(path "/b67e9cd8-720b-5b5f-aa4a-f57f78e38a2f")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -8191,7 +8191,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "6lNUgkFd11"
+		(property "SKiDL Tag" "82kK5XlbiO"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8217,7 +8217,7 @@
 				)
 			)
 		)
-		(path "/a5b15c98-87fe-5636-a54d-6d6f1d462f04")
+		(path "/47925467-64d6-58c8-a3e5-add4b94b004b")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -8406,7 +8406,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_UPLDY_P6_TO_UPLDX_P17")
+			(net "SIG_UPLDX_P17_TO_UPLDY_P6")
 			(pintype "UNSPECIFIED")
 			(uuid "2b87950e-badf-430b-bd0a-600f52830f3e")
 		)
@@ -8665,7 +8665,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "gHt3uZBIAC"
+		(property "SKiDL Tag" "097mg6hkfA"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8691,7 +8691,7 @@
 				)
 			)
 		)
-		(path "/78c41883-ccf2-50ba-b57c-801af4ddcfee")
+		(path "/39b2f49c-6f5f-50e1-9152-fdcf1ebb588a")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -8872,7 +8872,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "iX6k0a56BL"
+		(property "SKiDL Tag" "OifCoQr45N"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8898,7 +8898,7 @@
 				)
 			)
 		)
-		(path "/8c22a175-b25e-5f45-9c77-da54ab31215a")
+		(path "/9f7eb530-e10d-56b8-b434-fb3a166701c4")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -9078,7 +9078,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "adArUs6GQj"
+		(property "SKiDL Tag" "T5Ual_tf_G"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9104,7 +9104,7 @@
 				)
 			)
 		)
-		(path "/1dc69f66-b3e1-524d-ae45-80c817604e62")
+		(path "/d3243958-1cd2-530f-a4db-eddb53de0e7c")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -9240,7 +9240,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "XTAL_DOT_IN")
+			(net "XTAL_21M_IN")
 			(pintype "UNSPECIFIED")
 			(uuid "0473ef20-e77d-4af3-8346-13ad7483bf0a")
 		)
@@ -9329,7 +9329,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "zBjgc_RKrF"
+		(property "SKiDL Tag" "yrdeFlL2GD"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9355,7 +9355,7 @@
 				)
 			)
 		)
-		(path "/4bc494e5-564b-5786-816c-3d9e05b13159")
+		(path "/1fae9775-515e-5edd-96c6-a64fbc69affb")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -9474,14 +9474,14 @@
 			)
 		)
 	)
-	(footprint "Retr01_Lib:PinHeader_2x03_P2.54mm_Vertical"
+	(footprint "Retr01_Lib:PinHeader_2x04_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "535c2df8-8992-467d-9d8e-180b3753bed0")
 		(at 129.275 34.54 180)
-		(descr "Through hole straight pin header, 2x03, 2.54mm pitch, double rows")
-		(tags "Through hole pin header THT 2x03 2.54mm double row")
+		(descr "Through hole straight pin header, 2x04, 2.54mm pitch, double rows")
+		(tags "Through hole pin header THT 2x04 2.54mm double row")
 		(property "Reference" "J2"
-			(at 1.27 -2.38 0)
+			(at 1.27 -2.38 180)
 			(layer "F.SilkS")
 			(uuid "2406d2a0-5c0e-49f3-b722-f97a6be38d94")
 			(effects
@@ -9492,7 +9492,7 @@
 			)
 		)
 		(property "Value" "RGBS_HDR"
-			(at 1.27 7.46 0)
+			(at 1.27 10 180)
 			(layer "F.SilkS")
 			(uuid "6dbd6ac3-b262-4f59-890d-c19df69763b7")
 			(effects
@@ -9503,7 +9503,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 0)
+			(at 0 0 180)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "c7adf489-b69f-4492-a2ad-cea028de68d3")
@@ -9514,7 +9514,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 0)
+			(at 0 0 180)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "2e334e6a-b032-46f2-a956-6b230af1ab50")
@@ -9525,7 +9525,7 @@
 			)
 		)
 		(property "KiLib_Generator" "connector/pin_header_socket"
-			(at 0 0 0)
+			(at 0 0 180)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "30a7d0da-d518-476e-b0c4-dd65aebc8389")
@@ -9536,12 +9536,12 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "GYbpS0fDTO"
+		(property "SKiDL Tag" "FZhTuYUojp"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ddefd3e7-60be-4301-9235-d82cfc9c5923")
+			(uuid "254cf287-3424-4891-81f0-43b8f533d55f")
 			(effects
 				(font
 					(size 1 1)
@@ -9554,7 +9554,7 @@
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "2008af74-235f-4ae1-835c-e2bf1c5e73c6")
+			(uuid "827e59d0-10ce-4a8a-96c3-f9e84409b04f")
 			(effects
 				(font
 					(size 1 1)
@@ -9562,13 +9562,13 @@
 				)
 			)
 		)
-		(path "/56c8c8b7-71c2-547c-86e1-0f3454b64dc8")
+		(path "/4322b949-9bab-5c9b-89dc-942911983187")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start 3.92 -1.38)
-			(end 3.92 6.46)
+			(end 3.92 9)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -9597,8 +9597,8 @@
 			(uuid "02c3259b-023c-4848-ab60-2f63cccf5aa6")
 		)
 		(fp_line
-			(start -1.38 6.46)
-			(end 3.92 6.46)
+			(start -1.38 9)
+			(end 3.92 9)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -9618,7 +9618,7 @@
 		)
 		(fp_line
 			(start -1.38 1.27)
-			(end -1.38 6.46)
+			(end -1.38 9)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -9648,7 +9648,7 @@
 		)
 		(fp_rect
 			(start -1.77 -1.77)
-			(end 4.32 6.85)
+			(end 4.32 9.39)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -9658,8 +9658,8 @@
 			(uuid "9e6c6eee-0193-47f5-85aa-fdb515134abd")
 		)
 		(fp_line
-			(start 3.81 6.35)
-			(end -1.27 6.35)
+			(start 3.81 8.89)
+			(end -1.27 8.89)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -9669,7 +9669,7 @@
 		)
 		(fp_line
 			(start 3.81 -1.27)
-			(end 3.81 6.35)
+			(end 3.81 8.89)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -9688,7 +9688,7 @@
 			(uuid "dad4fa38-9561-467f-8a84-da36179c68ca")
 		)
 		(fp_line
-			(start -1.27 6.35)
+			(start -1.27 8.89)
 			(end -1.27 0)
 			(stroke
 				(width 0.1)
@@ -9743,7 +9743,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "VIDEO_CSYNC_1")
+			(net "CSYNC")
 			(pintype "UNSPECIFIED")
 			(uuid "ba09d7ba-80a1-42fc-b700-732b5498505a")
 		)
@@ -9753,7 +9753,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "GND")
+			(net "HSYNC")
 			(pintype "UNSPECIFIED")
 			(uuid "abae6bf5-558a-48d6-989c-60c87bddafde")
 		)
@@ -9763,12 +9763,32 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "GND")
+			(net "VSYNC")
 			(pintype "UNSPECIFIED")
 			(uuid "ac54fdc5-52de-44d6-a070-a839a96126df")
 		)
+		(pad "7" thru_hole circle
+			(at 0 7.62 180)
+			(size 1.7 1.7)
+			(drill 1)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "GND")
+			(pintype "UNSPECIFIED")
+			(uuid "23167eac-580b-442e-b6f8-d443048ec3d1")
+		)
+		(pad "8" thru_hole circle
+			(at 2.54 7.62 180)
+			(size 1.7 1.7)
+			(drill 1)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "GND")
+			(pintype "UNSPECIFIED")
+			(uuid "8ecd602f-2c54-4532-8793-2a8165273dad")
+		)
 		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x03_P2.54mm_Vertical.step"
+		(model "${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x04_P2.54mm_Vertical.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -9842,7 +9862,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "B5lsAJloUo"
+		(property "SKiDL Tag" "2XWiIeu3uQ"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9868,7 +9888,7 @@
 				)
 			)
 		)
-		(path "/d79b64a1-321e-5eb2-aad0-00b4a01049e8")
+		(path "/0ed5e298-6643-5550-a276-bf1eec457ee5")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -10020,7 +10040,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "9jpid6Iurh"
+		(property "SKiDL Tag" "soZlQXfswJ"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10046,7 +10066,7 @@
 				)
 			)
 		)
-		(path "/6570b0c3-c734-5a9b-a4e7-d5b2d9523451")
+		(path "/08efe11f-8785-5d95-baa1-33a06d5867d7")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -10198,7 +10218,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "6YaIJ31uUa"
+		(property "SKiDL Tag" "cLCBCVYXrc"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10224,7 +10244,7 @@
 				)
 			)
 		)
-		(path "/77787c7c-3120-5fbd-955a-6a4a0bfa4c16")
+		(path "/8d7c6f6f-18b9-5f30-b212-c423bc8c6de7")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -10376,7 +10396,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "gN4XaRIAdY"
+		(property "SKiDL Tag" "pgsOLRd3MG"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10402,7 +10422,7 @@
 				)
 			)
 		)
-		(path "/bfc315d8-c9b6-55f8-935f-626a938ed4fe")
+		(path "/66217e5c-6d8a-5256-96a5-d15650f7eb9e")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -10890,7 +10910,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "5aj4yXbHA_"
+		(property "SKiDL Tag" "3TmPcpc965"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10916,7 +10936,7 @@
 				)
 			)
 		)
-		(path "/413d526e-92a8-54e6-a390-33e6e175241a")
+		(path "/196d659e-4db7-5fee-95fc-2cbdf0819d57")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -11215,7 +11235,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_UPLDY_P6_TO_UPLDX_P17")
+			(net "SIG_UPLDX_P17_TO_UPLDY_P6")
 			(pintype "UNSPECIFIED")
 			(uuid "85120a9f-e9fe-4b7b-9325-7135f7f6a1e8")
 		)
@@ -11364,7 +11384,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "UWRMK2rO4t"
+		(property "SKiDL Tag" "8z_1VZHw5q"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11390,7 +11410,7 @@
 				)
 			)
 		)
-		(path "/30ca2b8f-c80c-508f-871b-0954d3ca4355")
+		(path "/3f5aa183-c888-59e0-bae9-c6a4e0f61963")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -11539,7 +11559,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U74_P6_TO_U74_P2")
+			(net "SIG_U74_P2_TO_U74_P6")
 			(pintype "UNSPECIFIED")
 			(uuid "e78550ba-995f-4dd7-8033-12f81e8b3c32")
 		)
@@ -11579,7 +11599,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U74_P6_TO_U74_P2")
+			(net "SIG_U74_P2_TO_U74_P6")
 			(pintype "UNSPECIFIED")
 			(uuid "2fefcc13-b960-4b01-bf82-51b0ee7e9412")
 		)
@@ -11738,7 +11758,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "oCws6oubVe"
+		(property "SKiDL Tag" "rNjOgRKnq2"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11764,7 +11784,7 @@
 				)
 			)
 		)
-		(path "/12adc9e7-6bf3-5a51-9f1b-7981aec5fd91")
+		(path "/90a39816-f0a6-58dc-9a8a-90734457e470")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -11916,7 +11936,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "fg0g0H1kNX"
+		(property "SKiDL Tag" "kIjmkTutQ8"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11942,7 +11962,7 @@
 				)
 			)
 		)
-		(path "/50438a7f-2710-50a6-8acf-62cdd731750b")
+		(path "/d4225b23-6f5b-5f67-a45a-c42b603428dc")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -12094,7 +12114,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "ciFgVVlia6"
+		(property "SKiDL Tag" "GM7K3XIVzZ"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -12120,7 +12140,7 @@
 				)
 			)
 		)
-		(path "/42060ef5-37bb-517b-8124-d0ce62aaae06")
+		(path "/6addc105-0cb9-5541-9124-243524757173")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -12289,7 +12309,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U6_P4_TO_U7B_P9")
+			(net "SIG_U7B_P9_TO_U6_P4")
 			(pintype "UNSPECIFIED")
 			(uuid "4fb84d77-4c0c-46f6-8bba-bc8b88cf9739")
 		)
@@ -12499,7 +12519,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "PAD1_DATA")
+			(net "SIG_U6_P25_TO_U7C_P4")
 			(pintype "UNSPECIFIED")
 			(uuid "61001a56-728d-443e-a39b-a75fe9e56f30")
 		)
@@ -12608,7 +12628,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "lmCH9oH5Bq"
+		(property "SKiDL Tag" "P4hD9pNcJp"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -12634,7 +12654,7 @@
 				)
 			)
 		)
-		(path "/25d6ac77-8853-55e8-ba58-2ece184d7e3b")
+		(path "/f0eebaa9-ea55-5700-9805-641c565b1e9b")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -12903,7 +12923,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "VIDEO_CSYNC_1")
+			(net "CSYNC")
 			(pintype "UNSPECIFIED")
 			(uuid "df64e129-2389-48f6-b412-6b25ee436280")
 		)
@@ -13082,7 +13102,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "jHA7B9Yyd2"
+		(property "SKiDL Tag" "GKzIW9Bb8H"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -13108,7 +13128,7 @@
 				)
 			)
 		)
-		(path "/00ee6c56-fee4-5cd0-9153-7887a10436d7")
+		(path "/98afad14-52f9-5e1f-8462-4c95e9d41645")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -13716,7 +13736,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "kwTG3uDmIj"
+		(property "SKiDL Tag" "6ZGRR1irWr"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -13742,7 +13762,7 @@
 				)
 			)
 		)
-		(path "/b48ad87f-ab39-5d61-8c23-ea7e2b67e6f2")
+		(path "/65bad7e4-43a3-5733-83cf-9695b1197693")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -13894,7 +13914,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "6bioLqlud5"
+		(property "SKiDL Tag" "64o58wD604"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -13920,7 +13940,7 @@
 				)
 			)
 		)
-		(path "/6ffa0a2d-6f07-5a92-b7c6-713b1ad55a97")
+		(path "/0af954c8-6b9d-5f54-a391-2404b408fb26")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -14101,7 +14121,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "CHkzAA4GoD"
+		(property "SKiDL Tag" "0rau3Rd0tB"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14127,7 +14147,7 @@
 				)
 			)
 		)
-		(path "/f49ca225-b021-5ce3-8b6d-c4c80d7f3557")
+		(path "/dd623956-744b-5739-b766-f7d029106ddb")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -14405,7 +14425,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "k9l2THzZ_O"
+		(property "SKiDL Tag" "7MvWStDCoU"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14431,7 +14451,7 @@
 				)
 			)
 		)
-		(path "/4ccf384e-1269-5a9b-8247-e2a927cb1f19")
+		(path "/d4a0d0bd-56f5-5183-86fe-cf98bd2a491d")
 		(sheetname "/")
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -14894,7 +14914,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "9myrh8fftd"
+		(property "SKiDL Tag" "7juTrYD6uR"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14920,7 +14940,7 @@
 				)
 			)
 		)
-		(path "/713111b3-6b15-54d1-9034-e437416707c2")
+		(path "/ee351beb-c11f-545e-8e3e-5dcbc6e42edb")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -16554,7 +16574,7 @@
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
 			(roundrect_rratio 0.15625)
-			(net "GND")
+			(net "+5V")
 			(pintype "UNSPECIFIED")
 			(uuid "fb2680dc-1cac-4ae7-a850-ff841a70a4a1")
 		)
@@ -16564,7 +16584,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "+5V")
+			(net "GND")
 			(pintype "UNSPECIFIED")
 			(uuid "2de7bf47-0e2a-4fea-8d3f-9639ac020f01")
 		)
@@ -16643,7 +16663,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "rnxNsD9njb"
+		(property "SKiDL Tag" "brMaGlb_ft"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -16669,7 +16689,7 @@
 				)
 			)
 		)
-		(path "/e90e90b4-8ca1-5ffa-a9a0-72e6feb1deb2")
+		(path "/9ac290a9-41da-5826-b841-7b75c0803e9c")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -17157,7 +17177,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "DtQRnIqkPB"
+		(property "SKiDL Tag" "HXkMJgXhrS"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -17183,7 +17203,7 @@
 				)
 			)
 		)
-		(path "/62002926-f703-5dd1-89b5-402698080a24")
+		(path "/cbaff66a-6267-5c6d-a9c4-655b1c562878")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -17364,7 +17384,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "hjaEWois9I"
+		(property "SKiDL Tag" "qPvTvHt2rM"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -17390,7 +17410,7 @@
 				)
 			)
 		)
-		(path "/494a072a-f832-568f-90f4-d7802beb583b")
+		(path "/a4183859-27b0-576d-b019-1642f9031dd4")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -17749,7 +17769,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U41_P12_BUS")
+			(net "SIG_U573_P3_BUS")
 			(pintype "UNSPECIFIED")
 			(uuid "83061207-bcff-4d70-a436-c628106789a1")
 		)
@@ -17799,7 +17819,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_US1_P28_BUS")
+			(net "SIG_U41_P18_BUS")
 			(pintype "UNSPECIFIED")
 			(uuid "ce91f42c-5113-4eb0-9527-28c49cee1859")
 		)
@@ -17878,7 +17898,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "woDwEueerQ"
+		(property "SKiDL Tag" "KvLCxVr3aA"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -17904,7 +17924,7 @@
 				)
 			)
 		)
-		(path "/9202da3a-5ed2-505d-8229-f603ce4a7fc2")
+		(path "/faf5a13d-3245-566e-898e-41ec9a8a6d39")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -18085,7 +18105,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "FhQJlrRJPE"
+		(property "SKiDL Tag" "6BCLH5U0cB"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18111,7 +18131,7 @@
 				)
 			)
 		)
-		(path "/d70169c1-936c-502b-a25c-76df0de46119")
+		(path "/58187dff-9a6d-51b1-a067-0157400045e9")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -18292,7 +18312,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "vWVwYzGkqN"
+		(property "SKiDL Tag" "mH3FQM4T1T"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18318,7 +18338,7 @@
 				)
 			)
 		)
-		(path "/384872ff-0f8a-56dc-af45-6ce2d45986a9")
+		(path "/a94f3474-fc8e-513a-88e3-a29395f95836")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -18537,7 +18557,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U6_P4_TO_U7B_P9")
+			(net "SIG_U7B_P9_TO_U6_P4")
 			(pintype "UNSPECIFIED")
 			(uuid "46d57b8b-0a99-4b7e-81a5-2f9fcea0636d")
 		)
@@ -18686,7 +18706,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "Y_bf2VPoBF"
+		(property "SKiDL Tag" "HatBs8qxHi"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18712,7 +18732,7 @@
 				)
 			)
 		)
-		(path "/4be0d4cb-7d6d-5944-b8eb-c7c6c6548367")
+		(path "/43389b26-40f0-5e53-b2bc-4384f3afbfc2")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -18775,7 +18795,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "XTAL_DOT_IN")
+			(net "XTAL_21M_IN")
 			(pintype "UNSPECIFIED")
 			(uuid "8a52155a-4c88-4bec-a526-8eea672fe245")
 		)
@@ -18864,7 +18884,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "5la6CfoZs5"
+		(property "SKiDL Tag" "jKM2XMVHNZ"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18890,7 +18910,7 @@
 				)
 			)
 		)
-		(path "/b43d2f3b-9425-519b-a0b3-a4fd159a0529")
+		(path "/3e83c28b-60ff-5393-a2c0-5a6394f5ecbc")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -19042,7 +19062,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "OEVaNj5lY4"
+		(property "SKiDL Tag" "aSC24DRvW6"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -19068,7 +19088,7 @@
 				)
 			)
 		)
-		(path "/e6106ea1-c530-59a4-a1f8-61393a2daab1")
+		(path "/e27d0a9e-04dc-5266-8b8e-fc357bc80a1b")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -19237,7 +19257,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "PAD1_DATA")
+			(net "SIG_U6_P25_TO_U7C_P4")
 			(pintype "UNSPECIFIED")
 			(uuid "a51f64eb-b94b-4ba3-b28d-2f516cb3ac70")
 		)
@@ -19436,7 +19456,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "VWdiaBR_1u"
+		(property "SKiDL Tag" "UTwNjrzB8q"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -19462,7 +19482,7 @@
 				)
 			)
 		)
-		(path "/76d7002e-095e-5d31-9921-73240d13c1c8")
+		(path "/6d74491b-0b56-5b8d-a8ad-d2382a5a39ec")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -19614,7 +19634,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "PwGhIhulIx"
+		(property "SKiDL Tag" "f16Gb3Ezs6"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -19640,7 +19660,7 @@
 				)
 			)
 		)
-		(path "/eadf2579-380d-5e21-97ed-5f0b560c13f4")
+		(path "/446f8f51-e1a4-59fb-bfce-257a999d32a3")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -19821,7 +19841,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "29V8XaM6Al"
+		(property "SKiDL Tag" "FdOxfv842F"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -19847,7 +19867,7 @@
 				)
 			)
 		)
-		(path "/9969048e-bc3b-51b7-8740-ca6d3d79de91")
+		(path "/1959b6e8-3a9c-5f18-a95c-7074eef495f3")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -19999,7 +20019,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "3n_He1Ppk4"
+		(property "SKiDL Tag" "1xjICtwAaZ"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20025,7 +20045,7 @@
 				)
 			)
 		)
-		(path "/0297a691-da1d-5879-87c6-0e774fe68eac")
+		(path "/1898b576-562c-5c63-9d79-aea3f7781b12")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -20170,7 +20190,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "JCGrU7JUw1"
+		(property "SKiDL Tag" "x0Odqrl59T"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20196,7 +20216,7 @@
 				)
 			)
 		)
-		(path "/82afe732-b9bd-5009-805c-f2a6c369d1dd")
+		(path "/65d7901d-b1a4-51c2-8ff1-a348fdd6b566")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -20347,7 +20367,7 @@
 			(drill oval 2 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "PAD1_DATA")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "6d5850a2-ef69-495c-91b2-9e03e3d10666")
 		)
@@ -20357,7 +20377,7 @@
 			(drill oval 2 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "b35adf17-5b7c-44af-8bda-9910da1287d8")
 		)
@@ -20387,7 +20407,7 @@
 			(drill oval 2 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SCROLL_CLK_1")
+			(net "NC")
 			(pintype "UNSPECIFIED")
 			(uuid "c2873974-6915-406f-bc66-a356daf48460")
 		)
@@ -20466,7 +20486,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "otPg9nHJkf"
+		(property "SKiDL Tag" "O4MlBRfxES"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20492,7 +20512,7 @@
 				)
 			)
 		)
-		(path "/40e8343c-c74d-5ba6-ac69-f6b3bf0062d6")
+		(path "/f52a21d3-cfa4-52c0-bfe2-c720fe5accd1")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -20673,7 +20693,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "7fCX9vI78Z"
+		(property "SKiDL Tag" "N9n4YcYEtZ"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20699,7 +20719,7 @@
 				)
 			)
 		)
-		(path "/2b3c2c2a-f711-5129-99e6-eda04ebf2c1d")
+		(path "/1a3911cf-3b80-50f1-824b-83edd0537c05")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -20851,7 +20871,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "IsJ_vaNCIk"
+		(property "SKiDL Tag" "L6q98mKWAR"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20877,7 +20897,7 @@
 				)
 			)
 		)
-		(path "/fe46d819-0dd4-5d83-b961-f78f628617e7")
+		(path "/f56bf85f-c574-5229-b5c8-4449c9cba9af")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -21029,7 +21049,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "_DSfVWPLXM"
+		(property "SKiDL Tag" "HGpbXTkkeW"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21055,7 +21075,7 @@
 				)
 			)
 		)
-		(path "/ec3426a2-133f-51d6-bca9-ee30385f636d")
+		(path "/3307e716-1f16-5d8f-a3c1-1c3582a788f1")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -21364,7 +21384,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_US2_P18_TO_J5_P16")
+			(net "SIG_J5_P16_TO_US2_P18")
 			(pintype "UNSPECIFIED")
 			(uuid "55ba1f4f-6591-44c7-ab66-3a94eb2622f0")
 		)
@@ -21464,7 +21484,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_J5_P13_TO_US2_P28")
+			(net "SIG_US2_P28_TO_J5_P13")
 			(pintype "UNSPECIFIED")
 			(uuid "863d0be2-9ca6-4c6d-a94a-f325b0ebbf43")
 		)
@@ -21484,7 +21504,7 @@
 	(footprint "Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "c5047024-5d2b-419a-ae21-5f3ca457255d")
-		(at -65.845 38.295)
+		(at 61.225 26.725)
 		(descr "Through hole straight pin header, 2x02, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x02 2.54mm double row")
 		(property "Reference" "J7"
@@ -21543,7 +21563,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "j0BMM6Fpzd"
+		(property "SKiDL Tag" "KrNYtiW4IT"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21569,7 +21589,7 @@
 				)
 			)
 		)
-		(path "/1100a822-e7fe-5640-9f59-bb4c857edefb")
+		(path "/121c85b1-d271-590d-9e06-32baf190cdfc")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -21829,7 +21849,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "62h8A_2pdm"
+		(property "SKiDL Tag" "FPCRjiI4OW"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21855,7 +21875,7 @@
 				)
 			)
 		)
-		(path "/b14426b4-d622-5b74-8328-e0fc5ac87e0b")
+		(path "/f0f78d7a-d8be-5253-a068-9bff1c2f56f9")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -22007,7 +22027,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "rGX5PZXOUk"
+		(property "SKiDL Tag" "IayzdJeeyo"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22033,7 +22053,7 @@
 				)
 			)
 		)
-		(path "/687918d8-0f95-5602-b1c6-74df4c683e71")
+		(path "/c8da8e88-92c4-5cc2-8879-6c035567ac95")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -22185,7 +22205,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "AZBBS_Ofyf"
+		(property "SKiDL Tag" "RkvOHc6Bs9"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22211,7 +22231,7 @@
 				)
 			)
 		)
-		(path "/ef1d54ae-085d-5a01-90a7-953d7af82996")
+		(path "/5307dbbd-640d-59a7-8ce3-63f2642f963d")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -22392,7 +22412,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "t0L7CwT28j"
+		(property "SKiDL Tag" "URumgd6UFV"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22418,7 +22438,7 @@
 				)
 			)
 		)
-		(path "/6273fa26-4867-5787-bafb-6c7c65af5032")
+		(path "/090d9cf8-1771-5433-ad89-56b2ab07758c")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -22906,7 +22926,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "KFCwjhpSVo"
+		(property "SKiDL Tag" "h84wq7FS80"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22932,7 +22952,7 @@
 				)
 			)
 		)
-		(path "/6fc70470-f773-50ef-976a-30ee1a0d8f34")
+		(path "/194eb00a-7230-5fa1-8529-7f93ec94c4b1")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -23113,7 +23133,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "xLv_xerz9S"
+		(property "SKiDL Tag" "DcVvTzglkz"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23139,7 +23159,7 @@
 				)
 			)
 		)
-		(path "/bf51946e-8856-5cbc-9da2-3a4d50ab040d")
+		(path "/e3e1c6a8-7c7d-53c5-8c08-6b01c619212e")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -23320,7 +23340,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "wYcnyS8Tdc"
+		(property "SKiDL Tag" "WmFJKLbs3x"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23346,7 +23366,7 @@
 				)
 			)
 		)
-		(path "/cd988a7f-bdb2-5d0a-bb38-6b71fe5dc11d")
+		(path "/15f6c658-8237-5959-b0fb-765501bfb1b3")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -23623,7 +23643,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "CZVNAwGtCJ"
+		(property "SKiDL Tag" "cwYgZMIM3s"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23649,7 +23669,7 @@
 				)
 			)
 		)
-		(path "/b9fed625-519f-51de-8763-0602a4cf20b6")
+		(path "/4018b81c-0355-5f9f-8312-1ab35b919933")
 		(sheetname "/")
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -24112,7 +24132,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "2oV4zhidOO"
+		(property "SKiDL Tag" "nhl71nQYLD"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24138,7 +24158,7 @@
 				)
 			)
 		)
-		(path "/9b69b2cc-c12d-5229-9d69-e782235efe09")
+		(path "/aff82aaa-57d1-50f7-bfb3-047a0416bfc0")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -24319,7 +24339,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "MCxwB5WXJl"
+		(property "SKiDL Tag" "1pXdyXeqBN"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24345,7 +24365,7 @@
 				)
 			)
 		)
-		(path "/60750d6d-14a2-5049-a438-042a454814e1")
+		(path "/cb474ef7-679f-52e9-8ea6-2b7179c7f98c")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -24497,7 +24517,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "y_pgCrzYak"
+		(property "SKiDL Tag" "dcwfNBXAdW"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24523,7 +24543,7 @@
 				)
 			)
 		)
-		(path "/1ff741e9-0718-5fda-9900-20a0db9a2284")
+		(path "/a840d9d4-73e1-5092-8869-b08506f663eb")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -24675,7 +24695,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "PxF6s5K2Kf"
+		(property "SKiDL Tag" "3Do8He_FU5"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24701,7 +24721,7 @@
 				)
 			)
 		)
-		(path "/1a8f03e5-1b29-5505-8a12-af69805bf1f0")
+		(path "/7c700330-6a46-5b1d-9741-bc77af84662f")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -24960,7 +24980,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "M5SUb8PooT"
+		(property "SKiDL Tag" "nMcCwb4aQi"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24986,7 +25006,7 @@
 				)
 			)
 		)
-		(path "/0fa07672-035b-5b49-a596-7b08b9c254b6")
+		(path "/88ceb8b5-c101-57a9-a0bd-bbb8a4a00cde")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -25155,7 +25175,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "_tn6gZdWGt"
+		(property "SKiDL Tag" "kadrPPP0S8"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25181,7 +25201,7 @@
 				)
 			)
 		)
-		(path "/efd71f08-2b90-5566-80fc-dbd3c499beea")
+		(path "/04a6b3cc-cb52-579f-899c-eb0316fce841")
 		(sheetname "/")
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -25350,7 +25370,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "jQN4qYgn31"
+		(property "SKiDL Tag" "K4DtP9Qmbs"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25376,7 +25396,7 @@
 				)
 			)
 		)
-		(path "/137e3bb6-2420-5a7e-ab3e-ec08268657e5")
+		(path "/af0b70b1-5659-5416-b4ae-36211968dd2f")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -25557,7 +25577,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "WdyDqIpuGc"
+		(property "SKiDL Tag" "1POeX2xpQT"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25583,7 +25603,7 @@
 				)
 			)
 		)
-		(path "/28b558e6-922b-54bb-be53-a4367aebd41d")
+		(path "/1da1338d-aff2-5d1f-9857-bef7b8258124")
 		(sheetname "/")
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -25931,7 +25951,7 @@
 			(size 1.95 0.6)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net "VIDEO_CSYNC_1")
+			(net "CSYNC")
 			(pintype "UNSPECIFIED")
 			(uuid "efe0223b-bd35-4e44-9e54-234886ef8c07")
 		)
@@ -26010,7 +26030,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "hNvfWDKCzV"
+		(property "SKiDL Tag" "ddCN3mSCWm"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -26036,7 +26056,7 @@
 				)
 			)
 		)
-		(path "/cb728829-5585-503a-a0ba-589e04fb9f0d")
+		(path "/e754392e-0e15-5a88-942d-be4bd6b4df90")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -26217,7 +26237,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "ChYMlWxMzw"
+		(property "SKiDL Tag" "wZ1sQJ9dtp"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -26243,7 +26263,7 @@
 				)
 			)
 		)
-		(path "/1f015d96-baf8-5d81-a32a-cb03f56788e7")
+		(path "/e2f50be1-03a8-5f12-a438-2021c84065e3")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -26395,7 +26415,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "0TmtStjmpJ"
+		(property "SKiDL Tag" "XZnabX7zCM"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -26421,7 +26441,7 @@
 				)
 			)
 		)
-		(path "/dc13e7d8-fe21-50e7-bb69-e7cb21dafc58")
+		(path "/f4836d77-ee84-5e0d-871a-ffa0ad742c1f")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
@@ -26670,7 +26690,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_U41_P12_BUS")
+			(net "SIG_U573_P3_BUS")
 			(pintype "UNSPECIFIED")
 			(uuid "230c61fe-ccdd-4815-b184-266c33af515a")
 		)
@@ -26730,7 +26750,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_US1_P28_BUS")
+			(net "SIG_U41_P18_BUS")
 			(pintype "UNSPECIFIED")
 			(uuid "95784c92-b7c2-4045-8aa6-849d1299b9b2")
 		)
@@ -26909,7 +26929,7 @@
 				)
 			)
 		)
-		(property "SKiDL Tag" "0n3eo8HWyi"
+		(property "SKiDL Tag" "AHMfsM8wCl"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -26935,7 +26955,7 @@
 				)
 			)
 		)
-		(path "/391f129d-d8a7-5def-8f4e-47421d4da695")
+		(path "/c974b196-1f56-58fb-a538-6c55f84641bd")
 		(sheetname "/")
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)

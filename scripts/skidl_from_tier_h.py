@@ -70,7 +70,7 @@ def index_refs(data: dict) -> dict[str, dict]:
     for net_entry in data.get("nets") or []:
         for node in net_entry.get("nodes") or []:
             ref = node.get("ref") or "?"
-            if ref in ("?", "SCR1"):
+            if ref in ("?", "SCR1", "5V", "GND"):
                 continue
             rec = info.setdefault(ref, {"max_num": 0, "parts": set()})
             rec["max_num"] = max(rec["max_num"], int(node.get("num") or 0))

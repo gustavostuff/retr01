@@ -287,7 +287,7 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "AD725": _nums(16),
     "CART_EDGE_36": _nums(36),
     "BARREL_5V": ["1", "2", "3"],  # GCT DCJ200-10-A: 1=Center(+5V), 2=Shunt(GND), 3=Sleeve(GND)
-    "RGBS_HDR": _nums(6),
+    "RGBS_HDR": _nums(8),
     # CUI SJ1-3515N 5-pin horizontal TRS jack
     "TRS_P1": ["S", "T", "R", "TN", "RN"],
     "TRS_P2": ["S", "T", "R", "TN", "RN"],

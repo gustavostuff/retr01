@@ -149,20 +149,35 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         comp = _find_net_by_node(nets_map, "U725", "COMP")
         pin_connect(parts["J9"], "", "2", comp if comp is not None else _ensure_net(nets_map, "COMPOSITE_OUT"))
 
-    # J2 sync-capable RGB (docs/general/hardware.md): R/G/B + CSYNC/HSYNC pin 4, pin 5 GND or VSYNC.
+    # J2 2x4 RGB + CSYNC/HSYNC/VSYNC (docs/general/hardware.md).
+    # 1 R  2 G
+    # 3 B  4 CSYNC
+    # 5 HSYNC  6 VSYNC
+    # 7 GND  8 GND
     if "J2" in parts:
         for j2_pin, r_ref in ((1, "R9"), (2, "R10"), (3, "R11")):
             video = _find_net_for_part_pin(nets_map, r_ref, "1")
             if video is not None:
                 pin_connect(parts["J2"], "", j2_pin, video)
-        csync = _ensure_net(nets_map, "CSYNC")
+        csync = _find_net_by_name(nets_map, ("CSYNC", "VIDEO_CSYNC")) or _ensure_net(nets_map, "CSYNC")
         csync.name = "CSYNC"
         pin_connect(parts["J2"], "", 4, csync)
         if "UPLDV" in parts:
             pin_connect(parts["UPLDV"], "", int(P.UPLDV_EQ), csync)
+        if "UPLDX" in parts:
+            pin_connect(parts["UPLDX"], "CSYNC", "CSYNC", csync)
+        hsync = _find_net_by_name(nets_map, ("HSYNC", "VIDEO_HSYNC")) or _ensure_net(nets_map, "HSYNC")
+        hsync.name = "HSYNC"
+        pin_connect(parts["J2"], "", 5, hsync)
+        if "UPLDX" in parts:
+            pin_connect(parts["UPLDX"], "HSYNC", "HSYNC", hsync)
+        vsync = _find_net_by_name(nets_map, ("VSYNC", "VIDEO_VSYNC")) or _ensure_net(nets_map, "VSYNC")
+        vsync.name = "VSYNC"
+        pin_connect(parts["J2"], "", 6, vsync)
+        if "UPLDY" in parts:
+            pin_connect(parts["UPLDY"], "VSYNC", "VSYNC", vsync)
         if gnd is not None:
-            # RGBS default: pin 5 at GND (RGBHV mode jumper swaps pin 5 to VSYNC instead).
-            pin_connect(parts["J2"], "", 5, gnd)
-            pin_connect(parts["J2"], "", 6, gnd)
+            pin_connect(parts["J2"], "", 7, gnd)
+            pin_connect(parts["J2"], "", 8, gnd)
 
     # Arcade J5 2x10: sim has no GPIO net names yet; GND on P1/P2 footer pins (see wire above).

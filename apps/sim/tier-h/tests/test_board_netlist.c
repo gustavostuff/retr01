@@ -107,6 +107,13 @@ int main(void) {
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "RIGHT", r01s_avr128db28_s2_entity(&board.mcu_s2),
                                           "P2_RIGHT"),
                 "J5 RIGHT on P2");
+    expect_true(board.io.j2.pin_count == 8, "J2 is 2x4");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "CSYNC", r01s_ad724_entity(&board.ad724), "HSYNC"),
+                "J2 CSYNC on AD724 HSYNC");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J2 pin 7 GND");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND2", r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J2 pin 8 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "GND17", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J5 pin 17 GND");
     expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP",

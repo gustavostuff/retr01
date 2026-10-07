@@ -62,6 +62,7 @@ def apply_pinmap_extras() -> None:
     t["XTAL"] = ["1", "2"]
     t["R_1M"] = _nums(2)
     t["BARREL_5V"] = ["1", "2", "3"]
+    t["RGBS_HDR"] = _nums(8)
     t["MCP130"] = ["1", "2", "3"]
     t["TRS_P1"] = ["S", "T", "R", "TN", "RN"]
     t["TRS_P2"] = ["S", "T", "R", "TN", "RN"]
@@ -70,6 +71,16 @@ def apply_pinmap_extras() -> None:
     a["RCJ-012"] = {"2": "SIGNAL", "1A": "GND", "1B": "GND", "1C": "GND"}
     a["RCJ-014"] = dict(a["RCJ-012"])
     a["BARREL_5V"] = {"1": "+5V", "2": "GND", "3": "GND"}
+    a["RGBS_HDR"] = {
+        "1": "R",
+        "2": "G",
+        "3": "B",
+        "4": "CSYNC",
+        "5": "HSYNC",
+        "6": "VSYNC",
+        "7": "GND",
+        "8": "GND",
+    }
     a["MCP130"] = {"1": "RESET#", "2": "VDD", "3": "VSS"}
     a["TRS_P1"] = {"S": "GND", "T": "+5V", "R": "DATA", "TN": "NC", "RN": "NC"}
     a["TRS_P2"] = dict(a["TRS_P1"])

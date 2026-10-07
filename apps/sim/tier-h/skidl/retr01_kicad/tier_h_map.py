@@ -29,7 +29,7 @@ REFDES: dict[str, Res] = {
     "U04": ("74HCU04", fp.DIP14),
     "U74": ("74HC74", fp.DIP14),
     "J1": ("BARREL_5V", fp.BARREL),
-    "J2": ("RGBS_HDR", fp.HDR2x3),
+    "J2": ("RGBS_HDR", fp.HDR2x4),
     "J3": ("TRS_P1", fp.TRS),
     "J4": ("TRS_P2", fp.TRS),
     "J5": ("ARCADE_2x10", fp.HDR2x10),

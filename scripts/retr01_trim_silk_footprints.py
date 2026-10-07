@@ -44,6 +44,7 @@ STOCK: list[tuple[str, str]] = [
     # Jack_3.5mm_CUI_SJ1-3515N_Horizontal is custom (in-repo WRL + 3D pose); do not re-trim from stock.
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x02_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x03_P2.54mm_Vertical.kicad_mod"),
+    ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x04_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_1x06_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_1x10_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x10_P2.54mm_Vertical.kicad_mod"),

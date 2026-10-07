@@ -3,7 +3,7 @@
 
 #include "discrete_ic/entity.h"
 
-/* J2-style 2x3 male pin header (docs/general/hardware.md). */
+/* J2-style 2x4 male pin header (docs/general/hardware.md). */
 typedef struct R01aRgbsHdr {
     NsEntity base;
 } R01aRgbsHdr;

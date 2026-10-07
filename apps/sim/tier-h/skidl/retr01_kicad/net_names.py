@@ -194,6 +194,8 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("J2", "2"): "VIDEO_GREEN",
     ("J2", "3"): "VIDEO_BLUE",
     ("J2", "4"): "VIDEO_CSYNC",
+    ("J2", "5"): "VIDEO_HSYNC",
+    ("J2", "6"): "VIDEO_VSYNC",
     ("J3", "R"): "PAD1_DATA",
     ("J4", "R"): "PAD2_DATA",
     ("J5", "1"): "UPDI_PROG_DATA",
@@ -216,6 +218,8 @@ _PRESERVED_NETS = frozenset(
         "FSC_XTAL",
         "FSC_FIN",
         "CSYNC",
+        "HSYNC",
+        "VSYNC",
         "PHI2",
     }
 )

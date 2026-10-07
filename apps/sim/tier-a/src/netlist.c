@@ -262,6 +262,8 @@ static void build_auto(R01aBoard *b) {
 
     link_n(bx, "HWRAP", by, "CLK");
     link_n(bx, "CSYNC", j2, "CSYNC");
+    link_n(bx, "HSYNC", j2, "HSYNC");
+    link_n(by, "VSYNC", j2, "VSYNC");
     for (i = 0; i < 6; i++) {
         snprintf(iname, sizeof(iname), "INDEX%d", i);
         snprintf(aname, sizeof(aname), "A%d", i);
