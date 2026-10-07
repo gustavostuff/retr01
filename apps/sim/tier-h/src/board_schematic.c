@@ -208,10 +208,10 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, r32, "1", u04, "1A");
     r01s_pin_netlist_link(nl, r32, "2", u04, "1Y");
   }
-  r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "1", y2, "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C21"), "1", y2, "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C21"), "2", pwr, "GND");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "1", y2, "2");
   r01s_pin_netlist_link(nl, passive_entity(board, "C22"), "2", pwr, "GND");
-  r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "1", y2, "2");
-  r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "2", pwr, "GND");
   if (u04 && u74) {
     r01s_pin_netlist_link(nl, u04, "2Y", u74, "1CLK");
     r01s_pin_netlist_name_net(nl, u04, "2Y", "CLK_21M");
@@ -238,10 +238,10 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, r31, "1", u04, "3A");
     r01s_pin_netlist_link(nl, r31, "2", u04, "3Y");
   }
-  r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "1", y1, "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "1", y1, "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "2", pwr, "GND");
+  r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "1", y1, "2");
   r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "2", pwr, "GND");
-  r01s_pin_netlist_link(nl, passive_entity(board, "C27"), "1", y1, "2");
-  r01s_pin_netlist_link(nl, passive_entity(board, "C27"), "2", pwr, "GND");
   if (u04) {
     r01s_pin_netlist_link(nl, u04, "5A", pwr, "GND");
     r01s_pin_netlist_link(nl, u04, "6A", pwr, "GND");
@@ -249,10 +249,10 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
 
   /* Y3 3.579545 MHz FSC into AD724 FIN. */
   if (y3) {
-    r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "1", y3, "1");
+    r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "1", y3, "1");
+    r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "2", pwr, "GND");
+    r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "1", y3, "2");
     r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "2", pwr, "GND");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "1", y3, "2");
-    r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "2", pwr, "GND");
     r01s_pin_netlist_name_net(nl, y3, "1", "FSC_FIN");
     r01s_pin_netlist_name_net(nl, y3, "2", "FSC_XTAL");
     if (u725) {

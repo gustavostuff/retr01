@@ -68,7 +68,7 @@ Tie **U725** analog ground and **SCR1** / DAC return per video section in wiring
 
 ## 4. Crystals and clock logic
 
-Motherboard clocks are HC-49/US crystals plus **U04** (74HCU04) and **U74** (74HC74). Gate roles match [`docs/ic_behavior/74HCU04.md`](../ic_behavior/74HCU04.md) and [`docs/ic_behavior/74HC74.md`](../ic_behavior/74HC74.md). Load caps match [`pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md) (C22/C23 = Y2, C24/C25 = Y3, C26/C27 = Y1).
+Motherboard clocks are HC-49/US crystals plus **U04** (74HCU04) and **U74** (74HC74). Gate roles match [`docs/ic_behavior/74HCU04.md`](../ic_behavior/74HCU04.md) and [`docs/ic_behavior/74HC74.md`](../ic_behavior/74HC74.md). Load caps match [`pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md) (C21/C22 = Y2, C23/C24 = Y3, C25/C26 = Y1).
 
 U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 
@@ -78,8 +78,8 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 | --- | --- |
 | R32 (1 M ohm) | U04 pin 1 (1A) and pin 2 (1Y) |
 | Y2 pins 1 and 2 | U04 pin 1 and pin 2 (Pierce tank) |
-| C22 pin 1 / pin 2 | Y2 pin 1 / GND |
-| C23 pin 1 / pin 2 | Y2 pin 2 / GND |
+| C21 pin 1 / pin 2 | Y2 pin 1 / GND |
+| C22 pin 1 / pin 2 | Y2 pin 2 / GND |
 | U04 pin 3 (2A) | U04 pin 2 (1Y) |
 | U04 pin 4 (2Y) | U74 pin 3 (1CLK) |
 | U74 pin 6 (1/Q) | U74 pin 2 (1D) |
@@ -94,8 +94,8 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 | --- | --- |
 | R31 (1 M ohm) | U04 pin 5 (3A) and pin 6 (3Y) |
 | Y1 pins 1 and 2 | U04 pin 5 and pin 6 (Pierce tank) |
-| C26 pin 1 / pin 2 | Y1 pin 1 / GND |
-| C27 pin 1 / pin 2 | Y1 pin 2 / GND |
+| C25 pin 1 / pin 2 | Y1 pin 1 / GND |
+| C26 pin 1 / pin 2 | Y1 pin 2 / GND |
 | U04 pin 9 (4A) | U04 pin 6 (3Y) |
 | U04 pin 8 (4Y) | **R12** pin 1 (PHI2 to U1) |
 
@@ -105,8 +105,8 @@ Unused U04 inputs pin 11 (5A) and pin 13 (6A) tie to GND.
 
 | From | To |
 | --- | --- |
-| C24 pin 1 / pin 2 | Y3 pin 1 / GND |
-| C25 pin 1 / pin 2 | Y3 pin 2 / GND |
+| C23 pin 1 / pin 2 | Y3 pin 1 / GND |
+| C24 pin 1 / pin 2 | Y3 pin 2 / GND |
 | Y3 | U725 FIN (pin 3) per Analog Devices crystal recipe |
 
 ---

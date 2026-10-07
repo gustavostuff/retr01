@@ -1,10 +1,10 @@
 # Main PCB: capacitors
 
-Bulk **E1**, bypass **C1-C20**, and crystal loads **C22-C27**. There is no **C21**.
+Bulk **E1**, bypass **C1-C20**, and crystal loads **C21-C26**.
 
 Values match [`docs/passive_bom.md`](../../passive_bom.md) and `retr01_kicad/tier_h_map.py`. Zones: [README.md](README.md). Crystal loops: [crystals.md](crystals.md).
 
-Cart flash/EEPROM and pad ATtiny85 each have one 100 nF on **those** boards, not here.
+Cart flash, cart EEPROM, and the pad ATtiny85 each carry one 100 nF on those boards.
 
 ---
 
@@ -49,15 +49,15 @@ IC pin tables: [ics.md](ics.md).
 
 ---
 
-## Crystal loads C22-C27 (~18-20 pF, SKiDL value 22 pF)
+## Crystal loads C21-C26 (~18-20 pF, SKiDL value 22 pF)
 
-Sit at the crystal, not across the board. Pin 1 to the crystal pin, pin 2 to `GND`. Island layout: [crystals.md](crystals.md).
+Sit at the crystal. Pin 1 to the crystal pin, pin 2 to `GND`. Island layout: [crystals.md](crystals.md).
 
 | Cap | Crystal pin | Zone |
 |-----|-------------|------|
-| C22 | Y2 pin 1 | Z2 |
-| C23 | Y2 pin 2 | Z2 |
-| C24 | Y3 pin 1 | Z2 |
-| C25 | Y3 pin 2 | Z2 |
-| C26 | Y1 pin 1 | Z2 |
-| C27 | Y1 pin 2 | Z2 |
+| C21 | Y2 pin 1 | Z2 |
+| C22 | Y2 pin 2 | Z2 |
+| C23 | Y3 pin 1 | Z2 |
+| C24 | Y3 pin 2 | Z2 |
+| C25 | Y1 pin 1 | Z2 |
+| C26 | Y1 pin 2 | Z2 |

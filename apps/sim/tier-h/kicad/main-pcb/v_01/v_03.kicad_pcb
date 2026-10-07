@@ -5389,7 +5389,7 @@
 		(at -70.895 54.955)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
-		(property "Reference" "C22"
+		(property "Reference" "C21"
 			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "a0a1b354-ef79-41eb-822e-5f562299470f")
@@ -8609,7 +8609,7 @@
 		(at -70.895 67.105)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
-		(property "Reference" "C25"
+		(property "Reference" "C24"
 			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "447214d2-28ce-482b-85f6-8dbd8f652f29")
@@ -17842,7 +17842,7 @@
 		(at -70.895 63.055)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
-		(property "Reference" "C24"
+		(property "Reference" "C23"
 			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "5ed47811-b3f8-47b7-a8e1-cb66854e46c4")
@@ -18049,7 +18049,7 @@
 		(at -70.895 71.155)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
-		(property "Reference" "C26"
+		(property "Reference" "C25"
 			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "85addba2-70e7-4e4b-8044-4760ccd6dbc5")
@@ -23284,7 +23284,7 @@
 		(at -70.895 75.205)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
-		(property "Reference" "C27"
+		(property "Reference" "C26"
 			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "ae0579ba-c3f5-45b7-aa0d-02adcfa06903")
@@ -24924,7 +24924,7 @@
 		(at -70.895 59.005)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
-		(property "Reference" "C23"
+		(property "Reference" "C22"
 			(at 2.5 -2.5 0)
 			(layer "F.SilkS")
 			(uuid "4d78e562-b353-4b81-9c3f-c89492b7b678")

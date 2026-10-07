@@ -97,13 +97,13 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 | Even 2-16 | P2 bits to US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6` |
 | 17-20 | `GND` |
 
-Cabinet microswitch series **47 ohm** in [`hardware.md`](../../general/hardware.md) is not on the locked motherboard BOM ([`passive_bom.md`](../../passive_bom.md)).
+Cabinet microswitch series **47 ohm** lives on the harness ([`hardware.md`](../../general/hardware.md), [`passive_bom.md`](../../passive_bom.md)).
 
 ---
 
 ## J7, cab power/reset 2x2 (near J5)
 
-Cab harness brings `+5V`, `GND`, and reset. No onboard power slide or reset tactile.
+Cab harness brings `+5V`, `GND`, and reset.
 
 | Pin | Net |
 |-----|-----|
@@ -119,4 +119,4 @@ Layout (top view, pin 1 at top-left):
 3 (RESB)  4 (GND)
 ```
 
-J7 RESB has no onboard debounce RC. U130 holds the supervisor path ([ics.md](ics.md)).
+U130 holds the supervisor path on RESB ([ics.md](ics.md)).

@@ -33,14 +33,14 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 | C19 | U04 | 74HCU04 clock inverter | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 
-Cart flash, cart EEPROM, and the pad ATtiny85 each have one 100 nF on those boards. Those caps are not spawned on the motherboard canvas. Crystal loads stay C22-C27.
+Cart flash, cart EEPROM, and the pad ATtiny85 each carry one 100 nF on those boards. Crystal loads are C21-C26.
 
 Each bypass: cap `1` to IC VCC, cap `2` to `PS1` GND, `PS1` VDD to IC VCC.
 
 ## Bulk and crystals
 
 - **E1:** `+` to `+5V`, `-` to GND.
-- **Y1/Y2/Y3** (HC-49/US crystals): load **C22-C27**. **Y1** and **Y2** Pierce loops sit on **U04**. **U74** divides Y2 by 4 for DOT. Sim time still steps canned **OSC8M** / **OSC_DOT** engines; those chips are not on the exported netlist.
+- **Y1/Y2/Y3** (HC-49/US crystals): load **C21-C26**. **Y1** and **Y2** Pierce loops sit on **U04**. **U74** divides Y2 by 4 for DOT. Sim time steps canned **OSC8M** / **OSC_DOT** engines. Export carries Y1/Y2/Y3 plus U04/U74.
 - **Y3:** load caps plus **`FSC_XTAL`** into AD724 FIN when that path is modeled.
 
 ## Video DAC

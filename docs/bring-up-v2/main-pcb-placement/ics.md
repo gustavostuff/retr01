@@ -115,7 +115,7 @@ DAC **R1-R11** sit between U24 and J2 ([resistors.md](resistors.md)).
 
 ### U725, AD724 (SOIC-16)
 
-Bypass **C18** near APOS/DPOS. Crystal **Y3** with **C24/C25** ([crystals.md](crystals.md)).
+Bypass **C18** near APOS/DPOS. Crystal **Y3** with **C23/C24** ([crystals.md](crystals.md)).
 
 | U725 net | Destination |
 |----------|-------------|

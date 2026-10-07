@@ -25,7 +25,7 @@ The Sim tray shows **many identical CCAP / R sprites**. That is one part per loc
 | 23 | **100 nF** bypass | One per VCC site: 20 on main PCB, 2 on cart, 1 on pad |
 | 6 | Crystal load (~18-20 pF class) | **2 per crystal** on Y1 / Y2 / Y3. Same CCAP body as bypass, different value |
 
-So most CCAPs are **decoupling**. The extras are **crystal loads**, not more bypass.
+23 CCAPs are 100 nF bypass. Six are crystal loads.
 
 **Electrolytic (1)**
 

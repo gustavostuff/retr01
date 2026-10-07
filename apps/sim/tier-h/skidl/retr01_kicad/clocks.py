@@ -2,11 +2,11 @@
 
 Implements the discrete Pierce crystal oscillators and flip-flop divider
 documented in docs/general/hardware.md and docs/passive_bom.md:
-- CPU Clock (8.000 MHz): Y1 crystal + 74HCU04 inverters (Gates 3 & 4) + R31 (1M) + C26/C27
+- CPU Clock (8.000 MHz): Y1 crystal + 74HCU04 inverters (Gates 3 & 4) + R31 (1M) + C25/C26
 - Dot Clock (5.369318 MHz): Y2 crystal (21.47727 MHz) + 74HCU04 inverters (Gates 1 & 2)
-  + R32 (1M) + C22/C23 + SN74HC74 dual D flip-flop divider (Stage 1 divide-by-2 to 10.738 MHz,
+  + R32 (1M) + C21/C22 + SN74HC74 dual D flip-flop divider (Stage 1 divide-by-2 to 10.738 MHz,
   Stage 2 divide-by-2 to 5.369 MHz DOT clock)
-- FSC Clock (3.579545 MHz): Y3 crystal + C24/C25 directly to AD724 on-chip oscillator pins
+- FSC Clock (3.579545 MHz): Y3 crystal + C23/C24 directly to AD724 on-chip oscillator pins
 """
 
 from __future__ import annotations
@@ -21,12 +21,12 @@ CLOCK_REFDES = (
     "Y3",
     "R31",
     "R32",
+    "C21",
     "C22",
     "C23",
     "C24",
     "C25",
     "C26",
-    "C27",
 )
 
 
@@ -84,12 +84,12 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if "R32" in parts:
         pin_connect(parts["R32"], "", "1", xtal_dot_in)
         pin_connect(parts["R32"], "", "2", xtal_dot_out)
+    if "C21" in parts:
+        pin_connect(parts["C21"], "", "1", xtal_dot_in)
+        pin_connect(parts["C21"], "", "2", gnd)
     if "C22" in parts:
-        pin_connect(parts["C22"], "", "1", xtal_dot_in)
+        pin_connect(parts["C22"], "", "1", xtal_dot_out)
         pin_connect(parts["C22"], "", "2", gnd)
-    if "C23" in parts:
-        pin_connect(parts["C23"], "", "1", xtal_dot_out)
-        pin_connect(parts["C23"], "", "2", gnd)
 
     # 74HC74 Stage 1: divide 21.477 MHz by 2 -> 10.738 MHz
     clk_10m = _ensure_net(nets_map, "CLK_10M")
@@ -135,12 +135,12 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if "R31" in parts:
         pin_connect(parts["R31"], "", "1", xtal_cpu_in)
         pin_connect(parts["R31"], "", "2", xtal_cpu_out)
+    if "C25" in parts:
+        pin_connect(parts["C25"], "", "1", xtal_cpu_in)
+        pin_connect(parts["C25"], "", "2", gnd)
     if "C26" in parts:
-        pin_connect(parts["C26"], "", "1", xtal_cpu_in)
+        pin_connect(parts["C26"], "", "1", xtal_cpu_out)
         pin_connect(parts["C26"], "", "2", gnd)
-    if "C27" in parts:
-        pin_connect(parts["C27"], "", "1", xtal_cpu_out)
-        pin_connect(parts["C27"], "", "2", gnd)
 
     # -----------------------------------------------------------------------
     # 3. FSC subcarrier crystal Y3 (3.579545 MHz to AD724 FIN and FSC_XTAL)
@@ -150,11 +150,11 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if "Y3" in parts:
         pin_connect(parts["Y3"], "", "1", fin)
         pin_connect(parts["Y3"], "", "2", fsc_xtal)
+    if "C23" in parts:
+        pin_connect(parts["C23"], "", "1", fin)
+        pin_connect(parts["C23"], "", "2", gnd)
     if "C24" in parts:
-        pin_connect(parts["C24"], "", "1", fin)
+        pin_connect(parts["C24"], "", "1", fsc_xtal)
         pin_connect(parts["C24"], "", "2", gnd)
-    if "C25" in parts:
-        pin_connect(parts["C25"], "", "1", fsc_xtal)
-        pin_connect(parts["C25"], "", "2", gnd)
     if "U725" in parts:
         pin_connect(parts["U725"], "", "3", fin)

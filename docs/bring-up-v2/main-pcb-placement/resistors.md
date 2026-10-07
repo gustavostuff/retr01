@@ -4,7 +4,7 @@ All **R1-R32** on the motherboard. Axial THT, vertical 2.54 mm pitch. Pin 1 is t
 
 Values match [`docs/passive_bom.md`](../../passive_bom.md) and `retr01_kicad/tier_h_map.py`. Zones: [README.md](README.md). Pin-level wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../misc/kicad-schematic-tier-h-passives.md).
 
-Arcade **47 ohm** button series is not on this BOM.
+Cabinet microswitch series **47 ohm** lives on the cabinet harness.
 
 ---
 
@@ -63,7 +63,7 @@ Cart dampers sit in line between the motherboard buses and [J36](connectors.md).
 | R29 | 4.7k | `+5V` | U1 RDY | CPU at pin 2 |
 | R30 | 10k | `+5V` | U1 RESB | Z1 at U130 / U1 pin 40 |
 
-`CART_WE#` idles high through a pull-up in play ([`hardware.md`](../../general/hardware.md)). **R23** is the series damper on that net. The pull-up has no extra refdes on this BOM.
+`CART_WE#` idles high through a pull-up in play ([`hardware.md`](../../general/hardware.md)). **R23** is the series damper on that net.
 
 ---
 

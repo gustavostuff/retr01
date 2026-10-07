@@ -100,8 +100,8 @@ RESISTOR_REFDES: dict[str, str] = {
     "R32": "R_1M",
 }
 
-CAP_REFDES: dict[str, str] = {f"C{i}": "C_100N" for i in range(1, 22)}
-CAP_REFDES.update({f"C{i}": "C_22P" for i in range(22, 28)})
+CAP_REFDES: dict[str, str] = {f"C{i}": "C_100N" for i in range(1, 21)}
+CAP_REFDES.update({f"C{i}": "C_22P" for i in range(21, 27)})
 
 
 def resolve(refdes: str, part_hints: Iterable[str]) -> Optional[Res]:

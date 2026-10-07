@@ -61,7 +61,7 @@ Standard PCB fabrication specifications:
 
 Component placement follows the natural left-to-right signal flow of the console architecture:
 
-1. **Oscillator cluster:** Y1 (8.000 MHz), Y2 (21.47727 MHz), U04, 1 Mohm feedback resistors, and C22/C23/C26/C27 reside within a tight 20 mm analog loop. Load-capacitor grounds return to U04 pin 7 before the plane.
+1. **Oscillator cluster:** Y1 (8.000 MHz), Y2 (21.47727 MHz), U04, 1 Mohm feedback resistors, and C21/C22/C25/C26 reside within a tight 20 mm analog loop. Load-capacitor grounds return to U04 pin 7 before the plane.
 2. **Video pipeline flow:** Components align sequentially:
    `Beam X / Beam Y PLDs -> Compositor PLD -> Color PROM -> R-2R Resistor Ladder -> J2 Video Header`
    The R-2R ladder resistors mount immediately adjacent to the PROM data output pins to minimize analog trace capacitance.

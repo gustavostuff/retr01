@@ -157,12 +157,12 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - RGBS video output header J2
 - Optional composite video encoder: AD724 (U725, SOIC-16), Y3 (3.579545 MHz crystal), RCA jack J9
 - Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U725), C19 (U04), C20 (U74)
-- Crystal load capacitors: C22, C23 (Y2), C24, C25 (Y3), C26, C27 (Y1)
+- Crystal load capacitors: C21, C22 (Y2), C23, C24 (Y3), C25, C26 (Y1)
 
 **Placement and routing rules:**
 - Arranged in a strict sequential line:
   `Oscillator -> Beam X/Y -> Compositor -> Color PROM -> DAC Resistors -> J2 Video Header`
-- Y1, Y2, U04, feedback resistors, and load capacitors C22/C23/C26/C27 form one clock island (loop area under 20 mm). Analog Pierce loops stay at U04. Buffered PHI2 and DOT leave that island as digital clocks.
+- Y1, Y2, U04, feedback resistors, and load capacitors C21/C22/C25/C26 form one clock island (loop area under 20 mm). Analog Pierce loops stay at U04. Buffered PHI2 and DOT leave that island as digital clocks.
 - The 6-bit color index bus runs directly from Compositor outputs to Color PROM address inputs A[5:0] with trace lengths under 25 mm.
 - Resistors R1 through R8 mount immediately adjacent to PROM data output pins DQ[7:0].
 - The analog video header J2 sits on the top board edge directly adjacent to the DAC termination resistors R9, R10, and R11.
@@ -286,7 +286,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 
 ## 8. Capacitor assignment and placement reference
 
-The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 supervisor), 6 crystal load capacitors, and 1 bulk entry electrolytic capacitor. Cart flash, cart EEPROM, and pad ATtiny85 each have their own 100 nF on those boards, not in the C1-C20 motherboard set.
+The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 supervisor), 6 crystal load capacitors, and 1 bulk entry electrolytic capacitor. Cart flash, cart EEPROM, and pad ATtiny85 each carry one 100 nF on those boards.
 
 | Cap | Value | Type | Assigned IC or Net | Package | Power Pin | Ground Pin | Board Location | Proximity Requirement |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -310,11 +310,11 @@ The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 super
 | C18 | 100 nF | Ceramic | U725 (AD724 Composite) | SOIC-16 | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) | Mount adjacent to pins 4 and 14 |
 | C19 | 100 nF | Ceramic | U04 (74HCU04) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C20 | 100 nF | Ceramic | U74 (74HC74) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
-| C22 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
-| C23 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
-| C24 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 1 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
-| C25 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 2 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
-| C26 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
-| C27 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
+| C21 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
+| C22 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
+| C23 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 1 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C24 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 2 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C25 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
+| C26 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
 | E1 | 220 uF | Electrolytic | Power Entry Rail | Radial Can | +5V Rail | GND | Zone 1 (Top-Left) | Mount adjacent to J1 / SW1 |
 
