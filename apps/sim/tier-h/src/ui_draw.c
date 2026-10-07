@@ -121,12 +121,11 @@ static void islands_strip_clamp(R01sUi *ui) {
 }
 
 int ui_islands_strip_contains(const R01sUi *ui, int lx, int ly) {
-    SDL_Rect rc;
-    if (!ui) {
-        return 0;
-    }
-    islands_strip_bounds(ui, &rc);
-    return lx >= rc.x && lx < rc.x + rc.w && ly >= rc.y && ly < rc.y + rc.h;
+    /* Not drawn. A live hitbox at the default origin would steal IC clicks. */
+    (void)ui;
+    (void)lx;
+    (void)ly;
+    return 0;
 }
 
 void ui_islands_strip_clamp(R01sUi *ui) {
@@ -403,12 +402,15 @@ static void legend_strip_clamp(R01sUi *ui) {
 
 int ui_legend_strip_contains(const R01sUi *ui, int lx, int ly) {
     SDL_Rect rc;
-
     if (!ui) {
         return 0;
     }
+    /* Keep bounds in the build. The strip is not drawn, so it must not eat clicks. */
     legend_strip_bounds(ui, &rc);
-    return lx >= rc.x && lx < rc.x + rc.w && ly >= rc.y && ly < rc.y + rc.h;
+    (void)rc;
+    (void)lx;
+    (void)ly;
+    return 0;
 }
 
 void ui_legend_strip_clamp(R01sUi *ui) {
@@ -872,7 +874,7 @@ static void wave_monitor_clamp(R01sUi *ui) {
 
 int ui_wave_monitor_contains(const R01sUi *ui, int lx, int ly) {
     SDL_Rect rc;
-    if (!ui) {
+    if (!ui || !r01s_board_from_group(ui->group)) {
         return 0;
     }
     wave_monitor_bounds(ui, &rc);
@@ -1343,15 +1345,21 @@ static void draw_island_frames(SDL_Renderer *r, const R01sUi *ui) {
 }
 
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
-    SDL_Rect view_clip = {R01S_UI_VIEW_X, R01S_UI_VIEW_Y, R01S_UI_VIEW_W, R01S_UI_VIEW_H};
+    int z = ui_zoom(ui);
+    SDL_Rect view_clip;
     int rank;
     int n_chips;
 
     fill_rect(r, 0, 0, R01S_LOGIC_W, R01S_LOGIC_H, R01S_BOARD_BG_R, R01S_BOARD_BG_G, R01S_BOARD_BG_B);
 
     /* Scale first. SetClipRect stores the rect multiplied by the current scale,
-     * and SetScale does not update a clip that was set earlier. */
-    SDL_RenderSetScale(r, (float)ui_zoom(ui), (float)ui_zoom(ui));
+     * so pass the pre-scale view (VIEW / zoom) and the stored scissor matches the
+     * 640x360 target. */
+    view_clip.x = R01S_UI_VIEW_X;
+    view_clip.y = R01S_UI_VIEW_Y;
+    view_clip.w = (R01S_UI_VIEW_W + z - 1) / z;
+    view_clip.h = (R01S_UI_VIEW_H + z - 1) / z;
+    SDL_RenderSetScale(r, (float)z, (float)z);
     SDL_RenderSetClipRect(r, &view_clip);
     draw_island_frames(r, ui);
 

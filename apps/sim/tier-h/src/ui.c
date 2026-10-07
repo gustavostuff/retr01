@@ -464,3 +464,83 @@ void r01s_ui_clamp_pan(R01sUi *ui) {
         ui->pan_y = max_y;
     }
 }
+
+void r01s_ui_letterbox_dst(int out_w, int out_h, SDL_Rect *dst, int *scale_out) {
+    int sx;
+    int sy;
+    int scale;
+    if (!dst) {
+        return;
+    }
+    if (out_w < 1) {
+        out_w = 1;
+    }
+    if (out_h < 1) {
+        out_h = 1;
+    }
+    sx = out_w / R01S_LOGIC_W;
+    sy = out_h / R01S_LOGIC_H;
+    scale = sx < sy ? sx : sy;
+    if (scale < 1) {
+        scale = 1;
+    }
+    dst->w = R01S_LOGIC_W * scale;
+    dst->h = R01S_LOGIC_H * scale;
+    dst->x = (out_w - dst->w) / 2;
+    dst->y = (out_h - dst->h) / 2;
+    if (scale_out) {
+        *scale_out = scale;
+    }
+}
+
+void r01s_ui_logic_from_window(SDL_Window *win, SDL_Renderer *ren, int wx, int wy, int *lx, int *ly) {
+    int ww = 1;
+    int wh = 1;
+    int ow = 1;
+    int oh = 1;
+    int ox;
+    int oy;
+    int scale = 1;
+    SDL_Rect dst;
+    if (!lx || !ly) {
+        return;
+    }
+    if (win) {
+        SDL_GetWindowSize(win, &ww, &wh);
+    }
+    if (ren) {
+        SDL_GetRendererOutputSize(ren, &ow, &oh);
+    }
+    if (ww < 1) {
+        ww = 1;
+    }
+    if (wh < 1) {
+        wh = 1;
+    }
+    if (ow < 1) {
+        ow = 1;
+    }
+    if (oh < 1) {
+        oh = 1;
+    }
+    ox = wx * ow / ww;
+    oy = wy * oh / wh;
+    r01s_ui_letterbox_dst(ow, oh, &dst, &scale);
+    *lx = ui_div_floor(ox - dst.x, scale);
+    *ly = ui_div_floor(oy - dst.y, scale);
+}
+
+void r01s_ui_present_canvas(SDL_Renderer *ren, SDL_Texture *target) {
+    SDL_Rect dst;
+    int ow = R01S_LOGIC_W;
+    int oh = R01S_LOGIC_H;
+    if (!ren || !target) {
+        return;
+    }
+    SDL_GetRendererOutputSize(ren, &ow, &oh);
+    r01s_ui_letterbox_dst(ow, oh, &dst, NULL);
+    SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+    SDL_RenderClear(ren);
+    SDL_RenderCopy(ren, target, NULL, &dst);
+    SDL_RenderPresent(ren);
+}

@@ -135,19 +135,8 @@ static void layout_two_islands(NsIslandBuilder *b) {
     wrap_island(ana);
 }
 
-static void logic_from_window(SDL_Window *win, int scale, int win_x, int win_y, int *lx, int *ly) {
-    int ww, wh, draw_w, draw_h, ox, oy;
-    SDL_GetWindowSize(win, &ww, &wh);
-    if (scale < 1) {
-        scale = 1;
-    }
-    draw_w = R01S_LOGIC_W * scale;
-    draw_h = R01S_LOGIC_H * scale;
-    ox = (ww - draw_w) / 2;
-    oy = (wh - draw_h) / 2;
-    /* Floor division: the black margin must not alias onto logic pixel 0. */
-    *lx = ui_div_floor(win_x - ox, scale);
-    *ly = ui_div_floor(win_y - oy, scale);
+static void logic_from_window(SDL_Window *win, SDL_Renderer *ren, int win_x, int win_y, int *lx, int *ly) {
+    r01s_ui_logic_from_window(win, ren, win_x, win_y, lx, ly);
 }
 
 /* Write view state a moment after the last edit. Quit still saves immediately. */
@@ -175,8 +164,7 @@ static void autosave_layout(R01sUi *ui) {
 }
 
 static void present(SDL_Renderer *ren, SDL_Texture *target, SDL_Window *win, int *scale_io) {
-    int ww, wh, scale, draw_w, draw_h;
-    SDL_Rect dst;
+    int ww, wh, scale;
     SDL_GetWindowSize(win, &ww, &wh);
     scale = ww / R01S_LOGIC_W;
     if (wh / R01S_LOGIC_H < scale) {
@@ -185,17 +173,10 @@ static void present(SDL_Renderer *ren, SDL_Texture *target, SDL_Window *win, int
     if (scale < 1) {
         scale = 1;
     }
-    *scale_io = scale;
-    draw_w = R01S_LOGIC_W * scale;
-    draw_h = R01S_LOGIC_H * scale;
-    dst.x = (ww - draw_w) / 2;
-    dst.y = (wh - draw_h) / 2;
-    dst.w = draw_w;
-    dst.h = draw_h;
-    SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-    SDL_RenderClear(ren);
-    SDL_RenderCopy(ren, target, NULL, &dst);
-    SDL_RenderPresent(ren);
+    if (scale_io) {
+        *scale_io = scale;
+    }
+    r01s_ui_present_canvas(ren, target);
     if (!(SDL_GetWindowFlags(win) & SDL_WINDOW_SHOWN)) {
         SDL_ShowWindow(win);
     }
@@ -369,7 +350,7 @@ int r01a_ui_run(struct R01aBoard *board) {
             } else {
                 SDL_GetMouseState(&mx, &my);
             }
-            logic_from_window(win, scale, mx, my, &lx, &ly);
+            logic_from_window(win, ren, mx, my, &lx, &ly);
             r01s_ui_handle_event(&ui, &ev, lx, ly);
         }
         if (r01a_lab_running(board)) {

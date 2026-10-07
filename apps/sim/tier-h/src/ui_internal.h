@@ -78,6 +78,12 @@ static inline void ui_logic_to_board(const R01sUi *ui, int lx, int ly, int *bx, 
     *by = ui_div_floor(ly, z) - R01S_UI_VIEW_Y + ui->pan_y;
 }
 
+/* Zoom-divided screen point (after hit_board_top divides logic by zoom) to board. */
+static inline void ui_zoom_to_board(const R01sUi *ui, int zx, int zy, int *bx, int *by) {
+    *bx = zx - R01S_UI_VIEW_X + ui->pan_x;
+    *by = zy - R01S_UI_VIEW_Y + ui->pan_y;
+}
+
 /* ui_font.c */
 int font_ensure(void);
 void font_shutdown(void);
@@ -139,7 +145,7 @@ int ui_lcd_scale_2x(const R01sUi *ui);
 void ui_set_lcd_scale_value(R01sUi *ui, int scale_2x);
 /* IC pin under logic-space (lx, ly), or -1. Package pins only. */
 int ui_ic_hover_pin(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
-/* Opaque drawn pixels. lx, ly are zoom-divided screen coords. */
+/* PNG sprite rectangle, or enclosing rect for code-drawn parts. lx, ly are zoom-divided. */
 int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly);
 int ui_screen_render_mode(const R01sUi *ui);
 void ui_set_lcd_scale(R01sUi *ui, int scale_2x);

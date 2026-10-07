@@ -874,40 +874,56 @@ static int glyph_pins_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly)
     return 0;
 }
 
-/* lx, ly are zoom-divided screen coords, matching the draw. */
+static int board_rect_hit(int bx, int by, int x, int y, int w, int h) {
+    return w > 0 && h > 0 && bx >= x && by >= y && bx < x + w && by < y + h;
+}
+
+/* DIP body plus the pin stubs drawn on the long sides. */
+static int ic_enclosing_hit(const R01sEntity *e, int bx, int by) {
+    int x = e->board_x;
+    int y = e->board_y;
+    int w = e->body_w;
+    int h = e->body_h;
+    if (r01s_orient_is_horiz(e->orient)) {
+        x -= R01S_CHIP_PIN_OUT;
+        w += 2 * R01S_CHIP_PIN_OUT;
+    } else {
+        y -= R01S_CHIP_PIN_OUT;
+        h += 2 * R01S_CHIP_PIN_OUT;
+    }
+    return board_rect_hit(bx, by, x, y, w, h);
+}
+
+/* lx, ly are zoom-divided screen coords, matching the draw (pan already in ui_board_s*). */
 int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
-    int x;
-    int y;
+    int bx;
+    int by;
     if (!ui || !e) {
         return 0;
     }
+    ui_zoom_to_board(ui, lx, ly, &bx, &by);
     if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
-        int bx = lx - R01S_UI_VIEW_X + ui->pan_x;
-        int by = ly - R01S_UI_VIEW_Y + ui->pan_y;
         return r01s_passive_hit((const R01sPassive *)(const void *)e, bx, by);
     }
-    x = ui_board_sx(ui, e->board_x);
-    y = ui_board_sy(ui, e->board_y);
+    if (e->visual == R01S_ENTITY_VIS_OSC) {
+        return ns_osc4legs_hit(e, bx, by);
+    }
+    if (e->visual == R01S_ENTITY_VIS_PIN_HDR) {
+        return ns_pin_header_hit(e, bx, by);
+    }
     if (e->visual == R01S_ENTITY_VIS_IC) {
-        if (ic_pin_index_at(ui, e, lx, ly) >= 0) {
-            return 1;
-        }
-        return filled_at(lx, ly, x, y, e->body_w, e->body_h);
+        return ic_enclosing_hit(e, bx, by);
     }
     if (e->visual == R01S_ENTITY_VIS_PWR) {
+        int x = ui_board_sx(ui, e->board_x);
+        int y = ui_board_sy(ui, e->board_y);
         int ix = x + (e->body_w - R01S_UI_BATTERY_W) / 2;
         int iy = y + 2;
-        /* Black plate is drawn under the PNG; transparent PNG pixels still grab. */
         if (filled_at(lx, ly, x, y, e->body_w, e->body_h) ||
             filled_at(lx, ly, ix, iy, R01S_UI_BATTERY_W, R01S_UI_BATTERY_H)) {
             return 1;
         }
         return glyph_pins_hit(ui, e, lx, ly);
-    }
-    if (e->visual == R01S_ENTITY_VIS_OSC) {
-        int bx = lx - R01S_UI_VIEW_X + ui->pan_x;
-        int by = ly - R01S_UI_VIEW_Y + ui->pan_y;
-        return ns_osc4legs_hit(e, bx, by);
     }
     if (e->visual == R01S_ENTITY_VIS_DISPLAY && e->part && strcmp(e->part, "SCREEN_SINK") == 0) {
         const R01sVideoSink *sink = (const R01sVideoSink *)(e->impl ? e->impl : (void *)e);
@@ -916,12 +932,12 @@ int ui_part_image_hit(const R01sUi *ui, const R01sEntity *e, int lx, int ly) {
         if (sink) {
             r01s_video_sink_lcd_size(sink, &lcd_w, &lcd_h);
         }
-        if (filled_at(lx, ly, x, y, lcd_w, lcd_h)) {
+        if (board_rect_hit(bx, by, e->board_x, e->board_y, lcd_w, lcd_h)) {
             return 1;
         }
         return glyph_pins_hit(ui, e, lx, ly);
     }
-    return filled_at(lx, ly, x, y, e->body_w, e->body_h);
+    return board_rect_hit(bx, by, e->board_x, e->board_y, e->body_w, e->body_h);
 }
 
 void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {

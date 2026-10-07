@@ -206,6 +206,13 @@ void r01s_ui_sync_gamepads(R01sUi *ui);
 uint8_t r01s_ui_gamepad_port(const R01sUi *ui, int player);
 void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r);
 
+/* Integer letterbox of the 640x360 canvas in renderer output pixels. */
+void r01s_ui_letterbox_dst(int out_w, int out_h, SDL_Rect *dst, int *scale_out);
+/* Map window mouse to logic pixels (same space as r01s_ui_draw). */
+void r01s_ui_logic_from_window(SDL_Window *win, SDL_Renderer *ren, int wx, int wy, int *lx, int *ly);
+/* Clear, copy the logic canvas through the letterbox, present. */
+void r01s_ui_present_canvas(SDL_Renderer *ren, SDL_Texture *target);
+
 /* Black boot screen during IC catchup. spin_frame advances on worker->main ticks. */
 void r01s_ui_draw_boot(R01sUi *ui, SDL_Renderer *r, int spin_frame);
 int r01s_ui_handle_event(R01sUi *ui, const SDL_Event *e, int logic_x, int logic_y);

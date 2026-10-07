@@ -45,16 +45,7 @@ static void catchup_signal_ui_tick(R01sApp *app, R01sBoard *board) {
 #define R01S_SIM_MAX_STEPS_PER_FRAME 24
 
 static void logic_from_window(const R01sApp *app, int win_x, int win_y, int *lx, int *ly) {
-    int ww, wh, draw_w, draw_h, ox, oy, scale;
-    SDL_GetWindowSize(app->win, &ww, &wh);
-    scale = app->scale > 0 ? app->scale : 1;
-    draw_w = R01S_LOGIC_W * scale;
-    draw_h = R01S_LOGIC_H * scale;
-    ox = (ww - draw_w) / 2;
-    oy = (wh - draw_h) / 2;
-    /* Floor division: the black margin must not alias onto logic pixel 0. */
-    *lx = ui_div_floor(win_x - ox, scale);
-    *ly = ui_div_floor(win_y - oy, scale);
+    r01s_ui_logic_from_window(app->win, app->ren, win_x, win_y, lx, ly);
 }
 
 static void app_autosave_layout(R01sApp *app);
@@ -192,8 +183,7 @@ int r01s_app_catchup_active(const R01sApp *app) {
 
 /* Draw + present boot UI; reveal window on first paint so setup never flashes empty. */
 static void app_present_boot(R01sApp *app, int spin) {
-    int ww, wh, scale, draw_w, draw_h;
-    SDL_Rect dst;
+    int ww, wh, scale;
 
     if (!app || !app->ren || !app->target || !app->win) {
         return;
@@ -213,17 +203,7 @@ static void app_present_boot(R01sApp *app, int spin) {
         }
         app->scale = scale;
     }
-    draw_w = R01S_LOGIC_W * scale;
-    draw_h = R01S_LOGIC_H * scale;
-    dst.x = (ww - draw_w) / 2;
-    dst.y = (wh - draw_h) / 2;
-    dst.w = draw_w;
-    dst.h = draw_h;
-
-    SDL_SetRenderDrawColor(app->ren, 0, 0, 0, 255);
-    SDL_RenderClear(app->ren);
-    SDL_RenderCopy(app->ren, app->target, NULL, &dst);
-    SDL_RenderPresent(app->ren);
+    r01s_ui_present_canvas(app->ren, app->target);
 
     if (!(SDL_GetWindowFlags(app->win) & SDL_WINDOW_SHOWN)) {
         SDL_ShowWindow(app->win);
@@ -466,8 +446,7 @@ void r01s_app_shutdown(R01sApp *app) {
 }
 
 void r01s_app_frame(R01sApp *app) {
-    int ww, wh, scale, draw_w, draw_h;
-    SDL_Rect dst;
+    int ww, wh, scale;
     R01sIslandGroup *group;
     R01sBoard *board;
     Uint32 now;
@@ -594,17 +573,7 @@ void r01s_app_frame(R01sApp *app) {
         }
         app->scale = scale;
     }
-    draw_w = R01S_LOGIC_W * scale;
-    draw_h = R01S_LOGIC_H * scale;
-    dst.x = (ww - draw_w) / 2;
-    dst.y = (wh - draw_h) / 2;
-    dst.w = draw_w;
-    dst.h = draw_h;
-
-    SDL_SetRenderDrawColor(app->ren, 0, 0, 0, 255);
-    SDL_RenderClear(app->ren);
-    SDL_RenderCopy(app->ren, app->target, NULL, &dst);
-    SDL_RenderPresent(app->ren);
+    r01s_ui_present_canvas(app->ren, app->target);
     app_autosave_layout(app);
 }
 

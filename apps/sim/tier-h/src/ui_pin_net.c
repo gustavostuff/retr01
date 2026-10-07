@@ -331,6 +331,8 @@ int ui_hit_chip_pin(const R01sUi *ui, int lx, int ly, int *chip_out, int *pin_ou
     if (!ui || !ui_logic_in_view(lx, ly)) {
         return 0;
     }
+    lx = ui_div_floor(lx, ui_zoom(ui));
+    ly = ui_div_floor(ly, ui_zoom(ui));
 
     for (ci = ui->chip_count - 1; ci >= 0; ci--) {
         const R01sEntity *e = ui->chips[ci];
