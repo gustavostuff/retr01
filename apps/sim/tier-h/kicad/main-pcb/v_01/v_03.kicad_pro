@@ -301,6 +301,24 @@
         "via_diameter": 0.6,
         "via_drill": 0.3,
         "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "Layer4",
+        "pcb_color": "rgb(220, 143, 50)",
+        "priority": 0,
+        "schematic_color": "rgb(220, 143, 50)",
+        "track_width": 0.2,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6
       }
     ],
     "meta": {
@@ -308,7 +326,172 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_patterns": [
+      {
+        "netclass": "Layer4",
+        "pattern": "VIDEO*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "XTAL*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "FSC*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "AUDIO*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "COMPOSITE*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "PAD*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "MCU_SDA*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "MCU_SCL*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_SDA*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_SCL*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "MCU_M_UPDI*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "MCU_S1_UPDI*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "MCU_S2_UPDI*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "UPDI*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SS_S1*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SS_S2*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_A14"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_A15"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_A16"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_A17"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CART_A18"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CPU_RDY*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CPU_RES*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CPU_IRQ*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CPU_NMIB"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "RESET*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CSYNC"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "HSYNC"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "VSYNC"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SDA_PULLUP*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SCL_PULLUP*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SCROLL_CLK*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J5*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_US2*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_UM_*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_U725*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J3*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J4*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J7*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J8*"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J9*"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {

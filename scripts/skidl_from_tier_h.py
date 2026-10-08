@@ -361,6 +361,10 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
         sys.path.insert(0, str(TIER_H_SKIDL_DIR))
     from retr01_kicad.clocks import ensure_clock_parts, wire_clocks
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
+    from retr01_kicad.layer4_nets import (
+        annotate_netlist_layer4_class,
+        apply_layer4_netclass,
+    )
     from retr01_kicad.mobo_scope import normalize_export_node
     from retr01_kicad.net_names import name_all_nets
     from retr01_kicad.power_rails import restore_rail_net_names, wire_power_rails
@@ -435,10 +439,13 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
             elif str(p.num) == "1" and p.net is not None:
                 p.net.name = "+5V"
 
+    layer4_names = apply_layer4_netclass(unique_nets)
+
     buf = StringIO()
     generate_netlist(file_=buf)
     # Skidl 2.3 sometimes emits the +5V rail as NET_NNN despite net.name="+5V".
     out = annotate_netlist_pinfunctions(buf.getvalue(), parts)
+    out = annotate_netlist_layer4_class(out, layer4_names)
     import re as _re
 
     out = _re.sub(r'\(name "\+5V\d+"\)', '(name "+5V")', out)
@@ -504,6 +511,11 @@ def main() -> None:
     print(f"wrote {out_path} ({len(netlist_text)} bytes) - PRELIMINARY / NOT FAB-READY", file=sys.stderr)
 
     pcb_dir = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb/v_01"
+    if str(TIER_H_SKIDL_DIR) not in sys.path:
+        sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+    from retr01_kicad.layer4_nets import layer4_net_names_from_netlist, patch_kicad_pro
+
+    layer4_from_net = layer4_net_names_from_netlist(netlist_text)
     for pcb_path in sorted(pcb_dir.glob("v_0*.kicad_pcb")):
         old = pcb_path.read_text(encoding="utf-8")
         new = patch_pcb_clock_straps(old)
@@ -511,6 +523,12 @@ def main() -> None:
         if new != old:
             pcb_path.write_text(new, encoding="utf-8")
             print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
+    for pro_path in sorted(pcb_dir.glob("v_0*.kicad_pro")):
+        old = pro_path.read_text(encoding="utf-8")
+        new = patch_kicad_pro(old, layer4_from_net)
+        if new != old:
+            pro_path.write_text(new, encoding="utf-8")
+            print(f"updated Layer4 net class in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
 
 
 if __name__ == "__main__":

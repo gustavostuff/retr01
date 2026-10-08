@@ -113,6 +113,7 @@
 		)
 		(capping no)
 		(filling no)
+		(zone_defaults)
 		(pcbplotparams
 			(layerselection 0x00000000_00000000_55555555_5755f5ff)
 			(plot_on_all_layers_selection 0x00000000_00000000_00000000_00000000)
@@ -333,13 +334,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "01797d5a-1b88-4ffb-b933-387a1229fbef")
-		(at 241.46 43)
+		(at 263.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R9"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "8156621f-2358-47e3-a413-d2bc3a63307f")
+			(uuid "2256aa5d-3e75-4487-95ac-fccc0b5985ea")
 			(effects
 				(font
 					(size 1 1)
@@ -350,7 +351,7 @@
 		(property "Value" "75R"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "45e70519-e24f-4974-a89a-476a977ded07")
+			(uuid "5c6088e2-9822-4e08-aa95-f61509bbfe25")
 			(effects
 				(font
 					(size 1 1)
@@ -362,7 +363,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "32315598-74d6-4ac6-850b-43973a1b524e")
+			(uuid "fb7402e0-7eed-4bd5-9847-0fbcf2eaed04")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -373,7 +374,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "aaf8258f-d319-48f1-8c1c-5c6bab0dcb67")
+			(uuid "9bf68b31-a27b-4de4-b984-07f1d7fcf070")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -722,13 +723,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "01b34f6a-e080-451c-807e-314199c7b889")
-		(at 192.46 43)
+		(at 214.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R2"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "ad9c4db7-5ee8-494f-9d78-bd5725a82f46")
+			(uuid "2b9daf4d-6651-4408-8616-b672275eb98c")
 			(effects
 				(font
 					(size 1 1)
@@ -739,7 +740,7 @@
 		(property "Value" "4k"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "f5a4db0a-57f6-45b4-84ce-8066c55788d3")
+			(uuid "6d4e660a-c298-459a-ade1-d24cfa6e28fb")
 			(effects
 				(font
 					(size 1 1)
@@ -751,7 +752,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "2386e5a8-ccfc-4b34-a2e4-b48f4c34a0c9")
+			(uuid "3f2f2278-f792-44d2-9a8d-9d28502a4113")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -762,7 +763,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d82c3ae7-95f0-4960-9a6b-0f2d1c88a011")
+			(uuid "578da4d0-0769-4ab3-b9a3-f407b72e05e1")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2870,13 +2871,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "16ca83ea-4e81-4456-a03a-18beed768144")
-		(at 206.46 43)
+		(at 228.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R4"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "781b09fa-320b-4733-8c26-efccbcd9c1ee")
+			(uuid "45cc4357-0627-4dfb-9bb5-0854d402a03a")
 			(effects
 				(font
 					(size 1 1)
@@ -2887,7 +2888,7 @@
 		(property "Value" "4k"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "d39305e5-e6a0-48b1-9fb9-68178546f2e6")
+			(uuid "3be02838-79f8-48b0-9c80-8e8d37f2b353")
 			(effects
 				(font
 					(size 1 1)
@@ -2899,7 +2900,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "b0b4f722-0f86-4ba0-9802-e1c2796c1938")
+			(uuid "a60514eb-4c70-4a3a-b9d4-632a36a986ec")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2910,7 +2911,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f8704cb9-9c04-4bd6-8ad1-d3c875fb9492")
+			(uuid "8c3c4e0d-33aa-4356-b586-e34a39e29eaf")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4476,7 +4477,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "1b8cbf37-38c1-4d5a-87ac-70d3249e82e0")
-		(at -87.195 54.955)
+		(at -90 64.7)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C3"
@@ -4865,13 +4866,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "1d0f66dd-d94b-4074-b921-3e0e390c7d97")
-		(at 207.46 51)
+		(at 229.455 76.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R13"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "052e9216-8e51-4070-8cde-07805386ae03")
+			(uuid "57aa069c-9926-4cf8-82f9-d88c1bac9d22")
 			(effects
 				(font
 					(size 1 1)
@@ -4882,7 +4883,7 @@
 		(property "Value" "33R"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "0a84a7c0-c861-48ed-87c9-6018600a4b68")
+			(uuid "197cb0db-f5dc-4372-b783-928089b87a6d")
 			(effects
 				(font
 					(size 1 1)
@@ -4894,7 +4895,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e4c50669-513f-4741-a849-f55e2f7e4c6d")
+			(uuid "927e1c43-a4d6-419f-abca-50639f2bfe5e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4905,7 +4906,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ad4413eb-a117-44de-b6a4-1b3364c30576")
+			(uuid "0c93ce25-b5fc-4118-a466-37156adbc742")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7144,7 +7145,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "426630e9-117c-4df0-93db-85e6a14e3dc3")
-		(at -87.195 71.155)
+		(at -90 80.9)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C7"
@@ -11662,13 +11663,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "5ed2dfc9-d250-4889-b709-699630e8047d")
-		(at 235.46 43)
+		(at 257.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R8"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "9e9d6818-92c7-45b5-84ea-445d3ce9f983")
+			(uuid "b2b77fa5-377c-4fe3-bec7-c4b9df042cd4")
 			(effects
 				(font
 					(size 1 1)
@@ -11679,7 +11680,7 @@
 		(property "Value" "1k"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "0d1c6cf7-bf2b-4c2e-bf86-64a6e92cb3a8")
+			(uuid "225d8beb-ebec-4c32-85ba-17ea1ede0eab")
 			(effects
 				(font
 					(size 1 1)
@@ -11691,7 +11692,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "37c6ab2a-e48b-49e0-bc7e-2ce528a3064d")
+			(uuid "c95c748c-79d4-4188-b880-25ce0b6d84d2")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11702,7 +11703,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d490794e-961f-4d7c-a165-e12a3a2a825d")
+			(uuid "e6eb8422-25f4-4339-82ab-8e304fdf6458")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11842,13 +11843,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "63c85b11-0a9a-432c-8176-8fe618e77727")
-		(at 192.46 51)
+		(at 214.5 67.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R10"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "74da71a1-6767-48be-b60c-a6429948dcbc")
+			(uuid "a5592406-4315-40da-b399-0fa371719d53")
 			(effects
 				(font
 					(size 1 1)
@@ -11859,7 +11860,7 @@
 		(property "Value" "75R"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "db74071f-d0f4-406f-90bd-5181cbecf50e")
+			(uuid "4678772f-84a4-4541-ab5f-3d06a111629c")
 			(effects
 				(font
 					(size 1 1)
@@ -11871,7 +11872,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a60dbb69-0a69-495e-8c06-bbb527b7598d")
+			(uuid "c6b1b774-7d39-4d4a-b2c8-5a020e526509")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11882,7 +11883,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e59cf20b-5478-4b55-ba4d-f416b11e937e")
+			(uuid "98bc1133-277e-4992-b481-0d091f128fed")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14185,13 +14186,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "6d4eb917-1e36-4b74-9509-c4cdbc41547e")
-		(at 185.46 51)
+		(at 207.5 67.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R12"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "129618d7-bec4-4042-8b34-375f4e0db511")
+			(uuid "04aa5b09-1ea9-4545-afa7-9d09cb06f405")
 			(effects
 				(font
 					(size 1 1)
@@ -14202,7 +14203,7 @@
 		(property "Value" "33R"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "e9d92c07-512a-46c2-bd9f-ce07107ecd4f")
+			(uuid "a77a8853-f929-4549-9c11-1f3276efbdd7")
 			(effects
 				(font
 					(size 1 1)
@@ -14214,7 +14215,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "cf786322-686f-42f8-83a2-b6e599a3e88e")
+			(uuid "a230c94b-5aa3-49c9-a484-296ec89994d1")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14225,7 +14226,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "945ad4e8-3245-434c-9abc-f9b34765ccc0")
+			(uuid "8efc970a-bf01-4d42-a291-d6ac5f088b78")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14365,7 +14366,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "71146001-6d0e-4942-8822-b84d1506bee5")
-		(at -87.195 75.205)
+		(at -90 84.95)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C8"
@@ -19245,13 +19246,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "a7cdb31a-4d4e-454b-9cce-467cd8d379fe")
-		(at 222.46 51)
+		(at 231.46 83)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R32"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "5768d3a3-e24d-4f51-b4fe-9efd3450a38f")
+			(uuid "ee1195b4-f000-4dc4-888c-204e7eb518b4")
 			(effects
 				(font
 					(size 1 1)
@@ -19262,7 +19263,7 @@
 		(property "Value" "1M"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "ff55432e-292c-4404-8d91-dbffcadc4774")
+			(uuid "64a61369-9f91-4730-824b-db16af382d4f")
 			(effects
 				(font
 					(size 1 1)
@@ -19274,7 +19275,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "70b432b4-d893-435e-8388-4a0279102881")
+			(uuid "2fd93272-199a-4b94-b480-41ad6f092aaf")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19285,7 +19286,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a16af245-8310-4ded-b343-1a17b893095f")
+			(uuid "a749b272-fa78-4aa7-9ab2-beb7ef825b84")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19425,13 +19426,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "a9519314-36cb-4076-828a-b811ad89f531")
-		(at 213.92 43)
+		(at 235.96 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R5"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "68a63477-162d-4882-9b1c-8d4cb1f095af")
+			(uuid "eeab8d6c-2792-4e91-8c4a-47933d625b7f")
 			(effects
 				(font
 					(size 1 1)
@@ -19442,7 +19443,7 @@
 		(property "Value" "2k"
 			(at 1.08 2.5 0)
 			(layer "F.SilkS")
-			(uuid "6b437a20-c501-4521-a4bd-b6667ffccb3d")
+			(uuid "7ac899d6-3cc2-400c-9beb-ad258737a41c")
 			(effects
 				(font
 					(size 1 1)
@@ -19454,7 +19455,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "7586cbb7-b58a-464d-9da5-b4325e201681")
+			(uuid "1d5a4b7e-9528-4f83-ac70-dfec12511518")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19465,7 +19466,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "c8c0ed1e-bd49-4c2f-8d84-6cf49b3ecb3c")
+			(uuid "1ab1fe43-61d4-4618-a54c-6b670eaf5fa0")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20195,7 +20196,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "b7f566e0-ae37-49f0-84f3-43a75ff34217")
-		(at -87.195 59.005)
+		(at -90 68.75)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C4"
@@ -20584,13 +20585,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "b9e36c39-c9af-41e2-99b1-6a1e7671bc5d")
-		(at 228.46 43)
+		(at 250.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R7"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "ae373e7f-994e-441a-9116-41c98af5bef0")
+			(uuid "a71e2221-3b12-44c3-9f0a-7cf99f423e36")
 			(effects
 				(font
 					(size 1 1)
@@ -20601,7 +20602,7 @@
 		(property "Value" "1k"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "dd460fe0-1c00-4690-a993-e01fcf0ed121")
+			(uuid "cf0da798-c132-44f7-a57c-3611041b5844")
 			(effects
 				(font
 					(size 1 1)
@@ -20613,7 +20614,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8fa326af-5c0e-40e4-bb13-665cb6ec93dc")
+			(uuid "c942b8d7-fd72-4bfe-a443-906f24a5172a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20624,7 +20625,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a3ec8856-b10f-4b04-b887-a60faf5ab70e")
+			(uuid "5d17d659-e675-42d1-859a-5f7970b634c8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22459,13 +22460,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "c84962e7-10fc-4d2e-bed8-c3bb39876f96")
-		(at 185.5 43)
+		(at 207.54 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R1"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "a03987a2-c1bf-47f5-bf84-9b99aa05d977")
+			(uuid "f788a0bf-e990-49e2-b77d-0fb7e6b154b0")
 			(effects
 				(font
 					(size 1 1)
@@ -22476,7 +22477,7 @@
 		(property "Value" "4k"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "2c0e9f53-4a85-481b-8961-f28041c2d92f")
+			(uuid "f7a0ae01-8e2b-4ef1-bc78-f2e6e4809f92")
 			(effects
 				(font
 					(size 1 1)
@@ -22488,7 +22489,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f410b7ff-7117-401e-806d-fd6fe28d4c58")
+			(uuid "2d5042d2-87a0-4f80-aa51-016cde1e90d7")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22499,7 +22500,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0eb90e2e-b0cb-4c88-a180-dc66eaa7299c")
+			(uuid "fa9311d4-08e4-4d38-ab32-d36a5db51140")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23779,7 +23780,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "d1f89e5c-bcdd-459e-b253-2c1158516048")
-		(at -87.195 79.255)
+		(at -90 89)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C9"
@@ -24786,7 +24787,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "e3b01850-9f39-4d3a-be74-7db2f5e2650b")
-		(at -87.195 63.055)
+		(at -90 72.8)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C5"
@@ -24995,13 +24996,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "e51dca3f-c384-4906-a86f-0d6daa759b4a")
-		(at 215.46 51)
+		(at 235.955 70)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R31"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "5b5f157c-ab65-4c7d-8d20-33d516096787")
+			(uuid "2a3fc069-ac49-4041-8f5b-4bd922fa8d3e")
 			(effects
 				(font
 					(size 1 1)
@@ -25012,7 +25013,7 @@
 		(property "Value" "1M"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "b16e7b2f-9bcd-4bfa-9376-0f0b1432598a")
+			(uuid "9f0d9302-462a-4c99-bcdb-24a5e677b58f")
 			(effects
 				(font
 					(size 1 1)
@@ -25024,7 +25025,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "fe2bbc67-f641-48f1-b308-364b3e150100")
+			(uuid "e447ea55-e117-4bdc-97ba-4950793ed265")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25035,7 +25036,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "af3f65c4-0c16-4235-a53f-92647ed6c634")
+			(uuid "c16b12b8-2f3c-46c1-a21e-a80dc88f1eda")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25175,13 +25176,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "e8168567-c428-4824-8f60-b389afcf4810")
-		(at 199.46 43)
+		(at 221.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R3"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "3329b34c-5a1d-41f2-8735-9572b4630f86")
+			(uuid "c02bf6cc-acd8-4278-96f3-2ecb4d3c4942")
 			(effects
 				(font
 					(size 1 1)
@@ -25192,7 +25193,7 @@
 		(property "Value" "2k"
 			(at 1.27 2.37 0)
 			(layer "F.SilkS")
-			(uuid "cf29f350-dde7-4347-b8a3-03ccb8e0a058")
+			(uuid "9dedab53-f7df-40e6-9645-36041d5272e9")
 			(effects
 				(font
 					(size 1 1)
@@ -25204,7 +25205,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3a2cfb90-3672-44be-8fc3-9f8eed124964")
+			(uuid "7bd2c3e1-2f82-4189-8587-ed5478edb0df")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25215,7 +25216,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "bbf6cd60-9a2d-4fc9-8b85-1914daec9190")
+			(uuid "31f6c6f9-4f0b-40a3-a0b6-6bc26e6133be")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26037,7 +26038,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "f1132502-9233-4c48-94a7-4d784f598f1b")
-		(at -87.195 67.105)
+		(at -90 76.85)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C6"
@@ -26924,13 +26925,13 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "fba43c15-8aa3-46de-8022-f12567b7c2b1")
-		(at 221.46 43)
+		(at 243.5 59.5)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R6"
 			(at 1.27 -2.37 0)
 			(layer "F.SilkS")
-			(uuid "61ea6242-96b2-4b86-a306-5a4541b5eff4")
+			(uuid "bfd702cb-e2f7-4e51-a9ea-68d1c218bdd3")
 			(effects
 				(font
 					(size 1 1)
@@ -26941,7 +26942,7 @@
 		(property "Value" "2k"
 			(at 1.27 3 0)
 			(layer "F.SilkS")
-			(uuid "9fe8dc8a-bdcb-4b9f-b80a-a6d1a22ead95")
+			(uuid "d97bf864-4698-4979-866e-5dd2c7279bb6")
 			(effects
 				(font
 					(size 1 1)
@@ -26953,7 +26954,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "44d58a94-5a1a-4804-b6ab-bff21ee216d5")
+			(uuid "f3a752ac-0c35-485a-872b-5caed74b8e8a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26964,7 +26965,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f6a5286b-e6ef-4445-9345-99e1d573fefe")
+			(uuid "481019d3-b72f-4047-a36a-fd26fd03c753")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -32201,11 +32202,11 @@
 				(xy 155.290276 77.589669) (xy 155.361465 77.483127) (xy 155.410501 77.364744) (xy 155.4355 77.239069)
 				(xy 155.4355 70.3295) (xy 155.455185 70.262461) (xy 155.507989 70.216706) (xy 155.5595 70.2055)
 				(xy 157.2105 70.2055) (xy 157.277539 70.225185) (xy 157.323294 70.277989) (xy 157.3345 70.3295)
-				(xy 157.3345 79.779069) (xy 157.3345 79.779071) (xy 157.334499 79.779071) (xy 157.359497 79.904738)
-				(xy 157.359499 79.904744) (xy 157.408533 80.023124) (xy 157.408538 80.023133) (xy 157.479723 80.129668)
-				(xy 157.479726 80.129672) (xy 157.570327 80.220273) (xy 157.570331 80.220276) (xy 157.676866 80.291461)
-				(xy 157.676872 80.291464) (xy 157.676873 80.291465) (xy 157.795256 80.340501) (xy 157.79526 80.340501)
-				(xy 157.795261 80.340502) (xy 157.920928 80.3655) (xy 157.920931 80.3655) (xy 158.049069 80.3655)
+				(xy 157.3345 79.650931) (xy 157.3345 79.779069) (xy 157.3345 79.779071) (xy 157.334499 79.779071)
+				(xy 157.359497 79.904738) (xy 157.359499 79.904744) (xy 157.408533 80.023124) (xy 157.408538 80.023133)
+				(xy 157.479723 80.129668) (xy 157.479726 80.129672) (xy 157.570327 80.220273) (xy 157.570331 80.220276)
+				(xy 157.676866 80.291461) (xy 157.676872 80.291464) (xy 157.676873 80.291465) (xy 157.795256 80.340501)
+				(xy 157.79526 80.340501) (xy 157.795261 80.340502) (xy 157.920928 80.3655) (xy 157.920931 80.3655)
 				(xy 159.006929 80.3655) (xy 159.073968 80.385185) (xy 159.107245 80.416613) (xy 159.144009 80.467213)
 				(xy 159.213034 80.562219) (xy 159.357786 80.706971) (xy 159.478649 80.794781) (xy 159.52339 80.827287)
 				(xy 159.596028 80.864298) (xy 159.61608 80.874515) (xy 159.666876 80.92249) (xy 159.683671 80.990311)

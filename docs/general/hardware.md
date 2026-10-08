@@ -368,7 +368,7 @@ Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all liv
 
 The GND copper is one net. Planes and fills are not cut into a digital region and an analog region. Noise stays down by placement, by which outer layer a signal uses, and by the analog keepout on layer 4. **+5V** is a routed net on layer 1 (0.8 mm to 1.2 mm). It is not an inner plane. Stitching vias tie GND on all four layers every 10 mm to 15 mm, and next to each IC ground pin. KiCad zone fill drops orphan copper.
 
-Net-by-net assignment, the half/half outer-layer target, and the analog keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
+Net-by-net assignment, the half/half outer-layer target, the analog keepout, and the KiCad **Layer4** air-wire class: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 
 **Layer 1:** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, U24 digital outputs to the DAC resistors, S1 `AD[7:0]` / ALE / field `/WE`, SPI MOSI/MISO/SCK, scroll X data, and +5V.
 
