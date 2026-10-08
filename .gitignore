@@ -48,6 +48,8 @@ apps/sdk/r01_c/host-build/
 /skidl_from_tier_h_sklib.py
 /skidl.erc
 /skidl.log
+/__init__.erc
+/__init__.log
 /skidl_REPL.*
 /bad_fmt1.retr01
 # Sim layout JSON belongs under apps/sim/*/ (or cwd when testing), not repo root
