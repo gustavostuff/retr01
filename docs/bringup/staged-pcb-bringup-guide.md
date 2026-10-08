@@ -52,9 +52,9 @@ A 50 mm (2 inch) length difference on parallel data lines is about 0.33 ns of sk
 
 Standard PCB fabrication specifications:
 - **Digital signal traces:** 0.25 mm (10 mil) width with 0.25 mm spacing. This fits between 2.54 mm DIP socket pins while maintaining high fabrication yield.
-- **Stackup:** 4-layer motherboard. Layer 1 is noisy signals, +5V, and a GND fill. Layers 2 and 3 are solid GND planes. Layer 4 is quiet signals and a GND fill. Which nets are noisy or quiet is listed in `docs/general/hardware.md`.
+- **Stackup:** 4-layer motherboard. Layer 1 is clock-rate digital, +5V, and a GND fill. Layers 2 and 3 are solid GND planes. Layer 4 is analog, slow digital, I/O, and a GND fill. Net assignment is [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 - **Power traces:** +5V is routed on layer 1 at 0.8 mm to 1.2 mm (30 to 50 mil). It is not an inner plane.
-- **Unified ground rule:** GND on all four layers is one net. Planes and fills are not cut into a digital region and an analog region. Noise isolation comes from placement and from keeping quiet nets on layer 4.
+- **Unified ground rule:** GND on all four layers is one net. Planes and fills are not cut into a digital region and an analog region. Isolation comes from placement, outer-layer assignment, and the analog keepout on layer 4.
 - **Stitching vias:** Vias tie GND on all four layers every 10 mm to 15 mm and next to each IC ground pin. Unconnected copper islands are removed in the KiCad zone fill.
 
 ### Component placement topology

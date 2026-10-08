@@ -13,6 +13,7 @@ Pin-level R/C wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../mis
 
 | Doc | What it covers |
 |-----|----------------|
+| [main-pcb-layers.md](../main-pcb-layers.md) | Layer 1 vs layer 4 assignment, analog keepout, underpasses |
 | [connectors.md](connectors.md) | J1, J2, J3/J4, J5, J7, J8, J9, J36 |
 | [ics.md](ics.md) | CPU, RAM, PLDs, MCUs, clock logic, encoder, glue |
 | [resistors.md](resistors.md) | R1-R32 (DAC, series 33 ohm, pull-ups, Pierce 1M) |
@@ -86,6 +87,7 @@ Ratsnest refresh from `retr01_prelim.net` follows. Short nets route first: bypas
 
 - [`docs/passive_bom.md`](../../passive_bom.md): values and counts
 - [`docs/misc/kicad-schematic-tier-h-passives.md`](../../misc/kicad-schematic-tier-h-passives.md): pin-level R/C wiring
+- [`docs/bring-up-v2/main-pcb-layers.md`](../main-pcb-layers.md): which nets sit on layer 1 vs layer 4
 - [`docs/bringup/pcb-component-placement-guide.md`](../../bringup/pcb-component-placement-guide.md): zone rationale
 - [`docs/bringup/pcb-netlist-verification-guide.md`](../../bringup/pcb-netlist-verification-guide.md): PCB vs JSON check
 - [`docs/bringup/tier-h-skidl-export.md`](../../bringup/tier-h-skidl-export.md): `.net` export

@@ -133,7 +133,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-17 | Entity pack | Max sprites/frame **6**. Maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
-| 2026-10-01 | PCB layers | Motherboard is 4-layer: signal, GND, GND, signal. Noisy nets and +5V on layer 1. Quiet nets on layer 4. Cart and pad PCBs are 2-layer. |
+| 2026-10-01 | PCB layers | Motherboard is 4-layer: signal, GND, GND, signal. Clock-rate digital and +5V on layer 1. Analog and every slower control/I/O net on layer 4. Target about half the signal traces on each outer layer. Cart and pad PCBs are 2-layer. See `docs/bring-up-v2/main-pcb-layers.md`. |
 | 2026-09-29 | Mobo size | **160 x 100 mm** (Eurocard 3U). |
 | 2026-09-28 | IC budget | **19** motherboard (includes 74HCU04, 74HC74, AD724) + **2** cart = **21**. |
 | 2026-09-14 | BG autoscroll | BG0 and BG1 may each autoscroll and/or wrap strips. Default is clamp. |

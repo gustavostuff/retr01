@@ -361,16 +361,18 @@ Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all liv
 
 | Layer | Copper |
 | --- | --- |
-| 1 | Noisy signals, +5V, and a GND fill |
+| 1 | Clock-rate digital, +5V, and a GND fill |
 | 2 | Solid GND plane |
 | 3 | Solid GND plane |
-| 4 | Quiet signals and a GND fill |
+| 4 | Analog, slow digital, I/O, and a GND fill |
 
-The GND copper is one net. Planes and fills are not cut into a digital region and an analog region. Noise stays down by placement and by which outer layer a signal uses. **+5V** is a routed net on layer 1 (0.8 mm to 1.2 mm). It is not an inner plane. Stitching vias tie GND on all four layers every 10 mm to 15 mm, and next to each IC ground pin. KiCad zone fill drops orphan copper.
+The GND copper is one net. Planes and fills are not cut into a digital region and an analog region. Noise stays down by placement, by which outer layer a signal uses, and by the analog keepout on layer 4. **+5V** is a routed net on layer 1 (0.8 mm to 1.2 mm). It is not an inner plane. Stitching vias tie GND on all four layers every 10 mm to 15 mm, and next to each IC ground pin. KiCad zone fill drops orphan copper.
 
-**Layer 1 (noisy):** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, S1 `AD[7:0]` / ALE / field `/WE`, SPI, scroll X, and +5V.
+Net-by-net assignment, the half/half outer-layer target, and the analog keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 
-**Layer 4 (quiet):** Pierce loops (Y1, Y2, U04, feedback resistors, load caps), Y3 and FSC into the AD724, the R-2R ladder to J2, composite to J9, filtered audio to J8, pad UART, I2C, `RESB`, and `CPU_RDY`.
+**Layer 1:** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, U24 digital outputs to the DAC resistors, S1 `AD[7:0]` / ALE / field `/WE`, SPI MOSI/MISO/SCK, scroll X data, and +5V.
+
+**Layer 4:** Pierce loops (Y1, Y2, U04 analog pins, feedback resistors, load caps), Y3 and FSC into the AD724, the R-2R gun nodes to J2, composite to J9, audio to J8, pad UART, I2C, `RESB`, `CPU_RDY`, UPDI, arcade and pad GPIO, LED anodes, line/frame strobes, soft SELs, SPI chip-selects, and MAP A14-A18.
 
 Cart and pad PCBs are **2-layer**.
 
@@ -429,7 +431,7 @@ These track common practice for this **4-layer** digital and video board:
 - **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
 - **Board edges:** High-speed and clock traces stay off the PCB perimeter. Edge copper couples into chassis and EMI. Clocks sit toward the middle of the board. Connectors and video out may sit on the edge by nature. Their stub lengths stay short.
 - **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
-- **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Keep digital buses from cutting through that island.
+- **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 - **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
 - **Silkscreen:** Refdes, polarity, DIP `M/S1/S2/CART` and `ALL OFF = SAFE`, TP names, LED names.
