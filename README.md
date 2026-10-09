@@ -1,6 +1,6 @@
 <img src="img/v_01.png" alt="Logo V1" />
 
-Retr01 is an MCU-assisted 8-bit game system for arcade and console setups, plus an emulator and a studio for making games and content.
+Retr01 is an MCU-assisted 8-bit gaming system for arcade and console setups, plus an emulator and a studio for making games and content.
 
 <a href="https://i.ibb.co/KzhxrmpL/preliminary-pcb.jpg"><img src="img/readme/preliminary_pcb.jpg" alt="PCB" /></a>
 
