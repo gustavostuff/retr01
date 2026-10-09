@@ -116,7 +116,8 @@ target_include_directories(retr01_sim_app PUBLIC
 target_link_libraries(retr01_sim_app PUBLIC retr01_sim_core PkgConfig::SDL2 PkgConfig::FREETYPE)
 target_compile_definitions(retr01_sim_app PRIVATE
   "R01S_ASSETS_DIR=\"${R01_ASSETS_OTHER}\""
-  "R01S_ASSETS_PNG_DIR=\"${R01_ASSETS_PNG}\"")
+  "R01S_ASSETS_PNG_DIR=\"${R01_ASSETS_PNG}\""
+  "R01S_LAYOUT_DEFAULT=\"${CMAKE_CURRENT_SOURCE_DIR}/ui_layout.json\"")
 
 add_executable(retr01_sim src/main.c)
 target_link_libraries(retr01_sim PRIVATE retr01_sim_app)

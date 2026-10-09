@@ -11,6 +11,9 @@
 #include <string.h>
 
 #define R01S_LAYOUT_VERSION 4
+#ifndef R01S_LAYOUT_DEFAULT
+#define R01S_LAYOUT_DEFAULT "ui_layout.json"
+#endif
 /* Pre-v3 layouts had empty soft-$7Fxx island D at index 3. */
 
 static const char *orient_to_json(R01sPkgOrient o) {
@@ -58,39 +61,12 @@ static uint8_t orient_from_json(const char *s) {
     return (uint8_t)R01S_ORIENT_0;
 }
 
-static const char *const LAYOUT_READ_PATHS[] = {
-    "app/sim/ui_layout.json",
-    "../app/sim/ui_layout.json",
-    "ui_layout.json",
-    NULL,
-};
-
-static const char *layout_write_path(void) {
+static const char *layout_path(void) {
     const char *env = getenv("R01S_LAYOUT");
-    FILE *f;
-    int i;
     if (env && env[0]) {
         return env;
     }
-    /* Prefer creating/updating under app/sim/ when that dir exists. */
-    f = fopen("app/sim/ui_layout.json", "r");
-    if (f) {
-        fclose(f);
-        return "app/sim/ui_layout.json";
-    }
-    f = fopen("app/sim/.", "r");
-    if (f) {
-        fclose(f);
-        return "app/sim/ui_layout.json";
-    }
-    for (i = 0; LAYOUT_READ_PATHS[i]; i++) {
-        f = fopen(LAYOUT_READ_PATHS[i], "r");
-        if (f) {
-            fclose(f);
-            return LAYOUT_READ_PATHS[i];
-        }
-    }
-    return "ui_layout.json";
+    return R01S_LAYOUT_DEFAULT;
 }
 
 static int chip_index_by_refdes(const R01sUi *ui, const char *refdes) {
@@ -160,7 +136,7 @@ int r01s_ui_layout_save(R01sUi *ui) {
         return -1;
     }
     capture_snapshots(ui);
-    path = layout_write_path();
+    path = layout_path();
     f = fopen(path, "w");
     if (!f) {
         fprintf(stderr, "layout: could not write %s\n", path);
@@ -480,22 +456,8 @@ int r01s_ui_layout_load(R01sUi *ui) {
     for (i = 0; i < R01S_BOARD_MAX_CHIPS; i++) {
         chip_z_by_index[i] = i;
     }
-    {
-        const char *env = getenv("R01S_LAYOUT");
-        int pi;
-        if (env && env[0]) {
-            path = env;
-            f = fopen(path, "rb");
-        } else {
-            for (pi = 0; LAYOUT_READ_PATHS[pi]; pi++) {
-                f = fopen(LAYOUT_READ_PATHS[pi], "rb");
-                if (f) {
-                    path = LAYOUT_READ_PATHS[pi];
-                    break;
-                }
-            }
-        }
-    }
+    path = layout_path();
+    f = fopen(path, "rb");
     if (!f) {
         return -1;
     }

@@ -228,7 +228,7 @@ int r01a_ui_run(struct R01aBoard *board) {
         return 1;
     }
     r01a_lab_boot(board);
-    setenv("R01S_LAYOUT", R01A_ISLAND_LAYOUT, 1);
+    setenv("R01S_LAYOUT", R01A_ISLAND_LAYOUT, 0);
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());

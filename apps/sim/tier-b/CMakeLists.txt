@@ -78,6 +78,7 @@ target_include_directories(retr01_sim_tier_b_app PRIVATE
 target_compile_definitions(retr01_sim_tier_b_app PRIVATE
   "R01A_LAB_TITLE=\"Retr01 Tier B\""
   "R01A_ISLAND_LAYOUT=\"${CMAKE_CURRENT_SOURCE_DIR}/island_layout.json\""
+  "R01S_LAYOUT_DEFAULT=\"${CMAKE_CURRENT_SOURCE_DIR}/island_layout.json\""
   "R01S_ASSETS_DIR=\"${SIM_COMMON}/assets/other\""
   "R01S_ASSETS_PNG_DIR=\"${SIM_COMMON}/assets/png\""
 )

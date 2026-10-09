@@ -2,7 +2,7 @@
 
 Isolated hardware lab for [docs/bringup/tier-b-video-lab.md](../../../docs/bringup/tier-b-video-lab.md). The board recipe and netlist stay in this folder. Clocks, PROM, the layout loader, the font, and the PNG chrome come from [`apps/sim/common/`](../common/). Bench and sim are **RGBS-only** (no AD724/FSC composite path). Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/).
 
-The window matches Tier A and Tier H: a DIGITAL island and an ANALOG island, green air wires, no protoboard and no manual wire mode. `UPLDC` sits on DIGITAL with the beam PLDs. Placement saves to this folder's `island_layout.json`.
+The window matches Tier A and Tier H: a DIGITAL island and an ANALOG island, green air wires, no protoboard and no manual wire mode. `UPLDC` sits on DIGITAL with the beam PLDs. Placement saves to this folder's `island_layout.json`. `R01S_LAYOUT` overrides that path.
 
 ## Additions (not in Tier A)
 
