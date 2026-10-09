@@ -293,6 +293,8 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "TRS_P2": ["S", "T", "R", "TN", "RN"],
     "ARCADE_2x10": _nums(20),
     "CAB_PWR_RST": _nums(4),
+    "CART_PROG_HDR": _nums(4),
+    "SW_CART_ARM": _nums(4),
     "SCALE_SW": _nums(2),
     "AUDIO_OUT": _nums(2),  # RCJ: 1=center, 2=shell
     "COMPOSITE_OUT": _nums(2),

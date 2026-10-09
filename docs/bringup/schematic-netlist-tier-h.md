@@ -74,6 +74,10 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 | R31 | U04 Y2 Pierce (pins 1-2) |
 | R32 | U04 Y1 Pierce (pins 5-6) |
 
+## Cart program header
+
+**J10** 2x2 and **SW10** 2-pos DIP. Pin 1 PWR is named `J10_PWR_NC`. Pins 2 and 4 are GND. Pin 3 DATA goes to SW10 pos 1 (MCU side is UM PC1 / `SPI_MISO`). SW10 pos 2 is `CART_ARM` toward the compositor. Default both poles open in the netlist. See [`hardware.md`](../general/hardware.md).
+
 ## Gaps (not schematic-complete on silicon)
 
 - **PLD signal pins** use DIP-24 legs so each air wire leaves a pin. Those numbers are a placement stand-in until a JEDEC map exists. Pin 12 is GND and pin 24 is VCC.

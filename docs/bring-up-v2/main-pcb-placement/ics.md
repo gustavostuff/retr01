@@ -186,7 +186,7 @@ Location: junction of CPU D, soft decode, SPI to S1/S2, and cart I2C. Bypass **C
 | CPU D0-D1 | PA0-1 | Soft bus (Z / in) |
 | I2C SDA/SCL | PA2-3 | Cart EEPROM (OD). Series **R24/R25** 33 ohm to J36. Pull-ups **R27/R28** 4.7k to `+5V` |
 | CPU D2-D5 | PA4-7 | Soft bus |
-| SPI MOSI/MISO/SCK | PC0-2 | Master to S1/S2 |
+| SPI MOSI/MISO/SCK | PC0-2 | Master to S1/S2. PC1 also J10 DATA through SW10 |
 | `/SS_S1` | PC3 | Slave select S1 |
 | `SEL_SOFT0` | PD1 | Soft page decode |
 | `CPU_RDY` | PD2 | OD stall |
@@ -196,7 +196,7 @@ Location: junction of CPU D, soft decode, SPI to S1/S2, and cart I2C. Bypass **C
 | CPU D6-D7 | PD6-7 | Soft bus |
 | `SEL_SOFT1` / `2` | PF0-1 | Soft page decode |
 | `S1_RDY` | PF6 | Handshake from S1 |
-| UPDI | pin 19 | Program header / DIP |
+| UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |
 
 Power: VDD **20**, GND **15** and **21**, VDDIO2 **6**, AVDD **14** to `+5V` / `GND`. **C5** sits within 5 mm of pin 20.
 
@@ -219,7 +219,7 @@ Bypass **C6** at pin 20.
 | ALE | PF0 | U573 LE |
 | `/WE` | PF1 | U41 WE# (local pull-up) |
 | `S1_RDY` | PF6 | to UM |
-| UPDI | pin 19 | Program header / DIP |
+| UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |
 
 ### U573, 74HC573 (DIP-20)
 
@@ -263,4 +263,4 @@ Location: behind J3/J4. Bypass **C7** at pin 20.
 | `PAD_DATA` | PF0 OD | J3/J4 ring plus **R26** 4.7k |
 | `AUDIO_PWM` | PF1 | J8 |
 | P2 START | PF6 | J5 |
-| UPDI | pin 19 | Program header / DIP |
+| UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |

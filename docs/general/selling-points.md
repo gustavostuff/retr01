@@ -48,7 +48,7 @@ Studio-friendly hard cap: **32** entity **types** **cart-wide** (one global cata
 
 ## Console programs its own carts
 
-One DIY tool: **Adafruit's UPDI Friend**, clipped onto one shared set of motherboard male pins (no USB on console/cart/pads). A **4-pos DIP** picks MCU-M / S1 / S2 / cart. Default **all OFF** so nothing is armed. Scope is **AVRs + cart only**. PLDs, color PROM, and pad MCUs: buy **pre-programmed**, or DIY with a separate tool (Arduino Nano/Uno GAL programmers, TL866-class, Arduino-as-ISP). See `hardware.md`.
+One DIY tool: **Adafruit's UPDI Friend**. Cart work clips onto motherboard **J10** (2x2 male pins, no USB on console/cart/pads). **SW10** (2-pos DIP, default **both OFF**) arms the cart DATA line and `WE#`. Scope is **cart only**. AVRs, PLDs, color PROM, and pad MCUs: buy **pre-programmed**, or DIY off the board (Friend SerialUPDI on a breadboard for AVRs, Arduino Nano/Uno GAL programmers, TL866-class, Arduino-as-ISP). See `hardware.md`.
 
 ## Light-gun ready hit detect (later)
 

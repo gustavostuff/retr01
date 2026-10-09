@@ -1,6 +1,6 @@
 # Programming guide for Tier A, B, and C ICs
 
-Summary of programming tools and flashing procedures for the programmable devices in Retr01 Tiers A, B, and C.
+Summary of programming tools and flashing procedures for the programmable devices in Retr01 Tiers A, B, and C. AVR128DB28 parts use SerialUPDI on a breadboard (pin 19). Motherboard **J10** is a cart-only header and is not used on these tiers. See [`hardware.md`](../general/hardware.md).
 
 Volatile parts (such as AS6C62256 SRAM) and standard logic (such as 74HC573 and 74HC74) require no programming device.
 

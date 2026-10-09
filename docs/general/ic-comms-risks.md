@@ -115,15 +115,15 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 ### 8. Cart flash vs MAP / CHR / program path (High)
 
-**What:** Cart `CE#` is tied active. Motherboard gates **`OE#`**. `WE#` is idle-high in play and used by the MCU-M flash bridge when the program DIP selects cart. A0-A13 from CPU, A14-A18 from Compositor MAP.
+**What:** Cart `CE#` is tied active. Motherboard gates **`OE#`**. `WE#` is idle-high in play and used by the MCU-M flash bridge when **SW10** arms **CART_ARM**. A0-A13 from CPU, A14-A18 from Compositor MAP.
 
-**When it bites:** `OE#` true during a soft-port or RAM cycle (decode bug). `WE#` glitch during play programs random bytes. MAP bits change mid-PRG fetch. Program DIP left on with Friend attached.
+**When it bites:** `OE#` true during a soft-port or RAM cycle (decode bug). `WE#` glitch during play programs random bytes. MAP bits change mid-PRG fetch. SW10 left ON with Friend attached.
 
 **Mitigate:**
 
 - Decode: cart `OE#` only for PRG `$8000-$FFFF` reads and intentional MAP/CHR windows. Never with RAM or soft selects.
-- Hardware pull-up on `WE#`. Bridge must actively drive only in cart program mode.
-- DIP default **all OFF**. Silkscreen `ALL OFF = SAFE`. Never two DIP positions ON.
+- Hardware pull-up on `WE#`. Compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space.
+- SW10 default **both OFF**. Silkscreen `ALL OFF = SAFE`. CART_ARM board pull-down.
 - Series 33 ohm on cart D/OE/WE as already planned.
 
 ### 9. Color PROM and compositor per-dot path (Med)
@@ -207,15 +207,15 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 ### 15. Program header vs live bus (Med)
 
-**What:** Adafruit's UPDI Friend on a shared header can talk to an AVR UPDI pin or the cart flash bridge. That path is hostile to a running game bus if enabled by mistake.
+**What:** Adafruit's UPDI Friend on **J10** talks to MCU-M **PC1** (USART1 one-wire) when SW10 pos 1 is ON. That pin is SPI MISO in play. CART_ARM (SW10 pos 2) lets the compositor pulse cart `WE#`. Both are hostile to a running game bus if armed by mistake.
 
-**When it bites:** Two DIP switches ON shorts UPDI lines. Cart mode while CPU runs injects WE# cycles. Friend attached with a switch left ON after a session.
+**When it bites:** SW10 pos 1 ON during play fights SPI MISO. Cart mode while CPU runs injects WE# cycles. Friend attached with SW10 left ON after a session.
 
 **Mitigate:**
 
-- Default all DIP OFF. One ON at a time.
-- Firmware: refuse cart-bridge commands unless a strap/DIP read says cart mode.
-- Bring-up checklist: verify DIP before power application when Friend is clipped on.
+- Default SW10 both OFF. DATA disconnected from PC1. CART_ARM low.
+- Firmware: refuse cart-bridge commands unless CART_ARM is high. Keep `/SS_S1` and `/SS_S2` high in cart mode.
+- Bring-up checklist: verify SW10 before power application when Friend is clipped on.
 
 ## Priority matrix (what to prove first)
 

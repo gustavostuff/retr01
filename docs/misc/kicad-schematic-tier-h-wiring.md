@@ -139,7 +139,8 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | VBL, SEL_SOFT* | PD3, PD1, PF0-1 inputs |
 | CPU_A_SAMPLE | PD4 |
 | S1_RDY | PF6 in |
-| UPDI | pin 19 -> program header + DIP switch pos 1 |
+| UPDI | pin 19 (off-board SerialUPDI, not on J10) |
+| Cart DATA | PC1 through **SW10** pos 1 from **J10** pin 3 |
 
 ---
 
@@ -152,7 +153,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | SPI slave | PD4-7 with **UM** |
 | PAD_DATA | PF0 OD + **R26** -> **J3/J4** ring |
 | AUDIO_PWM | PF1 -> analog audio jack network |
-| UPDI | pin 19 -> DIP pos 3 |
+| UPDI | pin 19 (off-board SerialUPDI, not on J10) |
 
 Arcade: **J5** 2x10. Odd pins 1-15 to Player 1, even pins 2-16 to Player 2, pins 17-20 to GND. See [`hardware.md`](../general/hardware.md) Controllers.
 
@@ -187,8 +188,8 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | **J7** | Cab power/reset 2x2 | +5V, GND, **RESB** / reset (pins 1-4) |
 | **J8** | Audio RCA | PWM / mix from **US2** |
 | **J9** | Composite RCA | **U725** output when populated |
-
-Program header + 4-position DIP (UPDI / cart flash select) are defined in [`hardware.md`](../general/hardware.md) Console as programmer section. Add as symbol cluster (**J_PROG**, **SW_PROG**) wired to **UM** UPDI bridge and cart **WE#** path.
+| **J10** | Cart program 2x2 | Pin 1 PWR NC, pins 2/4 GND, pin 3 DATA through **SW10** |
+| **SW10** | 2-pos DIP | Pos 1 DATA to UM PC1. Pos 2 CART_ARM to compositor. Default both OFF |
 
 ---
 

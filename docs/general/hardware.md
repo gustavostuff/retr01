@@ -44,6 +44,7 @@ The PLD decode asserts the right `/OE` (and related selects) for the current add
 | Net | Idle-safe |
 | --- | --- |
 | Cart **`WE#`** | Pull-up (high = no program pulse) |
+| **`CART_ARM`** | Pull-down (low = compositor keeps `WE#` idle) |
 | Cart **`OE#`** | Inactive unless decode asserts it |
 | **`/SS_S1`**, **`/SS_S2`** | Pull-up (deselected) |
 | Field **ALE** | Low (latch holding) |
@@ -87,7 +88,7 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 | Class | Parts | Programmable? | Flashed through the console? |
 | --- | --- | --- | --- |
 | **CPU** | W65C02S | Yes (runs cart **PRG**) | No (executes cart code, is not flashed) |
-| **MCU helpers** | 3x AVR128DB28 | Yes (firmware) | **Yes** (Adafruit's UPDI Friend header) |
+| **MCU helpers** | 3x AVR128DB28 | Yes (firmware) | **No** (breadboard SerialUPDI, then install) |
 | **PLDs** | 3x ATF22V10 | Yes (beam / decode equations) | **No** (pre-programmed or DIY PLD tool) |
 | **OTP color table** | AT27C256R | Program once (factory/DIY blow) | **No** (pre-programmed or DIY PROM tool) |
 | **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves) | **Yes** (cart flash via MCU-M bridge) |
@@ -129,7 +130,7 @@ RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
 | Chip | Owns |
 | --- | --- |
-| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is clipped onto the program header |
+| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is on **J10** and **SW10** is armed |
 | **MCU-S1** | OAM apply, **full sprite field in VBlank**, **BG0 next-line fill in HBlank only** (ping-pong), field SRAM via AD mux + HC573 |
 | **MCU-S2** | `$7F60`/`$7F61` pads, `$7F40`-`$7F5F` APU mailbox, DPCM samples in S2 flash, **PWM** audio on PF1 |
 
@@ -145,12 +146,12 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 
 ## Pin freeze essentials
 
-**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Shared program header for **Adafruit's UPDI Friend**, plus a **4-pos DIP** footprint to select MCU-M / S1 / S2 / cart (default all OFF). Exact pinout TBD.
+**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Cart program header is **J10** (2x2) plus **SW10** (2-pos DIP, default both OFF). AVR UPDI stays off J10.
 
 | Lock | Value |
 | --- | --- |
 | Cart I2C | M TWI0 DEFAULT **PA2/PA3** |
-| Master SPI | SPI1 DEFAULT PC0 MOSI, PC1 MISO, PC2 SCK, PC3 `/SS_S1`. `/SS_S2` = PD5 |
+| Master SPI | SPI1 DEFAULT PC0 MOSI, PC1 MISO, PC2 SCK, PC3 `/SS_S1`. `/SS_S2` = PD5. Cart program: USART1 one-wire on **PC1** (SW10 pos 1) |
 | Slave SPI | SPI1 ALT1 PD4 MOSI, PD5 MISO, PD6 SCK, PD7 `/SS` |
 | DAC / audio | On-chip DAC on PD6 unused. S2 audio = TCA0 WO1 **PF1** |
 | Pad UART | USART2 OD on **PF0** |
@@ -176,7 +177,7 @@ Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
 | Net | PORT | Net | PORT |
 | --- | --- | --- | --- |
 | `CPU_D0`/`D1` | PA0-1 Z/in | `I2C_SDA`/`SCL` | PA2-3 OD |
-| `CPU_D2`..`D5` | PA4-7 Z/in | `SPI_MOSI/MISO/SCK` | PC0-2 |
+| `CPU_D2`..`D5` | PA4-7 Z/in | `SPI_MOSI/MISO/SCK` | PC0-2. PC1 also cart DATA |
 | `/SS_S1` | PC3 out | `SEL_SOFT0` | PD1 in |
 | `CPU_RDY` | PD2 OD | `VBL` | PD3 in |
 | `CPU_A_SAMPLE` | PD4 in | `/SS_S2` | PD5 out |
@@ -207,7 +208,7 @@ Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
 | --- | --- |
 | **Beam X** | Dot / H inside 341. Scroll Y `$7F03`. HBlank / VBlank / NMI |
 | **Beam Y** | Line / V. Raster Y `$7F04` + cascaded EQ -> IRQB |
-| **Compositor** | Priority, Color PROM index, MAP A14-A18. `LE_7F02`/`03`/`04`, `SEL_VRAM`, `LE_MAP`, three `SEL_SOFT*`, residual `/OE` |
+| **Compositor** | Priority, Color PROM index, MAP A14-A18. `LE_7F02`/`03`/`04`, `SEL_VRAM`, `LE_MAP`, three `SEL_SOFT*`, residual `/OE`. Cart `WE#` gated by **CART_ARM** |
 
 Hard LE and beam stay out of MCU paths. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157). Prefer **AS6C62256-55**. Keep VRAM mux / decode traces short. HC157 **G** must never float (G high forces Y low, not Hi-Z).
 
@@ -261,57 +262,67 @@ EDAC **395-036-*** style. Looking into the console socket (or at the cart edge f
 
 **CHR fetch:** CHR is **16** banks on the same flash (**64 KB**). During a CHR window the cell or sprite attr bank field (4 bits) is part of the flash address: bits **0-1** on **A12-A13** (inside a 16 KB page), bits **2-3** on **A14-A15**, CHR region base on MAP **A16-A18**. MCU-S1 can form that address in firmware. If BG1 CHR is built in the Compositor, folding bits 2-3 onto A14/A15 is a 22V10 product-term question. See `video-graphics.md` and `open-questions.md`.
 
-### Console as programmer (locked): Adafruit's UPDI Friend
+### Console as programmer (locked): cart flash via J10
 
-The console (+ **Adafruit's UPDI Friend**) is a flasher for **only** the **three AVRs** and a **seated cartridge**. It does **not** program the ATF22V10 PLDs, the AT27C256R color PROM, or the pad ATtiny85. Those still need their own tools (PLD programmer, OTP/PROM burner, AVR ISP for the pad) before or beside assembly.
+The console plus **Adafruit's UPDI Friend** is a flasher for a **seated cartridge** only. It does not program the three AVR128DB28 parts, the ATF22V10 PLDs, the AT27C256R color PROM, or the pad ATtiny85. Those parts are programmed off the motherboard, then installed.
 
-USB-C stays on Adafruit's UPDI Friend (PC side only). The console, cart, and pads have **no USB**. The Friend wires clip onto male header pins on the motherboard.
+USB-C stays on Adafruit's UPDI Friend (PC side only). The console, cart, and pads have **no USB**. Friend wires clip onto **J10**, a 2x2 male header.
 
-Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback for SerialUPDI. No USBASP. No separate flasher PCB for AVR/cart work.
+Adafruit's UPDI Friend is a CH340E USB-serial with the usual 1K RX/TX loopback. Cart DATA uses that one-wire serial path into running MCU-M firmware (USART1 on **PC1**), not SerialUPDI onto pin 19. No USBASP. No separate flasher PCB for cart work.
 
-**Same header, target select via DIP switch.** One shared program header (PWR / GND / data). A through-hole **4-position DIP switch** footprint on the motherboard routes the Friend data line to exactly one target:
+**J10** (2x2, 2.54 mm male). Same footprint family as J7. Friend cables carry three wires (PWR, GND, DATA). Pin 4 is a second GND so the housing sits on four holes.
 
-| DIP pos | ON selects |
+Top view, pin 1 at top-left:
+
+```text
+1 (PWR NC)  2 (GND)
+3 (DATA)    4 (GND)
+```
+
+- Pin 1 PWR: **NC**. Friend 5 V does not feed the Eurocard rail. Console power stays J1.
+- Pins 2 and 4: board GND.
+- Pin 3 DATA: MCU-M **PC1** through **SW10** position 1.
+
+**SW10** is a through-hole **2-position DIP**. Default both OFF.
+
+| SW10 pos | ON does |
 | --- | --- |
-| 1 | **MCU-M** UPDI |
-| 2 | **MCU-S1** UPDI |
-| 3 | **MCU-S2** UPDI |
-| 4 | **Cart** flash path (Friend data into MCU-M bridge / prog pin, then cart `WE#` / bus) |
+| 1 | Connects J10 DATA to MCU-M **PC1** (USART1 one-wire). Play uses PC1 as SPI MISO |
+| 2 | Pulls **CART_ARM** high into the compositor. That gates cart `WE#` |
 
-**Default = all OFF.** Shipping and normal play leave every switch off so the Friend data pin is disconnected from all AVRs and from the cart bridge. That cuts accidental flash risk if someone plugs Adafruit's UPDI Friend in without meaning to program anything.
+**Default = both OFF.** Play and shipping leave DATA disconnected from PC1 and CART_ARM low (board pull-down). `WE#` stays pulled up. Silkscreen: `CART DATA / ARM` and `ALL OFF = SAFE`.
 
-**One ON at a time.** Two UPDI targets stay off together (would short UPDI pins). Cart mode (pos 4) is alone as well. Silkscreen can say `M / S1 / S2 / CART` and `ALL OFF = SAFE`.
+**Firmware (locked):** MCU-M refuses cart-bridge work unless CART_ARM is high. `/SS_S1` and `/SS_S2` stay high. PC1 PORTMUXes to USART1 as open-drain one-wire UART. Cart mode stays off while a game is running.
 
-**Firmware (locked):** MCU-M refuses cart-bridge / `WE#` commands unless it reads cart mode from the DIP (or an equivalent strap). Cart mode stays off while a game is running.
+**Address path (locked):** MCU-M has CPU D[7:0] and no cart address pins. A0-A13 stay on the 6502. A14-A18 stay on the compositor MAP latch (`$7F90`). While CART_ARM is high, `$8000-$FFFF` reads are MCU-M cycles (same shape as soft `$7Fxx`, with `CPU_RDY` if the window is tight). MCU-M serves a small 6502 stub. That stub copies itself into system RAM and jumps there. The RAM stub talks to MCU-M through `$7Fxx`, sets MAP via `$7F90`-`$7F92`, and writes `$8000-$FFFF`. The compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space.
 
-Feasibility check (2026-09): AVR128DB28 is UPDI-only on pin 19. DxCore / avrdude **SerialUPDI** talk to it through this adapter. Cart ROM is **SST39SF040** parallel NOR, so cart writes still go through the MCU-M bridge when DIP pos 4 is ON.
+Host command bytes on the Friend serial link stay TBD. Pin numbers and this bridge contract are locked. See `open-questions.md`.
 
 | Job | Path |
 | --- | --- |
-| Reflash an AVR (on board) | Friend on header, matching DIP ON -> that AVR **UPDI** |
-| Program cart flash (on board) | Friend on header, DIP pos 4 ON -> **MCU-M** bridge -> cart |
-| PLDs / color PROM / pad MCU | **Out of scope** for this header (see below) |
+| Program cart flash (on board) | Friend on **J10**, **SW10** both ON, MCU-M USART plus RAM stub, cart `WE#` |
+| Reflash an AVR | Off the motherboard. Friend on a breadboard to that chip **UPDI** pin 19, then install |
+| PLDs / color PROM / pad MCU | Off the motherboard (see below) |
 
-**DIY before soldering.** Someone building a console can program each AVR128DB28 on a breadboard with Adafruit's UPDI Friend first (PWR / GND / UPDI), then solder the flashed chips. On-board header + DIP remain available later for AVR updates and cart programming.
+Keep each AVR's UPDI pin configured as **UPDI** (not reset/GPIO) so Adafruit's UPDI Friend works on the bench. Adafruit's High Voltage UPDI Friend is only a recovery tool if that fuse is bricked. Pin 19 is not brought to J10.
 
-Keep each AVR's UPDI pin configured as **UPDI** (not reset/GPIO) so Adafruit's UPDI Friend works. Adafruit's High Voltage UPDI Friend is only a recovery tool if someone bricks that fuse. Exact header pin numbers and host command protocol stay **TBD**.
+### PLDs, color PROM, AVRs, and pad MCU (not J10)
 
-### PLDs, color PROM, and pad MCU (not Adafruit's UPDI Friend)
+J10 does not program these. AVR128DB28 parts use Adafruit's UPDI Friend on a breadboard (SerialUPDI to pin 19), then get installed. **Locked:** there is **no** high-voltage programming path on the motherboard (no ~12 V PLD EDIT / no ~13 V PROM VPP injected on-board). PLDs, the color PROM, and the pad MCU are programmed **off the console PCB**, then installed (sockets recommended so they can be swapped).
 
-Adafruit's UPDI Friend cannot program these. **Locked:** there is **no** high-voltage programming path on the motherboard (no ~12 V PLD EDIT / no ~13 V PROM VPP injected on-board). Those ICs are programmed **off the console PCB**, then installed (sockets recommended so they can be swapped).
+Two practical paths:
 
-Two practical paths for builders:
-
-1. **Buy them pre-programmed.** Blank stock is the default from distributors. Programming services (distributor / MicrochipDirect-style / kit vendor selling Retr01-ready parts) can ship ATF22V10s with the beam/compositor JEDEC images, an AT27C256R blown with the 64-color table, and pad ATtiny85s with pad firmware. That is the easiest path for non-tinkerers. Note: the color PROM is **OTP** (one-time). A wrong blow means a new chip.
+1. **Buy them pre-programmed.** Blank stock is the default from distributors. Programming services (distributor / MicrochipDirect-style / kit vendor selling Retr01-ready parts) can ship AVR128DB28s with MCU firmware, ATF22V10s with the beam/compositor JEDEC images, an AT27C256R blown with the 64-color table, and pad ATtiny85s with pad firmware. That is the easiest path when a bench programmer is not on hand. Note: the color PROM is **OTP** (one-time). A wrong blow means a new chip.
 2. **Program them with a separate tool** (off the console PCB):
 
 | Part | DIY options (examples) |
 | --- | --- |
+| **AVR128DB28** | Adafruit's UPDI Friend, or USB-serial with 1K TX/RX loopback, SerialUPDI to pin 19, on a breadboard |
 | **ATF22V10** | Arduino **Uno/Nano**-based GAL programmers (e.g. Afterburner), or a TL866-class universal programmer that lists ATF22V10 |
 | **AT27C256R** | Parallel EPROM/OTP programmer (TL866-class or similar) that supports 27C256 and the required VPP/VCC programming voltages |
 | **ATtiny85** (pad) | **ISP**: Arduino as ISP (Nano/Uno), USBasp, USBtinyISP, and so on. Optional ISP header on the pad PCB is fine (5 V only, no HV) |
 
-Prefer programming PLDs and the color PROM **before** they go into the motherboard (or drop pre-programmed parts into sockets). Same for the pad MCU before closing the controller shell.
+Prefer programming PLDs, the color PROM, and the three AVRs **before** they go into the motherboard (or drop pre-programmed parts into sockets). Same for the pad MCU before closing the controller shell.
 
 ## Controllers
 
@@ -402,7 +413,7 @@ Minimum set (expand as layout needs):
 | **+5V** | After barrel / regulator entry |
 | **PHI2**, **DOT** | Clock sanity |
 | **RESET_N** | Bring-up |
-| **UPDI_HDR** (Friend data) | Program path alive |
+| **CART_PROG_DATA** (J10 DATA) | Cart program path alive |
 | Cart **WE#**, **OE#** | Flash / bus checks |
 | Soft I/O sample (ex. one `$7Fxx` SEL) | Decode smoke test |
 
@@ -420,7 +431,7 @@ Starter set (roles can grow):
 | Heartbeat M | MCU-M alive (firmware toggles on a timer even while `CPU_RDY` pulses) |
 | Heartbeat S1 | MCU-S1 alive |
 | Heartbeat S2 | MCU-S2 alive |
-| Prog / activity | Optional. Blinks while Adafruit's UPDI Friend / cart-bridge path is busy (if firmware can drive it) |
+| Prog / activity | Optional. Blinks while the J10 / MCU-M cart-bridge path is busy (if firmware can drive it) |
 
 ### Layout rules (bring-up friendly)
 
@@ -434,7 +445,7 @@ These track common practice for this **4-layer** digital and video board:
 - **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 - **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
-- **Silkscreen:** Refdes, polarity, DIP `M/S1/S2/CART` and `ALL OFF = SAFE`, TP names, LED names.
+- **Silkscreen:** Refdes, polarity, SW10 `CART DATA / ARM` and `ALL OFF = SAFE`, TP names, LED names.
 
 **Cart and pad PCBs (2-layer).** Same spirit: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
 

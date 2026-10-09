@@ -10,9 +10,9 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 **Touches:** `hardware.md`, `video-graphics.md`
 
-### Console program header / flash protocol
+### Console cart-flash host protocol
 
-**Device locked:** Adafruit's UPDI Friend on one shared motherboard header. **4-pos DIP** selects MCU-M / S1 / S2 / cart. Default **all OFF** (safe). Flasher scope: **AVRs + cart only**. PLDs / color PROM / pad MCU: pre-programmed buy option or DIY external tools. Still **TBD:** header pin numbers and host commands.
+**Device locked:** Adafruit's UPDI Friend on **J10** (2x2: PWR NC, GND, DATA, GND). **SW10** 2-pos DIP arms DATA onto MCU-M PC1 and CART_ARM into the compositor (default both OFF). Flasher scope: **seated cart only**. AVRs / PLDs / color PROM / pad MCU: pre-programmed buy option or DIY off the board. MCU-M USART plus 6502 RAM stub is the bridge. Still **TBD:** host command bytes on the Friend serial link.
 
 **Touches:** `hardware.md`, `cartridge.md`
 
@@ -54,7 +54,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 8. Cart flashing
 
-**Resolved:** Console + **Adafruit's UPDI Friend**. Shared header. **4-pos DIP** selects M / S1 / S2 / cart (default all OFF). Flashes **AVRs + cart only**. PLDs / color PROM / pad MCU: pre-programmed buy option or DIY external tools. Header pin numbers / protocol TBD.
+**Resolved:** Console + **Adafruit's UPDI Friend** on **J10** (2x2). **SW10** 2-pos DIP (default both OFF). Flashes a **seated cart only**. MCU-M USART on PC1 plus a 6502 RAM stub drive the SST39SF040. AVRs / PLDs / color PROM / pad MCU: pre-programmed buy option or DIY off the board. Host command bytes TBD.
 
 ### 9. Interleaved VRAM timing
 
@@ -128,7 +128,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-14 | Entity spawns | Spawn locations in PRG, not cart world blobs. |
 | 2026-09-13 | Sync out | One header, CSYNC or H/V mode. |
 | 2026-09-13 | Branding | One product: Retr01. |
-| 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend. Shared header. 4-pos DIP: M/S1/S2/cart, default all OFF. Scope: AVRs + cart only. |
+| 2026-09-14 | Flasher | Console + Adafruit's UPDI Friend on J10 (2x2). SW10 2-pos DIP, default both OFF. Scope: seated cart only. AVRs off-board SerialUPDI. |
 | 2026-09-14 | Entity caps | 16 types per world. format_ver 3. |
 | 2026-09-17 | Entity pack | Max sprites/frame **6**. Maxed def **532 B**. Draw origin is per **frame**. Hitbox is per **state**. |
 | 2026-09-14 | Anim tiles | base..base+3 wrap in bank, default delay 6. |

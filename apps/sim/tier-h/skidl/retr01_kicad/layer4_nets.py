@@ -2,7 +2,7 @@
 
 Assignment follows docs/bring-up-v2/main-pcb-layers.md. Layer 1 keeps clock-rate
 buses, digital squares, and +5V. Layer 4 gets analog, reset/ready, handshake,
-I2C, UPDI, pads, arcade, sync, MAP A14-A18, and SPI chip-selects.
+I2C, cart program DATA / CART_ARM, pads, arcade, sync, MAP A14-A18, and SPI chip-selects.
 
 The class exists so Pcbnew can color those air wires separately. Track and via
 geometry match the Default class.
@@ -103,6 +103,9 @@ KICAD_PATTERNS = (
     "MCU_S1_UPDI*",
     "MCU_S2_UPDI*",
     "UPDI*",
+    "CART_PROG*",
+    "CART_ARM*",
+    "J10_PWR*",
     "SS_S1*",
     "SS_S2*",
     "CART_A14",
@@ -130,6 +133,8 @@ KICAD_PATTERNS = (
     "SIG_J7*",
     "SIG_J8*",
     "SIG_J9*",
+    "SIG_J10*",
+    "SIG_SW10*",
 )
 
 _EXACT = frozenset(
@@ -172,7 +177,9 @@ _EXACT = frozenset(
         "MCU_M_UPDI",
         "MCU_S1_UPDI",
         "MCU_S2_UPDI",
-        "UPDI_PROG_DATA",
+        "CART_PROG_DATA",
+        "CART_ARM",
+        "J10_PWR_NC",
         "PAD_DATA_BUS",
         "PAD1_DATA",
         "PAD2_DATA",

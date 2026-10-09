@@ -19,7 +19,7 @@ The KiCad tree has a populated **`v_02.kicad_pcb`** / **`v_02.kicad_pro`** under
 | --- | --- |
 | [`kicad-schematic-tier-h-symbols.md`](kicad-schematic-tier-h-symbols.md) | KiCad project setup, symbol libraries, refdes table, footprints, power symbols, annotation, ERC |
 | [`kicad-schematic-tier-h-passives.md`](kicad-schematic-tier-h-passives.md) | Power entry, bypass, bulk, crystals, DAC resistors, 33 ohm series, pull-ups (pin-level) |
-| [`kicad-schematic-tier-h-wiring.md`](kicad-schematic-tier-h-wiring.md) | CPU, memories, PLDs, glue, MCUs, field path, video, cart socket **J36**, connectors **J1-J9** |
+| [`kicad-schematic-tier-h-wiring.md`](kicad-schematic-tier-h-wiring.md) | CPU, memories, PLDs, glue, MCUs, field path, video, cart socket **J36**, connectors **J1-J10**, **SW10** |
 
 ---
 

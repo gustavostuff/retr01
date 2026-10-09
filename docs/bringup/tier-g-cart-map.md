@@ -16,13 +16,13 @@
 | - | MAP port | `$7F90-$7F93` (seek + auto-inc data) via M/PLD as designed |
 | 0-1 | **24C64** or FRAM | Optional saves (chunked, short RDY, UI alive) |
 
-**CE#** tied active on the cart. Motherboard gates **`OE#`**. **`WE#`** idle-high in play (board pull-up). Used by the MCU-M flash bridge when the program DIP selects cart.
+**CE#** tied active on the cart. Motherboard gates **`OE#`**. **`WE#`** idle-high in play (board pull-up). Used by the MCU-M flash bridge when **SW10** arms **CART_ARM**.
 
 **Still omit:** MCU-S2 / pads / audio (Tier H). No mapper ICs.
 
 ### Flasher (can stay partial)
 
-Adafruit UPDI Friend + 4-pos DIP (M / S1 / S2 / cart). Default all OFF. Scope: **AVRs + cart only**. PLDs / color PROM stay pre-programmed or external tools.
+Adafruit UPDI Friend on **J10** (2x2) plus **SW10** (2-pos DIP, default both OFF). Scope: **seated cart only**. AVRs / PLDs / color PROM stay pre-programmed or off-board tools.
 
 ---
 

@@ -42,7 +42,7 @@ Every net in the layer 4 tables below belongs on layer 4. Leaving a safe net on 
 | Digital square clock (PHI2, DOT, U04 buffer, U74, 157 pin S) | 1 |
 | Parallel bus that changes on PHI2 or DOT (A, D, AD, mux, index, field, scroll, SPI clock/data) | 1 |
 | Analog (crystal Pierce, DAC guns, AD724, composite, audio after PWM) | 4 |
-| Reset, ready, selects, handshake, I2C, UPDI, pads, arcade, LEDs, line/frame strobes, MAP high bits | 4 |
+| Reset, ready, selects, handshake, I2C, cart program DATA / CART_ARM, pads, arcade, LEDs, line/frame strobes, MAP high bits | 4 |
 
 A via may pass through layers 2 and 3. Signal copper does not stop on layers 2 or 3.
 
@@ -181,7 +181,7 @@ MAP A14-A18 and the soft SELs route around the analog keepout, not through the D
 | Net | Path |
 |-----|------|
 | SDA / SCL | UM PA2-3, **R24** / **R25**, **R27** / **R28**, J36 A3/B3 |
-| UPDI | UM, US1, US2 pin 19 to the Friend header / DIP |
+| Cart program | **J10** DATA through **SW10** to UM PC1. **CART_ARM** to compositor. AVR pin 19 stays off this header |
 | `PAD_DATA` | US2 PF0, **R26**, J3/J4 ring |
 | J5 P1 / P2 bits | US2 ports to arcade header |
 | Heartbeat / power LEDs | Series resistors to LED anodes |

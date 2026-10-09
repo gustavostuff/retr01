@@ -24,14 +24,12 @@ See `memory.md` for the full map. Short version:
 
 ## Programming workflow
 
-The **console is the flasher** for the **three AVRs** and a **seated cart** only. Accessory is **Adafruit's UPDI Friend**, clipped onto **one** shared motherboard header. A **4-pos DIP** selects MCU-M, MCU-S1, MCU-S2, or cart (default **all OFF** = safe / nothing connected).
+The **console is the flasher** for a **seated cart** only. Accessory is **Adafruit's UPDI Friend**, clipped onto motherboard **J10** (2x2). **SW10** (2-pos DIP, default **both OFF**) arms DATA onto MCU-M **PC1** and **CART_ARM** into the compositor.
 
-- **AVRs (on board):** turn on the matching DIP, SerialUPDI into that chip's UPDI pin.
-- **Cart image:** turn on the cart DIP, MCU-M bridges onto the cart bus and fills the SST39SF040 (and save EEPROM if needed). MCU-M must **refuse** bridge / `WE#` work unless cart mode is selected. Cart mode stays off during gameplay.
-- **Play vs program:** cart `WE#` stays pulled up and idle in play. Motherboard gates `OE#` only for PRG / MAP / CHR windows (never with RAM or soft `$7Fxx`).
+- **Cart image:** SW10 both ON. MCU-M takes a one-wire USART stream on PC1, serves a small 6502 stub on `$8000-$FFFF` reads (with `CPU_RDY` as needed), then the stub in system RAM writes the SST39SF040 (and save EEPROM if needed). MCU-M refuses bridge work unless CART_ARM is high. Cart mode stays off during gameplay.
+- **Play vs program:** cart `WE#` stays pulled up and idle in play. The compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space. Motherboard gates `OE#` only for PRG / MAP / CHR windows (never with RAM or soft `$7Fxx`).
+- **AVRs:** programmed off the motherboard. Friend on a breadboard to pin 19 (SerialUPDI), then the chip is installed. Pin 19 is not on J10.
 
-PLDs (ATF22V10), the color PROM (AT27C256R), and pad MCUs are **not** flashed through this console header. Builders can **buy them pre-programmed** or program them themselves (Arduino Nano/Uno-based GAL tools such as Afterburner, a TL866-class PROM/PLD programmer, Arduino-as-ISP for the ATtiny85). Prefer programming PLDs and the color PROM **before** first power-on with the CPU populated. A fuller programming guide will come later. See `hardware.md` and `ic-comms-risks.md`.
+PLDs (ATF22V10), the color PROM (AT27C256R), the three AVRs, and pad MCUs are **not** flashed through J10. Pre-programmed parts and off-board tools cover those. Prefer programming PLDs, the color PROM, and the AVRs **before** first power-on with the CPU populated. A fuller programming guide will come later. See `hardware.md` and `ic-comms-risks.md`.
 
-Builders can also flash each AVR on a **breadboard** with Adafruit's UPDI Friend before soldering, then use the on-board header later for cart programming and AVR updates.
-
-Exact header pin numbers / protocol TBD. See `hardware.md`.
+J10 pin numbers are locked in `hardware.md`. Host command bytes stay TBD.

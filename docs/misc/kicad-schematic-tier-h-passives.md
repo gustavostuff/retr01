@@ -148,7 +148,7 @@ Unused **U24** address pins: tie to **GND** on schematic ([`hardware.md`](../gen
 | R13 pin 1 | U74 pin 9 (DOT, 5.369318 MHz) | R13 pin 2 -> **UPLDX** DOT |
 | R14-R21 | **U1** D0-D7 | **J36** cart D0-D7 (via flash symbol or socket net names) |
 | R22 pin 1 | net **CART_OE#** (from PLD decode) | R22 pin 2 -> cart **OE#** |
-| R23 pin 1 | net **CART_WE#** (MCU-M bridge) | R23 pin 2 -> cart **WE#** |
+| R23 pin 1 | net **CART_WE#** (compositor, gated by CART_ARM) | R23 pin 2 -> cart **WE#** |
 | R24 | **UM** I2C **SDA** | **J36** SDA / **U50** SDA |
 | R25 | **UM** I2C **SCL** | **J36** SCL / **U50** SCL |
 
@@ -166,7 +166,7 @@ Cart data series (**R14-R21**) sit on the motherboard between **U1** and **J36**
 | R27 | 4.7k | +5V | **UM** I2C **SDA** |
 | R28 | 4.7k | +5V | **UM** I2C **SCL** |
 
-**CART_WE#** also needs a board **pull-up** to idle-high in play ([`hardware.md`](../general/hardware.md), [`ic-comms-risks.md`](../general/ic-comms-risks.md)).
+**CART_WE#** also needs a board **pull-up** to idle-high in play. **CART_ARM** needs a board **pull-down** so SW10 pos 2 open keeps `WE#` gated off ([`hardware.md`](../general/hardware.md), [`ic-comms-risks.md`](../general/ic-comms-risks.md)).
 
 ---
 

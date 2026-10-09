@@ -120,3 +120,25 @@ Layout (top view, pin 1 at top-left):
 ```
 
 U130 holds the supervisor path on RESB ([ics.md](ics.md)).
+
+---
+
+## J10, cart program header 2x2 (near UM)
+
+Adafruit's UPDI Friend clips onto this header. Cart flash only. Pin numbers follow [`hardware.md`](../../general/hardware.md).
+
+| Pin | Net |
+|-----|-----|
+| 1 | PWR, **NC** (Friend 5 V does not feed the rail) |
+| 2 | `GND` |
+| 3 | DATA, through **SW10** pos 1 to UM **PC1** |
+| 4 | `GND` |
+
+Layout (top view, pin 1 at top-left):
+
+```text
+1 (PWR NC)  2 (GND)
+3 (DATA)    4 (GND)
+```
+
+**SW10** is a 2-pos DIP next to J10. Default both OFF. Pos 1 series-connects DATA. Pos 2 pulls **CART_ARM** high into the compositor. Silkscreen `CART DATA / ARM` and `ALL OFF = SAFE`.

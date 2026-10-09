@@ -14,7 +14,7 @@ No CPU, cart, AVRs, VRAM, or Compositor.
 
 ## Bench shopping list
 
-Buy this to build the lab in [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md) on a desk. Programmer notes follow [docs/general/hardware.md](../../../docs/general/hardware.md) and [docs/ic_behavior/ATF22V10.md](../../../docs/ic_behavior/ATF22V10.md). Adafruit's UPDI Friend is not used here. It programs the AVRs and the cart later, not these PLDs or the color PROM.
+Buy this to build the lab in [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md) on a desk. Programmer notes follow [docs/general/hardware.md](../../../docs/general/hardware.md) and [docs/ic_behavior/ATF22V10.md](../../../docs/ic_behavior/ATF22V10.md). Adafruit's UPDI Friend is not used here. It programs AVRs off-board (SerialUPDI) and a seated cart through J10 later, not these PLDs or the color PROM.
 
 ### Tier A, required
 

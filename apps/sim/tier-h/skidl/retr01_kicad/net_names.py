@@ -205,8 +205,11 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("J2", "6"): "VIDEO_VSYNC",
     ("J3", "R"): "PAD1_DATA",
     ("J4", "R"): "PAD2_DATA",
-    ("J5", "1"): "UPDI_PROG_DATA",
     ("J7", "3"): "RESET_SWITCH#",
+    ("J10", "1"): "J10_PWR_NC",
+    ("J10", "3"): "CART_PROG_DATA",
+    ("SW10", "1"): "CART_PROG_DATA",
+    ("SW10", "3"): "CART_ARM",
 }
 
 # Protected nets that must never be altered or renamed

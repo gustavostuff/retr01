@@ -63,6 +63,8 @@ def apply_pinmap_extras() -> None:
     t["R_1M"] = _nums(2)
     t["BARREL_5V"] = ["1", "2", "3"]
     t["RGBS_HDR"] = _nums(8)
+    t["CART_PROG_HDR"] = _nums(4)
+    t["SW_CART_ARM"] = _nums(4)
     t["MCP130"] = ["1", "2", "3"]
     t["TRS_P1"] = ["S", "T", "R", "TN", "RN"]
     t["TRS_P2"] = ["S", "T", "R", "TN", "RN"]
@@ -80,6 +82,18 @@ def apply_pinmap_extras() -> None:
         "6": "VSYNC",
         "7": "GND",
         "8": "GND",
+    }
+    a["CART_PROG_HDR"] = {
+        "1": "PWR",
+        "2": "GND",
+        "3": "DATA",
+        "4": "GND",
+    }
+    a["SW_CART_ARM"] = {
+        "1": "DATA_J",
+        "2": "ARM_VCC",
+        "3": "CART_ARM",
+        "4": "DATA_M",
     }
     a["MCP130"] = {"1": "RESET#", "2": "VDD", "3": "VSS"}
     a["TRS_P1"] = {"S": "GND", "T": "+5V", "R": "DATA", "TN": "NC", "RN": "NC"}

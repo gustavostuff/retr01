@@ -527,6 +527,7 @@ static void apply_scroll_latch(R01sBoard *board, R01sPinNetlist *nl) {
 static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   R01sEntity *cpu = r01s_w65c02s_entity(&board->cpu);
+  R01sEntity *mcu_m = r01s_avr128db28_m_entity(&board->mcu_m);
   R01sEntity *s2 = r01s_avr128db28_s2_entity(&board->mcu_s2);
   R01sEntity *sink = r01s_video_sink_entity(&board->video_sink);
   R01sMoboIo *io = &board->io;
@@ -571,6 +572,14 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, &io->j7, "GND1", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j7, "GND2", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j7, "RESB", cpu, "RESB");
+  r01s_pin_netlist_name_net(nl, &io->j10, "PWR", "J10_PWR_NC");
+  r01s_pin_netlist_link(nl, &io->j10, "GND1", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j10, "GND2", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j10, "DATA", &io->sw10, "DATA_J");
+  r01s_pin_netlist_name_net(nl, &io->j10, "DATA", "CART_PROG_DATA");
+  r01s_pin_netlist_link(nl, &io->sw10, "DATA_M", mcu_m, "SPI_MISO");
+  r01s_pin_netlist_link(nl, &io->sw10, "ARM_VCC", pwr, "VDD");
+  r01s_pin_netlist_name_net(nl, &io->sw10, "CART_ARM", "CART_ARM");
 }
 
 void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {

@@ -16,6 +16,8 @@ CONNECTOR_REFDES = (
     "J7",
     "J8",
     "J9",
+    "J10",
+    "SW10",
     "J36",
 )
 
@@ -93,6 +95,8 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J5", "20"),
             ("J7", "2"),
             ("J7", "4"),
+            ("J10", "2"),
+            ("J10", "4"),
             ("J1", "2"),
             ("J1", "3"),
             ("J36", "1"),   # A1 GND
@@ -106,6 +110,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         for ref, pin in (
             ("J1", "1"),
             ("J7", "1"),
+            ("SW10", "2"),
             ("J3", P.TRS_TIP),
             ("J4", P.TRS_TIP),
             ("J36", "3"),  # A2 VCC
@@ -181,3 +186,28 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             pin_connect(parts["J2"], "", 8, gnd)
 
     # Arcade J5 2x10: sim has no GPIO net names yet; GND on P1/P2 footer pins (see wire above).
+
+    # J10 2x2 cart program + SW10 2-pos DIP (docs/general/hardware.md).
+    # 1 PWR NC   2 GND
+    # 3 DATA     4 GND
+    # SW10 pos 1 pads 1-4 DATA (open by default). Pos 2 pads 2-3 CART_ARM.
+    if "J10" in parts:
+        pwr_nc = _ensure_net(nets_map, "J10_PWR_NC")
+        pwr_nc.name = "J10_PWR_NC"
+        pin_connect(parts["J10"], "", 1, pwr_nc)
+        data = _find_net_by_name(nets_map, ("CART_PROG_DATA",)) or _ensure_net(
+            nets_map, "CART_PROG_DATA"
+        )
+        data.name = "CART_PROG_DATA"
+        pin_connect(parts["J10"], "", 3, data)
+        if "SW10" in parts:
+            pin_connect(parts["SW10"], "", 1, data)
+    if "SW10" in parts:
+        arm = _find_net_by_name(nets_map, ("CART_ARM",)) or _ensure_net(nets_map, "CART_ARM")
+        arm.name = "CART_ARM"
+        pin_connect(parts["SW10"], "", 3, arm)
+        miso = _find_net_by_name(nets_map, ("SPI_MISO",)) or _find_net_by_node(
+            nets_map, "UM", "SPI_MISO"
+        )
+        if miso is not None:
+            pin_connect(parts["SW10"], "", 4, miso)
