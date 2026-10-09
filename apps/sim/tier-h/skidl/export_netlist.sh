@@ -29,6 +29,7 @@ mkdir -p "$DIR"
 "$BUILD" >"$JSON"
 python3 "$REPO/scripts/retr01_trim_silk_footprints.py"
 python3 "$REPO/scripts/skidl_from_tier_h.py" "${QUIET[@]}"
+python3 "$REPO/scripts/retr01_patch_3d_poses.py"
 
 # KiCad resolves Retr01_Lib from the board project fp-lib-table (real copy, not a symlink).
 KICAD_V01="$REPO/apps/sim/tier-h/kicad/main-pcb/v_01"

@@ -79,11 +79,11 @@ KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual e
 
 ### KiCad custom library and board
 
-- **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/` (3D offset/rotation live in each `.kicad_mod` `(model ...)` block).
+- **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/`. 3D offset/scale/rotate for U130 (`TO-92_Inline`: offset X 1.25 mm, rotate Z 180 deg), RCA (`CUI_RCJ-014*`), and TRS jacks live in `scripts/retr01_patch_3d_poses.py`. `export_netlist.sh` stamps those values into the `.kicad_mod` files and into matching `(model ...)` blocks on each `v_0*.kicad_pcb`.
 - **Board:** `apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb` and `v_02.kicad_pro`. Open the project from **`v_01/`** so `${KIPRJMOD}` resolves.
 - **Export copy:** `export_netlist.sh` copies the library tree into `v_01/library/` for KiCad (`fp-lib-table` -> `${KIPRJMOD}/library/Retr01_Lib.pretty`).
 
-Notable custom footprints: **J36** `EDAC_395_MoboSocket_2x18_2.54x5.08mm` (5.08 mm row spacing), **J3/J4** CUI SJ1-3515N horizontal jack, **J1** GCT DCJ200-10-A barrel jack, **J8/J9** `CUI_RCJ-014` / `CUI_RCJ-014_Audio`, **U725** narrow **SOIC-16** (trimmed silk from KiCad `Package_SO`). Supplier STEP sources for WRL regeneration are under `Retr01_Lib.3dshapes/_step_source/`. Colored WRLs use `scripts/step_colored_to_wrl.py` when needed.
+Notable custom footprints: **J36** `EDAC_395_MoboSocket_2x18_2.54x5.08mm` (5.08 mm row spacing), **J3/J4** CUI SJ1-3515N horizontal jack, **J1** GCT DCJ200-10-A barrel jack, **J8/J9** `CUI_RCJ-014` / `CUI_RCJ-014_Audio`, **U130** `TO-92_Inline` (MCP130, 3D pose from `retr01_patch_3d_poses.py`), **U725** narrow **SOIC-16** (trimmed silk from KiCad `Package_SO`). Supplier STEP sources for WRL regeneration are under `Retr01_Lib.3dshapes/_step_source/`. Colored WRLs use `scripts/step_colored_to_wrl.py` when needed.
 
 ### Silkscreen text (refdes + value)
 
