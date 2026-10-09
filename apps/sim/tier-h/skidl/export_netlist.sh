@@ -21,9 +21,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ ! -x "$BUILD" ]]; then
-    echo "missing $BUILD — run: cmake --build apps/sim/tier-h/build --target export_tier_h_netlist" >&2
+    echo "missing $BUILD - run: cmake --build apps/sim/tier-h/build --target export_tier_h_netlist" >&2
     exit 1
 fi
+
+cleanup_root() {
+    "$REPO/scripts/clean_repo_root_strays.sh" || true
+}
+trap cleanup_root EXIT
 
 mkdir -p "$DIR"
 "$BUILD" >"$JSON"

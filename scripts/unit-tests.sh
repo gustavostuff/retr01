@@ -7,6 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+trap '"$ROOT/scripts/clean_repo_root_strays.sh" || true' EXIT
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
 SIM_A="$ROOT/apps/sim/tier-a"

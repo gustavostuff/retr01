@@ -340,6 +340,41 @@ def annotate_pcb_pinfunctions(pcb_text: str, netlist_text: str) -> str:
     return "".join(parts)
 
 
+_ROOT_STRAY_NAMES = (
+    "retr01_tier_h.json",
+    "retr01_prelim.net",
+    "skidl.erc",
+    "skidl.log",
+    "__init__.erc",
+    "__init__.log",
+    "skidl_from_tier_h_sklib.py",
+    "ui_layout.json",
+    "test_layout.json",
+    "test_cart.retr01",
+    "test_cart_pb.retr01",
+    "test_prom.bin",
+    "listing.txt",
+    "sdk_overlay.prg",
+    "sdk_overlay.prg.elf",
+    "test_roundtrip.r01proj",
+    "bad_fmt1.retr01",
+)
+
+
+def remove_repo_root_strays() -> None:
+    """SKiDL loggers write next to cwd. Drop those leftovers from the repo root."""
+    for name in _ROOT_STRAY_NAMES:
+        path = REPO_ROOT / name
+        if path.is_file():
+            path.unlink()
+    for path in REPO_ROOT.glob("skidl_from_tier_h.*"):
+        if path.is_file():
+            path.unlink()
+    for path in REPO_ROOT.glob("skidl_REPL.*"):
+        if path.is_file():
+            path.unlink()
+
+
 def configure_skidl_logging(quiet: bool) -> None:
     if not quiet:
         return
@@ -504,31 +539,31 @@ def main() -> None:
     try:
         os.chdir(TIER_H_SKIDL_DIR)
         netlist_text = build_skidl(data, quiet=args.quiet)
+        out_path.write_text(netlist_text, encoding="utf-8")
+        print(f"wrote {out_path} ({len(netlist_text)} bytes) - PRELIMINARY / NOT FAB-READY", file=sys.stderr)
+
+        pcb_dir = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb/v_01"
+        if str(TIER_H_SKIDL_DIR) not in sys.path:
+            sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+        from retr01_kicad.layer4_nets import layer4_net_names_from_netlist, patch_kicad_pro
+
+        layer4_from_net = layer4_net_names_from_netlist(netlist_text)
+        for pcb_path in sorted(pcb_dir.glob("v_0*.kicad_pcb")):
+            old = pcb_path.read_text(encoding="utf-8")
+            new = patch_pcb_clock_straps(old)
+            new = annotate_pcb_pinfunctions(new, netlist_text)
+            if new != old:
+                pcb_path.write_text(new, encoding="utf-8")
+                print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
+        for pro_path in sorted(pcb_dir.glob("v_0*.kicad_pro")):
+            old = pro_path.read_text(encoding="utf-8")
+            new = patch_kicad_pro(old, layer4_from_net)
+            if new != old:
+                pro_path.write_text(new, encoding="utf-8")
+                print(f"updated Layer4 net class in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
     finally:
         os.chdir(orig_cwd)
-
-    out_path.write_text(netlist_text, encoding="utf-8")
-    print(f"wrote {out_path} ({len(netlist_text)} bytes) - PRELIMINARY / NOT FAB-READY", file=sys.stderr)
-
-    pcb_dir = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb/v_01"
-    if str(TIER_H_SKIDL_DIR) not in sys.path:
-        sys.path.insert(0, str(TIER_H_SKIDL_DIR))
-    from retr01_kicad.layer4_nets import layer4_net_names_from_netlist, patch_kicad_pro
-
-    layer4_from_net = layer4_net_names_from_netlist(netlist_text)
-    for pcb_path in sorted(pcb_dir.glob("v_0*.kicad_pcb")):
-        old = pcb_path.read_text(encoding="utf-8")
-        new = patch_pcb_clock_straps(old)
-        new = annotate_pcb_pinfunctions(new, netlist_text)
-        if new != old:
-            pcb_path.write_text(new, encoding="utf-8")
-            print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
-    for pro_path in sorted(pcb_dir.glob("v_0*.kicad_pro")):
-        old = pro_path.read_text(encoding="utf-8")
-        new = patch_kicad_pro(old, layer4_from_net)
-        if new != old:
-            pro_path.write_text(new, encoding="utf-8")
-            print(f"updated Layer4 net class in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
+        remove_repo_root_strays()
 
 
 if __name__ == "__main__":
