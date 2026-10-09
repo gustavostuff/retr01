@@ -5593,14 +5593,13 @@
 		)
 	)
 	(footprint "Retr01_Lib:Jack_3.5mm_CUI_SJ1-3515N_Horizontal"
-		(locked yes)
 		(layer "F.Cu")
 		(uuid "28bf86ef-a146-4d8a-a02a-80ec4f7eec0e")
 		(at 35.5 117.5 90)
 		(descr "TRS 3.5mm, horizontal, through-hole, with tip and ring switches, https://www.cuidevices.com/product/resource/sj1-351xn.pdf")
 		(tags "TRS audio jack stereo horizontal")
 		(property "Reference" "J3"
-			(at 5.2 -7 90)
+			(at 13.724328 -5.177927 0)
 			(unlocked yes)
 			(layer "F.SilkS")
 			(uuid "31c582d7-d033-4d68-b8e9-ddee51dc3531")
@@ -5612,7 +5611,7 @@
 			)
 		)
 		(property "Value" "TRS_P1"
-			(at 5.45 7.1 90)
+			(at 13.766122 3.473559 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(uuid "554e517a-bf2f-4602-bec9-64ff3ce1d7e0")
@@ -20199,14 +20198,13 @@
 		)
 	)
 	(footprint "Retr01_Lib:Jack_3.5mm_CUI_SJ1-3515N_Horizontal"
-		(locked yes)
 		(layer "F.Cu")
 		(uuid "ba89174a-9caf-4f78-ab84-6ae51fd03f4d")
 		(at 49.05 117.5 90)
 		(descr "TRS 3.5mm, horizontal, through-hole, with tip and ring switches, https://www.cuidevices.com/product/resource/sj1-351xn.pdf")
 		(tags "TRS audio jack stereo horizontal")
 		(property "Reference" "J4"
-			(at 5.2 -7 90)
+			(at 13.807917 -5.311855 0)
 			(unlocked yes)
 			(layer "F.SilkS")
 			(uuid "010e3c93-fe0e-437d-a7bf-bc92feecccef")
@@ -20218,7 +20216,7 @@
 			)
 		)
 		(property "Value" "TRS_P2"
-			(at 5.45 7.1 90)
+			(at 13.766122 3.381426 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(uuid "a0ac77e8-efaf-4f4e-ae93-e165a8643e8c")
