@@ -166,7 +166,7 @@ Cart data series (**R14-R21**) sit on the motherboard between **U1** and **J36**
 | R27 | 4.7k | +5V | **UM** I2C **SDA** |
 | R28 | 4.7k | +5V | **UM** I2C **SCL** |
 
-**CART_WE#** also needs a board **pull-up** to idle-high in play. **CART_ARM** needs a board **pull-down** so SW10 pos 2 open keeps `WE#` gated off ([`hardware.md`](../general/hardware.md), [`ic-comms-risks.md`](../general/ic-comms-risks.md)).
+**CART_WE#** also needs a board **pull-up** to idle-high in play. **CART_ARM** is compositor MAP latch D7, cleared by **RESB** ([`hardware.md`](../general/hardware.md), [`ic-comms-risks.md`](../general/ic-comms-risks.md)).
 
 ---
 

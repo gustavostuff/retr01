@@ -3636,7 +3636,6 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
             r01s_island_builder_mount_rel(b, p2, R01S_ISLAND_MCU_LB, p1->body_w + R01S_CHIP_GAP, y);
         }
         r01s_island_builder_mount_rel(b, &board->io.j10, R01S_ISLAND_MCU_LB, 0, 72);
-        r01s_island_builder_mount_rel(b, &board->io.sw10, R01S_ISLAND_MCU_LB, 24, 72);
     }
     {
         R01sEntity *flash_e = r01s_sst39sf040_entity(&board->cart_module.flash);

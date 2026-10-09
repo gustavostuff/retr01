@@ -131,7 +131,7 @@ Adafruit's UPDI Friend clips onto this header. Cart flash only. Pin numbers foll
 |-----|-----|
 | 1 | PWR, **NC** (Friend 5 V does not feed the rail) |
 | 2 | `GND` |
-| 3 | DATA, through **SW10** pos 1 to UM **PC1** |
+| 3 | DATA, UM **PC1** (`SPI_MISO` / USART1) |
 | 4 | `GND` |
 
 Layout (top view, pin 1 at top-left):
@@ -141,4 +141,4 @@ Layout (top view, pin 1 at top-left):
 3 (DATA)    4 (GND)
 ```
 
-**SW10** is a 2-pos DIP next to J10. Default both OFF. Pos 1 series-connects DATA. Pos 2 pulls **CART_ARM** high into the compositor. Silkscreen `CART DATA / ARM` and `ALL OFF = SAFE`.
+**CART_ARM** is compositor MAP latch D7, not a header pin. Silkscreen `CART` at J10.

@@ -186,7 +186,7 @@ Location: junction of CPU D, soft decode, SPI to S1/S2, and cart I2C. Bypass **C
 | CPU D0-D1 | PA0-1 | Soft bus (Z / in) |
 | I2C SDA/SCL | PA2-3 | Cart EEPROM (OD). Series **R24/R25** 33 ohm to J36. Pull-ups **R27/R28** 4.7k to `+5V` |
 | CPU D2-D5 | PA4-7 | Soft bus |
-| SPI MOSI/MISO/SCK | PC0-2 | Master to S1/S2. PC1 also J10 DATA through SW10 |
+| SPI MOSI/MISO/SCK | PC0-2 | Master to S1/S2. PC1 also J10 DATA |
 | `/SS_S1` | PC3 | Slave select S1 |
 | `SEL_SOFT0` | PD1 | Soft page decode |
 | `CPU_RDY` | PD2 | OD stall |

@@ -121,16 +121,6 @@ static void init_j10(R01sEntity *e) {
     io_header(e, 2, 2);
 }
 
-static void init_sw10(R01sEntity *e) {
-    /* 2-pos DIP. Pos 1: pads 1-4 DATA. Pos 2: pads 2-3 CART_ARM. Default open. */
-    io_begin(e, "SW-DIP-2", "SW10");
-    io_pin(e, 1, "DATA_J");
-    io_pin(e, 2, "ARM_VCC");
-    io_pin(e, 3, "CART_ARM");
-    io_pin(e, 4, "DATA_M");
-    io_header(e, 2, 2);
-}
-
 static void init_u130(R01sEntity *e) {
     io_begin(e, "MCP130", "U130");
     io_pin(e, 1, "RESET#");
@@ -166,13 +156,12 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
     init_j5(&io->j5);
     init_j7(&io->j7);
     init_j10(&io->j10);
-    init_sw10(&io->sw10);
     init_j36(&io->j36);
     init_u130(&io->u130);
 }
 
 void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
-    R01sEntity *list[10];
+    R01sEntity *list[9];
     int i;
     if (!io || !nl) {
         return;
@@ -184,10 +173,9 @@ void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
     list[4] = &io->j5;
     list[5] = &io->j7;
     list[6] = &io->j10;
-    list[7] = &io->sw10;
-    list[8] = &io->j36;
-    list[9] = &io->u130;
-    for (i = 0; i < 10; i++) {
+    list[7] = &io->j36;
+    list[8] = &io->u130;
+    for (i = 0; i < 9; i++) {
         r01s_pin_netlist_register_entity(nl, list[i]);
     }
 }

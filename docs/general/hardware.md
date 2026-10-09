@@ -44,7 +44,7 @@ The PLD decode asserts the right `/OE` (and related selects) for the current add
 | Net | Idle-safe |
 | --- | --- |
 | Cart **`WE#`** | Pull-up (high = no program pulse) |
-| **`CART_ARM`** | Pull-down (low = compositor keeps `WE#` idle) |
+| **`CART_ARM`** | Compositor MAP latch D7, cleared by **RESB** (low = `WE#` gated off) |
 | Cart **`OE#`** | Inactive unless decode asserts it |
 | **`/SS_S1`**, **`/SS_S2`** | Pull-up (deselected) |
 | Field **ALE** | Low (latch holding) |
@@ -130,7 +130,7 @@ RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
 | Chip | Owns |
 | --- | --- |
-| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is on **J10** and **SW10** is armed |
+| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is on **J10** and **CART_ARM** is set |
 | **MCU-S1** | OAM apply, **full sprite field in VBlank**, **BG0 next-line fill in HBlank only** (ping-pong), field SRAM via AD mux + HC573 |
 | **MCU-S2** | `$7F60`/`$7F61` pads, `$7F40`-`$7F5F` APU mailbox, DPCM samples in S2 flash, **PWM** audio on PF1 |
 
@@ -146,12 +146,12 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 
 ## Pin freeze essentials
 
-**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Cart program header is **J10** (2x2) plus **SW10** (2-pos DIP, default both OFF). AVR UPDI stays off J10.
+**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Cart program header is **J10** (2x2). AVR UPDI stays off J10.
 
 | Lock | Value |
 | --- | --- |
 | Cart I2C | M TWI0 DEFAULT **PA2/PA3** |
-| Master SPI | SPI1 DEFAULT PC0 MOSI, PC1 MISO, PC2 SCK, PC3 `/SS_S1`. `/SS_S2` = PD5. Cart program: USART1 one-wire on **PC1** (SW10 pos 1) |
+| Master SPI | SPI1 DEFAULT PC0 MOSI, PC1 MISO, PC2 SCK, PC3 `/SS_S1`. `/SS_S2` = PD5. Cart program: USART1 one-wire on **PC1** (J10 DATA) |
 | Slave SPI | SPI1 ALT1 PD4 MOSI, PD5 MISO, PD6 SCK, PD7 `/SS` |
 | DAC / audio | On-chip DAC on PD6 unused. S2 audio = TCA0 WO1 **PF1** |
 | Pad UART | USART2 OD on **PF0** |
@@ -214,7 +214,7 @@ Hard LE and beam stay out of MCU paths. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, P
 
 **Cart `OE#` (locked):** assert only for PRG `$8000-$FFFF` reads and intentional MAP/CHR fetch windows. Those windows never overlap system RAM or soft `$7Fxx` selects.
 
-Macrocell pressure note: SY(8)+Q(8)+MAP(5) = **21** vs **30** MC on a 22V10. That budget is a hard limit when adding features. A **1-dot** Color PROM index latch in the Compositor is preferred if fit allows.
+Macrocell pressure note: SY(8)+Q(8)+MAP(5)+CART_ARM(1) = **22** vs **30** MC on a 22V10. That budget is a hard limit when adding features. A **1-dot** Color PROM index latch in the Compositor is preferred if fit allows.
 
 ## On-board memory (chips)
 
@@ -281,26 +281,19 @@ Top view, pin 1 at top-left:
 
 - Pin 1 PWR: **NC**. Friend 5 V does not feed the Eurocard rail. Console power stays J1.
 - Pins 2 and 4: board GND.
-- Pin 3 DATA: MCU-M **PC1** through **SW10** position 1.
+- Pin 3 DATA: MCU-M **PC1** (USART1 one-wire). Play uses PC1 as SPI MISO. An unplugged header leaves that pin as an open stub.
 
-**SW10** is a through-hole **2-position DIP**. Default both OFF.
+**CART_ARM** is D7 of the compositor MAP latch (`LE_MAP`). D0-D4 are A14-A18. **RESB** clears the latch. Play MAP writes keep D7 low. `WE#` stays pulled up.
 
-| SW10 pos | ON does |
-| --- | --- |
-| 1 | Connects J10 DATA to MCU-M **PC1** (USART1 one-wire). Play uses PC1 as SPI MISO |
-| 2 | Pulls **CART_ARM** high into the compositor. That gates cart `WE#` |
+**Firmware (locked):** MCU-M refuses cart-bridge work unless CART_ARM is high. `/SS_S1` and `/SS_S2` stay high. PC1 PORTMUXes to USART1 as open-drain one-wire UART. Cart mode stays off while a game is running. Friend stays off J10 during play (PC1 is live SPI MISO).
 
-**Default = both OFF.** Play and shipping leave DATA disconnected from PC1 and CART_ARM low (board pull-down). `WE#` stays pulled up. Silkscreen: `CART DATA / ARM` and `ALL OFF = SAFE`.
-
-**Firmware (locked):** MCU-M refuses cart-bridge work unless CART_ARM is high. `/SS_S1` and `/SS_S2` stay high. PC1 PORTMUXes to USART1 as open-drain one-wire UART. Cart mode stays off while a game is running.
-
-**Address path (locked):** MCU-M has CPU D[7:0] and no cart address pins. A0-A13 stay on the 6502. A14-A18 stay on the compositor MAP latch (`$7F90`). While CART_ARM is high, `$8000-$FFFF` reads are MCU-M cycles (same shape as soft `$7Fxx`, with `CPU_RDY` if the window is tight). MCU-M serves a small 6502 stub. That stub copies itself into system RAM and jumps there. The RAM stub talks to MCU-M through `$7Fxx`, sets MAP via `$7F90`-`$7F92`, and writes `$8000-$FFFF`. The compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space.
+**Address path (locked):** MCU-M has CPU D[7:0] and no cart address pins. A0-A13 stay on the 6502. A14-A18 stay on the compositor MAP latch (`$7F90`). While CART_ARM is high, `$8000-$FFFF` reads are MCU-M cycles (same shape as soft `$7Fxx`, with `CPU_RDY` if the window is tight). MCU-M serves a small 6502 stub. That stub copies itself into system RAM and jumps there. The RAM stub talks to MCU-M through `$7Fxx`, sets MAP via `$7F90`-`$7F92` (D7 = CART_ARM on the `LE_MAP` byte), and writes `$8000-$FFFF`. The compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space.
 
 Host command bytes on the Friend serial link stay TBD. Pin numbers and this bridge contract are locked. See `open-questions.md`.
 
 | Job | Path |
 | --- | --- |
-| Program cart flash (on board) | Friend on **J10**, **SW10** both ON, MCU-M USART plus RAM stub, cart `WE#` |
+| Program cart flash (on board) | Friend on **J10**, CART_ARM high, MCU-M USART plus RAM stub, cart `WE#` |
 | Reflash an AVR | Off the motherboard. Friend on a breadboard to that chip **UPDI** pin 19, then install |
 | PLDs / color PROM / pad MCU | Off the motherboard (see below) |
 
@@ -445,7 +438,7 @@ These track common practice for this **4-layer** digital and video board:
 - **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 - **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
-- **Silkscreen:** Refdes, polarity, SW10 `CART DATA / ARM` and `ALL OFF = SAFE`, TP names, LED names.
+- **Silkscreen:** Refdes, polarity, J10 `CART`, TP names, LED names.
 
 **Cart and pad PCBs (2-layer).** Same spirit: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
 

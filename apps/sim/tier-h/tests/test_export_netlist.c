@@ -48,9 +48,7 @@ int main(void) {
     expect_true(strstr(json, "AUDIO_OUT") != NULL, "audio net name");
     expect_true(strstr(json, "HDR-2x4") != NULL, "J2 2x4 header in export");
     expect_true(strstr(json, "\"J10\"") != NULL, "J10 cart program header in export");
-    expect_true(strstr(json, "SW-DIP-2") != NULL, "SW10 DIP in export");
-    expect_true(strstr(json, "CART_PROG_DATA") != NULL, "cart program data net");
-    expect_true(strstr(json, "CART_ARM") != NULL, "CART_ARM net");
+    expect_true(strstr(json, "SPI_MISO") != NULL, "J10 DATA shares SPI_MISO");
     expect_true(strstr(json, "\"+5V\"") != NULL, "named +5V rail");
     r01s_island_builder_shutdown(&builder);
     return test_done("test_export_netlist");

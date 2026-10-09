@@ -575,11 +575,7 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_name_net(nl, &io->j10, "PWR", "J10_PWR_NC");
   r01s_pin_netlist_link(nl, &io->j10, "GND1", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j10, "GND2", pwr, "GND");
-  r01s_pin_netlist_link(nl, &io->j10, "DATA", &io->sw10, "DATA_J");
-  r01s_pin_netlist_name_net(nl, &io->j10, "DATA", "CART_PROG_DATA");
-  r01s_pin_netlist_link(nl, &io->sw10, "DATA_M", mcu_m, "SPI_MISO");
-  r01s_pin_netlist_link(nl, &io->sw10, "ARM_VCC", pwr, "VDD");
-  r01s_pin_netlist_name_net(nl, &io->sw10, "CART_ARM", "CART_ARM");
+  r01s_pin_netlist_link(nl, &io->j10, "DATA", mcu_m, "SPI_MISO");
 }
 
 void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {

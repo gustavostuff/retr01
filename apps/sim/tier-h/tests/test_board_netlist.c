@@ -127,15 +127,9 @@ int main(void) {
                 "J10 pin 2 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j10, "GND2", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J10 pin 4 GND");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j10, "DATA", &board.io.sw10, "DATA_J"),
-                "J10 DATA on SW10 pos 1");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.sw10, "DATA_M",
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j10, "DATA",
                                           r01s_avr128db28_m_entity(&board.mcu_m), "SPI_MISO"),
-                "SW10 MCU side on UM PC1");
-    expect_true(!r01s_pin_netlist_same_net(nl, &board.io.sw10, "DATA_J", &board.io.sw10, "DATA_M"),
-                "SW10 DATA pole open by default");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.sw10, "ARM_VCC", r01s_pwr5v_entity(&board.pwr), "VDD"),
-                "SW10 ARM pole to +5V");
+                "J10 DATA on UM PC1");
 
     r01s_island_builder_shutdown(&builder);
     return test_done("test_board_netlist");

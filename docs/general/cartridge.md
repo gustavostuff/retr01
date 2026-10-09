@@ -24,9 +24,9 @@ See `memory.md` for the full map. Short version:
 
 ## Programming workflow
 
-The **console is the flasher** for a **seated cart** only. Accessory is **Adafruit's UPDI Friend**, clipped onto motherboard **J10** (2x2). **SW10** (2-pos DIP, default **both OFF**) arms DATA onto MCU-M **PC1** and **CART_ARM** into the compositor.
+The **console is the flasher** for a **seated cart** only. Accessory is **Adafruit's UPDI Friend**, clipped onto motherboard **J10** (2x2). J10 DATA is MCU-M **PC1**. **CART_ARM** is D7 of the compositor MAP latch (`LE_MAP`), cleared by **RESB**.
 
-- **Cart image:** SW10 both ON. MCU-M takes a one-wire USART stream on PC1, serves a small 6502 stub on `$8000-$FFFF` reads (with `CPU_RDY` as needed), then the stub in system RAM writes the SST39SF040 (and save EEPROM if needed). MCU-M refuses bridge work unless CART_ARM is high. Cart mode stays off during gameplay.
+- **Cart image:** Friend on J10. MCU-M takes a one-wire USART stream on PC1, serves a small 6502 stub on `$8000-$FFFF` reads (with `CPU_RDY` as needed), then the stub in system RAM writes the SST39SF040 (and save EEPROM if needed). MCU-M refuses bridge work unless CART_ARM is high. Cart mode stays off during gameplay. Friend stays off J10 during play.
 - **Play vs program:** cart `WE#` stays pulled up and idle in play. The compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space. Motherboard gates `OE#` only for PRG / MAP / CHR windows (never with RAM or soft `$7Fxx`).
 - **AVRs:** programmed off the motherboard. Friend on a breadboard to pin 19 (SerialUPDI), then the chip is installed. Pin 19 is not on J10.
 

@@ -140,7 +140,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | CPU_A_SAMPLE | PD4 |
 | S1_RDY | PF6 in |
 | UPDI | pin 19 (off-board SerialUPDI, not on J10) |
-| Cart DATA | PC1 through **SW10** pos 1 from **J10** pin 3 |
+| Cart DATA | PC1 from **J10** pin 3 |
 
 ---
 
@@ -188,8 +188,7 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | **J7** | Cab power/reset 2x2 | +5V, GND, **RESB** / reset (pins 1-4) |
 | **J8** | Audio RCA | PWM / mix from **US2** |
 | **J9** | Composite RCA | **U725** output when populated |
-| **J10** | Cart program 2x2 | Pin 1 PWR NC, pins 2/4 GND, pin 3 DATA through **SW10** |
-| **SW10** | 2-pos DIP | Pos 1 DATA to UM PC1. Pos 2 CART_ARM to compositor. Default both OFF |
+| **J10** | Cart program 2x2 | Pin 1 PWR NC, pins 2/4 GND, pin 3 DATA to UM PC1 |
 
 ---
 

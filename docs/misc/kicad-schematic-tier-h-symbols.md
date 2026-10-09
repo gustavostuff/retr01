@@ -48,7 +48,6 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |
 | **J10** | Cart program 2x2 | Pin header | 2x2 (`PinHeader_2x02_P2.54mm_Vertical`) |
-| **SW10** | Cart arm 2-pos DIP | DIP switch | `SW_DIP_SPSTx02_Slide_9.78x7.26mm_W7.62mm_P2.54mm` |
 | **J36** | Cart socket 2x18 | Custom | `EDAC_395_MoboSocket_2x18_2.54x5.08mm` |
 | **C1-C26**, **R1-R32**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |
 

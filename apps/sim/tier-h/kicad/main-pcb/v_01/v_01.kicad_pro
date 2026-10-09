@@ -510,10 +510,6 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_SW10*"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "AUDIO_OUT"
       },
       {
