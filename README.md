@@ -28,7 +28,11 @@ PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. 
 
 ## Hardware
 
-The design uses a compact, mostly THT main system board with ~17 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is, the same PCB can be populated as a console (using 3.5mm TRS ports for pads and audio/composite RCA connectors) or as an arcade board (RGBS/RGBHV output + pin headers for arcade sticks and buttons).
+The design uses a compact, mostly THT main system board with ~17 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is:
+
+* The same PCB can be populated as a console, using 3.5mm TRS ports for pads and audio/composite RCA connectors, or:
+
+* As an arcade board, RGBS/RGBHV output + pin headers for arcade sticks and buttons.
 
 As for the cartridge, it's a small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold fingers per side.
 
