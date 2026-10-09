@@ -76,7 +76,7 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 
 | From | To |
 | --- | --- |
-| R32 (1 M ohm) | U04 pin 1 (1A) and pin 2 (1Y) |
+| R24 (1 M ohm) | U04 pin 1 (1A) and pin 2 (1Y) |
 | Y2 pins 1 and 2 | U04 pin 1 and pin 2 (Pierce tank) |
 | C21 pin 1 / pin 2 | Y2 pin 1 / GND |
 | C22 pin 1 / pin 2 | Y2 pin 2 / GND |
@@ -92,7 +92,7 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 
 | From | To |
 | --- | --- |
-| R31 (1 M ohm) | U04 pin 5 (3A) and pin 6 (3Y) |
+| R23 (1 M ohm) | U04 pin 5 (3A) and pin 6 (3Y) |
 | Y1 pins 1 and 2 | U04 pin 5 and pin 6 (Pierce tank) |
 | C25 pin 1 / pin 2 | Y1 pin 1 / GND |
 | C26 pin 1 / pin 2 | Y1 pin 2 / GND |
@@ -146,13 +146,12 @@ Unused **U24** address pins: tie to **GND** on schematic ([`hardware.md`](../gen
 | --- | --- | --- |
 | R12 pin 1 | U04 pin 8 (PHI2 buffer) | R12 pin 2 -> **U1** PHI2 |
 | R13 pin 1 | U74 pin 9 (DOT, 5.369318 MHz) | R13 pin 2 -> **UPLDX** DOT |
-| R14-R21 | **U1** D0-D7 | **J36** cart D0-D7 (via flash symbol or socket net names) |
-| R22 pin 1 | net **CART_OE#** (from PLD decode) | R22 pin 2 -> cart **OE#** |
-| R23 pin 1 | net **CART_WE#** (compositor, gated by CART_ARM) | R23 pin 2 -> cart **WE#** |
-| R24 | **UM** I2C **SDA** | **J36** SDA / **U50** SDA |
-| R25 | **UM** I2C **SCL** | **J36** SCL / **U50** SCL |
+| R14 pin 1 | net **CART_OE#** (from PLD decode) | R14 pin 2 -> cart **OE#** |
+| R15 pin 1 | net **CART_WE#** (compositor, gated by CART_ARM) | R15 pin 2 -> cart **WE#** |
+| R16 | **UM** I2C **SDA** | **J36** SDA / **U50** SDA |
+| R17 | **UM** I2C **SCL** | **J36** SCL / **U50** SCL |
 
-Cart data series (**R14-R21**) sit on the motherboard between **U1** and **J36** side-B D0-D7 pins ([`hardware.md`](../general/hardware.md) cart table).
+Cart **D0-D7** tie **U1** to **J36** side-B with no series parts ([`hardware.md`](../general/hardware.md) cart table).
 
 ---
 
@@ -160,11 +159,11 @@ Cart data series (**R14-R21**) sit on the motherboard between **U1** and **J36**
 
 | Resistor | Value | From | To |
 | --- | --- | --- | --- |
-| R29 | 4.7k (typ) | +5V | **U1** RDY (also **UM** `CPU_RDY` open-drain tie) |
-| R30 | 10k (typ) | +5V | **U1** RESB |
-| R26 | 4.7k | +5V | **US2** `PAD_DATA` (and pad **DATA** net toward **J3/J4**) |
-| R27 | 4.7k | +5V | **UM** I2C **SDA** |
-| R28 | 4.7k | +5V | **UM** I2C **SCL** |
+| R21 | 4.7k (typ) | +5V | **U1** RDY (also **UM** `CPU_RDY` open-drain tie) |
+| R22 | 10k (typ) | +5V | **U1** RESB |
+| R18 | 4.7k | +5V | **US2** `PAD_DATA` (and pad **DATA** net toward **J3/J4**) |
+| R19 | 4.7k | +5V | **UM** I2C **SDA** |
+| R20 | 4.7k | +5V | **UM** I2C **SCL** |
 
 **CART_WE#** also needs a board **pull-up** to idle-high in play. **CART_ARM** is compositor MAP latch D7, cleared by **RESB** ([`hardware.md`](../general/hardware.md), [`ic-comms-risks.md`](../general/ic-comms-risks.md)).
 

@@ -21,7 +21,7 @@ Known **gaps** (same as [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h
 - **AD724** NTSC analog (logic stub only)
 - **MCP130** supervisor not modeled in sim
 - Cart **edge** vs **U40** module (OE#/WE# stubs)
-- Skidl export is **motherboard-only**: 19 counted ICs (including **U04** 74HCU04, **U74** 74HC74, and **U725 / AD724** placeholder), **3x ATF22V10** (UPLDX/Y/V), connectors **J1-J9 + J36**. Sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
+- Skidl export is **motherboard-only**: 19 counted ICs (including **U04** 74HCU04, **U74** 74HC74, and **U725 / AD724** placeholder), **3x ATF22V10** (UPLDX/Y/V), connectors **J1-J10 + J36**. Sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
 
 The JSON embeds `"fabrication_ready": false` and `"purpose": "preliminary_pcb_illustrative_only"`.
 

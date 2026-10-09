@@ -16,7 +16,7 @@ Pin-level R/C wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../mis
 | [main-pcb-layers.md](../main-pcb-layers.md) | Layer 1 vs layer 4 assignment, analog keepout, underpasses |
 | [connectors.md](connectors.md) | J1, J2, J3/J4, J5, J7, J8, J9, J36 |
 | [ics.md](ics.md) | CPU, RAM, PLDs, MCUs, clock logic, encoder, glue |
-| [resistors.md](resistors.md) | R1-R32 (DAC, series 33 ohm, pull-ups, Pierce 1M) |
+| [resistors.md](resistors.md) | R1-R24 (DAC, series 33 ohm, pull-ups, Pierce 1M) |
 | [capacitors.md](capacitors.md) | E1 bulk, C1-C20 bypass, C21-C26 crystal loads |
 | [crystals.md](crystals.md) | Y1, Y2, Y3 and the clock-island cluster |
 
@@ -38,20 +38,20 @@ BOTTOM (front)     J3/J4 pads | J5 arcade | J7 cab
 
 | Zone | Name | Parts |
 |------|------|-------|
-| **Z1** | Top-left | U3, U130, E1, C2, C17, **R30** |
-| **CPU** | Top-center | U1, C1, **R29**, directly above J36 |
-| **Z2** | Top-right | Clock island (Y1-Y3, R12/R13/R31/R32, C19/C20/C21-C26), PLDs, U24, DAC R1-R11, J2, U725, J9 |
-| **CART** | Center | J36, cart series **R14-R25** |
+| **Z1** | Top-left | U3, U130, E1, C2, C17, **R22** |
+| **CPU** | Top-center | U1, C1, **R21**, directly above J36 |
+| **Z2** | Top-right | Clock island (Y1-Y3, R12/R13/R23/R24, C19/C20/C21-C26), PLDs, U24, DAC R1-R11, J2, U725, J9 |
+| **CART** | Center | J36, cart series **R14-R17** |
 | **Z3** | Middle-left | U6, U7A/B/C, U574 and their Cs |
-| **HUB** | Middle-center | UM, C5, I2C series **R24/R25**, pull-ups **R27/R28** |
+| **HUB** | Middle-center | UM, C5, I2C series **R16/R17**, pull-ups **R19/R20** |
 | **Z4** | Middle-right | US1, U573, U41 and Cs |
-| **Z5** | Bottom-left | US2, J3, J4, J5, J7, C7, pad pull-up **R26** |
+| **Z5** | Bottom-left | US2, J3, J4, J5, J7, C7, pad pull-up **R18** |
 
 ---
 
 ## Main PCB passive roll-up
 
-62 through-hole passives on this board. Cart flash, cart EEPROM, and the pad ATtiny85 each carry their own 100 nF. Cabinet **47 ohm** series parts sit on the harness. Canvas rails use the **5V** and **GND** symbols.
+54 through-hole passives on this board. Cart flash, cart EEPROM, and the pad ATtiny85 each carry their own 100 nF. Cabinet **47 ohm** series parts sit on the harness. Canvas rails use the **5V** and **GND** symbols.
 
 | Class | Refs | Qty | Doc |
 |-------|------|----:|-----|
@@ -60,9 +60,9 @@ BOTTOM (front)     J3/J4 pads | J5 arcade | J7 cab
 | Bypass 100 nF | C1-C20 | 20 | [capacitors.md](capacitors.md) |
 | Crystal loads | C21-C26 | 6 | [capacitors.md](capacitors.md), [crystals.md](crystals.md) |
 | DAC | R1-R11 | 11 | [resistors.md](resistors.md) |
-| Series 33 ohm | R12-R25 | 14 | [resistors.md](resistors.md) |
-| Pull-ups | R26-R30 | 5 | [resistors.md](resistors.md) |
-| Pierce feedback 1M | R31, R32 | 2 | [resistors.md](resistors.md), [crystals.md](crystals.md) |
+| Series 33 ohm | R12-R17 | 6 | [resistors.md](resistors.md) |
+| Pull-ups | R18-R22 | 5 | [resistors.md](resistors.md) |
+| Pierce feedback 1M | R23, R24 | 2 | [resistors.md](resistors.md), [crystals.md](crystals.md) |
 
 ---
 
@@ -77,7 +77,7 @@ BOTTOM (front)     J3/J4 pads | J5 arcade | J7 cab
 7. UM hub
 8. Zone 4 US1, U573, U41
 9. Zone 5 US2
-10. All passives: 100 nF bypass C1-C20, crystal loads C21-C26, E1, DAC R1-R11, series R12-R25, pull-ups R26-R30, feedback R31-R32
+10. All passives: 100 nF bypass C1-C20, crystal loads C21-C26, E1, DAC R1-R11, series R12-R17, pull-ups R18-R22, feedback R23-R24
 
 Ratsnest refresh from `retr01_prelim.net` follows. Short nets route first: bypass, clocks, color index, field AD, cart drop.
 

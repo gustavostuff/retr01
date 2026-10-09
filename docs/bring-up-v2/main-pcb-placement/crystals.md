@@ -2,7 +2,7 @@
 
 **Y1**, **Y2**, and **Y3** plus the compact analog loop around **U04** / **U74**. That cluster stays under about 20 mm.
 
-Load-cap tables: [capacitors.md](capacitors.md). Pierce **R31/R32** and clock series **R12/R13**: [resistors.md](resistors.md). Zones: [README.md](README.md).
+Load-cap tables: [capacitors.md](capacitors.md). Pierce **R23/R24** and clock series **R12/R13**: [resistors.md](resistors.md). Zones: [README.md](README.md).
 
 ---
 
@@ -10,7 +10,7 @@ Load-cap tables: [capacitors.md](capacitors.md). Pierce **R31/R32** and clock se
 
 HC-49/US vertical. Zone 2 clock island.
 
-Load caps **C21/C22**. Feedback **R32** (1M across U04 pins **1** and **2**). Crystal pins tie to U04 pins **1** and **2** (Pierce gate 1). U74 divides by 4 to **DOT** (~5.37 MHz).
+Load caps **C21/C22**. Feedback **R24** (1M across U04 pins **1** and **2**). Crystal pins tie to U04 pins **1** and **2** (Pierce gate 1). U74 divides by 4 to **DOT** (~5.37 MHz).
 
 ---
 
@@ -18,7 +18,7 @@ Load caps **C21/C22**. Feedback **R32** (1M across U04 pins **1** and **2**). Cr
 
 HC-49/US vertical. Zone 2 clock island.
 
-Load caps **C25/C26**. Feedback **R31** (1M across U04 pins **5** and **6**). Crystal pins tie to U04 pins **5** and **6** (Pierce gate 3). Buffered PHI2 leaves through **R12** to U1 pin 37.
+Load caps **C25/C26**. Feedback **R23** (1M across U04 pins **5** and **6**). Crystal pins tie to U04 pins **5** and **6** (Pierce gate 3). Buffered PHI2 leaves through **R12** to U1 pin 37.
 
 ---
 
@@ -66,6 +66,6 @@ DOT leaves through **R13** 33 ohm toward Beam X ([ics.md](ics.md) UPLDX).
 
 | Crystal | Loads | Feedback | Logic |
 |---------|-------|----------|-------|
-| Y2 21.47727 MHz | C21, C22 | R32 on U04 1-2 | U04 gates 1-2, then U74 /4 |
-| Y1 8.000 MHz | C25, C26 | R31 on U04 5-6 | U04 gates 3-4, then R12 |
+| Y2 21.47727 MHz | C21, C22 | R24 on U04 1-2 | U04 gates 1-2, then U74 /4 |
+| Y1 8.000 MHz | C25, C26 | R23 on U04 5-6 | U04 gates 3-4, then R12 |
 | Y3 3.579545 MHz | C23, C24 | AD724 on-chip | U725 FIN |

@@ -235,7 +235,7 @@ Validates the physical cartridge edge connector and memory mapping:
 Brings the remaining peripherals online to complete the console:
 - **Populate:**
   - Socket US2 (AVR128DB28 for MCU-S2).
-  - Controller TRS jacks J3 and J4, pull-up resistor R26.
+  - Controller TRS jacks J3 and J4, pull-up resistor R18.
   - Audio output filter passives, RCA audio jack J8.
   - Optional: solder AD724 SOIC-16, Y3 crystal (3.579 MHz), and RCA composite jack J9.
   - Install JP_PWR4 shunt.

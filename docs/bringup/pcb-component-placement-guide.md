@@ -119,7 +119,7 @@ Houses system memory and the MCP130 reset supervisor.
 **Placement and routing rules:**
 - U3 (System RAM) sits in the top-left area to the left of the CPU.
 - The 16-bit address bus (A[15:0]) and 8-bit data bus (D[7:0]) run directly into U3 from the left side of the CPU.
-- MCP130 mounts immediately adjacent to CPU pin 40 (`RESB`), with a dedicated 10 kohm pull-up resistor (R30) tied to +5.0 V.
+- MCP130 mounts immediately adjacent to CPU pin 40 (`RESB`), with a dedicated 10 kohm pull-up resistor (R22) tied to +5.0 V.
 - Buffered PHI2 from the Zone 2 clock island reaches CPU pin 37 through series 33 ohm R12 at the buffer output.
 
 ---
@@ -181,7 +181,7 @@ Provides the physical docking slot for game cartridges and flash memory.
 - J36 mounts horizontally across the middle of the motherboard directly below the W65C02S CPU.
 - CPU address lines A0-A13 and data lines D[7:0] drop straight down from U1 into the upper pin row of J36.
 - Compositor mapping lines (`CART_A14` through `CART_A18`, `CART_OE#`, `CART_WE#`) enter J36 from Zone 2 on the right.
-- Series damping resistors (R14 through R23) sit directly in line between the motherboard buses and J36 pins.
+- Series damping resistors (R14 through R17) sit directly in line on cart OE#, WE#, SDA, and SCL at J36.
 
 ---
 

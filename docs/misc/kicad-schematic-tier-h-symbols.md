@@ -49,7 +49,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |
 | **J10** | Cart program 2x2 | Pin header | 2x2 (`PinHeader_2x02_P2.54mm_Vertical`) |
 | **J36** | Cart socket 2x18 | Custom | `EDAC_395_MoboSocket_2x18_2.54x5.08mm` |
-| **C1-C26**, **R1-R32**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |
+| **C1-C26**, **R1-R24**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |
 
 Cart flash **U40** and EEPROM **U50** belong on the **cart PCB** schematic. The motherboard sheet stops at **J36** (see wiring doc).
 
@@ -79,7 +79,7 @@ Use global labels (not hidden net names only) for buses that cross sheet areas:
 | `DOT` | Beam dot clock (after **R13**) |
 | `CPU_A0`..`CPU_A15` or `A[0:15]` | CPU address (match symbol pin names) |
 | `CPU_D0`..`CPU_D7` | CPU data |
-| `CART_OE#`, `CART_WE#` | Mobo-side cart control (before **R22** / **R23**) |
+| `CART_OE#`, `CART_WE#` | Mobo-side cart control (before **R14** / **R15**) |
 | `FSC_XTAL` | **Y3** output toward AD724 |
 | `SPI_MOSI`, `SPI_MISO`, `SPI_SCK`, `/SS_S1`, `/SS_S2` | MCU SPI mailbox |
 

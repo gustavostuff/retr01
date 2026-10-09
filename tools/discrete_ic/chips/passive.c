@@ -776,7 +776,7 @@ int ns_passive_bank_spawn_bom(NsPassiveBank *bank) {
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "2.00k", 3);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "1.00k", 3);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "75.0", 3);
-    add_n(bank, NS_PASSIVE_R, "R", &r_seq, "33", 14);
+    add_n(bank, NS_PASSIVE_R, "R", &r_seq, "33", 6);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "4.7k", 4);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "10k", 1);
     add_n(bank, NS_PASSIVE_R, "R", &r_seq, "1M", 2);

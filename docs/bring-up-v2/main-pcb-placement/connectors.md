@@ -26,12 +26,12 @@ View into the socket: **A** is one face, **B** is the opposite face.
 | A3 | `SDA` | UM TWI (33 ohm series + 4.7k pull-up) |
 | B3 | `SCL` | UM TWI (33 ohm series + 4.7k pull-up) |
 | A4-A17 | `A0`-`A13` | CPU `A0`-`A13` |
-| B4-B11 | `D0`-`D7` | CPU `D0`-`D7` (33 ohm series) |
+| B4-B11 | `D0`-`D7` | CPU `D0`-`D7` |
 | B12 | `OE#` | Compositor / MAP decode (33 ohm series) |
 | B13-B17 | `A14`-`A18` | Compositor MAP (UPLDV) |
 | B18 | `WE#` | Flash path / pull-up idle (33 ohm series) |
 
-Cart series **33 ohm** sit in line between the motherboard buses and J36: **R14-R21** on `D0`-`D7`, **R22** on `OE#`, **R23** on `WE#`, **R24** on `SDA`, **R25** on `SCL`.
+Cart series **33 ohm** sit in line between the motherboard buses and J36: **R14** on `OE#`, **R15** on `WE#`, **R16** on `SDA`, **R17** on `SCL`. Cart **D0-D7** have no series parts.
 
 ---
 
@@ -84,7 +84,7 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 | Contact | Net |
 |---------|-----|
 | Tip (T) | `+5V` |
-| Ring (R) | `PAD_DATA` (US2 PF0, open-drain) plus **R26** 4.7k pull-up |
+| Ring (R) | `PAD_DATA` (US2 PF0, open-drain) plus **R18** 4.7k pull-up |
 | Sleeve (S) | `GND` |
 
 ---

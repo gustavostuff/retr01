@@ -2365,8 +2365,8 @@ static void floor_run(const R01sUi *ui, const int *ids, int n, int *rx, int *ry,
 /* Zone 2 is a block, not one long strip.
  * Top: the two Pierce loops. Middle: the three PLDs. Bottom: PROM, DAC ladder, composite. */
 static void floor_pack_zone2(const R01sUi *ui, const int *ids, int n, int *rx, int *ry, int *out_w, int *out_h) {
-    static const char *const pierce_hi[] = {"Y2", "C21", "C22", "R31", "U04", "C19", "R12"};
-    static const char *const pierce_lo[] = {"Y1", "C25", "C26", "R32", "U74", "C20", "R13"};
+    static const char *const pierce_hi[] = {"Y2", "C21", "C22", "R24", "U04", "C19", "R12"};
+    static const char *const pierce_lo[] = {"Y1", "C25", "C26", "R23", "U74", "C20", "R13"};
     static const char *const beam_x[] = {"UPLDX", "C8"};
     static const char *const beam_y[] = {"UPLDY", "C9"};
     static const char *const beam_v[] = {"UPLDV", "C10"};

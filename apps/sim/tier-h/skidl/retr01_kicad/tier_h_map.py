@@ -93,14 +93,14 @@ RESISTOR_REFDES: dict[str, str] = {
     "R9": "R_75",
     "R10": "R_75",
     "R11": "R_75",
-    **{f"R{i}": "R_33" for i in range(12, 26)},
-    "R26": "R_4K7",
-    "R27": "R_4K7",
-    "R28": "R_4K7",
-    "R29": "R_4K7",
-    "R30": "R_10K",
-    "R31": "R_1M",
-    "R32": "R_1M",
+    **{f"R{i}": "R_33" for i in range(12, 18)},
+    "R18": "R_4K7",
+    "R19": "R_4K7",
+    "R20": "R_4K7",
+    "R21": "R_4K7",
+    "R22": "R_10K",
+    "R23": "R_1M",
+    "R24": "R_1M",
 }
 
 CAP_REFDES: dict[str, str] = {f"C{i}": "C_100N" for i in range(1, 21)}

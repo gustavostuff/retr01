@@ -39,10 +39,10 @@ int main(void) {
     memset(&board, 0, sizeof(board));
     r01s_island_builder_init(&builder);
     expect_true(r01s_board_build(&board, &builder) == 0, "board build");
-    expect_true(board.passives.count == 64, "passive BOM count");
+    expect_true(board.passives.count == 56, "passive BOM count");
     nl = &board.pin_netlist;
     passive_pins = passive_slots(&board);
-    expect_true(passive_pins >= 122, "passive pins registered in netlist");
+    expect_true(passive_pins >= 106, "passive pins registered in netlist");
     expect_true(r01s_pin_netlist_net_count(nl) < nl->slot_count,
                 "net count below registered pin slots");
     (void)passive_pins;
@@ -96,8 +96,8 @@ int main(void) {
     expect_true(r01s_pin_netlist_same_net(nl, r01s_compositor_entity(&board.compositor), "A0",
                                           r01s_at27c256r_entity(&board.color_prom), "A0"),
                 "color index A0");
-    expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "R14"), "2", &board.io.j36, "D0"),
-                "R14 cart side on J36 D0");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_w65c02s_entity(&board.cpu), "D0", &board.io.j36, "D0"),
+                "U1 D0 on J36 D0");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.u130, "RESET#", r01s_w65c02s_entity(&board.cpu), "RESB"),
                 "MCP130 reset on CPU RESB");
     expect_true(r01s_pin_netlist_same_net(nl, passive_by_refdes(&board, "C17"), "1", &board.io.u130, "VDD"),

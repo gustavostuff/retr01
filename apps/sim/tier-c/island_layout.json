@@ -1,8 +1,8 @@
 {
   "version": 4,
   "mode": "islands",
-  "pan_x": 382,
-  "pan_y": 4,
+  "pan_x": 398,
+  "pan_y": -35,
   "zoom": 1,
   "air_wires": 0,
   "present_scale": 2,
@@ -30,7 +30,7 @@
     {"i": 1, "x": 605, "y": 25, "w": 350, "h": 285, "z": 0}
   ],
   "island_chips": [
-    {"id": "Y2", "island": 0, "rx": 19, "ry": 144, "orient": "0"},
+    {"id": "Y2", "island": 0, "rx": 44, "ry": 124, "orient": "0"},
     {"id": "UPLDX", "island": 0, "rx": 38, "ry": 21, "orient": "0"},
     {"id": "UPLDY", "island": 0, "rx": 111, "ry": 19, "orient": "0"},
     {"id": "UPLDC", "island": 0, "rx": 126, "ry": 114, "orient": "0"},
@@ -46,7 +46,7 @@
     {"id": "C6", "island": 0, "rx": 146, "ry": 199, "orient": "0"},
     {"id": "C7", "island": 0, "rx": 161, "ry": 200, "orient": "0"},
     {"id": "C8", "island": 0, "rx": 26, "ry": 33, "orient": "180"},
-    {"id": "E1", "island": 0, "rx": 22, "ry": 117, "orient": "180"},
+    {"id": "E1", "island": 0, "rx": 26, "ry": 110, "orient": "180"},
     {"id": "5V", "island": 0, "rx": 10, "ry": 16, "orient": "0"},
     {"id": "GND", "island": 0, "rx": 11, "ry": 46, "orient": "0"},
     {"id": "R12", "island": 0, "rx": 10, "ry": 114, "orient": "90"},

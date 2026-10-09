@@ -52,7 +52,7 @@ A via may pass through layers 2 and 3. Signal copper does not stop on layers 2 o
 
 Layer 4 analog copper sits in Zone 2:
 
-- Y1 / Y2 Pierce loops at U04 (crystal pins, R31, R32, C21, C22, C25, C26)
+- Y1 / Y2 Pierce loops at U04 (crystal pins, R23, R24, C21, C22, C25, C26)
 - Y3 and FSC into U725 FIN (C23, C24)
 - DAC gun nodes after R1-R8, plus R9-R11, into J2 pins 1-3
 - U725 RIN / GIN / BIN / COMP and J9
@@ -95,11 +95,11 @@ Clocks stay short, toward the middle of the board, off the perimeter.
 | Net | Path |
 |-----|------|
 | U1 A0-A15 | U3, mux I0, J36 A0-A13 |
-| U1 D0-D7 | U3 DQ, U574 D, UM CPU_D, cart through **R14-R21** |
+| U1 D0-D7 | U3 DQ, U574 D, UM CPU_D, J36 D |
 | U1 RWB | Decode / PLDs |
 | U3 CE# / OE# / WE# | System RAM decode |
-| J36 `CART_OE#` | Through **R22** |
-| J36 `CART_WE#` | Through **R23** |
+| J36 `CART_OE#` | Through **R14** |
+| J36 `CART_WE#` | Through **R15** |
 
 ### VRAM and mux (PHI2 and beam)
 
@@ -144,8 +144,8 @@ The S1 triangle stays local. Layer 1 keeps the AD burst on this island.
 
 | Net | Path |
 |-----|------|
-| Y2 Pierce | U04 pins 1-2, **R32**, **C21**, **C22** |
-| Y1 Pierce | U04 pins 5-6, **R31**, **C25**, **C26** |
+| Y2 Pierce | U04 pins 1-2, **R24**, **C21**, **C22** |
+| Y1 Pierce | U04 pins 5-6, **R23**, **C25**, **C26** |
 | Y3 / FSC | U725 FIN, **C23**, **C24** |
 | Red / Green / Blue guns | After **R1-R8**, through **R9-R11**, to J2 pins 1-3 and U725 RIN/GIN/BIN |
 | U725 COMP | J9 center |
@@ -157,8 +157,8 @@ U24 O0-O7 arrive on layer 1. The analog net begins at the R1-R8 pad on the gun s
 
 | Net | Path |
 |-----|------|
-| `RESB` / `RESET_N` | U130 RESET#, U1 pin 40, **R30**, J7 pin 3 |
-| `CPU_RDY` | UM OD, U1 RDY, **R29** |
+| `RESB` / `RESET_N` | U130 RESET#, U1 pin 40, **R22**, J7 pin 3 |
+| `CPU_RDY` | UM OD, U1 RDY, **R21** |
 
 ### Handshake, decode, MAP high bits
 
@@ -180,9 +180,9 @@ MAP A14-A18 and the soft SELs route around the analog keepout, not through the D
 
 | Net | Path |
 |-----|------|
-| SDA / SCL | UM PA2-3, **R24** / **R25**, **R27** / **R28**, J36 A3/B3 |
+| SDA / SCL | UM PA2-3, **R16** / **R17**, **R19** / **R20**, J36 A3/B3 |
 | Cart program | **J10** DATA to UM PC1. **CART_ARM** is compositor MAP latch D7. AVR pin 19 stays off this header |
-| `PAD_DATA` | US2 PF0, **R26**, J3/J4 ring |
+| `PAD_DATA` | US2 PF0, **R18**, J3/J4 ring |
 | J5 P1 / P2 bits | US2 ports to arcade header |
 | Heartbeat / power LEDs | Series resistors to LED anodes |
 
@@ -232,7 +232,7 @@ Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py`.
 - [`docs/general/hardware.md`](../general/hardware.md): stackup summary and connector pinout
 - [main-pcb-placement/README.md](main-pcb-placement/README.md): zones and part list
 - [main-pcb-placement/ics.md](main-pcb-placement/ics.md): IC pin destinations
-- [main-pcb-placement/resistors.md](main-pcb-placement/resistors.md): R1-R32
+- [main-pcb-placement/resistors.md](main-pcb-placement/resistors.md): R1-R24
 - [main-pcb-placement/crystals.md](main-pcb-placement/crystals.md): Pierce and divider
 - [`docs/bringup/pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md): zone rationale
 - [`docs/bringup/staged-pcb-bringup-guide.md`](../bringup/staged-pcb-bringup-guide.md): fab widths

@@ -33,18 +33,18 @@ The Sim tray shows **many identical CCAP / R sprites**. That is one part per loc
 |----:|------|-----|
 | 1 | **220 uF** | Single 5 V entry bulk cap (ECAP sprite) |
 
-**Resistors (32 = 11 + 14 + 5 + 2)**
+**Resistors (24 = 11 + 6 + 5 + 2)**
 
 Only **11** are the analog video DAC network. The rest are digital:
 
 | Qty | What | Why |
 |----:|------|-----|
 | 11 | Color DAC (4k / 2k / 1k / 75 ohm) | Weighted R/G/B + 75 ohm terminations to ~0.7 Vpp ([`hardware.md`](general/hardware.md) Video out) |
-| 14 | **33 ohm** series | **2** clocks (PHI2, DOT) + **12** cart edge (**D[7:0]**, OE#, WE#, SDA, SCL) |
+| 6 | **33 ohm** series | **2** clocks (PHI2, DOT) + **4** cart edge (**OE#**, **WE#**, **SDA**, **SCL**) |
 | 5 | Pull-ups | Pad **DATA**, I2C **SDA/SCL**, CPU **RDY**, **RESB** |
 | 2 | **1 M ohm** feedback | Biases the two 74HCU04 crystal inverter gates (Y1 and Y2) into linear active mode |
 
-Video alone does **not** need 32 resistors. Cart damping + pull-ups + crystal feedback do.
+Video alone does **not** need 24 resistors. Clock and cart-control damping + pull-ups + crystal feedback do. Cart **D[7:0]** has no series parts.
 
 ---
 
@@ -114,9 +114,9 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 | Qty | Nets |
 |----:|------|
 | 2 | PHI2, DOT |
-| 12 | Cart **D[7:0]**, **OE#**, **WE#**, **SDA**, **SCL** |
+| 4 | Cart **OE#**, **WE#**, **SDA**, **SCL** |
 
-**Subtotal series 33 ohm: 14**
+**Subtotal series 33 ohm: 6**
 
 ### Pull-ups
 
@@ -148,10 +148,10 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 | 100 nF bypass | 23 |
 | 220 uF bulk | 1 |
 | DAC resistors | 11 |
-| 33 ohm series | 14 |
+| 33 ohm series | 6 |
 | Pull-ups | 5 |
 | Feedback resistors (1M) | 2 |
-| **Passive line items (sum of qtys)** | **65** |
+| **Passive line items (sum of qtys)** | **57** |
 
 ---
 

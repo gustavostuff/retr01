@@ -2,9 +2,9 @@
 
 Implements the discrete Pierce crystal oscillators and flip-flop divider
 documented in docs/general/hardware.md and docs/passive_bom.md:
-- CPU Clock (8.000 MHz): Y1 crystal + 74HCU04 inverters (Gates 3 & 4) + R31 (1M) + C25/C26
+- CPU Clock (8.000 MHz): Y1 crystal + 74HCU04 inverters (Gates 3 & 4) + R23 (1M) + C25/C26
 - Dot Clock (5.369318 MHz): Y2 crystal (21.47727 MHz) + 74HCU04 inverters (Gates 1 & 2)
-  + R32 (1M) + C21/C22 + SN74HC74 dual D flip-flop divider (Stage 1 divide-by-2 to 10.738 MHz,
+  + R24 (1M) + C21/C22 + SN74HC74 dual D flip-flop divider (Stage 1 divide-by-2 to 10.738 MHz,
   Stage 2 divide-by-2 to 5.369 MHz DOT clock)
 - FSC Clock (3.579545 MHz): Y3 crystal + C23/C24 directly to AD724 on-chip oscillator pins
 """
@@ -19,8 +19,8 @@ CLOCK_REFDES = (
     "Y1",
     "Y2",
     "Y3",
-    "R31",
-    "R32",
+    "R23",
+    "R24",
     "C21",
     "C22",
     "C23",
@@ -81,9 +81,9 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if "Y2" in parts:
         pin_connect(parts["Y2"], "", "1", xtal_dot_in)
         pin_connect(parts["Y2"], "", "2", xtal_dot_out)
-    if "R32" in parts:
-        pin_connect(parts["R32"], "", "1", xtal_dot_in)
-        pin_connect(parts["R32"], "", "2", xtal_dot_out)
+    if "R24" in parts:
+        pin_connect(parts["R24"], "", "1", xtal_dot_in)
+        pin_connect(parts["R24"], "", "2", xtal_dot_out)
     if "C21" in parts:
         pin_connect(parts["C21"], "", "1", xtal_dot_in)
         pin_connect(parts["C21"], "", "2", gnd)
@@ -140,9 +140,9 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if "Y1" in parts:
         pin_connect(parts["Y1"], "", "1", xtal_cpu_in)
         pin_connect(parts["Y1"], "", "2", xtal_cpu_out)
-    if "R31" in parts:
-        pin_connect(parts["R31"], "", "1", xtal_cpu_in)
-        pin_connect(parts["R31"], "", "2", xtal_cpu_out)
+    if "R23" in parts:
+        pin_connect(parts["R23"], "", "1", xtal_cpu_in)
+        pin_connect(parts["R23"], "", "2", xtal_cpu_out)
     if "C25" in parts:
         pin_connect(parts["C25"], "", "1", xtal_cpu_in)
         pin_connect(parts["C25"], "", "2", gnd)

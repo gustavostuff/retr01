@@ -124,7 +124,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 - Decode: cart `OE#` only for PRG `$8000-$FFFF` reads and intentional MAP/CHR windows. Never with RAM or soft selects.
 - Hardware pull-up on `WE#`. Compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space.
 - CART_ARM is compositor MAP latch D7 (`LE_MAP`). RESB clears it. Play MAP writes keep D7 low.
-- Series 33 ohm on cart D/OE/WE as already planned.
+- Series 33 ohm on cart OE#/WE# as already planned. Cart D has no series parts.
 
 ### 9. Color PROM and compositor per-dot path (Med)
 

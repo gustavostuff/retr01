@@ -392,7 +392,7 @@ Cart and pad PCBs are **2-layer**.
 | J36 | EDAC **395-036-520-201** |
 | Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / **3.579545 MHz** (74HCU04 + 74HC74 clock stage) |
 
-Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart D/OE/WE/SDA/SCL series **33 ohm**. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
+Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart OE#/WE#/SDA/SCL series **33 ohm**. Cart **D[7:0]** ties straight to J36. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 
 ### Test points
 

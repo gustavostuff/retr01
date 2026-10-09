@@ -193,8 +193,8 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *y1 = passive_entity(board, "Y1");
   R01sEntity *y2 = passive_entity(board, "Y2");
   R01sEntity *y3 = passive_entity(board, "Y3");
-  R01sEntity *r31 = passive_entity(board, "R31");
-  R01sEntity *r32 = passive_entity(board, "R32");
+  R01sEntity *r23 = passive_entity(board, "R23");
+  R01sEntity *r24 = passive_entity(board, "R24");
 
   /* Y2 21.47727 MHz Pierce (U04 gates 1-2) + U74 /4 -> DOT. */
   if (u04 && y2) {
@@ -204,9 +204,9 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_name_net(nl, u04, "1A", "XTAL_21M_IN");
     r01s_pin_netlist_name_net(nl, u04, "1Y", "XTAL_21M_OUT");
   }
-  if (r32 && u04) {
-    r01s_pin_netlist_link(nl, r32, "1", u04, "1A");
-    r01s_pin_netlist_link(nl, r32, "2", u04, "1Y");
+  if (r24 && u04) {
+    r01s_pin_netlist_link(nl, r24, "1", u04, "1A");
+    r01s_pin_netlist_link(nl, r24, "2", u04, "1Y");
   }
   r01s_pin_netlist_link(nl, passive_entity(board, "C21"), "1", y2, "1");
   r01s_pin_netlist_link(nl, passive_entity(board, "C21"), "2", pwr, "GND");
@@ -234,9 +234,9 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_name_net(nl, u04, "3Y", "XTAL_CPU_OUT");
     r01s_pin_netlist_name_net(nl, u04, "4Y", "PHI2");
   }
-  if (r31 && u04) {
-    r01s_pin_netlist_link(nl, r31, "1", u04, "3A");
-    r01s_pin_netlist_link(nl, r31, "2", u04, "3Y");
+  if (r23 && u04) {
+    r01s_pin_netlist_link(nl, r23, "1", u04, "3A");
+    r01s_pin_netlist_link(nl, r23, "2", u04, "3Y");
   }
   r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "1", y1, "1");
   r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "2", pwr, "GND");
@@ -311,39 +311,35 @@ static void apply_series_33(R01sBoard *board, R01sPinNetlist *nl) {
   link_series(nl, u74, "2Q", passive_entity(board, "R13"), beam, "DOT");
 
   for (i = 0; i < 8; i++) {
-    char rn[8];
     char dn[8];
     char fq[8];
-    snprintf(rn, sizeof(rn), "R%d", 14 + i);
     snprintf(dn, sizeof(dn), "D%d", i);
     snprintf(fq, sizeof(fq), "DQ%d", i);
-    link_series(nl, cpu, dn, passive_entity(board, rn), flash, fq);
+    r01s_pin_netlist_link(nl, cpu, dn, flash, fq);
   }
-  r01s_pin_netlist_link(nl, passive_entity(board, "R22"), "2", flash, "OE#");
-  r01s_pin_netlist_name_net(nl, passive_entity(board, "R22"), "1", "CART_OE#");
-  r01s_pin_netlist_link(nl, passive_entity(board, "R23"), "2", flash, "WE#");
-  r01s_pin_netlist_name_net(nl, passive_entity(board, "R23"), "1", "CART_WE#");
-  link_series(nl, mcu, "SDA", passive_entity(board, "R24"), ee, "SDA");
-  link_series(nl, mcu, "SCL", passive_entity(board, "R25"), ee, "SCL");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R14"), "2", flash, "OE#");
+  r01s_pin_netlist_name_net(nl, passive_entity(board, "R14"), "1", "CART_OE#");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R15"), "2", flash, "WE#");
+  r01s_pin_netlist_name_net(nl, passive_entity(board, "R15"), "1", "CART_WE#");
+  link_series(nl, mcu, "SDA", passive_entity(board, "R16"), ee, "SDA");
+  link_series(nl, mcu, "SCL", passive_entity(board, "R17"), ee, "SCL");
   /* Motherboard side of the cart nets also lands on J36. Flash stays on the same nets. */
   {
     R01sEntity *j36 = &board->io.j36;
     for (i = 0; i < 8; i++) {
-      char rn[8];
       char dn[8];
-      snprintf(rn, sizeof(rn), "R%d", 14 + i);
       snprintf(dn, sizeof(dn), "D%d", i);
-      r01s_pin_netlist_link(nl, passive_entity(board, rn), "2", j36, dn);
+      r01s_pin_netlist_link(nl, cpu, dn, j36, dn);
     }
     for (i = 0; i < 14; i++) {
       char an[8];
       snprintf(an, sizeof(an), "A%d", i);
       r01s_pin_netlist_link(nl, cpu, an, j36, an);
     }
-    r01s_pin_netlist_link(nl, passive_entity(board, "R22"), "2", j36, "OE#");
-    r01s_pin_netlist_link(nl, passive_entity(board, "R23"), "2", j36, "WE#");
-    r01s_pin_netlist_link(nl, passive_entity(board, "R24"), "2", j36, "SDA");
-    r01s_pin_netlist_link(nl, passive_entity(board, "R25"), "2", j36, "SCL");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R14"), "2", j36, "OE#");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R15"), "2", j36, "WE#");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R16"), "2", j36, "SDA");
+    r01s_pin_netlist_link(nl, passive_entity(board, "R17"), "2", j36, "SCL");
     r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "GND", j36, "GND_A1");
     r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "GND", j36, "GND_B1");
     r01s_pin_netlist_link(nl, r01s_pwr5v_entity(&board->pwr), "GND", j36, "GND_A18");
@@ -359,21 +355,21 @@ static void apply_pullups(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *apu = r01s_avr128db28_s2_entity(&board->mcu_s2);
   R01sEntity *pad = r01s_attiny85_entity(&board->pad_mcu[0]);
 
-  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R29"), "1");
-  r01s_pin_netlist_link(nl, passive_entity(board, "R29"), "2", cpu, "RDY");
+  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R21"), "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R21"), "2", cpu, "RDY");
   r01s_pin_netlist_link(nl, mcu, "CPU_RDY", cpu, "RDY");
 
-  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R30"), "1");
-  r01s_pin_netlist_link(nl, passive_entity(board, "R30"), "2", cpu, "RESB");
+  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R22"), "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R22"), "2", cpu, "RESB");
 
-  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R26"), "1");
-  r01s_pin_netlist_link(nl, passive_entity(board, "R26"), "2", apu, "PAD_DATA");
+  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R18"), "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R18"), "2", apu, "PAD_DATA");
   r01s_pin_netlist_link(nl, apu, "PAD_DATA", pad, "DATA");
 
-  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R27"), "1");
-  r01s_pin_netlist_link(nl, passive_entity(board, "R27"), "2", mcu, "SDA");
-  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R28"), "1");
-  r01s_pin_netlist_link(nl, passive_entity(board, "R28"), "2", mcu, "SCL");
+  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R19"), "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R19"), "2", mcu, "SDA");
+  r01s_pin_netlist_link(nl, pwr, "VDD", passive_entity(board, "R20"), "1");
+  r01s_pin_netlist_link(nl, passive_entity(board, "R20"), "2", mcu, "SCL");
 }
 
 static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {

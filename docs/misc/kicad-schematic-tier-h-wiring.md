@@ -13,7 +13,7 @@ PLD **fuse equations** are not duplicated here. Schematic work uses **named nets
 | U1 pin group | Connect to |
 | --- | --- |
 | A0-A15 | **U3** RAM A0-A15, **U4** PRG A0-A15, **U6** VRAM A0-A15, **UPLDV** / decode PLD address inputs, **J36** cart A0-A13 (Side A pins 4-17), **UM** sample inputs as needed |
-| D0-D7 | **U3** DQ0-DQ7, **U4** DQ0-DQ7, **U6** DQ0-DQ7, **UM** CPU_D0-D7 (PA/PD), **US2** pad bus sampling, **R14-R21** toward cart D0-D7 |
+| D0-D7 | **U3** DQ0-DQ7, **U4** DQ0-DQ7, **U6** DQ0-DQ7, **UM** CPU_D0-D7 (PA/PD), **US2** pad bus sampling, **J36** cart D0-D7 |
 
 ### Control
 
@@ -22,8 +22,8 @@ PLD **fuse equations** are not duplicated here. Schematic work uses **named nets
 | PHI2 | **R12** -> clock tree (see passives) |
 | RWB | Decode PLD (**UPLDV** or dedicated decode inputs) |
 | BE | Decode PLD |
-| RDY | **R29** pull-up, **UM** `CPU_RDY` (open-drain) |
-| RESB | **R30** pull-up, reset switch / **J7** reset path |
+| RDY | **R21** pull-up, **UM** `CPU_RDY` (open-drain) |
+| RESB | **R22** pull-up, reset switch / **J7** reset path |
 | IRQB | **UPLDY** EQ / interrupt output |
 | VDD / VSS | +5V / GND + **C1** |
 
@@ -132,10 +132,10 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | Net | PORT (see hardware.md) |
 | --- | --- |
 | CPU_D0-D7 | PA0-1, PA4-7, PD6-7 (tri-state / sample) |
-| I2C SDA/SCL | PA2-3 (+ **R27**, **R28**, **R24**, **R25** to cart) |
+| I2C SDA/SCL | PA2-3 (+ **R19**, **R20**, **R16**, **R17** to cart) |
 | SPI MOSI/MISO/SCK | PC0-2 |
 | /SS_S1, /SS_S2 | PC3, PD5 |
-| CPU_RDY | PD2 (OD) + **R29** |
+| CPU_RDY | PD2 (OD) + **R21** |
 | VBL, SEL_SOFT* | PD3, PD1, PF0-1 inputs |
 | CPU_A_SAMPLE | PD4 |
 | S1_RDY | PF6 in |
@@ -151,7 +151,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | P1 buttons | PA0-7 |
 | P2 buttons | PC0-3, PD1-3, PF6 |
 | SPI slave | PD4-7 with **UM** |
-| PAD_DATA | PF0 OD + **R26** -> **J3/J4** ring |
+| PAD_DATA | PF0 OD + **R18** -> **J3/J4** ring |
 | AUDIO_PWM | PF1 -> analog audio jack network |
 | UPDI | pin 19 (off-board SerialUPDI, not on J10) |
 
@@ -167,11 +167,11 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | --- | --- | --- | --- |
 | 1, 18 | GND | GND | GND |
 | 2 | +5V | +5V | +5V |
-| 3 | SDA | SCL | **UM** I2C via **R24/R25** |
-| 4-11 | A0-A7 | D0-D7 | **U1** A0-A7, D0-D7 via series **R14-R21** on D |
-| 12 | A8 | OE# | CPU A8, **CART_OE#** via **R22** |
+| 3 | SDA | SCL | **UM** I2C via **R16/R17** |
+| 4-11 | A0-A7 | D0-D7 | **U1** A0-A7, D0-D7 |
+| 12 | A8 | OE# | CPU A8, **CART_OE#** via **R14** |
 | 13-17 | A9-A13 | A14-A18 (MAP) | CPU A9-A13, **UPLDV** MAP outputs |
-| (WE#) | - | WE# | **CART_WE#** via **R23** |
+| (WE#) | - | WE# | **CART_WE#** via **R15** |
 
 **A14-A18** on the cart come from the compositor MAP port, not the CPU address pins.
 

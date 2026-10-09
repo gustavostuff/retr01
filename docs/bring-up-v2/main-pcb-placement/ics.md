@@ -16,12 +16,12 @@ Location: top-center, above J36. Bypass **C1** at pin 8.
 | 21 | VSS | `GND` |
 | 9-20 | A0-A11 | SysRAM U3, cart A0-A11, mux A-side |
 | 22-25 | A12-A15 | SysRAM U3. A0-A13 also drop into J36 A4-A17 |
-| 33-26 | D0-D7 | SysRAM U3, cart D (33 ohm), UM data, U574 D |
+| 33-26 | D0-D7 | SysRAM U3, cart D, UM data, U574 D |
 | 34 | RWB | Decode / PLDs |
 | 37 | PHI2 | Clock island (buffered 8 MHz) through **R12** 33 ohm |
-| 40 | RESB | U130 RESET#, **R30** 10k to `+5V`, J7 pin 3 |
+| 40 | RESB | U130 RESET#, **R22** 10k to `+5V`, J7 pin 3 |
 | 4 | IRQB | Beam Y EQ / IRQ path |
-| 2 | RDY | UM `CPU_RDY` (OD) plus **R29** 4.7k to `+5V` |
+| 2 | RDY | UM `CPU_RDY` (OD) plus **R21** 4.7k to `+5V` |
 
 Orientation: pin-1 notch per silkscreen. Address and data edge toward J36 so A/D drop straight down.
 
@@ -184,7 +184,7 @@ Location: junction of CPU D, soft decode, SPI to S1/S2, and cart I2C. Bypass **C
 | Net | Port | Role |
 |-----|------|------|
 | CPU D0-D1 | PA0-1 | Soft bus (Z / in) |
-| I2C SDA/SCL | PA2-3 | Cart EEPROM (OD). Series **R24/R25** 33 ohm to J36. Pull-ups **R27/R28** 4.7k to `+5V` |
+| I2C SDA/SCL | PA2-3 | Cart EEPROM (OD). Series **R16/R17** 33 ohm to J36. Pull-ups **R19/R20** 4.7k to `+5V` |
 | CPU D2-D5 | PA4-7 | Soft bus |
 | SPI MOSI/MISO/SCK | PC0-2 | Master to S1/S2. PC1 also J10 DATA |
 | `/SS_S1` | PC3 | Slave select S1 |
@@ -260,7 +260,7 @@ Location: behind J3/J4. Bypass **C7** at pin 20.
 | P2 RIGHT...UP | PC0-3 | J5 evens |
 | P2 X/Y/COIN | PD1-3 | J5 |
 | SPI and `/SS_S2` | PD4-7 | from UM |
-| `PAD_DATA` | PF0 OD | J3/J4 ring plus **R26** 4.7k |
+| `PAD_DATA` | PF0 OD | J3/J4 ring plus **R18** 4.7k |
 | `AUDIO_PWM` | PF1 | J8 |
 | P2 START | PF6 | J5 |
 | UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |
