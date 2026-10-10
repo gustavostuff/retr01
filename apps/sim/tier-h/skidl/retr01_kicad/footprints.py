@@ -33,6 +33,7 @@ HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"
 HDR2x10 = f"{_R}:PinHeader_2x10_P2.54mm_Vertical"
 EDGE36_MOBO = f"{_R}:EDAC_395_MoboSocket_2x18_2.54x5.08mm"
 TRS = f"{_R}:Jack_3.5mm_CUI_SJ1-3515N_Horizontal"
+TRS635 = f"{_R}:Jack_6.35mm_Neutrik_NMJ6HFD2-AU_Horizontal"
 # Edge-mount RCJ-01x (1A/1B/1C shell + pad 2 tip); from gametank avboard_tht2.
 RCA = "Retr01_Lib:CUI_RCJ-014"
 RCA_AUDIO = "Retr01_Lib:CUI_RCJ-014_Audio"

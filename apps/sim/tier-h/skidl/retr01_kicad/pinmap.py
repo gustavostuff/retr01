@@ -216,8 +216,10 @@ M1284_RESET, M1284_VCC, M1284_GND = "9", "10", "11"
 M1284_SCL, M1284_SDA = "22", "23"  # PC0/PC1 TWI
 M1284_PAD_DATA = "16"  # PD2
 # CUI SJ1-3515N horizontal 3.5mm TRS (5-pin): Tip=T, Ring=R, Sleeve=S, TipNormal=TN, RingNormal=RN.
+# Neutrik NMJ6HFD2-AU 6.35mm TRS (6-pin): same T/R/S plus SleeveNormal=SN.
 TRS_TIP, TRS_RING, TRS_SLEEVE = "T", "R", "S"
 TRS_NC = ("TN", "RN")
+TRS635_NC = ("TN", "RN", "SN")
 M1284_HBLANK = "17"  # PD3
 M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5 (BG0 scroll). SEL_FE00 shares UPLDA pin with FE06.
 # Soft $FExx: palette + MAP seek strobes. Only PD0/PD1 free after DQ remap.
@@ -291,6 +293,9 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     # CUI SJ1-3515N 5-pin horizontal TRS jack
     "TRS_P1": ["S", "T", "R", "TN", "RN"],
     "TRS_P2": ["S", "T", "R", "TN", "RN"],
+    # Neutrik NMJ6HFD2-AU 6-pin horizontal 6.35mm TRS (T/R/S + switched normals)
+    "TRS635_P1": ["S", "T", "R", "TN", "RN", "SN"],
+    "TRS635_P2": ["S", "T", "R", "TN", "RN", "SN"],
     "ARCADE_2x10": _nums(20),
     "CAB_PWR_RST": _nums(4),
     "CART_PROG_HDR": _nums(4),
