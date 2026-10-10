@@ -4,27 +4,27 @@ Retr01 is an MCU-assisted 8-bit gaming system for arcade and console setups, plu
 
 <a href="https://i.ibb.co/KzhxrmpL/preliminary-pcb.jpg"><img src="img/readme/preliminary_pcb.jpg" alt="PCB" /></a>
 
-Hardware remains in active development/design. Software, tooling, and documentation track that ongoing specification. The board layout shown above is an early revision and is intended to approximate the planned main PCB (click to open a hi-res version).
+Hardware remains in active development/design. Software, tooling, and documentation track that ongoing specification. The board layout shown above is an early revision and is intended to approximate the planned main PCB.
 
 ## Inspirations
 
 1. **NES: readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Those limits are on purpose. They keep the graphics simple and give every color choice more weight.
 2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
-3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays understandable instead of hiding behind an FPGA. It applies those ideas to a simple tile-based background and CHR system built around high-level _game entities_ rather than raw sprites, with clear VRAM windows and camera logic.
+3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA. Graphics are tile based, 8x8 pixels, 2bpp.
 
 ## Graphics
 
-The playfield is 128x120 with chunky pixels, NES-style color limits, and two real background layers, as stated above. The result is a sharp image with a simple hardware pipeline.
+The playfield is 128x120 (chunky pixels) scaled to 2x. This means the final render is 256x240, the exact same resolution as the NES, Sega Master System, among others. A whole _game screen_ is 16 tiles wide and 15 tiles tall (a nametable is 240 tile index bytes + 240 _attr_ bytes).
 
-Architecturally speaking, the graphics are based on worlds and screens: up to 8 worlds, 64 screens each (512 _TV screens_ of real state + some special/extra screens, PRG, BGM, etc). All within a 512KB cartridge.
+On a higher level, graphics are based on worlds and screens: up to 8 worlds, 64 screens each. That's 512 _TV screens_ of real state + some special/extra screens, PRG, Game music, Game _entities_, etc. All within a 512KB cartridge.
 
-Characters and objects are entities made from states, frames, and sprites (a _state_ being something like idle, running, or crouching). Hardware draws the background layers and sprites so PRG can focus on game logic instead of pushing every pixel.
+Entities are abstract objects like enemies, players, items, etc. They're made from states, frames, and sprites (a _state_ being something like idle, running, or crouching).
 
 ## Audio
 
-Retr01 uses 8 channels shared between BGM and SFX. Channels are fully independent, so a jump or shot does not temporarily mute a BGM channel (this was a inherent limitation of the NES, for instance).
+Retr01 uses 8 channels, 5 meant to be used for BGM and the rest for SFX. 
 
-PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. See [sound.md](docs/general/sound.md).
+PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. The Adventure Kid Waveforms library is used as a built-in sound repository. See [sound.md](docs/general/sound.md).
 
 ## Hardware
 
