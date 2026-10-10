@@ -18,7 +18,7 @@ The playfield is 128x120 (chunky pixels) scaled to 2x. This means the final rend
 
 On a higher level, graphics are based on worlds and screens: up to 8 worlds, 64 screens each. That's 512 _TV screens_ of real state + some special/extra screens, PRG, Game music, Game _entities_, etc. All within a 512KB cartridge.
 
-Entities are abstract objects like enemies, players, items, etc. They're made from states, frames, and sprites (a _state_ being something like idle, running, or crouching).
+Entities are abstract objects like enemies, players, projectiles, etc. They're made from states, frames, and sprites (a _state_ being something like idle, running, or crouching).
 
 ## Audio
 
