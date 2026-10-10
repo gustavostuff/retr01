@@ -16,7 +16,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 LIB = REPO / "apps/sim/tier-h/skidl/library/Retr01_Lib.pretty"
-PCB_DIR = REPO / "apps/sim/tier-h/kicad/main-pcb/v_01"
+PCB_DIR = REPO / "apps/sim/tier-h/kicad/main-pcb"
 
 
 @dataclass(frozen=True)

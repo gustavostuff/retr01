@@ -1,6 +1,6 @@
 # KiCad schematic Tier H: symbols and libraries
 
-**Project path:** `apps/sim/tier-h/kicad/main-pcb/v_01/` (`v_02.kicad_pro`, `v_01.kicad_sch`, `v_02.kicad_pcb`).
+**Project path:** `apps/sim/tier-h/kicad/main-pcb/` (`v_02.kicad_pro`, `v_01.kicad_sch`, `v_02.kicad_pcb`).
 
 **Footprint library on disk:** `${KIPRJMOD}/library/Retr01_Lib.pretty` (copied by `apps/sim/tier-h/skidl/export_netlist.sh` from `apps/sim/tier-h/skidl/library/`).
 
@@ -8,7 +8,7 @@
 
 ## 1. Open and configure the project
 
-1. Launch KiCad. **File -> Open Project** and select `v_01/v_02.kicad_pro`.
+1. Launch KiCad. **File -> Open Project** and select `main-pcb/v_02.kicad_pro`.
 2. Open **Schematic Editor** (Eeschema) from the project manager.
 3. **Preferences -> Manage Symbol Libraries**. Enable stock libraries (KiCad 8/9: `Symbol Libraries` tab). Typical installs use `/usr/share/kicad/symbols`.
 4. **Preferences -> Manage Footprint Libraries**. Confirm project table **`fp-lib-table`** lists `Retr01_Lib` at `${KIPRJMOD}/library/Retr01_Lib.pretty`.

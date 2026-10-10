@@ -37,18 +37,18 @@ python3 "$REPO/scripts/skidl_from_tier_h.py" "${QUIET[@]}"
 python3 "$REPO/scripts/retr01_patch_3d_poses.py"
 
 # KiCad resolves Retr01_Lib from the board project fp-lib-table (real copy, not a symlink).
-KICAD_V01="$REPO/apps/sim/tier-h/kicad/main-pcb/v_01"
+KICAD_MAIN_PCB="$REPO/apps/sim/tier-h/kicad/main-pcb"
 SRC_LIB="$DIR/library/Retr01_Lib.pretty"
-DST_LIB="$KICAD_V01/library/Retr01_Lib.pretty"
+DST_LIB="$KICAD_MAIN_PCB/library/Retr01_Lib.pretty"
 if [[ ! -d "$SRC_LIB" ]]; then
     echo "missing $SRC_LIB (Retr01 custom footprints)" >&2
     exit 1
 fi
-mkdir -p "$KICAD_V01/library"
+mkdir -p "$KICAD_MAIN_PCB/library"
 rm -rf "$DST_LIB"
 cp -a "$SRC_LIB" "$DST_LIB"
 SRC_3D="$DIR/library/Retr01_Lib.3dshapes"
-DST_3D="$KICAD_V01/library/Retr01_Lib.3dshapes"
+DST_3D="$KICAD_MAIN_PCB/library/Retr01_Lib.3dshapes"
 if [[ -d "$SRC_3D" ]]; then
     rm -rf "$DST_3D"
     mkdir -p "$DST_3D"

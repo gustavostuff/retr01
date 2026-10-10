@@ -1,6 +1,6 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **160 x 100 mm** (Standard Eurocard 3U format, DIN 41494 / IEC 60297). The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 170 mm** (Mini-ITX). The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
 **Packages (initial DIY board):** The board is mostly through-hole, with counted motherboard ICs using DIP / SPDIP / PDIP footprints. **AD724** is the sole surface-mount exception: Analog only sells **SOIC-16**, so **U725** mounts directly on a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`) without a DIP adapter. Cart and pad stay THT.
 
@@ -279,7 +279,7 @@ Top view, pin 1 at top-left:
 3 (DATA)    4 (GND)
 ```
 
-- Pin 1 PWR: **NC**. Friend 5 V does not feed the Eurocard rail. Console power stays J1.
+- Pin 1 PWR: **NC**. Friend 5 V does not feed the motherboard 5 V rail. Console power stays J1.
 - Pins 2 and 4: board GND.
 - Pin 3 DATA: MCU-M **PC1** (USART1 one-wire). Play uses PC1 as SPI MISO. An unplugged header leaves that pin as an open stub.
 

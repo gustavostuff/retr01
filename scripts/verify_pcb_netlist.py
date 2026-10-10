@@ -7,7 +7,7 @@ Usage:
     ./scripts/verify_pcb_netlist.py [path/to/sim.json] [path/to/board.kicad_pcb]
 Defaults:
     sim.json: apps/sim/tier-h/skidl/retr01_tier_h.json
-    board.kicad_pcb: apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb
+    board.kicad_pcb: apps/sim/tier-h/kicad/main-pcb/v_02.kicad_pcb
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_JSON = REPO_ROOT / "apps/sim/tier-h/skidl/retr01_tier_h.json"
-DEFAULT_PCB = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb"
+DEFAULT_PCB = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb/v_02.kicad_pcb"
 
 
 def parse_sim_json(json_path: Path) -> dict[str, set[tuple[str, str]]]:

@@ -23,7 +23,7 @@ Retr01 does not rely on manual graphical schematic capture in KiCad Eeschema (`.
            |
            v (Import Netlist / Update PCB)
 [Physical KiCad PCB Layout]
-  apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb
+  apps/sim/tier-h/kicad/main-pcb/v_02.kicad_pcb
 ```
 
 Without a KiCad schematic sheet, `v_02.kicad_pcb` still has to match the simulation pin graph (`retr01_tier_h.json`) with no missing or swapped connections. The comparison below is that check.
@@ -78,7 +78,7 @@ KiCad 10 footprints store the refdes as `(property "Reference" "U1")` and pad ne
 
 ```bash
 ./scripts/verify_pcb_netlist.py
-./scripts/verify_pcb_netlist.py apps/sim/tier-h/skidl/retr01_tier_h.json apps/sim/tier-h/kicad/main-pcb/v_01/v_02.kicad_pcb
+./scripts/verify_pcb_netlist.py apps/sim/tier-h/skidl/retr01_tier_h.json apps/sim/tier-h/kicad/main-pcb/v_02.kicad_pcb
 ```
 
 ---

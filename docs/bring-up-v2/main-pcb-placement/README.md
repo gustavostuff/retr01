@@ -1,7 +1,7 @@
 # Main PCB placement
 
 Floor-plan checklist for the motherboard under `apps/sim/tier-h/kicad/main-pcb/`.
-Board outline is **160 x 100 mm** Eurocard. Skidl netlist is `apps/sim/tier-h/skidl/retr01_prelim.net`.
+Board outline is **170 x 170 mm** Mini-ITX. Skidl netlist is `apps/sim/tier-h/skidl/retr01_prelim.net`.
 
 Design sources: [`docs/general/hardware.md`](../../general/hardware.md), floor plan [`docs/bringup/pcb-component-placement-guide.md`](../../bringup/pcb-component-placement-guide.md), passive values [`docs/passive_bom.md`](../../passive_bom.md), DIP pin numbers in `apps/sim/tier-h/skidl/retr01_kicad/pinmap.py`.
 

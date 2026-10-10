@@ -16,19 +16,20 @@ Components sit by **electrical signal flow** in five functional zones around the
 
 ---
 
-## 2. Board form factor: 160 mm x 100 mm (Standard Eurocard 3U)
+## 2. Board form factor: 170 mm x 170 mm (Mini-ITX)
 
-The physical motherboard outline is specified at **160 mm width by 100 mm height**, conforming to the international **Standard Eurocard 3U format** (standardized under DIN 41494 and IEC 60297).
+The physical motherboard outline is **170 mm by 170 mm**, the Mini-ITX desktop form factor.
 
-### Rationale for the 160 mm x 100 mm standard size
+### Rationale for the 170 mm x 170 mm Mini-ITX size
 
-1. **Off-the-shelf enclosure compatibility:** 160 mm x 100 mm is a common Eurocard size. Desktop cases from Hammond, Fischer Elektronik, and similar vendors include card guides for that outline. A custom chassis is not required.
-2. **Component density and breathing room:** Accommodates the counted motherboard BOM (18 through-hole DIP/SPDIP ICs plus the direct-mount SOIC-16 surface-mount AD724 composite encoder, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) at a balanced ~45% packing density. This ensures that 0.1 uF ceramic bypass capacitors sit immediately adjacent to IC power pins (< 5 mm), sockets maintain physical clearance for test clips during bring-up, and M3 corner mounting holes retain full 5 mm clearance from copper traces.
-3. **Geometry for 3-column physical bus topology:** The 1.6:1 aspect ratio provides the necessary horizontal span for a balanced 3-column layout:
-   - Left column (~45 mm): System RAM, VRAM, and multiplexers.
+1. **Routing room:** Four-layer THT buses (CPU, cart, VRAM mux, color index, field) need channel space between islands. A square 170 mm outline leaves copper for those runs without packing parts against the edge.
+2. **Off-the-shelf enclosure compatibility:** Mini-ITX cases and standoff plates fit a 170 x 170 mm board. Four M3 holes sit 6.35 mm in from each corner. A custom chassis is not required.
+3. **Component density and breathing room:** The counted motherboard BOM (18 through-hole DIP/SPDIP ICs plus the direct-mount SOIC-16 AD724, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin, socket clearance for test clips, and 5 mm keepout around the M3 holes.
+4. **Geometry for 3-column physical bus topology:** The square outline still holds three columns, with extra height for routing channels:
+   - Left column (~50 mm): System RAM, VRAM, and multiplexers.
    - Center column (~70 mm): 52 mm CPU package, 65 mm cartridge slot, and central MCU-M.
-   - Right column (~45 mm): Self-contained video engine, Color PROM, and DAC.
-4. **Fabrication efficiency:** Standard PCB prototyping pools at commercial fabricators support 160 mm x 100 mm boards under standard tier pricing and lead times.
+   - Right column (~50 mm): Self-contained video engine, Color PROM, and DAC.
+5. **Fabrication efficiency:** Standard PCB prototyping pools at commercial fabricators support 170 mm x 170 mm boards under standard tier pricing and lead times.
 
 ---
 

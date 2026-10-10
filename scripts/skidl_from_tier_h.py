@@ -542,7 +542,7 @@ def main() -> None:
         out_path.write_text(netlist_text, encoding="utf-8")
         print(f"wrote {out_path} ({len(netlist_text)} bytes) - PRELIMINARY / NOT FAB-READY", file=sys.stderr)
 
-        pcb_dir = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb/v_01"
+        pcb_dir = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb"
         if str(TIER_H_SKIDL_DIR) not in sys.path:
             sys.path.insert(0, str(TIER_H_SKIDL_DIR))
         from retr01_kicad.layer4_nets import layer4_net_names_from_netlist, patch_kicad_pro
