@@ -574,6 +574,10 @@
       },
       {
         "netclass": "Layer4",
+        "pattern": "SCROLL_CLK_1"
+      },
+      {
+        "netclass": "Layer4",
         "pattern": "SIG_J5_P10_TO_US2_P7"
       },
       {
@@ -611,10 +615,6 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_J5_P8_TO_US2_P5"
-      },
-      {
-        "netclass": "Layer4",
-        "pattern": "SIG_J5_P9_TO_US2_P26"
       },
       {
         "netclass": "Layer4",
@@ -662,6 +662,10 @@
       },
       {
         "netclass": "Layer4",
+        "pattern": "SIG_US2_P26_TO_J5_P9"
+      },
+      {
+        "netclass": "Layer4",
         "pattern": "SIG_US2_P27_TO_J5_P11"
       },
       {
@@ -682,10 +686,6 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "VIDEO_CSYNC"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "VIDEO_GREEN"
       },
       {
@@ -702,18 +702,18 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "XTAL_DOT_IN"
+        "pattern": "XTAL_21M_OUT"
       },
       {
         "netclass": "Layer4",
-        "pattern": "XTAL_DOT_OUT"
+        "pattern": "XTAL_DOT_IN"
       }
     ]
   },
   "pcbnew": {
     "last_paths": {
       "idf": "",
-      "netlist": "../../../skidl/retr01_prelim.net",
+      "netlist": "../../skidl/retr01_prelim.net",
       "plot": "",
       "specctra_dsn": "",
       "step": "",

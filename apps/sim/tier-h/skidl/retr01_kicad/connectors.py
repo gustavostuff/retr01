@@ -26,7 +26,7 @@ CONNECTOR_REFDES = (
 _TRS35_TO_TRS635 = (("J3", "J11"), ("J4", "J12"))
 
 # Nets that exist in Tier H JSON today (pad bus on US2).
-PAD_DATA_NET_HINTS = ("NET_752", "PAD_DATA")
+PAD_DATA_NET_HINTS = ("NET_752", "PAD_DATA", "PAD_DATA_BUS", "PAD1_DATA")
 
 
 def ensure_connector_parts(
@@ -86,6 +86,8 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     pad_net = _find_net_by_name(nets_map, PAD_DATA_NET_HINTS)
     if pad_net is None:
         pad_net = _find_net_by_node(nets_map, "US2", "PAD_DATA")
+    if pad_net is None:
+        pad_net = _find_net_for_part_pin(nets_map, "US2", "16")
 
     nc = _ensure_net(nets_map, "NC")
 
