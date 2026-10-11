@@ -43,7 +43,8 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |
 | **J1** | Barrel 5 V | `Connector:Barrel_Jack` | GCT DCJ200-10-A class |
 | **J2** | RGB + CSYNC/HSYNC/VSYNC 2x4 | Connector symbol | 2x4 header |
-| **J3**, **J4** | TRS pad jacks | `Connector_Audio:AudioJack3_SwitchTR` | CUI SJ1-3535NG horizontal |
+| **J3**, **J4** | TRS pad jacks 3.5 mm | `Connector_Audio:AudioJack3_SwitchTR` | Switchcraft 35RAPC4BV4 |
+| **J11**, **J12** | TRS pad jacks 6.35 mm | `Connector_Audio:AudioJack3_SwitchTR` | CLIFF S4 1/4" (typical S4/BMB/PC-C) |
 | **J5** | Arcade 2x10 | Pin header | 2x10 |
 | **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |

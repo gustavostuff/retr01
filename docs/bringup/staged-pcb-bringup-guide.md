@@ -235,12 +235,12 @@ Validates the physical cartridge edge connector and memory mapping:
 Brings the remaining peripherals online to complete the console:
 - **Populate:**
   - Socket US2 (AVR128DB28 for MCU-S2).
-  - Controller TRS jacks J3 and J4, pull-up resistor R18.
+  - Controller TRS jacks J3 and J4 (3.5 mm) or J11 and J12 (6.35 mm CLIFF S4), pull-up resistor R18.
   - Audio output filter passives, RCA audio jack J8.
   - Optional: solder AD724 SOIC-16, Y3 crystal (3.579 MHz), and RCA composite jack J9.
   - Install JP_PWR4 shunt.
 - **Verification:**
-  - Connect game controllers to J3 and J4. Verify button inputs register in software during VBlank.
+  - Game controllers on J3/J4 or J11/J12. Button inputs register in software during VBlank.
   - Verify PWM audio output on J8 produces clean sound without digital buzz.
   - If AD724 is populated, verify composite video output on J9.
 

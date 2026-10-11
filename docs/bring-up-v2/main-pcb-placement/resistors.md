@@ -49,7 +49,7 @@ Cart **D0-D7** tie straight from U1 to J36. Clock dampers sit at the buffer outp
 
 | Ref | Value | From | To | Zone |
 |-----|-------|------|----|------|
-| R18 | 4.7k | `+5V` | US2 `PAD_DATA` / J3 and J4 ring | Z5 at the TRS jacks |
+| R18 | 4.7k | `+5V` | US2 `PAD_DATA` / J3, J4, J11, and J12 ring | Z5 at the TRS jacks |
 | R19 | 4.7k | `+5V` | UM SDA | Hub at UM |
 | R20 | 4.7k | `+5V` | UM SCL | Hub at UM |
 | R21 | 4.7k | `+5V` | U1 RDY | CPU at pin 2 |

@@ -161,7 +161,7 @@ Cart **D0-D7** tie **U1** to **J36** side-B with no series parts ([`hardware.md`
 | --- | --- | --- | --- |
 | R21 | 4.7k (typ) | +5V | **U1** RDY (also **UM** `CPU_RDY` open-drain tie) |
 | R22 | 10k (typ) | +5V | **U1** RESB |
-| R18 | 4.7k | +5V | **US2** `PAD_DATA` (and pad **DATA** net toward **J3/J4**) |
+| R18 | 4.7k | +5V | **US2** `PAD_DATA` (and pad **DATA** net toward **J3/J4** and **J11/J12**) |
 | R19 | 4.7k | +5V | **UM** I2C **SDA** |
 | R20 | 4.7k | +5V | **UM** I2C **SCL** |
 

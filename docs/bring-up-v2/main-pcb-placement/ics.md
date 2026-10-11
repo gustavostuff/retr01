@@ -252,7 +252,7 @@ Bypass **C4** at pin 28.
 
 ### US2, AVR128DB28 MCU-S2
 
-Location: behind J3/J4. Bypass **C7** at pin 20.
+Location: behind J3/J4 and J11/J12. Bypass **C7** at pin 20.
 
 | Net | Port | Destination |
 |-----|------|-------------|
@@ -260,7 +260,7 @@ Location: behind J3/J4. Bypass **C7** at pin 20.
 | P2 RIGHT...UP | PC0-3 | J5 evens |
 | P2 X/Y/COIN | PD1-3 | J5 |
 | SPI and `/SS_S2` | PD4-7 | from UM |
-| `PAD_DATA` | PF0 OD | J3/J4 ring plus **R18** 4.7k |
+| `PAD_DATA` | PF0 OD | J3/J4 and J11/J12 ring plus **R18** 4.7k |
 | `AUDIO_PWM` | PF1 | J8 |
 | P2 START | PF6 | J5 |
 | UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |

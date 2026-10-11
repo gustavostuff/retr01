@@ -79,7 +79,9 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 
 ---
 
-## J3 / J4, TRS pads (front, bottom-left), Zone 5
+## J3 / J4 and J11 / J12, TRS pads (front, bottom-left), Zone 5
+
+3.5 mm jacks are **J3** (P1) and **J4** (P2). The 3.5 mm standard is Switchcraft **35RAPC4BV4**. 6.35 mm (1/4") jacks are **J11** (P1) and **J12** (P2). The 6.35 mm standard is **CLIFF S4** (typical **S4/BMB/PC-C**). Same Tip / Ring / Sleeve nets on both sizes. One size per player.
 
 | Contact | Net |
 |---------|-----|
@@ -93,8 +95,8 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 
 | Pins | Destination |
 |------|-------------|
-| Odd 1-15 | P1 bits to US2 `PA0`-`PA7` |
-| Even 2-16 | P2 bits to US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6` |
+| Even 2-16 | P1 bits to US2 `PA0`-`PA7` (pin 2 = bit 0) |
+| Odd 15-1 | P2 bits to US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6` (pin 15 = bit 0) |
 | 17-20 | `GND` |
 
 Cabinet microswitch series **47 ohm** lives on the harness ([`hardware.md`](../../general/hardware.md), [`passive_bom.md`](../../passive_bom.md)).
