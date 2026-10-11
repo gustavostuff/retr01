@@ -181,7 +181,17 @@ def _netlist_rails_ok(netlist_text: str) -> bool:
         ("J1", "1"): "+5V",
         ("J1", "2"): "GND",
         ("J3", "1"): "GND",
+        ("J3", "3"): "NC",
         ("J3", "4"): "+5V",
+        ("J3", "5"): "NC",
+        ("J4", "3"): "NC",
+        ("J4", "5"): "NC",
+        ("J11", "TN"): "NC",
+        ("J11", "RN"): "NC",
+        ("J11", "SN"): "NC",
+        ("J12", "TN"): "NC",
+        ("J12", "RN"): "NC",
+        ("J12", "SN"): "NC",
     }
     for key, net in want.items():
         hit = info.get(key)

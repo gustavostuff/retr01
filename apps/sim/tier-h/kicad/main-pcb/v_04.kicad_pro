@@ -212,7 +212,7 @@
       "track_widths": [
         0.0,
         0.25,
-        1.0
+        0.8
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -316,7 +316,7 @@
         "pcb_color": "rgb(220, 143, 50)",
         "priority": 0,
         "schematic_color": "rgb(220, 143, 50)",
-        "track_width": 0.25,
+        "track_width": 0.2,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -583,19 +583,15 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P1_TO_US2_P1"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "SIG_J5_P2_TO_US2_P22"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P3_TO_US2_P28"
+        "pattern": "SIG_J5_P3_TO_US2_P27"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P5_TO_US2_P27"
+        "pattern": "SIG_J5_P5_TO_US2_P1"
       },
       {
         "netclass": "Layer4",
@@ -668,6 +664,10 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_US2_P26_TO_J5_P10"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_US2_P28_TO_J5_P1"
       },
       {
         "netclass": "Layer4",
