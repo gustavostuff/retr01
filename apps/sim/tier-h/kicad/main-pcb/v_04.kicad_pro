@@ -655,6 +655,10 @@
       },
       {
         "netclass": "Layer4",
+        "pattern": "SIG_UM_P18_TO_US1_P18"
+      },
+      {
+        "netclass": "Layer4",
         "pattern": "SIG_US2_P23_TO_J5_P4"
       },
       {
@@ -684,6 +688,10 @@
       {
         "netclass": "Layer4",
         "pattern": "VIDEO_BLUE"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "VIDEO_CSYNC"
       },
       {
         "netclass": "Layer4",

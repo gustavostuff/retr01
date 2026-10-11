@@ -175,7 +175,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         comp = _find_net_by_node(nets_map, "U725", "COMP")
         pin_connect(parts["J9"], "", "2", comp if comp is not None else _ensure_net(nets_map, "COMPOSITE_OUT"))
 
-    # J2 2x4 RGB + CSYNC/HSYNC/VSYNC (docs/general/hardware.md).
+    # J2 1x8 RGB + CSYNC/HSYNC/VSYNC (docs/general/hardware.md).
     # 1 GND  2 GND
     # 3 CSYNC  4 B
     # 5 HSYNC  6 G

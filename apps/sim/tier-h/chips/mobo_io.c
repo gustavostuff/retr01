@@ -66,11 +66,8 @@ static void init_j36(R01sEntity *e) {
 }
 
 static void init_j2(R01sEntity *e) {
-    /* 2x4 male: 1=GND1   2=GND2
-                 3=CSYNC  4=B
-                 5=HSYNC  6=G
-                 7=VSYNC  8=R */
-    io_begin(e, "HDR-2x4", "J2");
+    /* 1x8 male: 1=GND1 2=GND2 3=CSYNC 4=B 5=HSYNC 6=G 7=VSYNC 8=R */
+    io_begin(e, "HDR-1x8", "J2");
     io_pin(e, 1, "GND1");
     io_pin(e, 2, "GND2");
     io_pin(e, 3, "CSYNC");
@@ -79,7 +76,7 @@ static void init_j2(R01sEntity *e) {
     io_pin(e, 6, "G");
     io_pin(e, 7, "VSYNC");
     io_pin(e, 8, "R");
-    io_header(e, 2, 4);
+    io_header(e, 8, 1);
 }
 
 /* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4. Odd 7/9 = GND.

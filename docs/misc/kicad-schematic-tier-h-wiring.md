@@ -182,7 +182,7 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | Ref | Function | Schematic nets |
 | --- | --- | --- |
 | **J1** | 5 V in | +5V, GND |
-| **J2** | RGB + sync out | DAC R/G/B, CSYNC, HSYNC, VSYNC (2x4) |
+| **J2** | RGB + sync out | DAC R/G/B, CSYNC, HSYNC, VSYNC (1x8) |
 | **J3**, **J4** | TRS pads 3.5 mm | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
 | **J11**, **J12** | TRS pads 6.35 mm (CLIFF S4) | Same Tip / Ring / Sleeve as J3 / J4 |
 | **J5** | Arcade P1 | 2x5. US2 `PA0`-`PA7`. GND on pins 7 and 9 |

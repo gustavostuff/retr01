@@ -42,7 +42,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |
 | **J1** | Barrel 5 V | `Connector:Barrel_Jack` | GCT DCJ200-10-A class |
-| **J2** | RGB + CSYNC/HSYNC/VSYNC 2x4 | Connector symbol | 2x4 header |
+| **J2** | RGB + CSYNC/HSYNC/VSYNC 1x8 | Connector symbol | 1x8 header |
 | **J3**, **J4** | TRS pad jacks 3.5 mm | `Connector_Audio:AudioJack3_SwitchTR` | Switchcraft 35RAPC2BVN4 |
 | **J11**, **J12** | TRS pad jacks 6.35 mm | `Connector_Audio:AudioJack3_SwitchTR` | CLIFF S4 1/4" (typical S4/BMB/PC-C) |
 | **J5** | Arcade P1 2x5 | Pin header | 2x5 |

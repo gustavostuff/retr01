@@ -118,7 +118,7 @@ int main(void) {
                 "J6 pin 1 on US2 18");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "Y", r01s_avr128db28_s2_entity(&board.mcu_s2), "P2_Y"),
                 "J6 pin 5 on US2 8");
-    expect_true(board.io.j2.pin_count == 8, "J2 is 2x4");
+    expect_true(board.io.j2.pin_count == 8, "J2 is 1x8");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "CSYNC", r01s_ad724_entity(&board.ad724), "HSYNC"),
                 "J2 CSYNC on AD724 HSYNC");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),

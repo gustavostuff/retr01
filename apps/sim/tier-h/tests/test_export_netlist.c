@@ -46,7 +46,7 @@ int main(void) {
     expect_true(strstr(json, "\"U725\"") != NULL, "AD724 in export");
     expect_true(strstr(json, "COMPOSITE_OUT") != NULL, "composite net name");
     expect_true(strstr(json, "AUDIO_OUT") != NULL, "audio net name");
-    expect_true(strstr(json, "HDR-2x4") != NULL, "J2 2x4 header in export");
+    expect_true(strstr(json, "HDR-1x8") != NULL, "J2 1x8 header in export");
     expect_true(strstr(json, "\"J10\"") != NULL, "J10 cart program header in export");
     expect_true(strstr(json, "SPI_MISO") != NULL, "J10 DATA shares SPI_MISO");
     expect_true(strstr(json, "\"+5V\"") != NULL, "named +5V rail");

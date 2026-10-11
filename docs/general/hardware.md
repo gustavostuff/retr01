@@ -331,17 +331,14 @@ Prefer programming PLDs, the color PROM, and the three AVRs **before** they go i
 
 ## Video out / sync header
 
-Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all live on **one** 2x4 header so RGBS and RGBHV cables pick a story without a mode jumper or a second connector family.
+Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all live on **one** 1x8 header so RGBS and RGBHV cables pick a story without a mode jumper or a second connector family.
 
 ### J2 sync-capable RGB header (locked with AD724)
 
-2x4 male, 2.54 mm. KiCad numbering, pin 1 at top-left:
+1x8 male, 2.54 mm. KiCad numbering, pin 1 at the left:
 
 ```text
-1 (GND)     2 (GND)
-3 (CSYNC)   4 (B)
-5 (HSYNC)   6 (G)
-7 (VSYNC)   8 (R)
+1 (GND)  2 (GND)  3 (CSYNC)  4 (B)  5 (HSYNC)  6 (G)  7 (VSYNC)  8 (R)
 ```
 
 | Pin | Net |
@@ -383,7 +380,7 @@ Cart and pad PCBs are **2-layer**.
 | Ref | Locked |
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
-| J2 | 2x4 RGB + CSYNC/HSYNC/VSYNC (table above) |
+| J2 | 1x8 RGB + CSYNC/HSYNC/VSYNC (table above) |
 | J3/J4 | Switchcraft **35RAPC2BVN4** 3.5 mm stereo TRS (vertical VN4) |
 | J11/J12 | CLIFF **S4** 1/4" (6.35 mm) TRS, typical **S4/BMB/PC-C** |
 | J5 | 2x5 arcade P1 (right of US2) |

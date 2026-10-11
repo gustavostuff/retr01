@@ -266,7 +266,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J1** | DC_IN | Top-Left rear edge | 5.0 V regulated DC barrel jack (center positive) |
 | **J8** | AUDIO | Top-Center rear edge | RCA mono/stereo audio line out |
 | **J9** | COMPOSITE | Top-Center rear edge | RCA composite video out (yellow) |
-| **J2** | RGBS_HDR | Top-Right rear edge | 2x4 0.1 inch header for raw RGB + CSYNC/HSYNC/VSYNC |
+| **J2** | RGBS_HDR | Top-Right rear edge | 1x8 0.1 inch header for raw RGB + CSYNC/HSYNC/VSYNC |
 | **J36** | CART_EDGE | Center board spine | 36-pin 2.54 mm edge connector for game carts |
 | **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad. Switchcraft 35RAPC2BVN4 |
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad. Switchcraft 35RAPC2BVN4 |
