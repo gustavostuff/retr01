@@ -52,11 +52,11 @@ POSES: tuple[Pose, ...] = (
         rotate=(90.0, 180.0, 0.0),
     ),
     Pose(
-        footprint="Jack_3.5mm_CUI_SJ1-3515N_Horizontal",
-        model_name="Jack_3.5mm_CUI_SJ1-3515N_Horizontal.wrl",
-        offset=(-2.0, 0.0, 3.0),
+        footprint="Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical_more_copper",
+        model_name="Switchcraft_35RAPC4BVN4.wrl",
+        offset=(12.75, 1.0, 7.0),
         scale=(1.0, 1.0, 1.0),
-        rotate=(90.0, 0.0, 90.0),
+        rotate=(180.0, 0.0, 180.0),
     ),
 )
 

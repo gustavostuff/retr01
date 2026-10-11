@@ -99,11 +99,18 @@ def _rail_markers(pins: list) -> Tuple[int, int]:
     return vdd_markers, gnd_markers
 
 
+def _is_nc_net(net) -> bool:
+    name = getattr(net, "name", "") or ""
+    return name == "NC" or name.startswith("NC_")
+
+
 def merge_rail_nets(parts: Dict[str, object], nets_map: dict) -> None:
     """Merge stray rail fragments onto canonical +5V / GND nets."""
     v5 = nets_map.get("+5V")
     gnd = nets_map.get("GND")
     for net in list(_collect_nets(parts)):
+        if _is_nc_net(net):
+            continue
         pins = getattr(net, "pins", []) or []
         if not pins:
             continue
@@ -125,6 +132,8 @@ def restore_rail_net_names(parts: Dict[str, object], nets_map: dict) -> None:
             net.name = key
 
     for net in _collect_nets(parts):
+        if _is_nc_net(net):
+            continue
         pins = getattr(net, "pins", []) or []
         if not pins:
             continue

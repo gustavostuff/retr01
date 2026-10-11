@@ -564,10 +564,6 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SCROLL_CLK"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "SIG_J5_P1_TO_US2_P27"
       },
       {
@@ -597,6 +593,10 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_J6_P3_TO_US2_P9"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J6_P4_TO_US2_P3"
       },
       {
         "netclass": "Layer4",
@@ -636,10 +636,6 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_UM_P18_TO_US1_P18"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "SIG_US2_P23_TO_J5_P4"
       },
       {
@@ -653,10 +649,6 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_US2_P2_TO_J6_P2"
-      },
-      {
-        "netclass": "Layer4",
-        "pattern": "SIG_US2_P3_TO_J6_P4"
       },
       {
         "netclass": "Layer4",
@@ -676,6 +668,10 @@
       },
       {
         "netclass": "Layer4",
+        "pattern": "VIDEO_CSYNC"
+      },
+      {
+        "netclass": "Layer4",
         "pattern": "VIDEO_GREEN"
       },
       {
@@ -692,7 +688,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "XTAL_21M_IN"
+        "pattern": "XTAL_DOT_IN"
       },
       {
         "netclass": "Layer4",

@@ -13,7 +13,7 @@ Source of truth after `r01s_board_netlist_rebuild()` (see [`schematic-netlist-ti
 - Motherboard IC links (`board_netlist.c`)
 - Passive / power / DAC / series / pull-up links (`board_schematic.c`)
 
-Skidl (`scripts/skidl_from_tier_h.py`) is a **consumer**: JSON in, KiCad `.net` out. Correct pin numbers, power rails, and bus membership belong in the **sim netlist** and chip pin maps; Python only applies motherboard scope (J36/J1 remap), footprint pin templates, NC stubs, and net naming. If JSON and PCB disagree, fix sim/export JSON before patching KiCad by hand.
+Skidl (`scripts/skidl_from_tier_h.py`) is a **consumer**: JSON in, KiCad `.net` out. Correct pin numbers, power rails, and bus membership belong in the **sim netlist** and chip pin maps; Python only applies motherboard scope (J36/J1 remap, J3/J4 sim TIP/RING/SLEEVE 1/2/3 onto Switchcraft pads 4/2/1), footprint pin templates, NC stubs, and net naming. If JSON and PCB disagree, fix sim/export JSON before patching KiCad by hand.
 - Motherboard ICs, passives, and power (sim still models cart flash/EEPROM and pad MCUs, while Skidl **remaps** those to **J36** and drops pad silicon)
 
 Known **gaps** (same as [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h.md)):
@@ -21,7 +21,7 @@ Known **gaps** (same as [`schematic-netlist-tier-h.md`](schematic-netlist-tier-h
 - **AD724** NTSC analog (logic stub only)
 - **MCP130** supervisor not modeled in sim
 - Cart **edge** vs **U40** module (OE#/WE# stubs)
-- Skidl export is **motherboard-only**: 19 counted ICs (including **U04** 74HCU04, **U74** 74HC74, and **U725 / AD724** placeholder), **3x ATF22V10** (UPLDX/Y/V), connectors **J1-J10 + J36**. Sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
+- Skidl export is **motherboard-only**: 19 counted ICs (including **U04** 74HCU04, **U74** 74HC74, and **U725 / AD724** placeholder), **3x ATF22V10** (UPLDX/Y/V), connectors **J1-J12 + J36**. Sim-only PLD helpers (UPLDA/B/I/N/P), cart **U40/U50**, pad **UPAD***, and **U4** PRG_ROM are omitted or remapped
 
 The JSON embeds `"fabrication_ready": false` and `"purpose": "preliminary_pcb_illustrative_only"`.
 
@@ -67,7 +67,7 @@ Script behavior:
 - Refuses export if JSON claims `fabrication_ready: true`
 - Maps passives to generic `Device` R/C symbols (electrolytics use `C`, not polarized CP)
 - Maps quartz crystals **Y1-Y3** to HC-49/US vertical packages and instantiates the discrete clock network with **U04** (74HCU04) and **U74** (74HC74). Other motherboard ICs use **DIP / THT footprints** from `retr01_kicad/` except **U725 / AD724** (**SOIC-16** `Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`)
-- **J3/J4** 3.5 mm TRS on Switchcraft **35RAPC4BV4** (netlist footprint `Connector_Audio:Jack_3.5mm_CUI_SJ1-3535NG_Horizontal`), **J11/J12** 6.35 mm TRS on the **CLIFF S4** 1/4" jack socket standard (typical **S4/BMB/PC-C**, netlist footprint `Retr01_Lib:Jack_6.35mm_Neutrik_NMJ6HFD2-AU_Horizontal`), **J8/J9** RCA (**RCJ-012** / **RCJ-014**, footprint **`Retr01_Lib:CUI_RCJ-014`** from GameTank `avboard_tht2`), **J5**/**J6** arcade 2x5 (P1 right of US2, P2 left), **J2** 2x4 RGB + CSYNC/HSYNC/VSYNC header (`Retr01_Lib:PinHeader_2x04_P2.54mm_Vertical`), **J10** cart program 2x2 (`Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical`), **J36** **`Retr01_Lib:EDAC_395_MoboSocket_2x18_2.54x5.08mm`** (2x18 THT + **`${KIPRJMOD}/library/Retr01_Lib.3dshapes/EDAC_395-036-520-201.wrl`**), **J1** GCT **DCJ200-10-A** horizontal barrel jack (see `retr01_kicad/tier_h_map.py` and `connectors.py`)
+- **J3/J4** 3.5 mm TRS on Switchcraft **35RAPC2BVN4** (netlist footprint `Retr01_Lib:Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical_more_copper`), **J11/J12** 6.35 mm TRS on the **CLIFF S4** 1/4" jack socket standard (typical **S4/BMB/PC-C**, netlist footprint `Retr01_Lib:Jack_6.35mm_Neutrik_NMJ6HFD2-AU_Horizontal`), **J8/J9** RCA (**RCJ-012** / **RCJ-014**, footprint **`Retr01_Lib:CUI_RCJ-014`** from GameTank `avboard_tht2`), **J5**/**J6** arcade 2x5 (P1 right of US2, P2 left), **J2** 2x4 RGB + CSYNC/HSYNC/VSYNC header (`Retr01_Lib:PinHeader_2x04_P2.54mm_Vertical`), **J10** cart program 2x2 (`Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical`), **J36** **`Retr01_Lib:EDAC_395_MoboSocket_2x18_2.54x5.08mm`** (2x18 THT + **`${KIPRJMOD}/library/Retr01_Lib.3dshapes/EDAC_395-036-520-201.wrl`**), **J1** GCT **DCJ200-10-A** horizontal barrel jack (see `retr01_kicad/tier_h_map.py` and `connectors.py`)
 - **J2** wiring (preliminary): pins 1-3 = PROM DAC guns after **R9-R11**. Pin 4 = **CSYNC** (sim JSON / AD724 `HSYNC`; compositor `UPLDV` EQ is the placeholder driver until the JEDEC map). Pins 5-6 = **HSYNC** / **VSYNC** (header nets; Beam X/Y drive them in the A-C lab). Pins 7-8 = **GND**. **U725** RGB + **COMP** (pin 10) to **J9** tip. **J8** tip is MCU-S2 **AUDIO_PWM**.
 - Custom footprints live in-repo at `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty`. **`export_netlist.sh` copies** that tree into `apps/sim/tier-h/kicad/main-pcb/library/Retr01_Lib.pretty` (no symlinks). The `v_01.kicad_pro` and `v_02.kicad_pro` files live in `main-pcb/`, so `${KIPRJMOD}` resolves. Re-import the netlist into **`v_02.kicad_pcb`** after export or KiCad may substitute stock footprints and drop **J3/J4** TRS / the second RCA. Replace-existing updates matching refdes only. Footprints in the netlist and not on the board attach to the cursor after the import dialog confirms. Escape discards that drag and those parts never land on copper.
 - Skips **SCR1** (sim LCD sink) and the UI **5V** / **GND** rail symbols. **PS1** sim PMIC pins remap to **J1**
@@ -83,7 +83,7 @@ KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual e
 - **Board:** `apps/sim/tier-h/kicad/main-pcb/v_02.kicad_pcb` and `v_02.kicad_pro`. Open the project from **`main-pcb/`** so `${KIPRJMOD}` resolves.
 - **Export copy:** `export_netlist.sh` copies the library tree into `main-pcb/library/` for KiCad (`fp-lib-table` -> `${KIPRJMOD}/library/Retr01_Lib.pretty`).
 
-Notable custom footprints: **J36** `EDAC_395_MoboSocket_2x18_2.54x5.08mm` (5.08 mm row spacing), **J1** GCT DCJ200-10-A barrel jack, **J8/J9** `CUI_RCJ-014` / `CUI_RCJ-014_Audio`, **U130** `TO-92_Inline` (MCP130, 3D pose from `retr01_patch_3d_poses.py`), **U725** narrow **SOIC-16** (trimmed silk from KiCad `Package_SO`). Supplier STEP sources for WRL regeneration are under `Retr01_Lib.3dshapes/_step_source/`. Colored WRLs use `scripts/step_colored_to_wrl.py` when needed.
+Notable custom footprints: **J36** `EDAC_395_MoboSocket_2x18_2.54x5.08mm` (5.08 mm row spacing), **J1** GCT DCJ200-10-A barrel jack, **J3/J4** `Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical_more_copper` (in-repo `Retr01_Lib`, 3D `Switchcraft_35RAPC4BVN4.wrl`), **J8/J9** `CUI_RCJ-014` / `CUI_RCJ-014_Audio`, **U130** `TO-92_Inline` (MCP130, 3D pose from `retr01_patch_3d_poses.py`), **U725** narrow **SOIC-16** (trimmed silk from KiCad `Package_SO`). Supplier STEP sources for WRL regeneration are under `Retr01_Lib.3dshapes/_step_source/`. Colored WRLs use `scripts/step_colored_to_wrl.py` when needed.
 
 ### Silkscreen text (refdes + value)
 

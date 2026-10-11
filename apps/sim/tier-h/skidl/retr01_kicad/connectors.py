@@ -139,10 +139,14 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     for small, large in _TRS35_TO_TRS635:
         if large not in parts:
             continue
-        for pin_id in (P.TRS_TIP, P.TRS_RING, P.TRS_SLEEVE):
-            net = _find_net_for_part_pin(nets_map, small, pin_id)
+        for small_pin, large_pin in (
+            (P.TRS_TIP, P.TRS635_TIP),
+            (P.TRS_RING, P.TRS635_RING),
+            (P.TRS_SLEEVE, P.TRS635_SLEEVE),
+        ):
+            net = _find_net_for_part_pin(nets_map, small, small_pin)
             if net is not None:
-                pin_connect(parts[large], "", pin_id, net)
+                pin_connect(parts[large], "", large_pin, net)
         for nc_pin in P.TRS635_NC:
             pin_connect(parts[large], "", nc_pin, nc)
 

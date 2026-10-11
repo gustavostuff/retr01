@@ -81,7 +81,7 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 
 ## J3 / J4 and J11 / J12, TRS pads (front, bottom-left), Zone 5
 
-3.5 mm jacks are **J3** (P1) and **J4** (P2). The 3.5 mm standard is Switchcraft **35RAPC4BV4**. 6.35 mm (1/4") jacks are **J11** (P1) and **J12** (P2). The 6.35 mm standard is **CLIFF S4** (typical **S4/BMB/PC-C**). Same Tip / Ring / Sleeve nets on both sizes. One size per player.
+3.5 mm jacks are **J3** (P1) and **J4** (P2). The 3.5 mm standard is Switchcraft **35RAPC2BVN4**. 6.35 mm (1/4") jacks are **J11** (P1) and **J12** (P2). The 6.35 mm standard is **CLIFF S4** (typical **S4/BMB/PC-C**). Same Tip / Ring / Sleeve nets on both sizes. One size per player.
 
 | Contact | Net |
 |---------|-----|

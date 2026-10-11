@@ -243,7 +243,7 @@ Interfaces with external gamepads, arcade controls, and audio output.
 
 **Components:**
 - MCU-S2 peripheral microcontroller (US2, AVR128DB28, SPDIP-28)
-- 2x 3.5 mm Switchcraft 35RAPC4BV4 TRS jacks (J3, J4) or 2x 6.35 mm CLIFF S4 jacks (J11, J12)
+- 2x 3.5 mm Switchcraft 35RAPC2BVN4 TRS jacks (J3, J4) or 2x 6.35 mm CLIFF S4 jacks (J11, J12)
 - Arcade control headers J5 (P1) and J6 (P2), 2x5 each, sandwiching US2
 - Cabinet power/reset header J7 (2x2)
 - RCA audio output jack J8 (top rear edge)
@@ -268,8 +268,8 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J9** | COMPOSITE | Top-Center rear edge | RCA composite video out (yellow) |
 | **J2** | RGBS_HDR | Top-Right rear edge | 2x4 0.1 inch header for raw RGB + CSYNC/HSYNC/VSYNC |
 | **J36** | CART_EDGE | Center board spine | 36-pin 2.54 mm edge connector for game carts |
-| **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad. Switchcraft 35RAPC4BV4 |
-| **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad. Switchcraft 35RAPC4BV4 |
+| **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad. Switchcraft 35RAPC2BVN4 |
+| **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad. Switchcraft 35RAPC2BVN4 |
 | **J11** | TRS635_P1 | Bottom-Left front edge | 6.35 mm (1/4") TRS for Player 1. CLIFF S4 standard, typical S4/BMB/PC-C |
 | **J12** | TRS635_P2 | Bottom-Left front edge | 6.35 mm (1/4") TRS for Player 2. CLIFF S4 standard, typical S4/BMB/PC-C |
 | **J5** | ARCADE_P1 | Right of US2 | 2x5. Even 2-10 = P1 bits 0-4. Odd 1/3/5 = bits 5-7. Odd 7/9 = GND |

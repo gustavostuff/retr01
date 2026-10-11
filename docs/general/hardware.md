@@ -327,7 +327,7 @@ Prefer programming PLDs, the color PROM, and the three AVRs **before** they go i
 
 **Arcade:** J5 and J6 **2x5**, one per player. US2 sits between them. Even pins 2-10 are bits 0-4 (pin 2 = bit 0). Odd pins 1/3/5 are bits 5-7. Odd pins 7 and 9 are GND. J5 is Player 1 to the right of US2 (180 deg, even column faces PA0-4). J6 is Player 2 to the left (0 deg, even column faces PC0-3 / PD1). J7 **2x2** (`+5V`/`GND` / `RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 3.5 mm or 6.35 mm (1/4") jacks. Same nets on both sizes. Tip=5 V, Ring=DATA, Sleeve=GND. Populate one size per player. 3.5 mm follows Switchcraft **35RAPC4BV4** (J3/J4, stereo threaded 35RAPC). 6.35 mm follows the **CLIFF S4** 1/4" jack socket standard (J11/J12). Stereo 3-pole PCB mount, typical order **S4/BMB/PC-C**. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
+**TRS (home shell):** 3.5 mm or 6.35 mm (1/4") jacks. Same nets on both sizes. Tip=5 V, Ring=DATA, Sleeve=GND. Populate one size per player. 3.5 mm follows Switchcraft **35RAPC2BVN4** (J3/J4, stereo vertical 35RAPC). 6.35 mm follows the **CLIFF S4** 1/4" jack socket standard (J11/J12). Stereo 3-pole PCB mount, typical order **S4/BMB/PC-C**. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
 
 ## Video out / sync header
 
@@ -384,7 +384,7 @@ Cart and pad PCBs are **2-layer**.
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
 | J2 | 2x4 RGB + CSYNC/HSYNC/VSYNC (table above) |
-| J3/J4 | Switchcraft **35RAPC4BV4** 3.5 mm stereo TRS (35RAPC, threaded) |
+| J3/J4 | Switchcraft **35RAPC2BVN4** 3.5 mm stereo TRS (vertical VN4) |
 | J11/J12 | CLIFF **S4** 1/4" (6.35 mm) TRS, typical **S4/BMB/PC-C** |
 | J5 | 2x5 arcade P1 (right of US2) |
 | J6 | 2x5 arcade P2 (left of US2) |

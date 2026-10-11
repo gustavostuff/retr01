@@ -2,6 +2,7 @@
 
 Drops cart silicon, pad MCUs, sim-only PLD helpers, and the sim PMIC (PS1).
 Remaps cart flash/EEPROM nodes onto J36. Maps PS1 power pins onto J1.
+Maps sim J3/J4 TIP/RING/SLEEVE (pins 1/2/3) onto Switchcraft 35RAPC2BVN4 pads 4/2/1.
 """
 
 from __future__ import annotations
@@ -93,6 +94,23 @@ _PS1_J1 = {
     "4": "2",  # GND -> sleeve
 }
 
+# Tier H sim TRS is logical TIP/RING/SLEEVE on pins 1/2/3. Switchcraft
+# 35RAPC2BVN4 copper is Tip=4 Ring=2 Sleeve=1. Connecting sim pin numbers
+# onto the footprint shorts +5V (tip) onto sleeve pad 1 and merges rails.
+_TRS_SIM_TO_SWITCHCRAFT = {
+    "TIP": int(P.TRS_TIP),
+    "T": int(P.TRS_TIP),
+    "RING": int(P.TRS_RING),
+    "R": int(P.TRS_RING),
+    "SLEEVE": int(P.TRS_SLEEVE),
+    "S": int(P.TRS_SLEEVE),
+}
+_TRS_SIM_PIN_TO_SWITCHCRAFT = {
+    1: int(P.TRS_TIP),
+    2: int(P.TRS_RING),
+    3: int(P.TRS_SLEEVE),
+}
+
 
 _SKIP_PIN_NAMES = frozenset({"CLK", "RUN"})
 
@@ -121,6 +139,13 @@ def normalize_export_node(ref: str, pin_name: str, pin_num: int) -> Optional[Nod
         if j1_pin is None:
             return None
         return ("J1", pin_name or "", int(j1_pin))
+    if ref in ("J3", "J4"):
+        mapped = _TRS_SIM_TO_SWITCHCRAFT.get((pin_name or "").upper())
+        if mapped is None:
+            mapped = _TRS_SIM_PIN_TO_SWITCHCRAFT.get(int(pin_num))
+        if mapped is None:
+            return None
+        return (ref, pin_name or "", mapped)
     return (ref, pin_name or "", pin_num)
 
 

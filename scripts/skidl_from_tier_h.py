@@ -174,6 +174,23 @@ def annotate_netlist_pinfunctions(text: str, parts: dict) -> str:
     )
 
 
+def _netlist_rails_ok(netlist_text: str) -> bool:
+    """Refuse PCB annotate when +5V/GND collapsed (J1 sleeve or J3 tip/sleeve)."""
+    info = _netlist_pad_info(netlist_text)
+    want = {
+        ("J1", "1"): "+5V",
+        ("J1", "2"): "GND",
+        ("J3", "1"): "GND",
+        ("J3", "4"): "+5V",
+    }
+    for key, net in want.items():
+        hit = info.get(key)
+        if hit is None or hit[0] != net:
+            return False
+    j3_ring = info.get(("J3", "2"))
+    return j3_ring is not None and j3_ring[0] not in ("+5V", "GND", "NC")
+
+
 def _netlist_pad_info(netlist_text: str) -> dict[tuple[str, str], tuple[str, str, str]]:
     """Map (ref, pin) to (net name, pinfunction, pintype)."""
     import re
@@ -320,7 +337,15 @@ def annotate_pcb_pinfunctions(pcb_text: str, netlist_text: str) -> str:
                 netname, name, ptype = hit
                 netname = netname.replace("\\", "\\\\").replace('"', '\\"')
                 name = name.replace("\\", "\\\\").replace('"', '\\"')
-                block = re.sub(r'\(net\s+"[^"]+"\)', f'(net "{netname}")', block, count=1)
+                if re.search(r'\(net\s+"[^"]+"\)', block):
+                    block = re.sub(r'\(net\s+"[^"]+"\)', f'(net "{netname}")', block, count=1)
+                else:
+                    block = re.sub(
+                        r'(\(uuid\s+"[^"]+"\)\n)',
+                        rf'\1\t\t\t(net "{netname}")\n',
+                        block,
+                        count=1,
+                    )
                 if name:
                     replacement = f'(pinfunction "{name}")\n\t\t\t(pintype "{ptype}")'
                     if re.search(r'\(pinfunction\s+"[^"]+"\)', block):
@@ -438,6 +463,10 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     ensure_clock_parts(parts, part_factory)
     ensure_part("U725")
     ensure_part("U130")
+    if "+5V" not in nets_map:
+        nets_map["+5V"] = Net("+5V")
+    if "GND" not in nets_map:
+        nets_map["GND"] = Net("GND")
     wire_connectors(parts, nets_map, pin_connect)
     wire_clocks(parts, nets_map, pin_connect)
     wire_power_rails(parts, nets_map, pin_connect)
@@ -554,7 +583,14 @@ def main() -> None:
                 continue
             old = pcb_path.read_text(encoding="utf-8")
             new = patch_pcb_clock_straps(old)
-            new = annotate_pcb_pinfunctions(new, netlist_text)
+            if _netlist_rails_ok(netlist_text):
+                new = annotate_pcb_pinfunctions(new, netlist_text)
+            else:
+                print(
+                    f"skipped pad annotate on {pcb_path.relative_to(REPO_ROOT)}: "
+                    "netlist +5V/GND failed J1/J3 rail check",
+                    file=sys.stderr,
+                )
             if new != old:
                 pcb_path.write_text(new, encoding="utf-8")
                 print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
