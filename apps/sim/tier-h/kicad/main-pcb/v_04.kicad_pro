@@ -574,47 +574,51 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SCROLL_CLK_1"
+        "pattern": "SCROLL_CLK"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P10_TO_US2_P7"
+        "pattern": "SIG_J5_P11_TO_US2_P4"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P12_TO_US2_P8"
+        "pattern": "SIG_J5_P13_TO_US2_P3"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P14_TO_US2_P9"
+        "pattern": "SIG_J5_P15_TO_US2_P2"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P16_TO_US2_P18"
+        "pattern": "SIG_J5_P16_TO_US2_P1"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P2_TO_US2_P2"
+        "pattern": "SIG_J5_P1_TO_US2_P18"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P3_TO_US2_P23"
+        "pattern": "SIG_J5_P2_TO_US2_P22"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P4_TO_US2_P3"
+        "pattern": "SIG_J5_P3_TO_US2_P9"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P6_TO_US2_P4"
+        "pattern": "SIG_J5_P5_TO_US2_P8"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P7_TO_US2_P25"
+        "pattern": "SIG_J5_P6_TO_US2_P24"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P8_TO_US2_P5"
+        "pattern": "SIG_J5_P7_TO_US2_P7"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_J5_P9_TO_US2_P5"
       },
       {
         "netclass": "Layer4",
@@ -646,31 +650,23 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_UM_P18_TO_US1_P18"
+        "pattern": "SIG_US2_P23_TO_J5_P4"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_US2_P1_TO_J5_P15"
+        "pattern": "SIG_US2_P25_TO_J5_P8"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_US2_P22_TO_J5_P1"
+        "pattern": "SIG_US2_P26_TO_J5_P10"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_US2_P24_TO_J5_P5"
+        "pattern": "SIG_US2_P27_TO_J5_P12"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_US2_P26_TO_J5_P9"
-      },
-      {
-        "netclass": "Layer4",
-        "pattern": "SIG_US2_P27_TO_J5_P11"
-      },
-      {
-        "netclass": "Layer4",
-        "pattern": "SIG_US2_P28_TO_J5_P13"
+        "pattern": "SIG_US2_P28_TO_J5_P14"
       },
       {
         "netclass": "Layer4",

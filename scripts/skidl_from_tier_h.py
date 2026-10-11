@@ -548,14 +548,17 @@ def main() -> None:
         from retr01_kicad.layer4_nets import layer4_net_names_from_netlist, patch_kicad_pro
 
         layer4_from_net = layer4_net_names_from_netlist(netlist_text)
-        for pcb_path in sorted(pcb_dir.glob("v_0*.kicad_pcb")):
+        standing = [pcb_dir / "v_04.kicad_pcb"]
+        for pcb_path in standing:
+            if not pcb_path.is_file():
+                continue
             old = pcb_path.read_text(encoding="utf-8")
             new = patch_pcb_clock_straps(old)
             new = annotate_pcb_pinfunctions(new, netlist_text)
             if new != old:
                 pcb_path.write_text(new, encoding="utf-8")
                 print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
-        for pro_path in sorted(pcb_dir.glob("v_0*.kicad_pro")):
+        for pro_path in [pcb_dir / "v_04.kicad_pro"]:
             old = pro_path.read_text(encoding="utf-8")
             new = patch_kicad_pro(old, layer4_from_net)
             if new != old:

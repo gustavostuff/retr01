@@ -82,15 +82,19 @@ static void init_j2(R01sEntity *e) {
     io_header(e, 2, 4);
 }
 
-/* 2x10 IDC. Odd pins are Player 1, even pins are Player 2. Last two rows are GND. */
+/* 2x10 IDC. v_04 J5 is rotated 180 deg: even column faces US2, pin 1 is
+   at the footer (larger Y). Even 2-16 = Player 1, walking up the header
+   with US2 PA0-7 (right DIP row, pin 22 up to 28 then 1). Odd 15-1 =
+   Player 2, walking down from the nose so US2 PC0 (pin 2, near the
+   notch) lands next to J5 pin 15 instead of crossing to pin 1. */
 static void init_j5(R01sEntity *e) {
     static const char *const p1[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
     static const char *const p2[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
     int i;
     io_begin(e, "HDR-2x10", "J5");
     for (i = 0; i < 8; i++) {
-        io_pin(e, i * 2 + 1, p1[i]);
-        io_pin(e, i * 2 + 2, p2[i]);
+        io_pin(e, i * 2 + 2, p1[i]);
+        io_pin(e, (7 - i) * 2 + 1, p2[i]);
     }
     io_pin(e, 17, "GND17");
     io_pin(e, 18, "GND18");

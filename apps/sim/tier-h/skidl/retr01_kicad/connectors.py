@@ -201,7 +201,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             pin_connect(parts["J2"], "", 7, gnd)
             pin_connect(parts["J2"], "", 8, gnd)
 
-    # Arcade J5 2x10: sim has no GPIO net names yet; GND on P1/P2 footer pins (see wire above).
+    # Arcade J5 2x10: even pins P1 (US2 PA), odd pins P2. GND on pins 17-20.
 
     # J10 2x2 cart program (docs/general/hardware.md).
     # 1 PWR NC   2 GND

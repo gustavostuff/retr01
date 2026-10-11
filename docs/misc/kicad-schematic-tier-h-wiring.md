@@ -155,7 +155,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | AUDIO_PWM | PF1 -> analog audio jack network |
 | UPDI | pin 19 (off-board SerialUPDI, not on J10) |
 
-Arcade: **J5** 2x10. Odd pins 1-15 to Player 1, even pins 2-16 to Player 2, pins 17-20 to GND. See [`hardware.md`](../general/hardware.md) Controllers.
+Arcade: **J5** 2x10. Even pins 2-16 to Player 1 (pin 2 = bit 0). Odd pins 15-1 to Player 2 (pin 15 = bit 0). Pins 17-20 to GND. See [`hardware.md`](../general/hardware.md) Controllers.
 
 ---
 

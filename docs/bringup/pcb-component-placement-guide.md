@@ -270,7 +270,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J36** | CART_EDGE | Center board spine | 36-pin 2.54 mm edge connector for game carts |
 | **J3** | TRS_P1 | Bottom-Left front edge | 3.5 mm TRS jack for Player 1 gamepad |
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad |
-| **J5** | ARCADE | Bottom-Left edge near J4 | 2x10 pin header. Odd pins are Player 1, even pins are Player 2, pins 17-20 are GND |
+| **J5** | ARCADE | Bottom-Left edge near J4 | 2x10 pin header. Even pins 2-16 are Player 1 (pin 2 = bit 0). Odd pins 15-1 are Player 2 (pin 15 = bit 0). Pins 17-20 are GND |
 | **J7** | CAB_PWR | Bottom edge near J5 | 2x2 `+5V`/`GND` over `RESET_N`/`GND` |
 
 ---

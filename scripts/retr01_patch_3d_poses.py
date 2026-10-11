@@ -164,9 +164,9 @@ def patch_library() -> int:
 
 def patch_boards() -> int:
     changed = 0
-    boards = sorted(PCB_DIR.glob("v_0*.kicad_pcb"))
-    if not boards:
-        raise SystemExit(f"no v_0*.kicad_pcb under {PCB_DIR}")
+    boards = [PCB_DIR / "v_04.kicad_pcb"]
+    if not boards[0].is_file():
+        raise SystemExit(f"missing {boards[0]}")
     for pcb_path in boards:
         old = pcb_path.read_text(encoding="utf-8")
         new, _found, _changed = patch_text(old, POSES)
