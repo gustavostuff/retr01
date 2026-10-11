@@ -4,10 +4,9 @@
     "active_layer_preset": "",
     "auto_track_width": true,
     "hidden_netclasses": [
-      "Default"
+      "Layer4"
     ],
     "hidden_nets": [
-      "",
       "GND",
       "+5V",
       "PROM_O6",
@@ -198,8 +197,7 @@
       "RAM_OE#",
       "RAM_WE#",
       "LINEBUF_CE#",
-      "LINEBUF_OE#",
-      "SIG_US1_P18_TO_UM_P18"
+      "LINEBUF_OE#"
     ],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
@@ -249,7 +247,7 @@
       "board_outline_area",
       "ly_points"
     ],
-    "visible_layers": "ffffffff_ffffffff_ffffffff_ffffffae",
+    "visible_layers": "ffffffff_ffffffff_ffffffff_ffffffab",
     "zone_display_mode": 0
   },
   "git": {

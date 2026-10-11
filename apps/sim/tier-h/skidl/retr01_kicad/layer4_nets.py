@@ -4,8 +4,8 @@ Assignment follows docs/bring-up-v2/main-pcb-layers.md. Layer 1 keeps clock-rate
 buses, digital squares, and +5V. Layer 4 gets analog, reset/ready, handshake,
 I2C, pads, arcade, sync, MAP A14-A18, and SPI chip-selects.
 
-The class exists so Pcbnew can color those air wires separately. Track and via
-geometry match the Default class.
+The class exists so Pcbnew can color those air wires separately. Track width is
+0.25 mm (digital signal width). Via geometry matches the Default class.
 """
 
 from __future__ import annotations
@@ -17,7 +17,8 @@ from typing import Iterable, Optional
 
 CLASS_NAME = "Layer4"
 
-# Same geometry as Default in v_0*.kicad_pro. Color is a starting point.
+# Track width 0.25 mm (digital signal). Other geometry matches Default.
+# Color is a starting point.
 KICAD_CLASS = {
     "bus_width": 12,
     "clearance": 0.2,
@@ -31,7 +32,7 @@ KICAD_CLASS = {
     "pcb_color": "rgb(220, 143, 50)",
     "priority": 0,
     "schematic_color": "rgb(220, 143, 50)",
-    "track_width": 0.2,
+    "track_width": 0.25,
     "tuning_profile": "",
     "via_diameter": 0.6,
     "via_drill": 0.3,
