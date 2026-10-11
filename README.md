@@ -10,7 +10,7 @@ Hardware remains in active development/design. Software, tooling, and documentat
 
 1. **NES: readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Those limits are on purpose. They keep the graphics simple and give every color choice more weight.
 2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
-3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA. Granted, Retr01 is not a pure TTL/discrete logic design, but it skips the black-box SoC approach entirely.
+3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA.
 
 ## Graphics
 
@@ -32,15 +32,17 @@ PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. 
 
 The design uses a compact, mostly THT main system board with ~17 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is:
 
-* The same PCB can be populated as a console, using 3.5mm TRS ports for pads and audio/composite RCA connectors, or:
+* For a home Console: TRS ports for pads and RCA connectors for mono audio and composite video.
 
-* As an arcade board, RGBS/RGBHV output + pin headers for arcade sticks and buttons.
+* For an Arcade setup: pin headers for RGBS/RGBHV video output and more pins for micro switches (sticks and buttons).
 
 As for the cartridge, it's a small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold fingers per side.
 
 Game pads are planned to use a 3-wire connection through any regular male to male audio aux cable (TRS ports on both the main PCB and the pads PCB). A serial protocol + ATtiny chips (on the pads board) will take care of communications.
 
 Note: the main motherboard uses the Mini-ITX format (170 x 170 mm). Standard desktop-PC outline, extra copper for 4-layer routing.
+
+Retr01 is not a pure TTL/discrete logic design, but it skips the black-box SoC approach entirely. It's a nice middle ground.
 
 ## Software pieces
 
