@@ -219,7 +219,7 @@ A whole bus that cannot finish on layer 1 is a placement problem first. The part
 
 ## KiCad net class Layer4
 
-Motherboard projects under `apps/sim/tier-h/kicad/main-pcb/` carry a net class named **Layer4**. Nets from the layer 4 tables above match that class through `netclass_patterns` (and through SKiDL on the next `export_netlist.sh` run). Layer 1 nets stay in **Default**.
+`main_pcb.kicad_pro` and `v_04.kicad_pro` carry a net class named **Layer4**. Nets from the layer 4 tables above match that class through `netclass_patterns` (and through SKiDL on the next `export_netlist.sh` run). Layer 1 nets stay in **Default**.
 
 Pcbnew colors Layer4 air wires from the class `pcb_color` (orange at `rgb(220, 143, 50)`). That color is a starting point. Board Setup, Net Classes, Layer4 changes it. Track and via sizes on Layer4 match Default.
 

@@ -73,7 +73,7 @@ Script behavior:
 - Skips **SCR1** (sim LCD sink) and the UI **5V** / **GND** rail symbols. **PS1** sim PMIC pins remap to **J1**
 - Unused footprint pads (arcade headers, **U725**, TRS NC pads, crystal load pins, etc.) tie to net **`NC`** so Pcbnew netlist import does not warn on missing symbol pins
 - Netlist nodes carry datasheet pin names (`pinfunction`) and KiCad pintypes. Package **VCC** / **GND** pads are `power_in`. **U74** PRE# / CLR# use net `U74_PRE_CLR#` (strapped to VCC in `DIP-14_W7.62mm_74HC74`). Spare **U04** inputs use net `U04_SPARE_IN` (strapped to GND in `DIP-14_W7.62mm_74HCU04`).
-- Quiet analog and slow I/O nets use KiCad net class **Layer4** so those air wires can take a different color from Default. Assignment follows [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md). Patterns live in `retr01_kicad/layer4_nets.py` and in each `v_0*.kicad_pro`.
+- Quiet analog and slow I/O nets use KiCad net class **Layer4** so those air wires can take a different color from Default. Assignment follows [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md). Patterns live in `retr01_kicad/layer4_nets.py` and in `main_pcb.kicad_pro` / `v_04.kicad_pro`.
 
 KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual experiment. Symbols and footprints require replacement and reconciliation against the schematic source of truth.
 
