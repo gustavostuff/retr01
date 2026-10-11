@@ -578,7 +578,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P1_TO_US2_P27"
+        "pattern": "SIG_J5_P1_TO_US2_P1"
       },
       {
         "netclass": "Layer4",
@@ -590,7 +590,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P5_TO_US2_P1"
+        "pattern": "SIG_J5_P5_TO_US2_P27"
       },
       {
         "netclass": "Layer4",
@@ -602,7 +602,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J6_P1_TO_US2_P8"
+        "pattern": "SIG_J6_P1_TO_US2_P18"
       },
       {
         "netclass": "Layer4",
@@ -614,7 +614,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J6_P5_TO_US2_P18"
+        "pattern": "SIG_J6_P5_TO_US2_P8"
       },
       {
         "netclass": "Layer4",
@@ -647,6 +647,10 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_UM_9"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_UM_P18_TO_US1_P18"
       },
       {
         "netclass": "Layer4",

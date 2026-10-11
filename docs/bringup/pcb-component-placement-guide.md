@@ -272,8 +272,8 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad. Switchcraft 35RAPC2BVN4 |
 | **J11** | TRS635_P1 | Bottom-Left front edge | 6.35 mm (1/4") TRS for Player 1. CLIFF S4 standard, typical S4/BMB/PC-C |
 | **J12** | TRS635_P2 | Bottom-Left front edge | 6.35 mm (1/4") TRS for Player 2. CLIFF S4 standard, typical S4/BMB/PC-C |
-| **J5** | ARCADE_P1 | Right of US2 | 2x5. Even 2-10 = P1 bits 0-4. Odd 1/3/5 = bits 5-7. Odd 7/9 = GND |
-| **J6** | ARCADE_P2 | Left of US2 | 2x5. Even 2-10 = P2 bits 0-4. Odd 1/3/5 = bits 5-7. Odd 7/9 = GND |
+| **J5** | ARCADE_P1 | Right of US2 | 2x5. Even 2-10 = P1 bits 0-4. Odd 1 = PA7 (US2 1), 3 = PA6 (US2 28), 5 = PA5 (US2 27). Odd 7/9 = GND |
+| **J6** | ARCADE_P2 | Left of US2 | 2x5. Even 2-10 = P2 bits 0-4. Odd 1 = PF6 (US2 18), 3 = PD3 (US2 9), 5 = PD2 (US2 8). Odd 7/9 = GND |
 | **J7** | CAB_PWR | Bottom edge near J5 | 2x2 `+5V`/`GND` over `RESET_N`/`GND` |
 
 ---

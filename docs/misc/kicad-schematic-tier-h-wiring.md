@@ -155,7 +155,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | AUDIO_PWM | PF1 -> analog audio jack network |
 | UPDI | pin 19 (off-board SerialUPDI, not on J10) |
 
-Arcade: **J5** and **J6** 2x5. Even 2-10 = bits 0-4 (pin 2 = bit 0). Odd 1/3/5 = bits 5-7. Odd 7/9 = GND. J5 is P1 (US2 `PA0`-`PA7`). J6 is P2 (US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6`). See [`hardware.md`](../general/hardware.md) Controllers.
+Arcade: **J5** and **J6** 2x5. Even 2-10 = bits 0-4 (pin 2 = bit 0). Odd 7/9 = GND. J5 odd 1/3/5 = US2 1/28/27 (`PA7`/`PA6`/`PA5`). J6 odd 1/3/5 = US2 18/9/8 (`PF6`/`PD3`/`PD2`). J5 is P1 (US2 `PA0`-`PA7`). J6 is P2 (US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6`). See [`hardware.md`](../general/hardware.md) Controllers.
 
 ---
 

@@ -69,7 +69,13 @@
           "thermal_relief_spoke_width": 0.5
         }
       },
-      "diff_pair_dimensions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
       "drc_exclusions": [],
       "meta": {
         "version": 2
@@ -203,7 +209,11 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0,
+        0.25,
+        1.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -230,7 +240,12 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -564,7 +579,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P1_TO_US2_P27"
+        "pattern": "SCROLL_CLK_1"
       },
       {
         "netclass": "Layer4",
@@ -572,7 +587,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P3_TO_US2_P28"
+        "pattern": "SIG_J5_P3_TO_US2_P27"
       },
       {
         "netclass": "Layer4",
@@ -588,7 +603,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J6_P1_TO_US2_P8"
+        "pattern": "SIG_J6_P1_TO_US2_P18"
       },
       {
         "netclass": "Layer4",
@@ -600,7 +615,7 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J6_P5_TO_US2_P18"
+        "pattern": "SIG_J6_P5_TO_US2_P8"
       },
       {
         "netclass": "Layer4",
@@ -636,6 +651,10 @@
       },
       {
         "netclass": "Layer4",
+        "pattern": "SIG_UM_P18_TO_US1_P18"
+      },
+      {
+        "netclass": "Layer4",
         "pattern": "SIG_US2_P23_TO_J5_P4"
       },
       {
@@ -645,6 +664,10 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_US2_P26_TO_J5_P10"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "SIG_US2_P28_TO_J5_P1"
       },
       {
         "netclass": "Layer4",

@@ -82,32 +82,34 @@ static void init_j2(R01sEntity *e) {
     io_header(e, 2, 4);
 }
 
-/* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4, odd 1/3/5 = bits 5-7,
-   odd 7/9 = GND. J5 (P1) sits to the right of US2 at 180 deg so the even
-   column faces PA0-4. J6 (P2) sits to the left at 0 deg so the even
-   column faces PC0-3 / PD1. */
-static void init_arcade_2x5(R01sEntity *e, const char *refdes, const char *const bits[8]) {
+/* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4. Odd 7/9 = GND.
+   J5 odd 1/3/5 = PA7/PA6/PA5 (US2 1/28/27). J6 odd 1/3/5 = PF6/PD3/PD2
+   (US2 18/9/8). J5 is 180 deg and J6 is 0 deg beside US2. */
+static void init_arcade_2x5(R01sEntity *e, const char *refdes, const char *const evens[5],
+                            const char *const odds[3]) {
     int i;
     io_begin(e, "HDR-2x5", refdes);
     for (i = 0; i < 5; i++) {
-        io_pin(e, i * 2 + 2, bits[i]);
+        io_pin(e, i * 2 + 2, evens[i]);
     }
-    io_pin(e, 1, bits[5]);
-    io_pin(e, 3, bits[6]);
-    io_pin(e, 5, bits[7]);
+    io_pin(e, 1, odds[0]);
+    io_pin(e, 3, odds[1]);
+    io_pin(e, 5, odds[2]);
     io_pin(e, 7, "GND7");
     io_pin(e, 9, "GND9");
     io_header(e, 2, 5);
 }
 
 static void init_j5(R01sEntity *e) {
-    static const char *const p1[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
-    init_arcade_2x5(e, "J5", p1);
+    static const char *const even[5] = {"P0", "P1", "P2", "P3", "P4"};
+    static const char *const odd[3] = {"P7", "P6", "P5"};
+    init_arcade_2x5(e, "J5", even, odd);
 }
 
 static void init_j6(R01sEntity *e) {
-    static const char *const p2[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
-    init_arcade_2x5(e, "J6", p2);
+    static const char *const even[5] = {"RIGHT", "LEFT", "DOWN", "UP", "X"};
+    static const char *const odd[3] = {"START", "COIN", "Y"};
+    init_arcade_2x5(e, "J6", even, odd);
 }
 
 static void init_j7(R01sEntity *e) {

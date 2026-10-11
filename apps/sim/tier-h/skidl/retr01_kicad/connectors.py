@@ -206,7 +206,8 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             pin_connect(parts["J2"], "", 7, gnd)
             pin_connect(parts["J2"], "", 8, gnd)
 
-    # Arcade J5 (P1) and J6 (P2) 2x5: even 2-10 bits 0-4, odd 1/3/5 bits 5-7, odd 7/9 GND.
+    # Arcade J5 (P1) and J6 (P2) 2x5: even 2-10 bits 0-4, odd 7/9 GND.
+    # J5 odd 1/3/5 = PA7/PA6/PA5 (US2 1/28/27). J6 odd 1/3/5 = PF6/PD3/PD2 (US2 18/9/8).
 
     # J10 2x2 cart program (docs/general/hardware.md).
     # 1 PWR NC   2 GND

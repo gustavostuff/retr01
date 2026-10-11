@@ -104,9 +104,20 @@ int main(void) {
                 "C17 on MCP130 VDD");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "P0", r01s_avr128db28_s2_entity(&board.mcu_s2), "PAD0"),
                 "J5 P0 on PAD0");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "P7", r01s_avr128db28_s2_entity(&board.mcu_s2), "PAD7"),
+                "J5 pin 1 on US2 1");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "P6", r01s_avr128db28_s2_entity(&board.mcu_s2), "PAD6"),
+                "J5 pin 3 on US2 28");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "P5", r01s_avr128db28_s2_entity(&board.mcu_s2), "PAD5"),
+                "J5 pin 5 on US2 27");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "RIGHT", r01s_avr128db28_s2_entity(&board.mcu_s2),
                                           "P2_RIGHT"),
                 "J6 RIGHT on P2");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "START", r01s_avr128db28_s2_entity(&board.mcu_s2),
+                                          "P2_START"),
+                "J6 pin 1 on US2 18");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "Y", r01s_avr128db28_s2_entity(&board.mcu_s2), "P2_Y"),
+                "J6 pin 5 on US2 8");
     expect_true(board.io.j2.pin_count == 8, "J2 is 2x4");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "CSYNC", r01s_ad724_entity(&board.ad724), "HSYNC"),
                 "J2 CSYNC on AD724 HSYNC");
