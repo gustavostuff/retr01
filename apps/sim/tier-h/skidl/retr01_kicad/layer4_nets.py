@@ -238,6 +238,8 @@ _LAYER4_PINS = frozenset(
 
 
 def _never_name(name: str) -> bool:
+    if name == "NC" or name.startswith("NC_"):
+        return True
     if name in _NEVER or name in _NEVER_CART_A:
         return True
     if name.startswith("CART_OE") or name.startswith("CART_WE"):

@@ -181,24 +181,33 @@ def _netlist_rails_ok(netlist_text: str) -> bool:
         ("J1", "1"): "+5V",
         ("J1", "2"): "GND",
         ("J3", "1"): "GND",
-        ("J3", "3"): "NC",
         ("J3", "4"): "+5V",
-        ("J3", "5"): "NC",
-        ("J4", "3"): "NC",
-        ("J4", "5"): "NC",
-        ("J11", "TN"): "NC",
-        ("J11", "RN"): "NC",
-        ("J11", "SN"): "NC",
-        ("J12", "TN"): "NC",
-        ("J12", "RN"): "NC",
-        ("J12", "SN"): "NC",
     }
     for key, net in want.items():
         hit = info.get(key)
         if hit is None or hit[0] != net:
             return False
+    nc_pads = (
+        ("J3", "3"),
+        ("J3", "5"),
+        ("J4", "3"),
+        ("J4", "5"),
+        ("J11", "TN"),
+        ("J11", "RN"),
+        ("J11", "SN"),
+        ("J12", "TN"),
+        ("J12", "RN"),
+        ("J12", "SN"),
+    )
+    for key in nc_pads:
+        hit = info.get(key)
+        name = hit[0] if hit else ""
+        if not name or name in ("+5V", "GND") or not (name == "NC" or name.startswith("NC_")):
+            return False
     j3_ring = info.get(("J3", "2"))
-    return j3_ring is not None and j3_ring[0] not in ("+5V", "GND", "NC")
+    return j3_ring is not None and j3_ring[0] not in ("+5V", "GND", "NC") and not (
+        j3_ring[0].startswith("NC_")
+    )
 
 
 def _netlist_pad_info(netlist_text: str) -> dict[tuple[str, str], tuple[str, str, str]]:

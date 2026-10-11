@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Callable, Dict, Iterable, Optional
 
 from . import pinmap as P
+from .power_rails import ensure_nc_net
 
 # (refdes, mpn, footprint key in tier_h_map via resolve)
 CONNECTOR_REFDES = (
@@ -90,8 +91,6 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     if pad_net is None:
         pad_net = _find_net_for_part_pin(nets_map, "US2", "16")
 
-    nc = _ensure_net(nets_map, "NC")
-
     if gnd:
         for ref, pin in (
             ("J3", P.TRS_SLEEVE),
@@ -133,7 +132,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     for ref in ("J3", "J4"):
         if ref in parts:
             for nc_pin in P.TRS_NC:
-                pin_connect(parts[ref], "", nc_pin, nc)
+                pin_connect(parts[ref], "", nc_pin, ensure_nc_net(nets_map, ref, nc_pin))
 
     # Populate either 3.5 mm or 6.35 mm: J11 mirrors J3, J12 mirrors J4.
     for small, large in _TRS35_TO_TRS635:
@@ -148,7 +147,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             if net is not None:
                 pin_connect(parts[large], "", large_pin, net)
         for nc_pin in P.TRS635_NC:
-            pin_connect(parts[large], "", nc_pin, nc)
+            pin_connect(parts[large], "", nc_pin, ensure_nc_net(nets_map, large, nc_pin))
 
     # RCA shells to GND. Tips come from the sim JSON (US2 PWM / U725 COMP).
     if gnd:

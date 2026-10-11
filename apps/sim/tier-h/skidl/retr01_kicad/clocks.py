@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from typing import Callable, Dict
 
+from .power_rails import ensure_nc_net
+
 CLOCK_REFDES = (
     "U04",
     "U74",
@@ -51,7 +53,6 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     """Wire discrete Pierce oscillators and 74HC74 divider per docs/general/hardware.md."""
     gnd = _ensure_net(nets_map, "GND")
     v5 = _ensure_net(nets_map, "+5V")
-    nc = _ensure_net(nets_map, "NC")
 
     phi2 = _ensure_net(nets_map, "PHI2")
     dot = _ensure_net(nets_map, "DOT")
@@ -134,9 +135,9 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             if str(getattr(pin, "num", "")) in ("11", "13"):
                 pin.disconnect()
         pin_connect(parts["U04"], "", "11", u04_spare)   # 5A
-        pin_connect(parts["U04"], "", "10", nc)          # 5Y
+        pin_connect(parts["U04"], "", "10", ensure_nc_net(nets_map, "U04", "10"))  # 5Y
         pin_connect(parts["U04"], "", "13", u04_spare)   # 6A
-        pin_connect(parts["U04"], "", "12", nc)          # 6Y
+        pin_connect(parts["U04"], "", "12", ensure_nc_net(nets_map, "U04", "12"))  # 6Y
     if "Y1" in parts:
         pin_connect(parts["Y1"], "", "1", xtal_cpu_in)
         pin_connect(parts["Y1"], "", "2", xtal_cpu_out)

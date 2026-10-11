@@ -52,7 +52,7 @@ def parse_kicad_pcb(pcb_path: Path) -> dict[str, set[tuple[str, str]]]:
         refdes = ref_m.group(1)
         for pad_m in pad_re.finditer(chunk):
             net_name = pad_m.group(2) or pad_m.group(3) or ""
-            if net_name and net_name != "NC":
+            if net_name and net_name != "NC" and not net_name.startswith("NC_"):
                 pcb_nets[net_name].add((refdes, pad_m.group(1)))
     return pcb_nets
 

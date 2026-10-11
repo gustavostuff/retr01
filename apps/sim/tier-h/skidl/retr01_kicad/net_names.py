@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Set
 
-from .power_rails import _rail_markers
+from .power_rails import _rail_markers, is_nc_name
 
 
 # Priority 1: Direct refdes + pin number to descriptive signal name
@@ -206,17 +206,17 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("J2", "7"): "VIDEO_VSYNC",
     ("J2", "8"): "VIDEO_RED",
     ("J3", "2"): "PAD1_DATA",
-    ("J3", "3"): "NC",
-    ("J3", "5"): "NC",
+    ("J3", "3"): "NC_J3_3",
+    ("J3", "5"): "NC_J3_5",
     ("J4", "2"): "PAD2_DATA",
-    ("J4", "3"): "NC",
-    ("J4", "5"): "NC",
-    ("J11", "TN"): "NC",
-    ("J11", "RN"): "NC",
-    ("J11", "SN"): "NC",
-    ("J12", "TN"): "NC",
-    ("J12", "RN"): "NC",
-    ("J12", "SN"): "NC",
+    ("J4", "3"): "NC_J4_3",
+    ("J4", "5"): "NC_J4_5",
+    ("J11", "TN"): "NC_J11_TN",
+    ("J11", "RN"): "NC_J11_RN",
+    ("J11", "SN"): "NC_J11_SN",
+    ("J12", "TN"): "NC_J12_TN",
+    ("J12", "RN"): "NC_J12_RN",
+    ("J12", "SN"): "NC_J12_SN",
     ("J7", "3"): "RESET_SWITCH#",
     ("J10", "1"): "J10_PWR_NC",
 }
@@ -329,12 +329,12 @@ def name_all_nets(nets: list) -> None:
     # Collect existing preserved names
     for net in nets:
         name = getattr(net, "name", "") or ""
-        if name in _PRESERVED_NETS:
+        if name in _PRESERVED_NETS or is_nc_name(name):
             used_names.add(name)
 
     for net in nets:
         curr_name = getattr(net, "name", "") or ""
-        if curr_name in _PRESERVED_NETS:
+        if curr_name in _PRESERVED_NETS or is_nc_name(curr_name):
             continue
 
         pins = getattr(net, "pins", []) or []

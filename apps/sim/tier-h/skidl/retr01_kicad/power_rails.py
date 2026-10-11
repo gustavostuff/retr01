@@ -99,9 +99,21 @@ def _rail_markers(pins: list) -> Tuple[int, int]:
     return vdd_markers, gnd_markers
 
 
-def _is_nc_net(net) -> bool:
-    name = getattr(net, "name", "") or ""
+def is_nc_name(name: str) -> bool:
     return name == "NC" or name.startswith("NC_")
+
+
+def _is_nc_net(net) -> bool:
+    return is_nc_name(getattr(net, "name", "") or "")
+
+
+def nc_net_name(ref: str, pin) -> str:
+    return f"NC_{ref}_{pin}"
+
+
+def ensure_nc_net(nets_map: dict, ref: str, pin):
+    """One unused pad per net so Pcbnew has no NC ratsnest."""
+    return _ensure_net(nets_map, nc_net_name(ref, pin))
 
 
 def merge_rail_nets(parts: Dict[str, object], nets_map: dict) -> None:
