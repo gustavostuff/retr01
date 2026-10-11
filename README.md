@@ -10,7 +10,7 @@ Hardware remains in active development/design. Software, tooling, and documentat
 
 1. **NES: readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Those limits are on purpose. They keep the graphics simple and give every color choice more weight.
 2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
-3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA. Graphics are tile based, 8x8 pixels, 2bpp.
+3. **[GameTank console](https://gametank.zone/)**: The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA. Granted, Retr01 is not a pure TTL/discrete logic design, but it skips the black-box SoC approach entirely.
 
 ## Graphics
 
@@ -19,6 +19,8 @@ The playfield is 128x120 (chunky pixels) scaled to 2x. This means the final rend
 On a higher level, graphics are based on worlds and screens: up to 8 worlds, 64 screens each. That's 512 _TV screens_ of real state + some special/extra screens, PRG, Game music, Game _entities_, etc. All within a 512KB cartridge.
 
 Entities are abstract objects like enemies, players, projectiles, etc. They're made from states, frames, and sprites (a _state_ being something like idle, running, or crouching).
+
+Graphics are tile based, 8x8 pixels, 2bpp.
 
 ## Audio
 
