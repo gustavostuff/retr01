@@ -54,9 +54,9 @@ Layer 4 analog copper sits in Zone 2:
 
 - Y1 / Y2 Pierce loops at U04 (crystal pins, R23, R24, C21, C22, C25, C26)
 - Y3 and FSC into U725 FIN (C23, C24)
-- DAC gun nodes after R1-R8, plus R9-R11, into J2 pins 1-3
+- DAC gun nodes after R1-R8, plus R9-R11, into J2 pins 8 / 6 / 4
 - U725 RIN / GIN / BIN / COMP and J9
-- HSYNC / VSYNC / CSYNC into J2 pins 4-6 (short, in this corner)
+- HSYNC / VSYNC / CSYNC into J2 pins 5 / 7 / 3 (short, in this corner)
 
 Digital copper on layer 4 stays out of that island. No parallel run beside those nets. A short crossing at 90 degrees is the fallback when a crossing cannot move.
 
@@ -147,7 +147,7 @@ The S1 triangle stays local. Layer 1 keeps the AD burst on this island.
 | Y2 Pierce | U04 pins 1-2, **R24**, **C21**, **C22** |
 | Y1 Pierce | U04 pins 5-6, **R23**, **C25**, **C26** |
 | Y3 / FSC | U725 FIN, **C23**, **C24** |
-| Red / Green / Blue guns | After **R1-R8**, through **R9-R11**, to J2 pins 1-3 and U725 RIN/GIN/BIN |
+| Red / Green / Blue guns | After **R1-R8**, through **R9-R11**, to J2 pins 8 / 6 / 4 and U725 RIN/GIN/BIN |
 | U725 COMP | J9 center |
 | AUDIO_PWM | US2 PF1 to J8, Zone 5 corridor only |
 
@@ -167,7 +167,7 @@ U24 O0-O7 arrive on layer 1. The analog net begins at the R1-R8 pad on the gun s
 | `VBL` | Beam Y to UM PD3 (and US1 VBL if wired) |
 | `S1_RDY` | US1 PF6 to UM PF6 |
 | IRQB / NMI / HBLANK / VBLANK | Beam PLDs to CPU / MCU |
-| HSYNC / VSYNC / CSYNC | Beam to J2 pins 5 / 6 / 4 and U725, inside the analog corner, short |
+| HSYNC / VSYNC / CSYNC | Beam to J2 pins 5 / 7 / 3 and U725, inside the analog corner, short |
 | `SEL_SOFT0` / `1` / `2` | Compositor to UM |
 | `CPU_A_SAMPLE` | To UM PD4 |
 | `/SS_S1` / `/SS_S2` | UM to US1 / US2 (selects only, not MOSI/MISO/SCK) |

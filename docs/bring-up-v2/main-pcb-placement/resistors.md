@@ -14,13 +14,13 @@ Cabinet microswitch series **47 ohm** lives on the cabinet harness.
 
 | Ref | Value | From | To |
 |-----|-------|------|----|
-| R1 | 4.00k | U24 `O7` | Red gun (J2 pin 1, U725 RIN) |
+| R1 | 4.00k | U24 `O7` | Red gun (J2 pin 8, U725 RIN) |
 | R2 | 4.00k | U24 `O6` | Red gun |
 | R3 | 2.00k | U24 `O5` | Red gun |
-| R4 | 4.00k | U24 `O4` | Green gun (J2 pin 2, U725 GIN) |
+| R4 | 4.00k | U24 `O4` | Green gun (J2 pin 6, U725 GIN) |
 | R5 | 2.00k | U24 `O3` | Green gun |
 | R6 | 2.00k | U24 `O2` | Green gun |
-| R7 | 1.00k | U24 `O1` | Blue gun (J2 pin 3, U725 BIN) |
+| R7 | 1.00k | U24 `O1` | Blue gun (J2 pin 4, U725 BIN) |
 | R8 | 1.00k | U24 `O0` | Blue gun |
 | R9 | 75 ohm | Red gun | `GND` |
 | R10 | 75 ohm | Green gun | `GND` |

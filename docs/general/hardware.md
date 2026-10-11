@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 170 mm** (Mini-ITX). The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
-**Packages (initial DIY board):** The board is mostly through-hole, with counted motherboard ICs using DIP / SPDIP / PDIP footprints. **AD724** is the sole surface-mount exception: Analog only sells **SOIC-16**, so **U725** mounts directly on a narrow **SOIC-16** land pattern on the top side (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`) without a DIP adapter. Cart and pad stay THT.
+**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **DIP-16** THT landing (`Retr01_Lib:DIP-16_W7.62mm`) for a SOIC-16-to-DIP adapter (typical **Proto Advantage PA0006**). Pin numbers stay 1:1 with the SOIC. Cart and pad stay THT.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -71,7 +71,7 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | AD724 | RGB to NTSC/PAL composite encoder | **SOIC-16** SMD on motherboard | Same (only package Analog sells) |
+| 1 | AD724 | RGB to NTSC/PAL composite encoder | DIP-16 THT adapter (SOIC-16 silicon) | Same silicon (Analog sells SOIC-16 only) |
 | 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
 | 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
@@ -102,7 +102,7 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is on the motherboard BOM (one of the **19**). Solder the **SOIC-16** part on **U725** with local bypass (**C18**) and the datasheet coupling network when the composite path is populated. Hand-solder or reflow is fine for a single narrow SOIC.
+**AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on a DIP-16 adapter in **U725** (socket optional) with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
 
 It accepts **CSYNC or separate HSYNC+VSYNC**, which matches J2 carrying all three syncs. Clocking is flexible (FSC crystal, FSC clock, or 4FSC). **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
@@ -338,22 +338,22 @@ Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all liv
 2x4 male, 2.54 mm. KiCad numbering, pin 1 at top-left:
 
 ```text
-1 (R)       2 (G)
-3 (B)       4 (CSYNC)
-5 (HSYNC)   6 (VSYNC)
-7 (GND)     8 (GND)
+1 (GND)     2 (GND)
+3 (CSYNC)   4 (B)
+5 (HSYNC)   6 (G)
+7 (VSYNC)   8 (R)
 ```
 
 | Pin | Net |
 | --- | --- |
-| 1 | Red |
-| 2 | Green |
-| 3 | Blue |
-| 4 | CSYNC |
+| 1 | GND |
+| 2 | GND |
+| 3 | CSYNC |
+| 4 | Blue |
 | 5 | HSYNC |
-| 6 | VSYNC |
-| 7 | GND |
-| 8 | GND |
+| 6 | Green |
+| 7 | VSYNC |
+| 8 | Red |
 
 **RGBS** cables use R/G/B + CSYNC + GND. **RGBHV** cables use R/G/B + HSYNC + VSYNC + GND. AD724 on **U725** can take CSYNC (HSYNC pin, VSYNC held) or the separate H/V pair from the same header.
 

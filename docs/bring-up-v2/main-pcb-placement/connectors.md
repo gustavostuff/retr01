@@ -39,22 +39,22 @@ Cart series **33 ohm** sit in line between the motherboard buses and J36: **R14*
 
 | Pin | Net |
 |-----|-----|
-| 1 | Red (DAC) |
-| 2 | Green (DAC) |
-| 3 | Blue (DAC) |
-| 4 | CSYNC |
+| 1 | `GND` |
+| 2 | `GND` |
+| 3 | CSYNC |
+| 4 | Blue (DAC) |
 | 5 | HSYNC |
-| 6 | VSYNC |
-| 7 | `GND` |
-| 8 | `GND` |
+| 6 | Green (DAC) |
+| 7 | VSYNC |
+| 8 | Red (DAC) |
 
 Layout (top view, pin 1 at top-left):
 
 ```text
-1 (R)       2 (G)
-3 (B)       4 (CSYNC)
-5 (HSYNC)   6 (VSYNC)
-7 (GND)     8 (GND)
+1 (GND)     2 (GND)
+3 (CSYNC)   4 (B)
+5 (HSYNC)   6 (G)
+7 (VSYNC)   8 (R)
 ```
 
 DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md) **U725**.

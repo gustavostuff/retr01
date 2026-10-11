@@ -5,7 +5,7 @@
 
 /*
  * Analog Devices AD724 RGB-to-NTSC/PAL encoder (U725).
- * PCB footprint is SOIC-16. The canvas draws a DIP-16 so the part can be placed.
+ * PCB footprint is DIP-16 (SOIC-16-to-DIP adapter). The canvas also draws DIP-16.
  * Logic stub: COMP is a video-present flag. No NTSC waveform.
  * Pin names match docs/ic_behavior/AD724.md.
  */

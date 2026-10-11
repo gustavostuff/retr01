@@ -176,18 +176,18 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         pin_connect(parts["J9"], "", "2", comp if comp is not None else _ensure_net(nets_map, "COMPOSITE_OUT"))
 
     # J2 2x4 RGB + CSYNC/HSYNC/VSYNC (docs/general/hardware.md).
-    # 1 R  2 G
-    # 3 B  4 CSYNC
-    # 5 HSYNC  6 VSYNC
-    # 7 GND  8 GND
+    # 1 GND  2 GND
+    # 3 CSYNC  4 B
+    # 5 HSYNC  6 G
+    # 7 VSYNC  8 R
     if "J2" in parts:
-        for j2_pin, r_ref in ((1, "R9"), (2, "R10"), (3, "R11")):
+        for j2_pin, r_ref in ((8, "R9"), (6, "R10"), (4, "R11")):
             video = _find_net_for_part_pin(nets_map, r_ref, "1")
             if video is not None:
                 pin_connect(parts["J2"], "", j2_pin, video)
         csync = _find_net_by_name(nets_map, ("CSYNC", "VIDEO_CSYNC")) or _ensure_net(nets_map, "CSYNC")
         csync.name = "CSYNC"
-        pin_connect(parts["J2"], "", 4, csync)
+        pin_connect(parts["J2"], "", 3, csync)
         if "UPLDV" in parts:
             pin_connect(parts["UPLDV"], "", int(P.UPLDV_EQ), csync)
         if "UPLDX" in parts:
@@ -199,12 +199,12 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             pin_connect(parts["UPLDX"], "HSYNC", "HSYNC", hsync)
         vsync = _find_net_by_name(nets_map, ("VSYNC", "VIDEO_VSYNC")) or _ensure_net(nets_map, "VSYNC")
         vsync.name = "VSYNC"
-        pin_connect(parts["J2"], "", 6, vsync)
+        pin_connect(parts["J2"], "", 7, vsync)
         if "UPLDY" in parts:
             pin_connect(parts["UPLDY"], "VSYNC", "VSYNC", vsync)
         if gnd is not None:
-            pin_connect(parts["J2"], "", 7, gnd)
-            pin_connect(parts["J2"], "", 8, gnd)
+            pin_connect(parts["J2"], "", 1, gnd)
+            pin_connect(parts["J2"], "", 2, gnd)
 
     # Arcade J5 (P1) and J6 (P2) 2x5: even 2-10 bits 0-4, odd 7/9 GND.
     # J5 odd 1/3/5 = PA7/PA6/PA5 (US2 1/28/27). J6 odd 1/3/5 = PF6/PD3/PD2 (US2 18/9/8).

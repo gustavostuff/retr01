@@ -130,11 +130,14 @@ Each gun: the three (or two) weight resistors meet at one node. That node feeds 
 
 | Pin | Net |
 |-----|-----|
-| 1 | R |
-| 2 | G |
-| 3 | B |
-| 4 | CSYNC |
-| 5-6 | GND |
+| 1 | GND |
+| 2 | GND |
+| 3 | CSYNC |
+| 4 | B |
+| 5 | HSYNC |
+| 6 | G |
+| 7 | VSYNC |
+| 8 | R |
 
 ---
 

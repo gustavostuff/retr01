@@ -161,7 +161,7 @@ Before inserting CPU or microcontrollers, the video generation path is confirmed
   - Resistor DAC (R1-R11) and RGBS video header J2.
 - **Leave unpopulated:**
   - Sockets: U1 (W65C02S), U3 (System RAM), U6 (VRAM), U7A-C (HC157), UM (MCU-M), US2 (MCU-S2).
-  - Surface-mount pads: U725 (AD724 composite encoder).
+  - Socket: U725 (AD724 DIP-16 adapter).
 - **Verification:**
   - Power up with JP_PWR1 and JP_PWR2 installed.
   - Connect monitor to J2 RGBS header.
@@ -237,7 +237,7 @@ Brings the remaining peripherals online to complete the console:
   - Socket US2 (AVR128DB28 for MCU-S2).
   - Controller TRS jacks J3 and J4 (3.5 mm) or J11 and J12 (6.35 mm CLIFF S4), pull-up resistor R18.
   - Audio output filter passives, RCA audio jack J8.
-  - Optional: solder AD724 SOIC-16, Y3 crystal (3.579 MHz), and RCA composite jack J9.
+  - Optional: seat AD724 on the U725 DIP-16 adapter, Y3 crystal (3.579 MHz), and RCA composite jack J9.
   - Install JP_PWR4 shunt.
 - **Verification:**
   - Game controllers on J3/J4 or J11/J12. Button inputs register in software during VBlank.
@@ -250,7 +250,7 @@ Brings the remaining peripherals online to complete the console:
 
 The Tier H board layout includes:
 
-1. **IC sockets:** DIP/SPDIP sockets for the 18 through-hole motherboard ICs. U725 (AD724) mounts on SOIC-16 pads with no socket or adapter.
+1. **IC sockets:** DIP/SPDIP sockets for the 19 through-hole motherboard ICs, including U725 (AD724 on a DIP-16 SOIC adapter).
 2. **Four power jumpers:** JP_PWR1 (Core/Video), JP_PWR2 (AVRs), JP_PWR3 (CPU/Memory), JP_PWR4 (Audio).
 3. **Tap headers:** 6-pin SPI header and 8-pin timing header on 2.54 mm pitch.
 4. **Pull-up resistors:** Active-low control pins (`/OE`, `/WE`, `/CE`, `RESB`, `RDY`) have pull-ups at the socket so an empty socket does not float those nets.

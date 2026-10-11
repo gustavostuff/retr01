@@ -583,15 +583,19 @@
       },
       {
         "netclass": "Layer4",
+        "pattern": "SIG_J5_P1_TO_US2_P1"
+      },
+      {
+        "netclass": "Layer4",
         "pattern": "SIG_J5_P2_TO_US2_P22"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P3_TO_US2_P27"
+        "pattern": "SIG_J5_P3_TO_US2_P28"
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_J5_P5_TO_US2_P1"
+        "pattern": "SIG_J5_P5_TO_US2_P27"
       },
       {
         "netclass": "Layer4",
@@ -651,10 +655,6 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SIG_UM_P18_TO_US1_P18"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "SIG_US2_P23_TO_J5_P4"
       },
       {
@@ -664,10 +664,6 @@
       {
         "netclass": "Layer4",
         "pattern": "SIG_US2_P26_TO_J5_P10"
-      },
-      {
-        "netclass": "Layer4",
-        "pattern": "SIG_US2_P28_TO_J5_P1"
       },
       {
         "netclass": "Layer4",
@@ -688,10 +684,6 @@
       {
         "netclass": "Layer4",
         "pattern": "VIDEO_BLUE"
-      },
-      {
-        "netclass": "Layer4",
-        "pattern": "VIDEO_CSYNC"
       },
       {
         "netclass": "Layer4",

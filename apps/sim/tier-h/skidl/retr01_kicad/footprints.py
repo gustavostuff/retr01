@@ -10,6 +10,8 @@ DIP40 = f"{_R}:DIP-40_W15.24mm"
 DIP24 = f"{_R}:DIP-24_W7.62mm"
 DIP20 = f"{_R}:DIP-20_W7.62mm"
 DIP16 = f"{_R}:DIP-16_W7.62mm"
+# U725 lands a SOIC-16-to-DIP adapter (typical Proto Advantage PA0006).
+AD724_DIP = DIP16
 SOIC16 = f"{_R}:SOIC-16_3.9x9.9mm_P1.27mm"
 DIP14 = f"{_R}:DIP-14_W7.62mm"
 DIP14_74HC74 = f"{_R}:DIP-14_W7.62mm_74HC74"

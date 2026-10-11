@@ -66,19 +66,19 @@ static void init_j36(R01sEntity *e) {
 }
 
 static void init_j2(R01sEntity *e) {
-    /* 2x4 male: 1=R      2=G
-                 3=B      4=CSYNC
-                 5=HSYNC  6=VSYNC
-                 7=GND1   8=GND2 */
+    /* 2x4 male: 1=GND1   2=GND2
+                 3=CSYNC  4=B
+                 5=HSYNC  6=G
+                 7=VSYNC  8=R */
     io_begin(e, "HDR-2x4", "J2");
-    io_pin(e, 1, "R");
-    io_pin(e, 2, "G");
-    io_pin(e, 3, "B");
-    io_pin(e, 4, "CSYNC");
+    io_pin(e, 1, "GND1");
+    io_pin(e, 2, "GND2");
+    io_pin(e, 3, "CSYNC");
+    io_pin(e, 4, "B");
     io_pin(e, 5, "HSYNC");
-    io_pin(e, 6, "VSYNC");
-    io_pin(e, 7, "GND1");
-    io_pin(e, 8, "GND2");
+    io_pin(e, 6, "G");
+    io_pin(e, 7, "VSYNC");
+    io_pin(e, 8, "R");
     io_header(e, 2, 4);
 }
 

@@ -24,7 +24,7 @@ The physical motherboard outline is **170 mm by 170 mm**, the Mini-ITX desktop f
 
 1. **Routing room:** Four-layer THT buses (CPU, cart, VRAM mux, color index, field) need channel space between islands. A square 170 mm outline leaves copper for those runs without packing parts against the edge.
 2. **Off-the-shelf enclosure compatibility:** Mini-ITX cases and standoff plates fit a 170 x 170 mm board. Four M3 holes use the Mini-ITX ATX subset (C, F, H, J). With the I/O edge as rear, C is 10.16 mm from the rear and 6.35 mm from the left; F is 33.02 mm from the rear and 6.35 mm from the right; H and J are 165.10 mm from the rear on those same left and right columns. The I/O-side pair is staggered (F sits 22.86 mm farther from the I/O than C). A custom chassis is not required.
-3. **Component density and breathing room:** The counted motherboard BOM (18 through-hole DIP/SPDIP ICs plus the direct-mount SOIC-16 AD724, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin, socket clearance for test clips, and 5 mm keepout around the M3 holes.
+3. **Component density and breathing room:** The counted motherboard BOM (19 through-hole DIP/SPDIP ICs including the AD724 DIP-16 adapter landing, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin, socket clearance for test clips, and 5 mm keepout around the M3 holes.
 4. **Geometry for 3-column physical bus topology:** The square outline still holds three columns, with extra height for routing channels:
    - Left column (~50 mm): System RAM, VRAM, and multiplexers.
    - Center column (~70 mm): 52 mm CPU package, 65 mm cartridge slot, and central MCU-M.
@@ -156,7 +156,7 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - Color PROM AT27C256R (U24, DIP-28)
 - Discrete R-2R resistor ladder network (R1 through R11)
 - RGBS video output header J2
-- Optional composite video encoder: AD724 (U725, SOIC-16), Y3 (3.579545 MHz crystal), RCA jack J9
+- Optional composite video encoder: AD724 (U725, DIP-16 adapter), Y3 (3.579545 MHz crystal), RCA jack J9
 - Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U725), C19 (U04), C20 (U74)
 - Crystal load capacitors: C21, C22 (Y2), C23, C24 (Y3), C25, C26 (Y1)
 
@@ -311,7 +311,7 @@ The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 super
 | C15 | 100 nF | Ceramic | U574 (Scroll X Latch) | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 20 |
 | C16 | 100 nF | Ceramic | U24 (Color PROM) | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 28 |
 | C17 | 100 nF | Ceramic | U130 (MCP130 Supervisor) | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 2 |
-| C18 | 100 nF | Ceramic | U725 (AD724 Composite) | SOIC-16 | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) | Mount adjacent to pins 4 and 14 |
+| C18 | 100 nF | Ceramic | U725 (AD724 Composite) | DIP-16 adapter | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) | Mount adjacent to pins 4 and 14 |
 | C19 | 100 nF | Ceramic | U04 (74HCU04) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C20 | 100 nF | Ceramic | U74 (74HC74) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C21 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |

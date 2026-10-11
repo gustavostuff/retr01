@@ -59,13 +59,13 @@ The following tables compare **Auto** links in sim to **bring-up docs**. Refdes 
 | --- | --- | --- | --- |
 | DOT -> Beam X CLK, series R | Y2 DOT -> R12 -> UPLDX CLK | Same intent | **High** for topology |
 | Beam X HWRAP -> Beam Y CLK | Linked | Line tick from X | **High** |
-| Beam X CSYNC -> J2 CSYNC | Linked | **J2 pin 4** CSYNC | **High** for sync topology |
+| Beam X CSYNC -> J2 CSYNC | Linked | **J2 pin 3** CSYNC | **High** for sync topology |
 | Beam X HSYNC -> J2 HSYNC | Linked | **J2 pin 5** HSYNC | **High** for sync topology |
-| Beam Y VSYNC -> J2 VSYNC | Linked | **J2 pin 6** VSYNC | **High** for sync topology |
+| Beam Y VSYNC -> J2 VSYNC | Linked | **J2 pin 7** VSYNC | **High** for sync topology |
 | Beam X INDEX[5:0] -> PROM A[5:0] | Linked | Tier A Method B in bring-up | **High** for lab Method B |
 | PROM A[13:6] -> GND | Linked via Y2 GND | Required | **High** |
 | PROM CE#, OE# -> GND | Linked | Lab hard-enable | **High** |
-| PROM O[7:0] -> R1..R8 -> J2 R/G/B | Linked | R3G3B2 + 75 ohm loads -> **J2 pins 1-3** | **Med** (sim LCD, not volts) |
+| PROM O[7:0] -> R1..R8 -> J2 R/G/B | Linked | R3G3B2 + 75 ohm loads -> **J2 pins 8 / 6 / 4** | **Med** (sim LCD, not volts) |
 | Oscillator OE# -> VDD | Linked | May float on bench if osc has OE# | **Low-Med** (check canned osc datasheet) |
 
 Tier A sim **does not** run CUPL/JEDEC. Beam equations live in C. A working bench **must** still burn PLDs; the sim only proves the **intended** counter/sync/index relationships for Method B bars.

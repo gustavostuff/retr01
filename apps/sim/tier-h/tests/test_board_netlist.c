@@ -122,9 +122,15 @@ int main(void) {
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "CSYNC", r01s_ad724_entity(&board.ad724), "HSYNC"),
                 "J2 CSYNC on AD724 HSYNC");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J2 pin 7 GND");
+                "J2 pin 1 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND2", r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J2 pin 8 GND");
+                "J2 pin 2 GND");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "R", passive_by_refdes(&board, "R9"), "1"),
+                "J2 pin 8 on R9");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "G", passive_by_refdes(&board, "R10"), "1"),
+                "J2 pin 6 on R10");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "B", passive_by_refdes(&board, "R11"), "1"),
+                "J2 pin 4 on R11");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "GND7", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J5 pin 7 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "GND7", r01s_pwr5v_entity(&board.pwr), "GND"),

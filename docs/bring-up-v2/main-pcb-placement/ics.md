@@ -113,7 +113,7 @@ Bypass **C16** at pin 28.
 
 DAC **R1-R11** sit between U24 and J2 ([resistors.md](resistors.md)).
 
-### U725, AD724 (SOIC-16)
+### U725, AD724 (DIP-16 adapter)
 
 Bypass **C18** near APOS/DPOS. Crystal **Y3** with **C23/C24** ([crystals.md](crystals.md)).
 

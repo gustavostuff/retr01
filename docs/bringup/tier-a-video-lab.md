@@ -229,14 +229,14 @@ Match product **J2** from `docs/general/hardware.md` (2x4, all three syncs prese
 
 | Pin | Lab net | Source |
 | --- | --- | --- |
-| 1 | **R** | Red DAC node (after 75 ohm load) |
-| 2 | **G** | Green DAC node |
-| 3 | **B** | Blue DAC node |
-| 4 | **CSYNC** | Beam X CSYNC |
+| 1 | **GND** | Common ground |
+| 2 | **GND** | Second ground pin |
+| 3 | **CSYNC** | Beam X CSYNC |
+| 4 | **B** | Blue DAC node |
 | 5 | **HSYNC** | Beam X HSYNC |
-| 6 | **VSYNC** | Beam Y VSYNC |
-| 7 | **GND** | Common ground |
-| 8 | **GND** | Second ground pin |
+| 6 | **G** | Green DAC node |
+| 7 | **VSYNC** | Beam Y VSYNC |
+| 8 | **R** | Red DAC node (after 75 ohm load) |
 
 **RGBS:** R/G/B + CSYNC + GND. **RGBHV:** R/G/B + HSYNC + VSYNC + GND. The breadboard header carries both; the cable picks the story.
 

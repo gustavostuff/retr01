@@ -77,14 +77,14 @@ def apply_pinmap_extras() -> None:
     a["RCJ-014"] = dict(a["RCJ-012"])
     a["BARREL_5V"] = {"1": "+5V", "2": "GND", "3": "GND"}
     a["RGBS_HDR"] = {
-        "1": "R",
-        "2": "G",
-        "3": "B",
-        "4": "CSYNC",
+        "1": "GND",
+        "2": "GND",
+        "3": "CSYNC",
+        "4": "B",
         "5": "HSYNC",
-        "6": "VSYNC",
-        "7": "GND",
-        "8": "GND",
+        "6": "G",
+        "7": "VSYNC",
+        "8": "R",
     }
     a["CART_PROG_HDR"] = {
         "1": "PWR",

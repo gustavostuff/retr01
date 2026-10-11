@@ -236,7 +236,8 @@ M328_XTAL1, M328_XTAL2 = "9", "10"
 M328_DQ = ("2", "3", "4", "5", "6", "11", "12", "13")  # PD0-4, PD5-7
 M328_AUD = ("14", "15", "16", "17", "18", "19", "23", "24")  # PB0-5, PC0-1 = AUD0(LSB)..AUD7(MSB)
 
-# AD725 RGB->NTSC/PAL encoder (wide SOIC-16 on DIP-16 via Proto Advantage PA0006).
+# AD724/AD725 RGB->NTSC/PAL encoder. Silicon is SOIC-16. U725 is DIP-16
+# (Retr01_Lib:DIP-16_W7.62mm) for a SOIC-16-to-DIP adapter (typical PA0006).
 AD725_STND, AD725_AGND, AD725_4FSC, AD725_APOS = "1", "2", "3", "4"
 AD725_CE, AD725_RIN, AD725_GIN, AD725_BIN = "5", "6", "7", "8"
 AD725_CRMA, AD725_COMP, AD725_LUMA, AD725_YTRAP = "9", "10", "11", "12"

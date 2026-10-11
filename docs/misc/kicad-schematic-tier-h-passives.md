@@ -42,7 +42,7 @@ Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND*
 | C15 | U574 | 74HC574 Scroll X Latch | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
 | C16 | U24 | AT27C256R Color PROM | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
 | C17 | U130 | MCP130 Reset Supervisor | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
-| C18 | U725 | AD724 Composite Video Encoder | SOIC-16 | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) |
+| C18 | U725 | AD724 Composite Video Encoder | DIP-16 adapter | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) |
 | C19 | U04 | 74HCU04 clock inverter | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 
@@ -134,7 +134,7 @@ Termination to GND (75 ohm, ~0.7 Vpp):
 | R10 | 75 ohm | **G** gun node | GND |
 | R11 | 75 ohm | **B** gun node | GND |
 
-**J2** pins 1-3 tie to **R/G/B** gun nodes (after resistors, per [`hardware.md`](../general/hardware.md) J2 table). **U725** RGB inputs share the same analog nets when populated.
+**J2** pins 8 / 6 / 4 tie to **R/G/B** gun nodes (after resistors, per [`hardware.md`](../general/hardware.md) J2 table). **U725** RGB inputs share the same analog nets when populated.
 
 Unused **U24** address pins: tie to **GND** on schematic ([`hardware.md`](../general/hardware.md)).
 
