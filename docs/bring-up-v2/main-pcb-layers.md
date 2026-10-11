@@ -183,7 +183,7 @@ MAP A14-A18 and the soft SELs route around the analog keepout, not through the D
 | SDA / SCL | UM PA2-3, **R16** / **R17**, **R19** / **R20**, J36 A3/B3 |
 | Cart program | **J10** DATA to UM PC1. **CART_ARM** is compositor MAP latch D7. AVR pin 19 stays off this header |
 | `PAD_DATA` | US2 PF0, **R18**, J3/J4 and J11/J12 ring |
-| J5 P1 / P2 bits | US2 ports to arcade header |
+| J5 / J6 arcade bits | US2 ports to P1 (J5) and P2 (J6) 2x5 headers |
 | Heartbeat / power LEDs | Series resistors to LED anodes |
 
 ---

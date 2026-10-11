@@ -45,7 +45,8 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **J2** | RGB + CSYNC/HSYNC/VSYNC 2x4 | Connector symbol | 2x4 header |
 | **J3**, **J4** | TRS pad jacks 3.5 mm | `Connector_Audio:AudioJack3_SwitchTR` | Switchcraft 35RAPC4BV4 |
 | **J11**, **J12** | TRS pad jacks 6.35 mm | `Connector_Audio:AudioJack3_SwitchTR` | CLIFF S4 1/4" (typical S4/BMB/PC-C) |
-| **J5** | Arcade 2x10 | Pin header | 2x10 |
+| **J5** | Arcade P1 2x5 | Pin header | 2x5 |
+| **J6** | Arcade P2 2x5 | Pin header | 2x5 |
 | **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
 | **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |
 | **J10** | Cart program 2x2 | Pin header | 2x2 (`PinHeader_2x02_P2.54mm_Vertical`) |

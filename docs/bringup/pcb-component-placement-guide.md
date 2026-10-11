@@ -64,7 +64,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 |                          |                                                       |
 |   * MCU-S2 (AVR128)      |   * Ground return, test points, mounting              |
 |   * J3/J4 / J11/J12 TRS  |                                                       |
-|   * Arcade header J5     |                                                       |
+|   * Arcade J5 / J6 2x5   |                                                       |
 +-----------------------+----------------------------------------------------------+
 ```
 
@@ -244,14 +244,14 @@ Interfaces with external gamepads, arcade controls, and audio output.
 **Components:**
 - MCU-S2 peripheral microcontroller (US2, AVR128DB28, SPDIP-28)
 - 2x 3.5 mm Switchcraft 35RAPC4BV4 TRS jacks (J3, J4) or 2x 6.35 mm CLIFF S4 jacks (J11, J12)
-- Arcade control header J5 (2x10)
+- Arcade control headers J5 (P1) and J6 (P2), 2x5 each, sandwiching US2
 - Cabinet power/reset header J7 (2x2)
 - RCA audio output jack J8 (top rear edge)
 - PWM from US2 pin PF1 runs to J8. The locked BOM has no extra audio filter capacitors.
 - Decoupling capacitor: C7 (for US2)
 
 **Placement and routing rules:**
-- US2 sits in the lower-left corner immediately behind controller jacks J3, J4, J11, and J12.
+- US2 sits in the lower-left corner immediately behind controller jacks J3, J4, J11, and J12, with J6 on its left and J5 on its right.
 - Open-drain UART controller data lines connect to the TRS rings through short traces with local 4.7 kohm pull-up resistors.
 - Audio PWM output from US2 pin PF1 routes up to the rear audio jack J8.
 
@@ -272,7 +272,8 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J4** | TRS_P2 | Bottom-Left front edge | 3.5 mm TRS jack for Player 2 gamepad. Switchcraft 35RAPC4BV4 |
 | **J11** | TRS635_P1 | Bottom-Left front edge | 6.35 mm (1/4") TRS for Player 1. CLIFF S4 standard, typical S4/BMB/PC-C |
 | **J12** | TRS635_P2 | Bottom-Left front edge | 6.35 mm (1/4") TRS for Player 2. CLIFF S4 standard, typical S4/BMB/PC-C |
-| **J5** | ARCADE | Bottom-Left edge near J4 | 2x10 pin header. Even pins 2-16 are Player 1 (pin 2 = bit 0). Odd pins 15-1 are Player 2 (pin 15 = bit 0). Pins 17-20 are GND |
+| **J5** | ARCADE_P1 | Right of US2 | 2x5. Even 2-10 = P1 bits 0-4. Odd 1/3/5 = bits 5-7. Odd 7/9 = GND |
+| **J6** | ARCADE_P2 | Left of US2 | 2x5. Even 2-10 = P2 bits 0-4. Odd 1/3/5 = bits 5-7. Odd 7/9 = GND |
 | **J7** | CAB_PWR | Bottom edge near J5 | 2x2 `+5V`/`GND` over `RESET_N`/`GND` |
 
 ---

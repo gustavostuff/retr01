@@ -14,7 +14,7 @@ Pin-level R/C wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../mis
 | Doc | What it covers |
 |-----|----------------|
 | [main-pcb-layers.md](../main-pcb-layers.md) | Layer 1 vs layer 4 assignment, analog keepout, underpasses |
-| [connectors.md](connectors.md) | J1, J2, J3/J4, J11/J12, J5, J7, J8, J9, J36 |
+| [connectors.md](connectors.md) | J1, J2, J3/J4, J11/J12, J5/J6, J7, J8, J9, J36 |
 | [ics.md](ics.md) | CPU, RAM, PLDs, MCUs, clock logic, encoder, glue |
 | [resistors.md](resistors.md) | R1-R24 (DAC, series 33 ohm, pull-ups, Pierce 1M) |
 | [capacitors.md](capacitors.md) | E1 bulk, C1-C20 bypass, C21-C26 crystal loads |
@@ -33,7 +33,7 @@ TOP (rear I/O)     J1 power | J8 audio | J9 composite | J2 RGBS
  Zone3 VRAM+MUX    |  MCU-M (UM)           |  Zone4 S1 + field
  Zone5 CTRL+AUDIO  |  (open / mounting)    |
 ----------------------------------------------------------------
-BOTTOM (front)     J3/J4 3.5 mm or J11/J12 6.35 mm pads | J5 arcade | J7 cab
+BOTTOM (front)     J3/J4 3.5 mm or J11/J12 6.35 mm pads | J6/US2/J5 arcade | J7 cab
 ```
 
 | Zone | Name | Parts |
@@ -45,7 +45,7 @@ BOTTOM (front)     J3/J4 3.5 mm or J11/J12 6.35 mm pads | J5 arcade | J7 cab
 | **Z3** | Middle-left | U6, U7A/B/C, U574 and their Cs |
 | **HUB** | Middle-center | UM, C5, I2C series **R16/R17**, pull-ups **R19/R20** |
 | **Z4** | Middle-right | US1, U573, U41 and Cs |
-| **Z5** | Bottom-left | US2, J3, J4, J11, J12, J5, J7, C7, pad pull-up **R18** |
+| **Z5** | Bottom-left | US2, J3, J4, J11, J12, J5, J6, J7, C7, pad pull-up **R18** |
 
 ---
 
@@ -70,7 +70,7 @@ BOTTOM (front)     J3/J4 3.5 mm or J11/J12 6.35 mm pads | J5 arcade | J7 cab
 
 1. Board outline and mounting holes
 2. J36 at center, then U1 above it
-3. J1 / E1 at top-left. J2 / J8 / J9 on the top edge. J3-J5 / J7 at bottom-left
+3. J1 / E1 at top-left. J2 / J8 / J9 on the top edge. J3-J6 / J7 at bottom-left
 4. Zone 2 clock island, then PLDs, U24, DAC, encoder
 5. Zone 1 U3 and reset
 6. Zone 3 U6, three HC157, U574

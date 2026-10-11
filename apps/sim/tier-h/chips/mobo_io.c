@@ -82,25 +82,32 @@ static void init_j2(R01sEntity *e) {
     io_header(e, 2, 4);
 }
 
-/* 2x10 IDC. v_04 J5 is rotated 180 deg: even column faces US2, pin 1 is
-   at the footer (larger Y). Even 2-16 = Player 1, walking up the header
-   with US2 PA0-7 (right DIP row, pin 22 up to 28 then 1). Odd 15-1 =
-   Player 2, walking down from the nose so US2 PC0 (pin 2, near the
-   notch) lands next to J5 pin 15 instead of crossing to pin 1. */
+/* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4, odd 1/3/5 = bits 5-7,
+   odd 7/9 = GND. J5 (P1) sits to the right of US2 at 180 deg so the even
+   column faces PA0-4. J6 (P2) sits to the left at 0 deg so the even
+   column faces PC0-3 / PD1. */
+static void init_arcade_2x5(R01sEntity *e, const char *refdes, const char *const bits[8]) {
+    int i;
+    io_begin(e, "HDR-2x5", refdes);
+    for (i = 0; i < 5; i++) {
+        io_pin(e, i * 2 + 2, bits[i]);
+    }
+    io_pin(e, 1, bits[5]);
+    io_pin(e, 3, bits[6]);
+    io_pin(e, 5, bits[7]);
+    io_pin(e, 7, "GND7");
+    io_pin(e, 9, "GND9");
+    io_header(e, 2, 5);
+}
+
 static void init_j5(R01sEntity *e) {
     static const char *const p1[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
+    init_arcade_2x5(e, "J5", p1);
+}
+
+static void init_j6(R01sEntity *e) {
     static const char *const p2[8] = {"RIGHT", "LEFT", "DOWN", "UP", "X", "Y", "COIN", "START"};
-    int i;
-    io_begin(e, "HDR-2x10", "J5");
-    for (i = 0; i < 8; i++) {
-        io_pin(e, i * 2 + 2, p1[i]);
-        io_pin(e, (7 - i) * 2 + 1, p2[i]);
-    }
-    io_pin(e, 17, "GND17");
-    io_pin(e, 18, "GND18");
-    io_pin(e, 19, "GND19");
-    io_pin(e, 20, "GND20");
-    io_header(e, 2, 10);
+    init_arcade_2x5(e, "J6", p2);
 }
 
 static void init_j7(R01sEntity *e) {
@@ -158,6 +165,7 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
     init_trs(&io->j3, "J3");
     init_trs(&io->j4, "J4");
     init_j5(&io->j5);
+    init_j6(&io->j6);
     init_j7(&io->j7);
     init_j10(&io->j10);
     init_j36(&io->j36);
@@ -165,7 +173,7 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
 }
 
 void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
-    R01sEntity *list[9];
+    R01sEntity *list[10];
     int i;
     if (!io || !nl) {
         return;
@@ -175,11 +183,12 @@ void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
     list[2] = &io->j3;
     list[3] = &io->j4;
     list[4] = &io->j5;
-    list[5] = &io->j7;
-    list[6] = &io->j10;
-    list[7] = &io->j36;
-    list[8] = &io->u130;
-    for (i = 0; i < 9; i++) {
+    list[5] = &io->j6;
+    list[6] = &io->j7;
+    list[7] = &io->j10;
+    list[8] = &io->j36;
+    list[9] = &io->u130;
+    for (i = 0; i < 10; i++) {
         r01s_pin_netlist_register_entity(nl, list[i]);
     }
 }

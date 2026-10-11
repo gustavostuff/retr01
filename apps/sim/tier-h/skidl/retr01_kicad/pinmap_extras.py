@@ -64,6 +64,8 @@ def apply_pinmap_extras() -> None:
     t["BARREL_5V"] = ["1", "2", "3"]
     t["RGBS_HDR"] = _nums(8)
     t["CART_PROG_HDR"] = _nums(4)
+    t["ARCADE_P1"] = _nums(10)
+    t["ARCADE_P2"] = _nums(10)
     t["MCP130"] = ["1", "2", "3"]
     t["TRS_P1"] = ["S", "T", "R", "TN", "RN"]
     t["TRS_P2"] = ["S", "T", "R", "TN", "RN"]

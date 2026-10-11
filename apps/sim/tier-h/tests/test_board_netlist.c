@@ -104,9 +104,9 @@ int main(void) {
                 "C17 on MCP130 VDD");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "P0", r01s_avr128db28_s2_entity(&board.mcu_s2), "PAD0"),
                 "J5 P0 on PAD0");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "RIGHT", r01s_avr128db28_s2_entity(&board.mcu_s2),
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "RIGHT", r01s_avr128db28_s2_entity(&board.mcu_s2),
                                           "P2_RIGHT"),
-                "J5 RIGHT on P2");
+                "J6 RIGHT on P2");
     expect_true(board.io.j2.pin_count == 8, "J2 is 2x4");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "CSYNC", r01s_ad724_entity(&board.ad724), "HSYNC"),
                 "J2 CSYNC on AD724 HSYNC");
@@ -114,8 +114,10 @@ int main(void) {
                 "J2 pin 7 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND2", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J2 pin 8 GND");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "GND17", r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J5 pin 17 GND");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "GND7", r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J5 pin 7 GND");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "GND7", r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J6 pin 7 GND");
     expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP",
                                           r01s_rca_jack_entity(&board.j9), "2"),
                 "J9 tip on AD724 COMP");

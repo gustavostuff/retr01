@@ -125,6 +125,7 @@ KICAD_PATTERNS = (
     "SCL_PULLUP*",
     "SCROLL_CLK*",
     "SIG_J5*",
+    "SIG_J6*",
     "SIG_US2*",
     "SIG_UM_*",
     "SIG_U725*",
@@ -227,7 +228,8 @@ _LAYER4_PINS = frozenset(
         ("J8", "1"),
         ("J9", "1"),
     }
-    | {(f"J5", str(i)) for i in range(1, 17)}
+    | {(f"J5", str(i)) for i in (1, 2, 3, 4, 5, 6, 8, 10)}
+    | {(f"J6", str(i)) for i in (1, 2, 3, 4, 5, 6, 8, 10)}
     | {(f"J2", str(i)) for i in range(1, 7)}
     | {(f"Y{n}", p) for n in ("1", "2", "3") for p in ("1", "2")}
     | {(f"US2", str(p)) for p in (1, 2, 3, 4, 5, 7, 8, 9, 22, 23, 24, 25, 26, 27, 28)}

@@ -91,13 +91,15 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 
 ---
 
-## J5, arcade 2x10 (bottom-left), Zone 5
+## J5 / J6, arcade 2x5 (around US2), Zone 5
 
-| Pins | Destination |
-|------|-------------|
-| Even 2-16 | P1 bits to US2 `PA0`-`PA7` (pin 2 = bit 0) |
-| Odd 15-1 | P2 bits to US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6` (pin 15 = bit 0) |
-| 17-20 | `GND` |
+J5 is Player 1, right of US2, rotated 180 deg. J6 is Player 2, left of US2, rotated 0 deg. Even column faces the DIP.
+
+| Pins | J5 (P1) | J6 (P2) |
+|------|---------|---------|
+| Even 2,4,6,8,10 | `PA0`-`PA4` (pin 2 = bit 0) | `PC0`-`PC3`, `PD1` (pin 2 = bit 0) |
+| Odd 1,3,5 | `PA5`-`PA7` | `PD2`, `PD3`, `PF6` |
+| Odd 7,9 | `GND` | `GND` |
 
 Cabinet microswitch series **47 ohm** lives on the harness ([`hardware.md`](../../general/hardware.md), [`passive_bom.md`](../../passive_bom.md)).
 

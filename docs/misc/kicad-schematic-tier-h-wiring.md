@@ -155,7 +155,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | AUDIO_PWM | PF1 -> analog audio jack network |
 | UPDI | pin 19 (off-board SerialUPDI, not on J10) |
 
-Arcade: **J5** 2x10. Even pins 2-16 to Player 1 (pin 2 = bit 0). Odd pins 15-1 to Player 2 (pin 15 = bit 0). Pins 17-20 to GND. See [`hardware.md`](../general/hardware.md) Controllers.
+Arcade: **J5** and **J6** 2x5. Even 2-10 = bits 0-4 (pin 2 = bit 0). Odd 1/3/5 = bits 5-7. Odd 7/9 = GND. J5 is P1 (US2 `PA0`-`PA7`). J6 is P2 (US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6`). See [`hardware.md`](../general/hardware.md) Controllers.
 
 ---
 
@@ -185,7 +185,8 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | **J2** | RGB + sync out | DAC R/G/B, CSYNC, HSYNC, VSYNC (2x4) |
 | **J3**, **J4** | TRS pads 3.5 mm | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
 | **J11**, **J12** | TRS pads 6.35 mm (CLIFF S4) | Same Tip / Ring / Sleeve as J3 / J4 |
-| **J5** | Arcade buttons | 2x10. GPIO from **US2**. GND on pins 17-20 |
+| **J5** | Arcade P1 | 2x5. US2 `PA0`-`PA7`. GND on pins 7 and 9 |
+| **J6** | Arcade P2 | 2x5. US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6`. GND on pins 7 and 9 |
 | **J7** | Cab power/reset 2x2 | +5V, GND, **RESB** / reset (pins 1-4) |
 | **J8** | Audio RCA | PWM / mix from **US2** |
 | **J9** | Composite RCA | **U725** output when populated |

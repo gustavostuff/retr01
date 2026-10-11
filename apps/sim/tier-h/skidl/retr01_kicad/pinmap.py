@@ -296,7 +296,8 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     # Neutrik NMJ6HFD2-AU 6-pin horizontal 6.35mm TRS (T/R/S + switched normals)
     "TRS635_P1": ["S", "T", "R", "TN", "RN", "SN"],
     "TRS635_P2": ["S", "T", "R", "TN", "RN", "SN"],
-    "ARCADE_2x10": _nums(20),
+    "ARCADE_P1": _nums(10),
+    "ARCADE_P2": _nums(10),
     "CAB_PWR_RST": _nums(4),
     "CART_PROG_HDR": _nums(4),
     "SCALE_SW": _nums(2),
