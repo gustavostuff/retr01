@@ -558,7 +558,7 @@ def main() -> None:
             if new != old:
                 pcb_path.write_text(new, encoding="utf-8")
                 print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
-        for pro_path in [pcb_dir / "v_04.kicad_pro"]:
+        for pro_path in [pcb_dir / "main_pcb.kicad_pro"]:
             old = pro_path.read_text(encoding="utf-8")
             new = patch_kicad_pro(old, layer4_from_net)
             if new != old:
