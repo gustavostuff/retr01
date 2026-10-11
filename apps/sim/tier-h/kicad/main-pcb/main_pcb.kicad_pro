@@ -574,10 +574,6 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "SCROLL_CLK"
-      },
-      {
-        "netclass": "Layer4",
         "pattern": "SIG_J5_P11_TO_US2_P4"
       },
       {
@@ -698,11 +694,11 @@
       },
       {
         "netclass": "Layer4",
-        "pattern": "XTAL_21M_OUT"
+        "pattern": "XTAL_21M_IN"
       },
       {
         "netclass": "Layer4",
-        "pattern": "XTAL_DOT_IN"
+        "pattern": "XTAL_21M_OUT"
       }
     ]
   },

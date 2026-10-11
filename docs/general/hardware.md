@@ -327,7 +327,7 @@ Prefer programming PLDs, the color PROM, and the three AVRs **before** they go i
 
 **Arcade:** J5 **2x10**. Even pins 2-16 are Player 1 bits 0-7 (pin 2 = bit 0). Odd pins 15-1 are Player 2 bits 0-7 (pin 15 = bit 0, pin 1 = bit 7). Pins 17-20 are GND. J7 **2x2** (`+5V`/`GND` / `RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 2x CUI Devices **SJ1-3515N** (5-pin horizontal). Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
+**TRS (home shell):** 2x CUI Devices **SJ1-3535NG** (5-pin horizontal). Tip=5 V, Ring=DATA, Sleeve=GND. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
 
 ## Video out / sync header
 
@@ -384,7 +384,7 @@ Cart and pad PCBs are **2-layer**.
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
 | J2 | 2x4 RGB + CSYNC/HSYNC/VSYNC (table above) |
-| J3/J4 | CUI Devices **SJ1-3515N** 5-pin horizontal TRS |
+| J3/J4 | CUI Devices **SJ1-3535NG** 5-pin horizontal TRS |
 | J5 | 2x10 arcade |
 | J7 | 2x2 power/reset |
 | J8 | CUI **RCJ-012** audio RCA |

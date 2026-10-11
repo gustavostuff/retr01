@@ -119,7 +119,7 @@ A manual datasheet audit covers every counted IC package:
 | **74HCU04** | DIP-14 (300 mil) | Pin 14 (VCC), Pin 7 (GND) |
 | **74HC74** | DIP-14 (300 mil) | Pin 14 (VCC), Pin 7 (GND) |
 | **AD724** | SOIC-16 (150 mil) | Pin 4 (APOS), pin 14 (DPOS), pin 2 (AGND), pin 13 (DGND), pin 3 (FIN) |
-| **CUI SJ1-3515N TRS** | `Retr01_Lib:Jack_3.5mm_CUI_SJ1-3515N_Horizontal` | Tip / ring / sleeve vs datasheet |
+| **CUI SJ1-3535NG TRS** | `Connector_Audio:Jack_3.5mm_CUI_SJ1-3535NG_Horizontal` | Tip / ring / sleeve vs datasheet |
 | **GCT DCJ200 barrel** | `Retr01_Lib:BarrelJack_GCT_DCJ200-10-A_Horizontal` | Center pin (+5.0 V) vs sleeve (GND) |
 
 ---
