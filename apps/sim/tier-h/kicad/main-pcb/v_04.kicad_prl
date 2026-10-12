@@ -4,7 +4,7 @@
     "active_layer_preset": "",
     "auto_track_width": true,
     "hidden_netclasses": [
-      "Layer4"
+      "Quiet"
     ],
     "hidden_nets": [
       "MCU_SDA",

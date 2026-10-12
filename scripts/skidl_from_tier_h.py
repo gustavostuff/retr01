@@ -624,7 +624,7 @@ def main() -> None:
             new = patch_kicad_pro(old, layer4_from_net)
             if new != old:
                 pro_path.write_text(new, encoding="utf-8")
-                print(f"updated Layer4/CPU_A/CPU_D net classes in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
+                print(f"updated Quiet/CPU_A/CPU_D net classes in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
     finally:
         os.chdir(orig_cwd)
         remove_repo_root_strays()

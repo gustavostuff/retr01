@@ -225,18 +225,18 @@ A whole bus that cannot finish on layer 1 is a placement problem first. The part
 
 | Class | Color | Nets | Layer |
 |-------|-------|------|-------|
-| **Layer4** | orange `rgb(220, 143, 50)` | Analog, reset/ready, handshake, I2C, pads, arcade, MAP A14-A18 | 4 |
+| **Quiet** | orange `rgb(220, 143, 50)` | Analog, reset/ready, handshake, I2C, pads, arcade, MAP A14-A18 | 4 |
 | **CPU_A** | blue `rgb(70, 140, 210)` | `CPU_A0`-`CPU_A15` (and `CART_A0`-`CART_A13` if those names remain) | 1 |
 | **CPU_D** | green `rgb(60, 180, 90)` | `CPU_D0`-`CPU_D7` | 1 |
 | Default | (KiCad default) | Remaining layer 1 nets | 1 |
 
-`CPU_A_SAMPLE` is not a bus bit. It stays on **Layer4**. `CART_A14`-`CART_A18` stay on **Layer4**.
+`CPU_A_SAMPLE` is not a bus bit. It stays on **Quiet**. `CART_A14`-`CART_A18` stay on **Quiet**.
 
-Pcbnew colors air wires from each class `pcb_color`. Board Setup, Net Classes changes a color. Track width is 0.25 mm on Layer4, CPU_A, and CPU_D. Via sizes still match Default.
+Pcbnew colors air wires from each class `pcb_color`. Board Setup, Net Classes changes a color. Track width is 0.25 mm on Quiet, CPU_A, and CPU_D. Via sizes still match Default.
 
 Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py` and `bus_nets.py`.
 
-Hide Layer4, then show only **CPU_A**, then only **CPU_D**, when placing U1, U3, U6, the 157s, U574, UM, and J36. Route each corridor as a parallel group on layer 1 before other Default nets. A whole bus that cannot finish on layer 1 is a placement problem first.
+Hide **Quiet**, then show only **CPU_A**, then only **CPU_D**, when placing U1, U3, U6, the 157s, U574, UM, and J36. Route each corridor as a parallel group on layer 1 before other Default nets. A whole bus that cannot finish on layer 1 is a placement problem first.
 
 ---
 

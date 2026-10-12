@@ -1,7 +1,7 @@
-"""Layer 4 KiCad net class (quiet analog plus slow digital / I/O).
+"""Quiet KiCad net class (analog plus slow digital / I/O, usually on layer 4).
 
 Assignment follows docs/bring-up-v2/main-pcb-layers.md. Layer 1 keeps clock-rate
-buses, digital squares, and +5V. Layer 4 gets analog, reset/ready, handshake,
+buses, digital squares, and +5V. Quiet nets are analog, reset/ready, handshake,
 I2C, pads, arcade, sync, MAP A14-A18, and SPI chip-selects.
 
 The class exists so Pcbnew can color those air wires separately. Track width is
@@ -17,7 +17,8 @@ from typing import Iterable, Optional
 
 from . import bus_nets
 
-CLASS_NAME = "Layer4"
+CLASS_NAME = "Quiet"
+LEGACY_CLASS_NAME = "Layer4"
 
 # Track width 0.25 mm (digital signal). Other geometry matches Default.
 # Color is a starting point.
@@ -257,7 +258,7 @@ def _never_name(name: str) -> bool:
 
 
 def is_layer4_name(name: str) -> bool:
-    """True when a net name belongs on the Layer4 class."""
+    """True when a net name belongs on the Quiet class."""
     if not name or _never_name(name):
         return False
     if name in _EXACT:
@@ -302,7 +303,7 @@ def layer4_net_names(nets: Iterable) -> list[str]:
 
 
 def apply_layer4_netclass(nets: Iterable) -> list[str]:
-    """Assign SKiDL NetClass Layer4. Returns the net names that matched."""
+    """Assign SKiDL NetClass Quiet. Returns the net names that matched."""
     from skidl import NetClass
 
     matched = layer4_net_names(nets)
@@ -331,7 +332,7 @@ def netclass_for_name(name: str) -> str:
 
 
 def annotate_netlist_layer4_class(text: str, names: Iterable[str]) -> str:
-    """Force (class ...) on Layer4, CPU_A, and CPU_D nets in a KiCad sexp netlist."""
+    """Force (class ...) on Quiet, CPU_A, and CPU_D nets in a KiCad sexp netlist."""
     want_l4 = set(names)
     class_re = re.compile(r'\(name "([^"]+)"\)(\s*)(\(class "[^"]+"\))?')
 
@@ -362,10 +363,10 @@ def kicad_pro_patterns(extra_names: Optional[Iterable[str]] = None) -> list[dict
 
 
 def patch_kicad_pro(text: str, extra_names: Optional[Iterable[str]] = None) -> str:
-    """Insert or replace Layer4, CPU_A, and CPU_D classes in a .kicad_pro."""
+    """Insert or replace Quiet, CPU_A, and CPU_D classes in a .kicad_pro."""
     data = json.loads(text)
     ns = data.get("net_settings") or {}
-    drop = {CLASS_NAME, bus_nets.CLASS_ADDR, bus_nets.CLASS_DATA}
+    drop = {CLASS_NAME, LEGACY_CLASS_NAME, bus_nets.CLASS_ADDR, bus_nets.CLASS_DATA}
     classes = [c for c in (ns.get("classes") or []) if c.get("name") not in drop]
     classes.append(dict(KICAD_CLASS))
     classes.extend(dict(spec) for spec in bus_nets.KICAD_CLASSES)
