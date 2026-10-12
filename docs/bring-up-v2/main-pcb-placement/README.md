@@ -79,7 +79,9 @@ BOTTOM (front)     J3/J4 3.5 mm or J11/J12 6.35 mm pads | J6/US2/J5 arcade | J7 
 9. Zone 5 US2
 10. All passives: 100 nF bypass C1-C20, crystal loads C21-C26, E1, DAC R1-R11, series R12-R17, pull-ups R18-R22, feedback R23-R24
 
-Ratsnest refresh from `retr01_prelim.net` follows. Short nets route first: bypass, clocks, color index, field AD, cart drop.
+Ratsnest refresh from `retr01_prelim.net` follows. Hide Layer4. Show only **CPU_A** (blue) and rotate U1 / U3 / the 157 I0 side / J36 odd row until the address comb is parallel. Show only **CPU_D** (green) and rotate U3 DQ / U6 DQ / U574 D / UM / J36 even row the same way. Route those two layer-1 corridors next, then short nets: bypass, clocks, color index, field AD, cart drop.
+
+The CPU bus stays one electrical net group. The two classes are a Pcbnew split only. No extra transceiver. See [`docs/misc/retr01_shared_bus_skidl.md`](../../misc/retr01_shared_bus_skidl.md).
 
 ---
 

@@ -92,10 +92,12 @@ Clocks stay short, toward the middle of the board, off the perimeter.
 
 ### CPU, RAM, cart (PHI2)
 
+The CPU address and data nets stay one electrical bus (hi-Z discipline, no extra transceiver). Pcbnew splits them into two layer-1 corridors so the ratsnest is two combs instead of one web.
+
 | Net | Path |
 |-----|------|
-| U1 A0-A15 | U3, mux I0, J36 A0-A13 |
-| U1 D0-D7 | U3 DQ, U574 D, UM CPU_D, J36 D |
+| U1 A0-A15 | U3, mux I0, J36 odd/side A (A0-A13). Net class **CPU_A** (blue). |
+| U1 D0-D7 | U3 DQ, U574 D, UM CPU_D, J36 even/side B. Net class **CPU_D** (green). |
 | U1 RWB | Decode / PLDs |
 | U3 CE# / OE# / WE# | System RAM decode |
 | J36 `CART_OE#` | Through **R14** |
@@ -217,13 +219,24 @@ A whole bus that cannot finish on layer 1 is a placement problem first. The part
 
 ---
 
-## KiCad net class Layer4
+## KiCad net classes
 
-`main_pcb.kicad_pro` and `v_04.kicad_pro` carry a net class named **Layer4**. Nets from the layer 4 tables above match that class through `netclass_patterns` (and through SKiDL on the next `export_netlist.sh` run). Layer 1 nets stay in **Default**.
+`main_pcb.kicad_pro`, `v_04.kicad_pro`, and `v_05.kicad_pro` carry these classes. `export_netlist.sh` rewrites them through `patch_kicad_pro` so they survive the next SKiDL export.
 
-Pcbnew colors Layer4 air wires from the class `pcb_color` (orange at `rgb(220, 143, 50)`). That color is a starting point. Board Setup, Net Classes, Layer4 changes it. Layer4 track width is 0.25 mm (digital signal width). Via sizes still match Default.
+| Class | Color | Nets | Layer |
+|-------|-------|------|-------|
+| **Layer4** | orange `rgb(220, 143, 50)` | Analog, reset/ready, handshake, I2C, pads, arcade, MAP A14-A18 | 4 |
+| **CPU_A** | blue `rgb(70, 140, 210)` | `CPU_A0`-`CPU_A15` (and `CART_A0`-`CART_A13` if those names remain) | 1 |
+| **CPU_D** | green `rgb(60, 180, 90)` | `CPU_D0`-`CPU_D7` | 1 |
+| Default | (KiCad default) | Remaining layer 1 nets | 1 |
 
-Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py`.
+`CPU_A_SAMPLE` is not a bus bit. It stays on **Layer4**. `CART_A14`-`CART_A18` stay on **Layer4**.
+
+Pcbnew colors air wires from each class `pcb_color`. Board Setup, Net Classes changes a color. Track width is 0.25 mm on Layer4, CPU_A, and CPU_D. Via sizes still match Default.
+
+Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py` and `bus_nets.py`.
+
+Hide Layer4, then show only **CPU_A**, then only **CPU_D**, when placing U1, U3, U6, the 157s, U574, UM, and J36. Route each corridor as a parallel group on layer 1 before other Default nets. A whole bus that cannot finish on layer 1 is a placement problem first.
 
 ---
 
@@ -236,3 +249,4 @@ Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py`.
 - [main-pcb-placement/crystals.md](main-pcb-placement/crystals.md): Pierce and divider
 - [`docs/bringup/pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md): zone rationale
 - [`docs/bringup/staged-pcb-bringup-guide.md`](../bringup/staged-pcb-bringup-guide.md): fab widths
+- [`docs/misc/retr01_shared_bus_skidl.md`](../misc/retr01_shared_bus_skidl.md): shared CPU bus as two Pcbnew corridors

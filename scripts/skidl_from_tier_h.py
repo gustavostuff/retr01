@@ -440,6 +440,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
         sys.path.insert(0, str(TIER_H_SKIDL_DIR))
     from retr01_kicad.clocks import ensure_clock_parts, wire_clocks
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
+    from retr01_kicad.bus_nets import apply_bus_netclasses
     from retr01_kicad.layer4_nets import (
         annotate_netlist_layer4_class,
         apply_layer4_netclass,
@@ -523,6 +524,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
                 p.net.name = "+5V"
 
     layer4_names = apply_layer4_netclass(unique_nets)
+    apply_bus_netclasses(unique_nets)
 
     buf = StringIO()
     generate_netlist(file_=buf)
@@ -613,12 +615,16 @@ def main() -> None:
             if new != old:
                 pcb_path.write_text(new, encoding="utf-8")
                 print(f"updated pad names in {pcb_path.relative_to(REPO_ROOT)}", file=sys.stderr)
-        for pro_path in [pcb_dir / "main_pcb.kicad_pro", pcb_dir / "v_04.kicad_pro"]:
+        for pro_path in [
+            pcb_dir / "main_pcb.kicad_pro",
+            pcb_dir / "v_04.kicad_pro",
+            pcb_dir / "v_05.kicad_pro",
+        ]:
             old = pro_path.read_text(encoding="utf-8")
             new = patch_kicad_pro(old, layer4_from_net)
             if new != old:
                 pro_path.write_text(new, encoding="utf-8")
-                print(f"updated Layer4 net class in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
+                print(f"updated Layer4/CPU_A/CPU_D net classes in {pro_path.relative_to(REPO_ROOT)}", file=sys.stderr)
     finally:
         os.chdir(orig_cwd)
         remove_repo_root_strays()

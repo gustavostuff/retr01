@@ -15,6 +15,8 @@ import json
 import re
 from typing import Iterable, Optional
 
+from . import bus_nets
+
 CLASS_NAME = "Layer4"
 
 # Track width 0.25 mm (digital signal). Other geometry matches Default.
@@ -114,6 +116,7 @@ KICAD_PATTERNS = (
     "CART_A16",
     "CART_A17",
     "CART_A18",
+    "CPU_A_SAMPLE",
     "CPU_RDY*",
     "CPU_RES*",
     "CPU_IRQ*",
@@ -192,6 +195,7 @@ _EXACT = frozenset(
         "CART_A17",
         "CART_A18",
         "SCROLL_CLK",
+        "CPU_A_SAMPLE",
     }
 )
 
@@ -240,6 +244,8 @@ _LAYER4_PINS = frozenset(
 def _never_name(name: str) -> bool:
     if name == "NC" or name.startswith("NC_"):
         return True
+    if name == "CPU_A_SAMPLE":
+        return False
     if name in _NEVER or name in _NEVER_CART_A:
         return True
     if name.startswith("CART_OE") or name.startswith("CART_WE"):
@@ -317,14 +323,24 @@ def apply_layer4_netclass(nets: Iterable) -> list[str]:
     return matched
 
 
+def netclass_for_name(name: str) -> str:
+    if is_layer4_name(name):
+        return CLASS_NAME
+    bus = bus_nets.class_for_name(name)
+    return bus if bus else "Default"
+
+
 def annotate_netlist_layer4_class(text: str, names: Iterable[str]) -> str:
-    """Force (class "Layer4") on matching nets in a KiCad sexp netlist."""
-    want = set(names)
+    """Force (class ...) on Layer4, CPU_A, and CPU_D nets in a KiCad sexp netlist."""
+    want_l4 = set(names)
     class_re = re.compile(r'\(name "([^"]+)"\)(\s*)(\(class "[^"]+"\))?')
 
     def repl(m: re.Match) -> str:
         name = m.group(1)
-        cls = CLASS_NAME if name in want else "Default"
+        if name in want_l4 or is_layer4_name(name):
+            cls = CLASS_NAME
+        else:
+            cls = netclass_for_name(name)
         return f'(name "{name}") (class "{cls}")'
 
     return class_re.sub(repl, text)
@@ -342,15 +358,17 @@ def kicad_pro_patterns(extra_names: Optional[Iterable[str]] = None) -> list[dict
             if name and name not in seen and is_layer4_name(name):
                 seen.add(name)
                 out.append({"netclass": CLASS_NAME, "pattern": name})
-    return out
+    return bus_nets.PATTERNS + out
 
 
 def patch_kicad_pro(text: str, extra_names: Optional[Iterable[str]] = None) -> str:
-    """Insert or replace the Layer4 class and netclass_patterns in a .kicad_pro."""
+    """Insert or replace Layer4, CPU_A, and CPU_D classes in a .kicad_pro."""
     data = json.loads(text)
     ns = data.get("net_settings") or {}
-    classes = [c for c in (ns.get("classes") or []) if c.get("name") != CLASS_NAME]
+    drop = {CLASS_NAME, bus_nets.CLASS_ADDR, bus_nets.CLASS_DATA}
+    classes = [c for c in (ns.get("classes") or []) if c.get("name") not in drop]
     classes.append(dict(KICAD_CLASS))
+    classes.extend(dict(spec) for spec in bus_nets.KICAD_CLASSES)
     ns["classes"] = classes
     ns["netclass_patterns"] = kicad_pro_patterns(extra_names)
     data["net_settings"] = ns

@@ -320,6 +320,44 @@
         "via_diameter": 0.6,
         "via_drill": 0.3,
         "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "priority": 0,
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6,
+        "name": "CPU_A",
+        "pcb_color": "rgb(70, 140, 210)",
+        "schematic_color": "rgb(70, 140, 210)"
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "priority": 0,
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6,
+        "name": "CPU_D",
+        "pcb_color": "rgb(60, 180, 90)",
+        "schematic_color": "rgb(60, 180, 90)"
       }
     ],
     "meta": {
@@ -328,6 +366,42 @@
     "net_colors": null,
     "netclass_assignments": null,
     "netclass_patterns": [
+      {
+        "netclass": "CPU_A",
+        "pattern": "CPU_A?"
+      },
+      {
+        "netclass": "CPU_A",
+        "pattern": "CPU_A1?"
+      },
+      {
+        "netclass": "CPU_A",
+        "pattern": "CART_A?"
+      },
+      {
+        "netclass": "CPU_A",
+        "pattern": "CART_A10"
+      },
+      {
+        "netclass": "CPU_A",
+        "pattern": "CART_A11"
+      },
+      {
+        "netclass": "CPU_A",
+        "pattern": "CART_A12"
+      },
+      {
+        "netclass": "CPU_A",
+        "pattern": "CART_A13"
+      },
+      {
+        "netclass": "CPU_D",
+        "pattern": "CPU_D?"
+      },
+      {
+        "netclass": "CPU_D",
+        "pattern": "CART_D?"
+      },
       {
         "netclass": "Layer4",
         "pattern": "VIDEO*"
@@ -423,6 +497,10 @@
       {
         "netclass": "Layer4",
         "pattern": "CART_A18"
+      },
+      {
+        "netclass": "Layer4",
+        "pattern": "CPU_A_SAMPLE"
       },
       {
         "netclass": "Layer4",
