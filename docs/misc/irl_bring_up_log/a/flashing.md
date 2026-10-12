@@ -1,6 +1,6 @@
 # Flashing Tier A
 
-Color bars need two ATF22V10 PLDs (Beam X and Beam Y) and one AT27C256R color PROM, all programmed before they go into a socket. The clock and a way to look at the signals are already on the bench. The burn itself takes a parallel programmer.
+Two ATF22V10 PLDs (Beam X and Beam Y) and one AT27C256R color PROM have to be programmed before they go into a socket. The burn files are in `docs/misc/irl_bring_up_log/firmware/a/`. The Adafruit 2045 Si5351 breakout can supply the 5.369318 MHz dot clock, and the 8-channel USB logic analyzer can watch that clock and the sync pulses. The burn itself takes a parallel programmer.
 
 RCA jacks can stay in the bag. Composite is a later tier. This lab is RGB plus sync.
 
@@ -16,12 +16,12 @@ RCA jacks can stay in the bag. Composite is a later tier. This lab is RGB plus s
 
 | Chip | Count | File | Hardware |
 | --- | --- | --- | --- |
-| ATF22V10C, PDIP-24 | 2 | One JEDEC each, Beam X and Beam Y, from CUPL or WinCUPL | XGecu T48 or TL866II Plus, device ATF22V10C. An Arduino Uno or Nano running Afterburner burns these two as well. |
-| AT27C256R-45, PDIP-28 | 1 | 64 bytes, addresses 0 through 63, packed R3G3B2 | The same T48 or TL866II Plus, device AT27C256R, VPP in the 12.5 V to 13 V range. Afterburner covers GAL parts only. |
+| ATF22V10C, PDIP-24 | 2 | `firmware/a/beam_x.jed` and `firmware/a/beam_y.jed` | XGecu T48 or TL866II Plus, device ATF22V10C. An Arduino Uno or Nano running Afterburner burns these two as well. |
+| AT27C256R-45, PDIP-28 | 1 | `firmware/a/at27c256r_kit.bin` (64 bytes, packed R3G3B2) | The same T48 or TL866II Plus, device AT27C256R, VPP in the 12.5 V to 13 V range. Afterburner covers GAL parts only. |
 
 One T48 or TL866II Plus covers both chips. Pre-programmed parts are the other path. The PROM is one-time, so the blank check and the verify are the whole safety net. On the PLDs, leave the security fuse unprogrammed so a later read-back still works.
 
-The color bytes start in `apps/common/r01_kit_palette.c`. Burn steps and the packed layout are in `docs/bringup/programming-tier-abc.md` and `docs/bringup/tier-a-video-lab.md`.
+What each file does, and the pinout, is in `docs/misc/irl_bring_up_log/firmware/a/README.md`. Programmer clicks are in `docs/bringup/programming-tier-abc.md`.
 
 ## Clock, next to the burn
 

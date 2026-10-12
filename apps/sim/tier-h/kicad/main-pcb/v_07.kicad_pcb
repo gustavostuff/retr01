@@ -5870,7 +5870,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "34095206-d1ab-49bf-b28d-dadcde266d82")
-		(at 154 77.1 90)
+		(at 153.856271 77.024332 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C16"
@@ -10311,7 +10311,7 @@
 	(footprint "Retr01_Lib:DIP-24_W7.62mm"
 		(layer "F.Cu")
 		(uuid "5b83e35e-6af0-414b-a4e7-6d499fc38d75")
-		(at 175.07 125.69 -90)
+		(at 175.07 125 -90)
 		(descr "24-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "UPLDX"
@@ -10522,7 +10522,7 @@
 			(uuid "0282a700-92fc-4435-84ab-73de45420f97")
 		)
 		(point
-			(at 161.1 129.5)
+			(at 161.1 128.81)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "8b77f983-64e2-4fcd-a045-ddc9245d3459")
@@ -14353,13 +14353,13 @@
 	(footprint "Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "754829b0-3432-4d8f-9241-71ef11f4b063")
-		(at 77.576231 122.920742)
+		(at 76.73 123.077784)
 		(descr "Through hole straight pin header, 2x05, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x05 2.54mm double row")
 		(property "Reference" "J5"
 			(at -1.38148 13.292873 0)
 			(layer "F.SilkS")
-			(uuid "0e615ce6-4f80-4a39-b622-8e049f02ae6e")
+			(uuid "b10eacbf-1024-4c2d-bedd-a08c481dd0ba")
 			(effects
 				(font
 					(size 1 1)
@@ -14370,7 +14370,7 @@
 		(property "Value" "ARCADE_P1"
 			(at 1.423769 20.079258 0)
 			(layer "F.Fab")
-			(uuid "b73ffb07-e7a4-46fe-90b3-938d084d9479")
+			(uuid "922ec475-ca97-40bc-b87c-2adfa8aa7ff0")
 			(effects
 				(font
 					(size 1 1)
@@ -14382,7 +14382,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "00c2748b-620a-4e52-8978-43ec6b5f0ca0")
+			(uuid "1439b398-5cfa-4401-89cc-e69df81e197a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14393,7 +14393,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a8fd99e4-ee6c-4c3a-b002-fa3c5cef10a1")
+			(uuid "8c591ad8-603a-4317-9f38-68cdc35fc98c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14556,7 +14556,7 @@
 			(uuid "619d938e-5e86-4034-a54f-94df8a8df466")
 		)
 		(fp_text user "${REFERENCE}"
-			(at -0.364927 -4.513997 180)
+			(at -0.364927 -3.077784 180)
 			(layer "F.Fab")
 			(uuid "eeaa0c59-f65d-4ba2-951d-051bc705edc4")
 			(effects
@@ -18622,7 +18622,7 @@
 		(property "Reference" "US1"
 			(at 3.81 -2.33 90)
 			(layer "F.SilkS")
-			(uuid "9ab6feb7-50cb-459f-82c4-83298e735066")
+			(uuid "3a1660d5-73d0-4d09-8621-d159814baf7a")
 			(effects
 				(font
 					(size 1 1)
@@ -18633,7 +18633,7 @@
 		(property "Value" "AVR128DB28"
 			(at 3.81 35.35 90)
 			(layer "F.SilkS")
-			(uuid "cfb574aa-2f07-4963-8a01-6bd9c7195798")
+			(uuid "16c20165-9282-4977-b24d-d0a312c613d5")
 			(effects
 				(font
 					(size 1 1)
@@ -18645,7 +18645,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "25a2e86d-09fa-451a-9d7f-9de208b12df5")
+			(uuid "198bb3a7-5845-4df6-91e8-64609968a58c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18656,7 +18656,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a8f9a2a7-1302-4c2c-9758-45f5a7d2dc70")
+			(uuid "c7670156-c56b-4372-ab96-1424c7e406c4")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20362,7 +20362,7 @@
 	(footprint "Retr01_Lib:DIP-16_W7.62mm"
 		(layer "F.Cu")
 		(uuid "aa7894aa-25ea-4dde-a8bb-431a71000691")
-		(at 48.62 96.78 180)
+		(at 47.81 96.78 180)
 		(descr "16-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U7C"
@@ -20573,7 +20573,7 @@
 			(uuid "04037e6f-9479-4037-827b-d4fc1c5f5e29")
 		)
 		(point
-			(at 44.81 87.89)
+			(at 44 87.89)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "ff340a3e-86a5-464d-95b1-aa5bbab3b2cc")
@@ -21913,7 +21913,7 @@
 	(footprint "Retr01_Lib:DIP-28_W7.62mm"
 		(layer "F.Cu")
 		(uuid "c3b0ea3f-2b99-46a7-adc7-e4dd6b7bf00e")
-		(at 93.172147 134.352958 180)
+		(at 92.81 134.51 180)
 		(descr "28-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "US2"
@@ -22124,7 +22124,7 @@
 			(uuid "47cf8aba-e75b-41e3-a43b-34dac53a17f0")
 		)
 		(point
-			(at 89.362147 117.842958)
+			(at 89 118)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "f7f2bae9-ddd1-4875-ad4a-2314f8b00609")
@@ -22933,7 +22933,7 @@
 	(footprint "Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "cc23bd29-0419-4157-b4a2-83c5b3ad94bc")
-		(at 100.975 133.08 180)
+		(at 101.28 133.237042 180)
 		(descr "Through hole straight pin header, 2x05, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x05 2.54mm double row")
 		(property "Reference" "J6"
@@ -23136,7 +23136,7 @@
 			(uuid "69dccafa-f7f5-4550-843a-9e5c1b50cf5d")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 2.62196 14.70719 180)
+			(at 2.62196 13.237042 180)
 			(layer "F.Fab")
 			(uuid "d9afd9b2-108c-49d7-8c38-9a41e6b61b5d")
 			(effects
@@ -24298,7 +24298,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "cf58e1c7-4cc3-4d6c-b596-437d769589b4")
-		(at 175.531759 80.230456 90)
+		(at 175.703713 80.256722 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C10"
