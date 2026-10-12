@@ -4,6 +4,7 @@
     "active_layer_preset": "",
     "auto_track_width": true,
     "hidden_netclasses": [
+      "Default",
       "Quiet"
     ],
     "hidden_nets": [
