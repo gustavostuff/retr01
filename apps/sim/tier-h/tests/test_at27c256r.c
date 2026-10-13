@@ -18,7 +18,7 @@ int main(void) {
     r01s_entity_drive(e, "CE#", R01S_LVL_L);
     r01s_entity_drive(e, "OE#", R01S_LVL_L);
     r01s_entity_drive(e, "VPP", R01S_LVL_H);
-    r01s_entity_drive(e, "PGM#", R01S_LVL_H);
+    r01s_entity_drive(e, "A14", R01S_LVL_L);
     r01s_entity_drive(e, "A0", R01S_LVL_L);
     r01s_entity_drive(e, "A1", R01S_LVL_H);
     r01s_entity_drive(e, "A2", R01S_LVL_L);

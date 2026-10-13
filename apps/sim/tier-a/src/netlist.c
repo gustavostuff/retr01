@@ -165,7 +165,7 @@ static void build_auto(R01aBoard *b) {
     link_n(u04, "VCC", u24, "VPP");
     link_n(u04, "VCC", bx, "RES#");
     link_n(u04, "VCC", by, "RES#");
-    link_n(u04, "VCC", u24, "PGM#");
+    link_n(u04, "GND", u24, "A14");
     link_n(u74, "VCC", u74, "1PRE#");
     link_n(u74, "VCC", u74, "1CLR#");
     link_n(u74, "VCC", u74, "2PRE#");

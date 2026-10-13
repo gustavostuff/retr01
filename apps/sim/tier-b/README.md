@@ -45,6 +45,6 @@ cmake --build apps/sim/tier-b/build -j
 ctest --test-dir apps/sim/tier-b/build --output-on-failure
 ```
 
-Repo wrappers: `./scripts/build-all.sh` installs `bin/sim-tier-b`. `./scripts/sim-tier-b.sh` runs it.
+Repo wrappers: `./scripts/build-all.sh` installs `bin/sim-tier-b`. `./scripts/sim-tier.sh b` runs it.
 
 Controls match Tier A. See [tier-a/README.md](../tier-a/README.md).

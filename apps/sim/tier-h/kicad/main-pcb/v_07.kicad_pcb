@@ -116,7 +116,6 @@
 		)
 		(capping no)
 		(filling no)
-		(zone_defaults)
 		(grid_origin 20 20)
 		(pcbplotparams
 			(layerselection 0x00000000_00000000_55555555_5755f5ff)
@@ -724,7 +723,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "01b34f6a-e080-451c-807e-314199c7b889")
-		(at 173 26.535 90)
+		(at 170.5 26.995 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R2"
@@ -3618,11 +3617,11 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "16ca83ea-4e81-4456-a03a-18beed768144")
-		(at 161.8 27.13 180)
+		(at 160 27 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R4"
-			(at -2.545183 -0.877774 0)
+			(at -2.545183 -0.877774 90)
 			(layer "F.SilkS")
 			(uuid "3aa03872-903c-4708-9562-5c011d66d3be")
 			(effects
@@ -3633,7 +3632,7 @@
 			)
 		)
 		(property "Value" "4k"
-			(at -2.53925 0.767738 0)
+			(at -2.53925 0.767738 90)
 			(layer "F.SilkS")
 			(uuid "ffe8e839-7369-4f93-9d59-4adfa08ec24e")
 			(effects
@@ -3644,7 +3643,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 0)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "cd1b66e3-9173-40b3-b202-821929000655")
@@ -3655,7 +3654,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 0)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "89585b01-0aac-4df5-a60a-cb4700ef68da")
@@ -3666,7 +3665,7 @@
 			)
 		)
 		(property "KiLib_Generator" "resistor/THT"
-			(at 0 0 0)
+			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "99511b19-5f19-4e52-b1ce-b5863ee2dcad")
@@ -3678,7 +3677,7 @@
 			)
 		)
 		(property "SKiDL Tag" "VfnINOHE7j"
-			(at 0 0 180)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -3691,7 +3690,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:114"
-			(at 0 0 180)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -3760,7 +3759,7 @@
 			(uuid "63faf0bc-9e58-4154-bcd1-0212b7c7badd")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0 180)
+			(at 0 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -3771,7 +3770,7 @@
 			(uuid "9677e348-a36f-4af1-8fc3-ab4103c024ce")
 		)
 		(pad "2" thru_hole circle
-			(at 2.54 0 180)
+			(at 2.54 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -10791,7 +10790,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "5ed2dfc9-d250-4889-b709-699630e8047d")
-		(at 177 34.54 90)
+		(at 175.5 35.04 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R8"
@@ -20072,7 +20071,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "a9519314-36cb-4076-828a-b811ad89f531")
-		(at 161.8 34.54 90)
+		(at 160 35 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R5"
@@ -21237,7 +21236,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "b9e36c39-c9af-41e2-99b1-6a1e7671bc5d")
-		(at 171.8 34.54 90)
+		(at 170.3 35 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R7"
@@ -22643,7 +22642,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "c84962e7-10fc-4d2e-bed8-c3bb39876f96")
-		(at 178 26.54 90)
+		(at 175.5 27 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R1"
@@ -25776,7 +25775,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "e8168567-c428-4824-8f60-b389afcf4810")
-		(at 167.5 26.535 90)
+		(at 165.5 26.995 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R3"
@@ -26764,7 +26763,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "fba43c15-8aa3-46de-8022-f12567b7c2b1")
-		(at 167 34.54 90)
+		(at 165.5 35 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R6"

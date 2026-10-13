@@ -37,6 +37,6 @@ cmake --build apps/sim/tier-c/build -j
 ctest --test-dir apps/sim/tier-c/build --output-on-failure
 ```
 
-Repo: `./scripts/build-all.sh` installs `bin/sim-tier-c`. `./scripts/sim-tier-c.sh` runs it.
+Repo: `./scripts/build-all.sh` installs `bin/sim-tier-c`. `./scripts/sim-tier.sh c` runs it.
 
 Controls match Tier A. See [tier-a/README.md](../tier-a/README.md).

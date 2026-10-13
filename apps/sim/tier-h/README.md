@@ -163,7 +163,7 @@ From the repo root:
 
 ```bash
 ./scripts/build-all.sh
-./scripts/sim-tier-h.sh
+./scripts/sim-tier.sh h
 ./scripts/unit-tests.sh
 ```
 
@@ -173,7 +173,7 @@ Developer rebuild of this tree only:
 cmake -S apps/sim/tier-h -B apps/sim/tier-h/build -DCMAKE_BUILD_TYPE=Release
 cmake --build apps/sim/tier-h/build -j
 ctest --test-dir apps/sim/tier-h/build --output-on-failure
-./scripts/sim-tier-h.sh
+./scripts/sim-tier.sh h
 ```
 
 Needs: CMake, a C compiler, SDL2 (`sdl2` package).
@@ -181,10 +181,10 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 ## Run
 
 ```bash
-./scripts/sim-tier-h.sh
-./scripts/sim-tier-h.sh example_01/example_01.retr01
-./scripts/sim-tier-h.sh DELAY=typical   # print typ path budget vs PHI2 half
-./scripts/sim-tier-h.sh DELAY=max       # print max (worst-case) path budget
+./scripts/sim-tier.sh h
+./scripts/sim-tier.sh h example_01/example_01.retr01
+./scripts/sim-tier.sh h DELAY=typical   # print typ path budget vs PHI2 half
+./scripts/sim-tier.sh h DELAY=max       # print max (worst-case) path budget
 ```
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $7Fxx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).

@@ -192,7 +192,7 @@ static void build_auto(R01aBoard *b) {
     link_n(y2, "VDD", by, "RES#");
     link_n(y2, "VDD", comp, "RES#");
     link_n(y2, "VDD", comp, "RWB");
-    link_n(y2, "VDD", u24, "PGM#");
+    link_n(y2, "GND", u24, "A14");
     link_n(y2, "GND", bx, "GND");
     link_n(y2, "GND", by, "GND");
     link_n(y2, "GND", comp, "GND");

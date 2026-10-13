@@ -11,7 +11,7 @@
 | Shared | `apps/common` | Linked by Studio / Emu / Sim |
 | Discrete IC engine | `tools/discrete_ic` | Linked by Sim |
 
-Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, `./scripts/sim-tier-a.sh`, `./scripts/sim-tier-b.sh`, `./scripts/sim-tier-c.sh`, and `./scripts/sim-tier-h.sh`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
+Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier.sh` with tier `a`, `b`, `c`, or `h`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
 
 ## Studio projects
 

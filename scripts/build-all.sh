@@ -47,7 +47,7 @@ build_one() {
 
 if [ "$CLEAN" -eq 1 ]; then
   echo "cleaning build trees and bin/"
-  rm -rf "$STUDIO/build" "$EMU/build" "$SIM_A/build" "$SIM_B/build" "$SIM_H/build" "$BIN"
+  rm -rf "$STUDIO/build" "$EMU/build" "$SIM_A/build" "$SIM_B/build" "$SIM_C/build" "$SIM_H/build" "$BIN"
 fi
 
 mkdir -p "$BIN"

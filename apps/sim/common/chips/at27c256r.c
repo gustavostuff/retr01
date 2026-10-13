@@ -83,7 +83,7 @@ void r01a_at27c256r_init(R01aAt27c256r *chip, const char *refdes) {
     ns_entity_add_pin(&chip->base, 24, "A9", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 25, "A8", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 26, "A13", NS_PIN_IN);
-    ns_entity_add_pin(&chip->base, 27, "PGM#", NS_PIN_IN);
+    ns_entity_add_pin(&chip->base, 27, "A14", NS_PIN_IN);
     ns_entity_add_pin(&chip->base, 28, "VCC", NS_PIN_PWR);
     /* 28P6 PDIP 600 mil (doc0014): D 36.7-37.3 mm, E1 13.5-14.0 mm molded width. */
     ns_entity_set_dip_mm(&chip->base, 28, 37, 14);

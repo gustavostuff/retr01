@@ -90,7 +90,7 @@ cmake --build apps/sim/tier-a/build -j
 ctest --test-dir apps/sim/tier-a/build --output-on-failure
 ```
 
-Repo wrappers: `./scripts/build-all.sh` installs `bin/sim-tier-a`. `./scripts/sim-tier-a.sh` runs it.
+Repo wrappers: `./scripts/build-all.sh` installs `bin/sim-tier-a`. `./scripts/sim-tier.sh a` runs it.
 
 While running, each UI frame advances a short DOT burst under a wall-clock budget so the window stays live. Frames per second sit at the top-right.
 

@@ -1949,14 +1949,13 @@ static void wire_video_prom_addr(R01sEntity *prom, uint8_t index) {
         r01s_entity_drive(prom, name, (index & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
     }
     {
-        static const char *const unused[] = {"A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13"};
+        static const char *const unused[] = {"A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14"};
         size_t u;
         for (u = 0; u < sizeof(unused) / sizeof(unused[0]); u++) {
             r01s_entity_drive(prom, unused[u], R01S_LVL_L);
         }
     }
     r01s_entity_drive(prom, "VPP", R01S_LVL_H);
-    r01s_entity_drive(prom, "PGM#", R01S_LVL_H);
     r01s_entity_drive(prom, "CE#", R01S_LVL_L);
     r01s_entity_drive(prom, "OE#", R01S_LVL_L);
     r01s_entity_eval(prom);

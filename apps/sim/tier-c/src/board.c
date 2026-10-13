@@ -521,12 +521,11 @@ static void board_bind_rails(R01aBoard *b) {
     drive_vdd(r01a_as6c62256_entity(&b->field_sram), "CE#", NS_LVL_L);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VCC", vdd);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VPP", vdd);
-    drive_vdd(r01a_at27c256r_entity(&b->prom), "PGM#", NS_LVL_H);
 }
 
 static void board_tie_prom_unused_a(R01aBoard *b) {
     NsEntity *prom = r01a_at27c256r_entity(&b->prom);
-    static const char *const unused[] = {"A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13"};
+    static const char *const unused[] = {"A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14"};
     size_t i;
     for (i = 0; i < sizeof(unused) / sizeof(unused[0]); i++) {
         ns_entity_drive(prom, unused[i], NS_LVL_L);
