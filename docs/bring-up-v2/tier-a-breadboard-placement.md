@@ -13,47 +13,58 @@ Power is off while a chip goes into a socket and while a chip comes out. One 5 V
 | ATF22V10C, PDIP-24, Beam X image | 1 | Dot counter and HSYNC |
 | ATF22V10C, PDIP-24, Beam Y image | 1 | Line counter and VSYNC |
 | AT27C256R, PDIP-28, kit image | 1 | 64 colors |
-| Si5351 breakout (Adafruit 2045) | 1 | 5.369318 MHz dot clock |
-| Arduino Uno or Nano | 1 | Writes the Si5351, and can feed the 5 V rail |
+| 74HCU04, PDIP-14 | 1 | Pierce oscillator and buffer. A 74HC04 is a different part. |
+| 74HC74, PDIP-14 | 1 | Divides 21.47727 MHz by 4 |
+| 21.47727 MHz crystal, HC-49 | 1 | Master clock |
+| 1 Mohm | 1 | Pierce feedback |
+| 18 pF to 20 pF | 2 | Crystal load capacitors |
 | 33 ohm | 1 | Series resistor on the dot clock |
 | 4 kohm, 2 kohm, 1 kohm | 2 of each | Red and green DAC weights |
 | 2 kohm, 1 kohm | 1 of each | Blue DAC weights |
 | 75 ohm | 3 | Gun loads |
-| 100 nF | 3 | One across each IC |
+| 100 nF | 5 | One across each IC |
 | 220 uF | 1 | Bulk capacitor at the 5 V entry |
 | 1x8 pin header, 2.54 mm | 1 | J2, to the monitor cable |
 
-The two PLDs are 0.3 inch (300 mil) between pin rows, so each one straddles the center channel of a breadboard. The PROM is 0.6 inch (600 mil). Its rows do not land on opposite sides of that channel. A 28-pin socket of the same width, with one jumper per pin, keeps the pin numbers on the right holes.
+The 74HCU04, the 74HC74, and the two PLDs are 0.3 inch (300 mil) between pin rows, so each one straddles the center channel of a breadboard. The PROM is 0.6 inch (600 mil). Its rows do not land on opposite sides of that channel. A 28-pin socket of the same width, with one jumper per pin, keeps the pin numbers on the right holes.
 
 Pin 1 is the pin next to the notch. Down the notched side the pins count upward. Up the far side they continue.
 
 ## 1. Rails
 
-1. Connect the Arduino 5 V pin to the breadboard +5 V rail.
-2. Connect the Arduino GND pin to the breadboard ground rail.
+1. Connect the 5 V supply to the breadboard +5 V rail.
+2. Connect the supply ground to the breadboard ground rail.
 3. Connect the 220 uF capacitor from the +5 V rail to the ground rail. The marked side goes to ground.
 4. Bridge +5 V to the rail on the far side of each breadboard in use. Bridge ground the same way.
 
-## 2. Seat the three ICs
+## 2. Seat the five ICs
 
 Power is still off.
 
-1. Seat Beam X across the center channel. Notch toward the row chosen as pin 1.
-2. Seat Beam Y the same way, close to Beam X. HSYNC is a short jumper between them.
-3. Seat the PROM in the wide socket. Notch marks pin 1.
+1. Seat the 74HCU04 across the center channel, with the crystal on the next rows. Notch toward the row chosen as pin 1.
+2. Seat the 74HC74 the same way, next to the 74HCU04. The 21 MHz wire between them stays short.
+3. Seat Beam X across the center channel. Notch toward the row chosen as pin 1.
+4. Seat Beam Y the same way, close to Beam X. HSYNC is a short jumper between them.
+5. Seat the PROM in the wide socket. Notch marks pin 1.
 
 ## 3. Power on each IC
 
-1. Connect Beam X pin 24 to +5 V.
-2. Connect Beam X pin 12 to ground.
-3. Connect a 100 nF capacitor from Beam X pin 24 to Beam X pin 12. Keep the leads short.
-4. Connect Beam Y pin 24 to +5 V.
-5. Connect Beam Y pin 12 to ground.
-6. Connect a 100 nF capacitor from Beam Y pin 24 to Beam Y pin 12.
-7. Connect PROM pin 28 (VCC) to +5 V.
-8. Connect PROM pin 1 (VPP) to +5 V. Same rail as pin 28.
-9. Connect PROM pin 14 (GND) to ground.
-10. Connect a 100 nF capacitor from PROM pin 28 to PROM pin 14.
+1. Connect 74HCU04 pin 14 to +5 V.
+2. Connect 74HCU04 pin 7 to ground.
+3. Connect a 100 nF capacitor from 74HCU04 pin 14 to 74HCU04 pin 7. Keep the leads short.
+4. Connect 74HC74 pin 14 to +5 V.
+5. Connect 74HC74 pin 7 to ground.
+6. Connect a 100 nF capacitor from 74HC74 pin 14 to 74HC74 pin 7.
+7. Connect Beam X pin 24 to +5 V.
+8. Connect Beam X pin 12 to ground.
+9. Connect a 100 nF capacitor from Beam X pin 24 to Beam X pin 12. Keep the leads short.
+10. Connect Beam Y pin 24 to +5 V.
+11. Connect Beam Y pin 12 to ground.
+12. Connect a 100 nF capacitor from Beam Y pin 24 to Beam Y pin 12.
+13. Connect PROM pin 28 (VCC) to +5 V.
+14. Connect PROM pin 1 (VPP) to +5 V. Same rail as pin 28.
+15. Connect PROM pin 14 (GND) to ground.
+16. Connect a 100 nF capacitor from PROM pin 28 to PROM pin 14.
 
 ## 4. PLD pins that stay tied
 
@@ -68,18 +79,30 @@ Beam X pins 15 through 23, and Beam Y pins 15 through 23, are the count bits. Le
 
 ## 5. Dot clock
 
-The Si5351 keeps 5.369318 MHz in volatile registers. The sketch `si5351_dot/si5351_dot.ino` writes that frequency to CLK0. Upload steps are in [`docs/misc/irl_bring_up_log/a/flashing.md`](../misc/irl_bring_up_log/a/flashing.md). A later power cycle of the Arduino needs that sketch again before Beam X has a clock.
+The crystal, the 1 Mohm resistor, the two load capacitors, and 74HCU04 pins 1 and 2 sit on adjacent rows. Leads on that loop stay short. The crystal has no polarity. A breadboard adds capacitance, so 18 pF is the starting load. 15 pF is the next value when pin 4 stays quiet.
 
-CLK0 swings to about 3.3 V. Beam X pin 1 treats that level as high.
+Gates 3 through 6 are unused. Their inputs go to ground. Their outputs stay open.
 
-1. Connect Si5351 VIN to the +5 V rail.
-2. Connect Si5351 GND to the ground rail.
-3. Connect Si5351 SDA to Arduino A4.
-4. Connect Si5351 SCL to Arduino A5.
-5. Connect Si5351 CLK0 to one end of the 33 ohm resistor.
-6. Connect the other end of the 33 ohm resistor to Beam X pin 1 (CLK).
+1. Connect 74HCU04 pins 5, 9, 11, and 13 to ground.
+2. Leave 74HCU04 pins 6, 8, 10, and 12 open.
+3. Connect one crystal pin to 74HCU04 pin 1.
+4. Connect the other crystal pin to 74HCU04 pin 2.
+5. Connect the 1 Mohm resistor from 74HCU04 pin 1 to 74HCU04 pin 2.
+6. Connect one 18 pF capacitor from 74HCU04 pin 1 to ground.
+7. Connect the other 18 pF capacitor from 74HCU04 pin 2 to ground.
+8. Connect 74HCU04 pin 2 to 74HCU04 pin 3.
+9. Connect 74HCU04 pin 4 to 74HC74 pin 3.
 
-Leave Si5351 CLK1 and CLK2 open.
+Pin 4 is about 21.48 MHz. The 74HC74 divides that by 2, then by 2 again. Both stages toggle by feeding the inverted output back to D. PRE# and CLR# stay high so neither flip-flop is forced set or clear.
+
+10. Connect 74HC74 pins 1, 4, 10, and 13 to +5 V.
+11. Connect 74HC74 pin 6 to 74HC74 pin 2.
+12. Connect 74HC74 pin 5 to 74HC74 pin 11.
+13. Connect 74HC74 pin 8 to 74HC74 pin 12.
+14. Connect 74HC74 pin 9 to one end of the 33 ohm resistor.
+15. Connect the other end of the 33 ohm resistor to Beam X pin 1 (CLK).
+
+Pin 5 is about 10.74 MHz. Pin 9 is the 5.369318 MHz dot clock.
 
 ## 6. Beam Y clock, and the sync pins
 
@@ -174,11 +197,13 @@ J2, left to right, pin 1 at the left:
 
 ## 14. Power on, then check
 
-Turn the 5 V supply on. The Arduino resets and the sketch writes the dot clock.
+Turn the 5 V supply on. The oscillator runs as soon as power is up.
 
 | Probe | A good result |
 | --- | --- |
-| Beam X pin 1 | About 5.37 MHz |
+| 74HCU04 pin 4 | About 21.48 MHz |
+| 74HC74 pin 5 | About 10.74 MHz |
+| 74HC74 pin 9, and Beam X pin 1 | About 5.37 MHz |
 | Beam X pin 14 | About 15.7 kHz, high for about 4.7 us |
 | Beam Y pin 14 | About 60.1 Hz, high for 3 lines |
 
@@ -188,6 +213,6 @@ RES low on a PLD clears that counter and holds it. Beam X pin 14 stays low while
 
 ## Related
 
-- Clock sketch and analyzer capture: [`docs/misc/irl_bring_up_log/a/flashing.md`](../misc/irl_bring_up_log/a/flashing.md)
+- Analyzer capture: [`docs/misc/irl_bring_up_log/a/flashing.md`](../misc/irl_bring_up_log/a/flashing.md)
 - Per-chip probe points: [`docs/misc/irl_bring_up_log/individual_ic_test/`](../misc/irl_bring_up_log/individual_ic_test/)
 - Tier B adds the Compositor on this same layout: [`tier-b-breadboard-placement.md`](tier-b-breadboard-placement.md)
