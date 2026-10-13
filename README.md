@@ -42,7 +42,7 @@ Game pads are planned to use a 3-wire connection through any regular male to mal
 
 Retr01 is not a pure TTL/discrete logic design, but it skips the black-box SoC approach entirely. It's a nice middle ground.
 
-Note: the main motherboard uses the Mini-ITX format (170 x 170 mm). Standard desktop-PC outline, extra copper for 4-layer routing.
+Note: the main motherboard is 170 x 120 mm, on a 4-layer stack.
 
 ## Software pieces
 

@@ -33,7 +33,7 @@ The remaining pain is presentation and layout, not the electrical rules.
 - Prefer net labels + bus entries over continuous wire lines between every chip.
 - Keep pure power and pure enable nets out of the data/address buses so the main bus stays focused.
 
-### PCB (4-layer Mini-ITX example)
+### PCB (4-layer, 170 x 120 mm)
 
 1. **Placement first**  
    Cluster every chip that touches the bus so their data/address pins face a common corridor. CPU near the centre or one end; RAMs, cart edge and MCU-M nearby.

@@ -1,6 +1,6 @@
 # Hardware
 
-One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 170 mm** (Mini-ITX). The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
+One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 120 mm**. The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
 **Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **DIP-16** THT landing (`Retr01_Lib:DIP-16_W7.62mm`) for a SOIC-16-to-DIP adapter (typical **Proto Advantage PA0006**). Pin numbers stay 1:1 with the SOIC. Cart and pad stay THT.
 

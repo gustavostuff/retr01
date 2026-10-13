@@ -16,20 +16,20 @@ Components sit by **electrical signal flow** in five functional zones around the
 
 ---
 
-## 2. Board form factor: 170 mm x 170 mm (Mini-ITX)
+## 2. Board form factor: 170 mm x 120 mm
 
-The physical motherboard outline is **170 mm by 170 mm**, the Mini-ITX desktop form factor.
+The physical motherboard outline is **170 mm by 120 mm**.
 
-### Rationale for the 170 mm x 170 mm Mini-ITX size
+### Rationale for the 170 mm x 120 mm outline
 
-1. **Routing room:** Four-layer THT buses (CPU, cart, VRAM mux, color index, field) need channel space between islands. A square 170 mm outline leaves copper for those runs without packing parts against the edge.
-2. **Off-the-shelf enclosure compatibility:** Mini-ITX cases and standoff plates fit a 170 x 170 mm board. Four M3 holes use the Mini-ITX ATX subset (C, F, H, J). With the I/O edge as rear, C is 10.16 mm from the rear and 6.35 mm from the left; F is 33.02 mm from the rear and 6.35 mm from the right; H and J are 165.10 mm from the rear on those same left and right columns. The I/O-side pair is staggered (F sits 22.86 mm farther from the I/O than C). A custom chassis is not required.
-3. **Component density and breathing room:** The counted motherboard BOM (19 through-hole DIP/SPDIP ICs including the AD724 DIP-16 adapter landing, 36-pin cartridge edge connector, discrete jacks, and ~65 passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin, socket clearance for test clips, and 5 mm keepout around the M3 holes.
-4. **Geometry for 3-column physical bus topology:** The square outline still holds three columns, with extra height for routing channels:
-   - Left column (~50 mm): System RAM, VRAM, and multiplexers.
-   - Center column (~70 mm): 52 mm CPU package, 65 mm cartridge slot, and central MCU-M.
-   - Right column (~50 mm): Self-contained video engine, Color PROM, and DAC.
-5. **Fabrication efficiency:** Standard PCB prototyping pools at commercial fabricators support 170 mm x 170 mm boards under standard tier pricing and lead times.
+1. **Routing room:** Four-layer THT buses (CPU, cart, VRAM mux, color index, field) need channel space between islands. The 170 mm width leaves copper for those runs without packing parts against the side edges.
+2. **Mounting:** Four M3 holes, one toward each corner, with keepout so sockets and jacks stay clear of the screws.
+3. **Component density and breathing room:** The counted motherboard BOM (19 through-hole DIP/SPDIP ICs including the AD724 DIP-16 adapter landing, 36-pin cartridge edge connector, discrete jacks, and the passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin and socket clearance for test clips.
+4. **Geometry for 3-column physical bus topology:** The 170 mm width holds three columns:
+   - Left column: System RAM, VRAM, and multiplexers.
+   - Center column: CPU package, cartridge slot, and central MCU-M.
+   - Right column: Video engine, Color PROM, and DAC.
+5. **Fabrication:** A 170 mm x 120 mm outline fits common prototype panels at commercial fabricators.
 
 ---
 
