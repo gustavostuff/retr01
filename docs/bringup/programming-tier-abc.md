@@ -60,7 +60,7 @@ A standard USB-to-UART adapter (such as a CH340 or CP2102 module) operates as a 
 - Place a resistor (1.0 k ohm to 4.7 k ohm) between the module TX pin and RX pin.
 - Connect the module RX pin to AVR128DB28 pin 19 (UPDI).
 - Connect module GND to breadboard GND.
-- Connect 5 V power to AVR128DB28 VDD and VDDIO2 pins (pins 6 and 14 to +5 V, pins 15 and 21 to GND).
+- Connect 5 V to pins 6 (VDDIO2), 14 (AVDD), and 20 (VDD). Connect pins 15 and 21 to GND.
 
 ### Flashing via pymcuprog (command line)
 Microchip's `pymcuprog` tool flashes hex files over standard serial ports:
