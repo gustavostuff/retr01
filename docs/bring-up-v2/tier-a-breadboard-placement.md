@@ -84,8 +84,8 @@ Names match the sim netlist. Physical DIP numbers follow the part datasheets / `
 
 | Net | Pins |
 |-----|------|
-| `+5V` | U04 VCC, U74 VCC, UPLDX VCC, UPLDY VCC, U24 VCC, U24 VPP, U24 PGM#, UPLDX RES#, UPLDY RES#, U74 PRE#/CLR# (both stages), E1(+) |
-| `GND` | All IC GND, U24 CE#, U24 OE#, U24 A6-A13, J2 GND pins, E1(-), unused U04 gate inputs tied inactive |
+| `+5V` | U04 VCC, U74 VCC, UPLDX VCC, UPLDY VCC, U24 VCC, U24 VPP, UPLDX RES#, UPLDY RES#, U74 PRE#/CLR# (both stages), E1(+) |
+| `GND` | All IC GND, U24 CE#, U24 OE#, U24 A6-A14, J2 GND pins, E1(-), unused U04 gate inputs tied inactive |
 
 Bypass: C1 at U04, C2 at U74, C3 at UPLDX, C4 at UPLDY, C5 at U24 (cap pin 1 to VCC, pin 2 to GND).
 

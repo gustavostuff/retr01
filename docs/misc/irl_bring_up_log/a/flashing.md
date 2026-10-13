@@ -35,9 +35,13 @@ A new login picks up the group. One CH340 enumerates as `/dev/ttyUSB0` on the `c
 
 One T48 or TL866II Plus covers both chips, with Xgpro. Programmer clicks are in `docs/bringup/programming-tier-abc.md`. On this bench the Arduino can run Afterburner for the two PLDs. The PROM stays on the T48 or TL866II Plus.
 
+`apps/flasher_tool/flasher.py` runs these burns from a keyboard menu, plus the Compositor JEDEC and the MCU-S1 hex. Those two rows stop when the image file is missing. The opening screen names the T48 or TL866II Plus and the HiLetgo CH340 SerialUPDI lead. `--check` reports whether both of those programmers are visible and does not start a burn.
+
+`apps/flasher_tool/verify.py` reads the same rows back. Enter compares the chip in the socket with the image file and prints `match` or `mismatch`. That script does not write a chip.
+
 Pre-programmed parts are the other path. The PROM is one-time, so the blank check and the verify are the whole safety net. On the PLDs, leave the security fuse unprogrammed so a later read-back still works.
 
-What each file does, and the full pinout, is in `docs/misc/irl_bring_up_log/firmware/a/README.md`.
+What each file does, and the full pinout, is in `docs/misc/irl_bring_up_log/firmware/a/README.md`. A breadboard read of a programmed AT27C256R, pin by pin, is in [`../individual_ic_test/at27c256r.md`](../individual_ic_test/at27c256r.md).
 
 ## Breadboard
 
