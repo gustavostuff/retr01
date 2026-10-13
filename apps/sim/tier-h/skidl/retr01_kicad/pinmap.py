@@ -215,12 +215,11 @@ M1284_P2 = ("1", "2", "3", "4", "5", "6", "7", "8")  # PB0..PB7
 M1284_RESET, M1284_VCC, M1284_GND = "9", "10", "11"
 M1284_SCL, M1284_SDA = "22", "23"  # PC0/PC1 TWI
 M1284_PAD_DATA = "16"  # PD2
-# Switchcraft 35RAPC2BVN4 (VN4 CD): Tip=4 Ring=2 Sleeve=1. Pads 3+5 NC.
-# Neutrik NMJ6HFD2-AU 6.35mm TRS: T/R/S plus switched TN/RN/SN.
+# One footprint: Switchcraft 35RAPC2BVN4 and Neutrik NMJ6HFD2-AU.
+# Tip=4, Ring=2, Sleeve=1 on both outlines. Pads 3 and 5 are the 3.5 mm NC holes.
+# TN, RN, and SN are the 6.35 mm switched contacts.
 TRS_TIP, TRS_RING, TRS_SLEEVE = "4", "2", "1"
-TRS_NC = ("3", "5")
-TRS635_TIP, TRS635_RING, TRS635_SLEEVE = "T", "R", "S"
-TRS635_NC = ("TN", "RN", "SN")
+TRS_NC = ("3", "5", "TN", "RN", "SN")
 M1284_HBLANK = "17"  # PD3
 M1284_FE06, M1284_FE07 = "18", "19"  # PD4/PD5 (BG0 scroll). SEL_FE00 shares UPLDA pin with FE06.
 # Soft $FExx: palette + MAP seek strobes. Only PD0/PD1 free after DQ remap.
@@ -292,12 +291,9 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "CART_EDGE_36": _nums(36),
     "BARREL_5V": ["1", "2", "3"],  # GCT DCJ200-10-A: 1=Center(+5V), 2=Shunt(GND), 3=Sleeve(GND)
     "RGBS_HDR": _nums(8),
-    # 35RAPC2BVN4: VN4 5-pad layout. Tip=4 Ring=2 Sleeve=1. Pads 3+5 NC.
-    "TRS_P1": _nums(5),
-    "TRS_P2": _nums(5),
-    # Neutrik NMJ6HFD2-AU 6-pin horizontal 6.35mm TRS (T/R/S + switched normals)
-    "TRS635_P1": ["S", "T", "R", "TN", "RN", "SN"],
-    "TRS635_P2": ["S", "T", "R", "TN", "RN", "SN"],
+    # Both jack outlines. Tip=4 Ring=2 Sleeve=1. NC: 3, 5, TN, RN, SN.
+    "TRS_P1": _nums(5) + ["TN", "RN", "SN"],
+    "TRS_P2": _nums(5) + ["TN", "RN", "SN"],
     "ARCADE_P1": _nums(10),
     "ARCADE_P2": _nums(10),
     "CAB_PWR_RST": _nums(4),

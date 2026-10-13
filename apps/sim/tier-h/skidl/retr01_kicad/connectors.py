@@ -19,13 +19,8 @@ CONNECTOR_REFDES = (
     "J8",
     "J9",
     "J10",
-    "J11",
-    "J12",
     "J36",
 )
-
-# J11/J12 are 6.35 mm TRS alternatives to J3/J4 (same Tip / Ring / Sleeve nets).
-_TRS35_TO_TRS635 = (("J3", "J11"), ("J4", "J12"))
 
 # Nets that exist in Tier H JSON today (pad bus on US2).
 PAD_DATA_NET_HINTS = ("NET_752", "PAD_DATA", "PAD_DATA_BUS", "PAD1_DATA")
@@ -133,21 +128,6 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         if ref in parts:
             for nc_pin in P.TRS_NC:
                 pin_connect(parts[ref], "", nc_pin, ensure_nc_net(nets_map, ref, nc_pin))
-
-    # Populate either 3.5 mm or 6.35 mm: J11 mirrors J3, J12 mirrors J4.
-    for small, large in _TRS35_TO_TRS635:
-        if large not in parts:
-            continue
-        for small_pin, large_pin in (
-            (P.TRS_TIP, P.TRS635_TIP),
-            (P.TRS_RING, P.TRS635_RING),
-            (P.TRS_SLEEVE, P.TRS635_SLEEVE),
-        ):
-            net = _find_net_for_part_pin(nets_map, small, small_pin)
-            if net is not None:
-                pin_connect(parts[large], "", large_pin, net)
-        for nc_pin in P.TRS635_NC:
-            pin_connect(parts[large], "", nc_pin, ensure_nc_net(nets_map, large, nc_pin))
 
     # RCA shells to GND. Tips come from the sim JSON (US2 PWM / U725 COMP).
     if gnd:

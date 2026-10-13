@@ -190,14 +190,14 @@ def _netlist_rails_ok(netlist_text: str) -> bool:
     nc_pads = (
         ("J3", "3"),
         ("J3", "5"),
+        ("J3", "TN"),
+        ("J3", "RN"),
+        ("J3", "SN"),
         ("J4", "3"),
         ("J4", "5"),
-        ("J11", "TN"),
-        ("J11", "RN"),
-        ("J11", "SN"),
-        ("J12", "TN"),
-        ("J12", "RN"),
-        ("J12", "SN"),
+        ("J4", "TN"),
+        ("J4", "RN"),
+        ("J4", "SN"),
     )
     for key in nc_pads:
         hit = info.get(key)

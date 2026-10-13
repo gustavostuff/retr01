@@ -327,7 +327,7 @@ Prefer programming PLDs, the color PROM, and the three AVRs **before** they go i
 
 **Arcade:** J5 and J6 **2x5**, one per player. US2 sits between them. Even pins 2-10 are bits 0-4 (pin 2 = bit 0). Odd pins 7 and 9 are GND. J5 odd pin 1 = PA7 (US2 1), pin 3 = PA6 (US2 28), pin 5 = PA5 (US2 27). J6 odd pin 1 = PF6 Start (US2 18), pin 3 = PD3 Coin (US2 9), pin 5 = PD2 Y (US2 8). J5 is Player 1 to the right of US2 (180 deg, even column faces PA0-4). J6 is Player 2 to the left (0 deg, even column faces PC0-3 / PD1). J7 **2x2** (`+5V`/`GND` / `RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6.
 
-**TRS (home shell):** 3.5 mm or 6.35 mm (1/4") jacks. Same nets on both sizes. Tip=5 V, Ring=DATA, Sleeve=GND. Populate one size per player. 3.5 mm follows Switchcraft **35RAPC2BVN4** (J3/J4, stereo vertical 35RAPC). 6.35 mm follows the **CLIFF S4** 1/4" jack socket standard (J11/J12). Stereo 3-pole PCB mount, typical order **S4/BMB/PC-C**. **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
+**TRS (home shell):** 3.5 mm or 6.35 mm (1/4") jacks. Same nets on both sizes. Tip=5 V, Ring=DATA, Sleeve=GND. Populate one size per player. **J3** is player 1 and **J4** is player 2. Each footprint carries the Switchcraft **35RAPC2BVN4** 3.5 mm outline and the **CLIFF S4** 6.35 mm outline (typical **S4/BMB/PC-C**). **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
 
 ## Video out / sync header
 
@@ -381,14 +381,15 @@ Cart and pad PCBs are **2-layer**.
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
 | J2 | 1x8 RGB + CSYNC/HSYNC/VSYNC (table above) |
-| J3/J4 | Switchcraft **35RAPC2BVN4** 3.5 mm stereo TRS (vertical VN4) |
-| J11/J12 | CLIFF **S4** 1/4" (6.35 mm) TRS, typical **S4/BMB/PC-C** |
+| J3 | Player 1 TRS. Switchcraft **35RAPC2BVN4** and CLIFF **S4** in one footprint |
+| J4 | Player 2 TRS. Switchcraft **35RAPC2BVN4** and CLIFF **S4** in one footprint |
 | J5 | 2x5 arcade P1 (right of US2) |
 | J6 | 2x5 arcade P2 (left of US2) |
 | J7 | 2x2 power/reset |
 | J8 | CUI **RCJ-012** audio RCA |
 | J9 | CUI **RCJ-014** composite RCA |
-| J36 | EDAC **395-036-520-201** |
+| J10 | 2x2 cart program (Friend DATA on pin 3) |
+| J36 | EDAC **395-036-520-201** cart socket, 36 contacts |
 | Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / **3.579545 MHz** (74HCU04 + 74HC74 clock stage) |
 
 Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart OE#/WE#/SDA/SCL series **33 ohm**. Cart **D[7:0]** ties straight to J36. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.

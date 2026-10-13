@@ -58,6 +58,20 @@ POSES: tuple[Pose, ...] = (
         scale=(1.0, 1.0, 1.0),
         rotate=(180.0, 0.0, 180.0),
     ),
+    Pose(
+        footprint="Jack_TRS_3.5mm_and_6.35mm",
+        model_name="Switchcraft_35RAPC4BVN4.wrl",
+        offset=(12.75, 1.0, 7.0),
+        scale=(1.0, 1.0, 1.0),
+        rotate=(180.0, 0.0, 180.0),
+    ),
+    Pose(
+        footprint="Jack_TRS_3.5mm_and_6.35mm",
+        model_name="Jack_6.35mm_Neutrik_NMJ6HFD2-AU_Horizontal.step",
+        offset=(16.144431, 7.303841, 0.0),
+        scale=(1.0, 1.0, 1.0),
+        rotate=(0.0, 0.0, -180.0),
+    ),
 )
 
 

@@ -2,6 +2,22 @@
 
 Board-edge and cart I/O. Zones and sequence: [README.md](README.md). Series resistors on cart and pads: [resistors.md](resistors.md).
 
+| Ref | Connector |
+| --- | --- |
+| J1 | DC barrel, 5 V |
+| J2 | RGB + sync header, 1x8 |
+| J3 | Player 1 TRS, 3.5 mm and 6.35 mm |
+| J4 | Player 2 TRS, 3.5 mm and 6.35 mm |
+| J5 | Arcade player 1, 2x5 |
+| J6 | Arcade player 2, 2x5 |
+| J7 | Cabinet power and reset, 2x2 |
+| J8 | Audio RCA |
+| J9 | Composite RCA |
+| J10 | Cart program header, 2x2 |
+| J36 | Cart socket, 36 contacts |
+
+J3 is player 1. J4 is player 2. Each footprint carries both jack outlines. Stuff one size per player. Tip, ring, and sleeve are the same nets on both outlines.
+
 ---
 
 ## J1, DC barrel (rear, top-left)
@@ -76,9 +92,9 @@ DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md
 
 ---
 
-## J3 / J4 and J11 / J12, TRS pads (front, bottom-left), Zone 5
+## J3 / J4, TRS pads (front, bottom-left), Zone 5
 
-3.5 mm jacks are **J3** (P1) and **J4** (P2). The 3.5 mm standard is Switchcraft **35RAPC2BVN4**. 6.35 mm (1/4") jacks are **J11** (P1) and **J12** (P2). The 6.35 mm standard is **CLIFF S4** (typical **S4/BMB/PC-C**). Same Tip / Ring / Sleeve nets on both sizes. One size per player.
+**J3** is player 1 and **J4** is player 2. Each footprint carries the Switchcraft **35RAPC2BVN4** 3.5 mm outline and the **CLIFF S4** 6.35 mm outline (typical **S4/BMB/PC-C**). Stuff one size per player. Tip, ring, and sleeve are the same nets on both outlines.
 
 | Contact | Net |
 |---------|-----|

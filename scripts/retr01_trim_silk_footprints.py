@@ -41,7 +41,7 @@ STOCK: list[tuple[str, str]] = [
     ("Oscillator.pretty", "Oscillator_DIP-8.kicad_mod"),
     ("Crystal.pretty", "Crystal_HC49-U_Vertical.kicad_mod"),
     ("Connector_BarrelJack.pretty", "BarrelJack_GCT_DCJ200-10-A_Horizontal.kicad_mod"),
-    # Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical*_more_copper is custom. Do not re-trim from stock.
+    # Jack_TRS_3.5mm_and_6.35mm and the older Switchcraft-only jack are custom. Do not re-trim from stock.
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x02_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x03_P2.54mm_Vertical.kicad_mod"),
     ("Connector_PinHeader_2.54mm.pretty", "PinHeader_2x04_P2.54mm_Vertical.kicad_mod"),

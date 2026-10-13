@@ -67,10 +67,8 @@ def apply_pinmap_extras() -> None:
     t["ARCADE_P1"] = _nums(10)
     t["ARCADE_P2"] = _nums(10)
     t["MCP130"] = ["1", "2", "3"]
-    t["TRS_P1"] = _nums(5)
-    t["TRS_P2"] = _nums(5)
-    t["TRS635_P1"] = ["S", "T", "R", "TN", "RN", "SN"]
-    t["TRS635_P2"] = ["S", "T", "R", "TN", "RN", "SN"]
+    t["TRS_P1"] = _nums(5) + ["TN", "RN", "SN"]
+    t["TRS_P2"] = _nums(5) + ["TN", "RN", "SN"]
     for key in ("RCJ-012", "RCJ-014", "AUDIO_OUT", "COMPOSITE_OUT"):
         t[key] = ["1A", "1B", "1C", "2"]
     a["RCJ-012"] = {"2": "SIGNAL", "1A": "GND", "1B": "GND", "1C": "GND"}
@@ -93,10 +91,17 @@ def apply_pinmap_extras() -> None:
         "4": "GND",
     }
     a["MCP130"] = {"1": "RESET#", "2": "VDD", "3": "VSS"}
-    a["TRS_P1"] = {"1": "SLEEVE", "2": "RING", "3": "MH3", "4": "TIP", "5": "MH5"}
+    a["TRS_P1"] = {
+        "1": "SLEEVE",
+        "2": "RING",
+        "3": "MH3",
+        "4": "TIP",
+        "5": "MH5",
+        "TN": "TN",
+        "RN": "RN",
+        "SN": "SN",
+    }
     a["TRS_P2"] = dict(a["TRS_P1"])
-    a["TRS635_P1"] = {"S": "SLEEVE", "T": "TIP", "R": "RING", "TN": "TN", "RN": "RN", "SN": "SN"}
-    a["TRS635_P2"] = dict(a["TRS635_P1"])
     a["XTAL"] = {"1": "1", "2": "2"}
     a["74HCU04"] = {
         "1": "1A", "2": "1Y",

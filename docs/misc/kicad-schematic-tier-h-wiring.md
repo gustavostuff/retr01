@@ -151,7 +151,7 @@ SPI to **UM**: **US1** PD4-PD7 (`SPI_*`, `/SS_S1`), **S1_RDY** PF6 <-> **UM** PF
 | P1 buttons | PA0-7 |
 | P2 buttons | PC0-3, PD1-3, PF6 |
 | SPI slave | PD4-7 with **UM** |
-| PAD_DATA | PF0 OD + **R18** -> **J3/J4** and **J11/J12** ring |
+| PAD_DATA | PF0 OD + **R18** -> **J3/J4** ring |
 | AUDIO_PWM | PF1 -> analog audio jack network |
 | UPDI | pin 19 (off-board SerialUPDI, not on J10) |
 
@@ -183,8 +183,7 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | --- | --- | --- |
 | **J1** | 5 V in | +5V, GND |
 | **J2** | RGB + sync out | DAC R/G/B, CSYNC, HSYNC, VSYNC (1x8) |
-| **J3**, **J4** | TRS pads 3.5 mm | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
-| **J11**, **J12** | TRS pads 6.35 mm (CLIFF S4) | Same Tip / Ring / Sleeve as J3 / J4 |
+| **J3**, **J4** | TRS pads, 3.5 mm and 6.35 mm | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
 | **J5** | Arcade P1 | 2x5. US2 `PA0`-`PA7`. GND on pins 7 and 9 |
 | **J6** | Arcade P2 | 2x5. US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6`. GND on pins 7 and 9 |
 | **J7** | Cab power/reset 2x2 | +5V, GND, **RESB** / reset (pins 1-4) |

@@ -32,8 +32,6 @@ REFDES: dict[str, Res] = {
     "J2": ("RGBS_HDR", fp.HDR1x8),
     "J3": ("TRS_P1", fp.TRS),
     "J4": ("TRS_P2", fp.TRS),
-    "J11": ("TRS635_P1", fp.TRS635),
-    "J12": ("TRS635_P2", fp.TRS635),
     "J5": ("ARCADE_P1", fp.HDR2x5),
     "J6": ("ARCADE_P2", fp.HDR2x5),
     "J7": ("CAB_PWR_RST", fp.HDR2x2),
