@@ -37,7 +37,7 @@ One T48 or TL866II Plus covers both chips, with Xgpro. Programmer clicks are in 
 
 `apps/flasher_tool/flasher.py` runs these burns from a keyboard menu, plus the Compositor JEDEC and the MCU-S1 hex. Those two rows stop when the image file is missing. The opening screen names the T48 or TL866II Plus and the HiLetgo CH340 SerialUPDI lead. `--check` reports whether both of those programmers are visible and does not start a burn.
 
-`apps/flasher_tool/verify.py` reads the same rows back. Enter compares the chip in the socket with the image file and prints `match` or `mismatch`. That script does not write a chip.
+`apps/flasher_tool/verify.py` reads the same rows back. Enter compares the chip in the socket with the image file and prints `match`, or `mismatch` plus the programmer's own error. That script does not write a chip. A failed burn in `flasher.py` stays on the menu the same way, under `write failed` or `verify failed`.
 
 Pre-programmed parts are the other path. The PROM is one-time, so the blank check and the verify are the whole safety net. On the PLDs, leave the security fuse unprogrammed so a later read-back still works.
 

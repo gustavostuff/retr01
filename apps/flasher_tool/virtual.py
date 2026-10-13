@@ -89,7 +89,7 @@ class VirtualBench:
             return None
         return "chip is not blank"
 
-    def program(self, target: Target, path: Path, port: str | None = None) -> bool:
+    def program(self, target: Target, path: Path, port: str | None = None) -> str | None:
         payload = path.read_bytes()
         if target.kind == "prom":
             self.prom.program(payload)
@@ -105,11 +105,11 @@ class VirtualBench:
             ok = self.avr.matches(payload)
         else:
             raise RuntimeError(f"unknown kind {target.kind}")
-        if self.fail_verify:
-            return False
-        return ok
+        if self.fail_verify or not ok:
+            return "verify failed\nchip does not match the image"
+        return None
 
-    def verify(self, target: Target, path: Path, port: str | None = None) -> bool:
+    def verify(self, target: Target, path: Path, port: str | None = None) -> str | None:
         payload = path.read_bytes()
         if target.kind == "prom":
             ok = self.prom.matches(payload)
@@ -122,6 +122,6 @@ class VirtualBench:
             ok = self.avr.port == port and self.avr.matches(payload)
         else:
             raise RuntimeError(f"unknown kind {target.kind}")
-        if self.fail_verify:
-            return False
-        return ok
+        if self.fail_verify or not ok:
+            return "mismatch\nchip does not match the image"
+        return None

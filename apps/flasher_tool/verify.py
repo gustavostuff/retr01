@@ -50,9 +50,10 @@ def verify_chip(
                 return "no CH340 port chosen"
             port = choose_port(ports)
 
-    if bench.verify(target, path, port):
-        return "match"
-    return "mismatch"
+    reason = bench.verify(target, path, port)
+    if reason:
+        return reason
+    return "match"
 
 
 def run_menu(bench, repo: Path = REPO, stdin=None, out=None) -> None:

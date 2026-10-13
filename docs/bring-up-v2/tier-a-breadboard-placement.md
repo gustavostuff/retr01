@@ -1,148 +1,193 @@
-# Tier A breadboard: zones, spacing, pin map
+# Tier A breadboard
 
-Physical desk layout for the Tier A video lab (DOT, Beam X/Y, color PROM, DAC, J2 RGBS).
-No hole coordinates. Exact JEDEC fuse maps and programming live in [`docs/bringup/tier-a-video-lab.md`](../bringup/tier-a-video-lab.md) and [`docs/bringup/programming-tier-abc.md`](../bringup/programming-tier-abc.md).
+Wire the flashed Beam X, Beam Y, and color PROM, then look for a solid field on the monitor. The three burn files are `firmware/a/beam_x.jed`, `firmware/a/beam_y.jed`, and `firmware/a/at27c256r_kit.bin`. Pin names on those burns are in [`docs/misc/irl_bring_up_log/firmware/a/README.md`](../misc/irl_bring_up_log/firmware/a/README.md).
 
-Sim SoT for Auto nets: `apps/sim/tier-a/src/netlist.c`.
+Beam X is a dot counter and HSYNC. Beam Y is a line counter and VSYNC. Neither burn drives the PROM address. Jumpers on A5 through A0 pick one kit color. J2 pin 3 (CSYNC) stays open. The monitor uses HSYNC and VSYNC.
 
----
+Power is off while a chip goes into a socket and while a chip comes out. One 5 V rail feeds every chip. The PROM programming voltage stays on the T48. On this board pin 1 (VPP) and pin 28 (VCC) share that same 5 V rail.
 
-## Zones (yes, still group)
+## Parts
 
-Three breadboards are typical. Treat them as islands, not one soup.
+| Part | Qty | Role |
+| --- | --- | --- |
+| ATF22V10C, PDIP-24, Beam X image | 1 | Dot counter and HSYNC |
+| ATF22V10C, PDIP-24, Beam Y image | 1 | Line counter and VSYNC |
+| AT27C256R, PDIP-28, kit image | 1 | 64 colors |
+| Si5351 breakout (Adafruit 2045) | 1 | 5.369318 MHz dot clock |
+| Arduino Uno or Nano | 1 | Writes the Si5351, and can feed the 5 V rail |
+| 33 ohm | 1 | Series resistor on the dot clock |
+| 4 kohm, 2 kohm, 1 kohm | 2 of each | Red and green DAC weights |
+| 2 kohm, 1 kohm | 1 of each | Blue DAC weights |
+| 75 ohm | 3 | Gun loads |
+| 100 nF | 3 | One across each IC |
+| 220 uF | 1 | Bulk capacitor at the 5 V entry |
+| 1x8 pin header, 2.54 mm | 1 | J2, to the monitor cable |
 
-| Zone | Role | Parts |
-|------|------|-------|
-| **Clock** | Pierce + divide to DOT | Y2, U04, U74, R12, R13, C6, C7, C1, C2 |
-| **Beam** | Raster and sync | UPLDX, UPLDY, C3, C4 |
-| **Analog out** | Index, PROM, DAC, monitor | U24, R1-R11, J2, C5 |
+The two PLDs are 0.3 inch (300 mil) between pin rows, so each one straddles the center channel of a breadboard. The PROM is 0.6 inch (600 mil). Its rows do not land on opposite sides of that channel. A 28-pin socket of the same width, with one jumper per pin, keeps the pin numbers on the right holes.
 
-Power entry (**E1** bulk, 5 V and GND into BB1 rails) sits at the clock or beam board edge so both digital islands share one clean return.
+Pin 1 is the pin next to the notch. Down the notched side the pins count upward. Up the far side they continue.
 
-Flow on the desk:
+## 1. Rails
+
+1. Connect the Arduino 5 V pin to the breadboard +5 V rail.
+2. Connect the Arduino GND pin to the breadboard ground rail.
+3. Connect the 220 uF capacitor from the +5 V rail to the ground rail. The marked side goes to ground.
+4. Bridge +5 V to the rail on the far side of each breadboard in use. Bridge ground the same way.
+
+## 2. Seat the three ICs
+
+Power is still off.
+
+1. Seat Beam X across the center channel. Notch toward the row chosen as pin 1.
+2. Seat Beam Y the same way, close to Beam X. HSYNC is a short jumper between them.
+3. Seat the PROM in the wide socket. Notch marks pin 1.
+
+## 3. Power on each IC
+
+1. Connect Beam X pin 24 to +5 V.
+2. Connect Beam X pin 12 to ground.
+3. Connect a 100 nF capacitor from Beam X pin 24 to Beam X pin 12. Keep the leads short.
+4. Connect Beam Y pin 24 to +5 V.
+5. Connect Beam Y pin 12 to ground.
+6. Connect a 100 nF capacitor from Beam Y pin 24 to Beam Y pin 12.
+7. Connect PROM pin 28 (VCC) to +5 V.
+8. Connect PROM pin 1 (VPP) to +5 V. Same rail as pin 28.
+9. Connect PROM pin 14 (GND) to ground.
+10. Connect a 100 nF capacitor from PROM pin 28 to PROM pin 14.
+
+## 4. PLD pins that stay tied
+
+Both PLDs use the same ties. RES high lets the counter run. The unused input pins sit at ground so they do not float.
+
+1. Connect Beam X pin 2 (RES) to +5 V.
+2. Connect Beam X pins 3, 4, 5, 6, 7, 8, 9, 10, 11, and 13 to ground.
+3. Connect Beam Y pin 2 (RES) to +5 V.
+4. Connect Beam Y pins 3, 4, 5, 6, 7, 8, 9, 10, 11, and 13 to ground.
+
+Beam X pins 15 through 23, and Beam Y pins 15 through 23, are the count bits. Leave them open. A probe can use them later. They do not go to the PROM.
+
+## 5. Dot clock
+
+The Si5351 keeps 5.369318 MHz in volatile registers. The sketch `si5351_dot/si5351_dot.ino` writes that frequency to CLK0. Upload steps are in [`docs/misc/irl_bring_up_log/a/flashing.md`](../misc/irl_bring_up_log/a/flashing.md). A later power cycle of the Arduino needs that sketch again before Beam X has a clock.
+
+CLK0 swings to about 3.3 V. Beam X pin 1 treats that level as high.
+
+1. Connect Si5351 VIN to the +5 V rail.
+2. Connect Si5351 GND to the ground rail.
+3. Connect Si5351 SDA to Arduino A4.
+4. Connect Si5351 SCL to Arduino A5.
+5. Connect Si5351 CLK0 to one end of the 33 ohm resistor.
+6. Connect the other end of the 33 ohm resistor to Beam X pin 1 (CLK).
+
+Leave Si5351 CLK1 and CLK2 open.
+
+## 6. Beam Y clock, and the sync pins
+
+Beam Y advances once per line, on the rising edge of HSYNC.
+
+1. Connect Beam X pin 14 (HSYNC) to Beam Y pin 1 (CLK).
+2. Connect that same Beam X pin 14 node to J2 pin 5 (HSYNC).
+3. Connect Beam Y pin 14 (VSYNC) to J2 pin 7 (VSYNC).
+4. Leave J2 pin 3 (CSYNC) open.
+
+## 7. PROM address pins that stay at ground
+
+The kit occupies addresses 0 through 63. A high on any pin in this list selects some other address. Those locations are still `0xFF`.
+
+1. Connect PROM pin 2 (A12) to ground.
+2. Connect PROM pin 3 (A7) to ground.
+3. Connect PROM pin 4 (A6) to ground.
+4. Connect PROM pin 21 (A10) to ground.
+5. Connect PROM pin 23 (A11) to ground.
+6. Connect PROM pin 24 (A9) to ground.
+7. Connect PROM pin 25 (A8) to ground.
+8. Connect PROM pin 26 (A13) to ground.
+9. Connect PROM pin 27 (A14) to ground. High on this pin selects the upper 16 KB.
+
+## 8. PROM enables
+
+Both enables are active low. A high on either one turns the data pins off.
+
+1. Connect PROM pin 20 (CE#) to ground.
+2. Connect PROM pin 22 (OE#) to ground.
+
+## 9. Color index
+
+A5 is the 32s bit. A0 is the 1s bit. The first check uses index 48, byte `0xFF`, every gun at full scale. That field is white when the DAC and the header match the list below.
+
+1. Connect PROM pin 5 (A5) to +5 V.
+2. Connect PROM pin 6 (A4) to +5 V.
+3. Connect PROM pin 7 (A3) to ground.
+4. Connect PROM pin 8 (A2) to ground.
+5. Connect PROM pin 9 (A1) to ground.
+6. Connect PROM pin 10 (A0) to ground.
+
+Another index is the same six pins, from the table in [`docs/misc/irl_bring_up_log/individual_ic_test/at27c256r.md`](../misc/irl_bring_up_log/individual_ic_test/at27c256r.md). Index 0 is byte `0x00`, which is black, so a dark screen at that index is the kit and not a dead DAC.
+
+## 10. Red gun
+
+PROM pin 19 is O7 (red weight 4), pin 18 is O6 (weight 2), pin 17 is O5 (weight 1). The three resistors meet at one node. That node is the red output.
+
+1. Connect PROM pin 19 to one end of a 4 kohm resistor (R1).
+2. Connect PROM pin 18 to one end of a 2 kohm resistor (R2).
+3. Connect PROM pin 17 to one end of a 1 kohm resistor (R3).
+4. Connect the free ends of R1, R2, and R3 together. That joint is the red node.
+5. Connect the red node to one end of a 75 ohm resistor (R9).
+6. Connect the other end of R9 to ground.
+7. Connect the red node to J2 pin 8 (R).
+
+## 11. Green gun
+
+PROM pin 16 is O4 (green weight 4), pin 15 is O3 (weight 2), pin 13 is O2 (weight 1). Pin 14 is ground, not a data pin.
+
+1. Connect PROM pin 16 to one end of a 4 kohm resistor (R4).
+2. Connect PROM pin 15 to one end of a 2 kohm resistor (R5).
+3. Connect PROM pin 13 to one end of a 1 kohm resistor (R6).
+4. Connect the free ends of R4, R5, and R6 together. That joint is the green node.
+5. Connect the green node to one end of a 75 ohm resistor (R10).
+6. Connect the other end of R10 to ground.
+7. Connect the green node to J2 pin 6 (G).
+
+## 12. Blue gun
+
+PROM pin 12 is O1 (blue weight 2). PROM pin 11 is O0 (blue weight 1).
+
+1. Connect PROM pin 12 to one end of a 2 kohm resistor (R7).
+2. Connect PROM pin 11 to one end of a 1 kohm resistor (R8).
+3. Connect the free ends of R7 and R8 together. That joint is the blue node.
+4. Connect the blue node to one end of a 75 ohm resistor (R11).
+5. Connect the other end of R11 to ground.
+6. Connect the blue node to J2 pin 4 (B).
+
+The PROM data pins reach the header only through those resistors. A direct wire from a data pin to J2 puts a 5 V swing on the monitor input.
+
+## 13. Header ground
+
+1. Connect J2 pin 1 to ground.
+2. Connect J2 pin 2 to ground.
+
+J2, left to right, pin 1 at the left:
 
 ```text
-[Clock] -> [Beam X | Beam Y] -> [PROM + DAC + J2]
+1 GND,  2 GND,  3 CSYNC (open),  4 B,  5 HSYNC,  6 G,  7 VSYNC,  8 R
 ```
 
----
+## 14. Power on, then check
 
-## Close vs far
+Turn the 5 V supply on. The Arduino resets and the sketch writes the dot clock.
 
-### Keep close
+| Probe | A good result |
+| --- | --- |
+| Beam X pin 1 | About 5.37 MHz |
+| Beam X pin 14 | About 15.7 kHz, high for about 4.7 us |
+| Beam Y pin 14 | About 60.1 Hz, high for 3 lines |
 
-| Pair | Why |
-|------|-----|
-| Each IC and its 100 nF | Bypass loop under a few cm |
-| Y2, R13, C6, C7, U04 gate 1 | Pierce loop area stays small |
-| U04 gate 2 out and U74 | 21 MHz into the divider |
-| U74 DOT out, R12, UPLDX CLK | Short clock run |
-| UPLDX and UPLDY | HWRAP is the line tick |
-| U24 and R1-R11 and J2 | Analog island. DAC sums stay short |
-| UPLDX INDEX[5:0] and U24 A[5:0] | Index bus stays short (under about one board length) |
+A monitor set for separate HSYNC and VSYNC, on J2 pins 5 and 7, locks to a solid white field at index 48. RGBS wants CSYNC on J2 pin 3. This burn does not drive that pin.
 
-### Keep apart / isolated
-
-| Separation | Why |
-|------------|-----|
-| Analog out vs long DOT / HWRAP runs | Clock edges into RGB |
-| Monitor cable strain on J2 vs crystal cans | Mechanical and HF coupling |
-| Spare jumper nests over the DAC | Accidental shorts and noise |
-
-Rails: bridge +5 V and GND on both sides of each board in use. Extra boards stay dead until a jumper reaches BB1 rails of that polarity.
-
----
-
-## Part list (refdes)
-
-| Refdes | Part | Zone |
-|--------|------|------|
-| Y2 | 21.47727 MHz crystal | Clock |
-| U04 | 74HCU04 | Clock |
-| U74 | 74HC74 | Clock |
-| UPLDX | ATF22V10 Beam X | Beam |
-| UPLDY | ATF22V10 Beam Y | Beam |
-| U24 | AT27C256R | Analog out |
-| J2 | 1x8 RGBS header | Analog out |
-| C1-C5 | 100 nF | At U04, U74, UPLDX, UPLDY, U24 |
-| C6, C7 | ~20 pF | Y2 loads |
-| E1 | ~220 uF | 5 V entry |
-| R12 | 33 ohm | DOT series |
-| R13 | 1M | Pierce feedback |
-| R1-R8 | DAC weights | Analog out |
-| R9-R11 | 75 ohm | Analog out |
-
-A canned 5.37 MHz oscillator or Si5351 may replace the Y2/U04/U74 Pierce chain. DOT still enters UPLDX CLK through R12.
-
----
-
-## Connection map (logical pins)
-
-Names match the sim netlist. Physical DIP numbers follow the part datasheets / `hw/md/`.
-
-### Power and static ties
-
-| Net | Pins |
-|-----|------|
-| `+5V` | U04 VCC, U74 VCC, UPLDX VCC, UPLDY VCC, U24 VCC, U24 VPP, UPLDX RES#, UPLDY RES#, U74 PRE#/CLR# (both stages), E1(+) |
-| `GND` | All IC GND, U24 CE#, U24 OE#, U24 A6-A14, J2 GND pins, E1(-), unused U04 gate inputs tied inactive |
-
-Bypass: C1 at U04, C2 at U74, C3 at UPLDX, C4 at UPLDY, C5 at U24 (cap pin 1 to VCC, pin 2 to GND).
-
-### Clock island
-
-| From | To |
-|------|----|
-| Y2 pin 1 | U04 `1A`, R13, C6 |
-| Y2 pin 2 | U04 `1Y`, R13, C7, U04 `2A` |
-| U04 `2Y` | U74 `1CLK` |
-| U74 `1/Q` | U74 `1D` |
-| U74 `1Q` | U74 `2CLK` |
-| U74 `2/Q` | U74 `2D` |
-| U74 `2Q` | R12 then UPLDX `CLK` (**DOT**) |
-
-### Beam and sync
-
-| From | To |
-|------|----|
-| UPLDX `HWRAP` | UPLDY `CLK` |
-| UPLDX `CSYNC` | J2 `CSYNC` |
-
-### Color index (Tier A only)
-
-| From | To |
-|------|----|
-| UPLDX `INDEX0`..`INDEX5` | U24 `A0`..`A5` |
-
-### DAC to J2
-
-Packing `{RRRGGGBB}` on PROM `O7`..`O0`:
-
-| Gun | PROM outs | Series Rs | Load | Header |
-|-----|-----------|-----------|------|--------|
-| R | O7, O6, O5 | R1 4k, R2 2k, R3 1k | R9 75 ohm to GND | J2 `R` |
-| G | O4, O3, O2 | R4 4k, R5 2k, R6 1k | R10 75 ohm to GND | J2 `G` |
-| B | O1, O0 | R7 2k, R8 1k | R11 75 ohm to GND | J2 `B` |
-
-Each gun: the three (or two) weight resistors meet at one node. That node feeds the 75 ohm and the J2 color pin.
-
-### J2
-
-| Pin | Net |
-|-----|-----|
-| 1 | GND |
-| 2 | GND |
-| 3 | CSYNC |
-| 4 | B |
-| 5 | HSYNC |
-| 6 | G |
-| 7 | VSYNC |
-| 8 | R |
-
----
+RES low on a PLD clears that counter and holds it. Beam X pin 14 stays low while Beam X pin 2 is low. Return pin 2 to +5 V before the next check. The same rule applies to Beam Y pin 2.
 
 ## Related
 
-- [`docs/bringup/tier-a-video-lab.md`](../bringup/tier-a-video-lab.md)
-- Tier B delta: [`tier-b-breadboard-placement.md`](tier-b-breadboard-placement.md)
-- Tier C delta: [`tier-c-breadboard-placement.md`](tier-c-breadboard-placement.md)
+- Clock sketch and analyzer capture: [`docs/misc/irl_bring_up_log/a/flashing.md`](../misc/irl_bring_up_log/a/flashing.md)
+- Per-chip probe points: [`docs/misc/irl_bring_up_log/individual_ic_test/`](../misc/irl_bring_up_log/individual_ic_test/)
+- Tier B adds the Compositor on this same layout: [`tier-b-breadboard-placement.md`](tier-b-breadboard-placement.md)

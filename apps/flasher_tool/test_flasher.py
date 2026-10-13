@@ -138,7 +138,8 @@ class VirtualChipTests(unittest.TestCase):
         bench = VirtualBench()
         bench.fail_verify = True
         message = burn.burn(_target("Beam Y"), bench)
-        self.assertEqual(message, "verify failed")
+        self.assertIn("verify failed", message)
+        self.assertIn("chip does not match the image", message)
         self.assertIsNotNone(bench.plds["Beam Y"].image)
 
     def test_menu_enter_programs_virtual_prom(self) -> None:
@@ -166,7 +167,8 @@ class VerifyTests(unittest.TestCase):
     def test_blank_prom_is_a_mismatch_and_stays_blank(self) -> None:
         bench = VirtualBench()
         message = verify.verify_chip(_target("Color PROM"), bench)
-        self.assertEqual(message, "mismatch")
+        self.assertIn("mismatch", message)
+        self.assertIn("chip does not match the image", message)
         self.assertTrue(bench.prom.is_blank())
         self.assertEqual(bench.prom.writes, 0)
 
@@ -183,14 +185,14 @@ class VerifyTests(unittest.TestCase):
         target = _target("Color PROM")
         burn.burn(target, bench, confirm=lambda: True)
         bench.prom.data[0] ^= 0xFF
-        self.assertEqual(verify.verify_chip(target, bench), "mismatch")
+        self.assertIn("mismatch", verify.verify_chip(target, bench))
 
     def test_programmed_pld_matches_and_empty_pld_does_not(self) -> None:
         bench = VirtualBench()
         target = _target("Beam X")
         burn.burn(target, bench)
         self.assertEqual(verify.verify_chip(target, bench), "match")
-        self.assertEqual(verify.verify_chip(_target("Beam Y"), bench), "mismatch")
+        self.assertIn("mismatch", verify.verify_chip(_target("Beam Y"), bench))
         self.assertNotIn("Beam Y", bench.plds)
 
     def test_missing_image_does_not_touch_a_chip(self) -> None:
@@ -225,10 +227,11 @@ class VerifyTests(unittest.TestCase):
                 verify.verify_chip(target, bench, repo, choose_port=lambda ports: ports[1]),
                 "match",
             )
-            self.assertEqual(
-                verify.verify_chip(target, bench, repo, choose_port=lambda ports: ports[0]),
-                "mismatch",
+            missed = verify.verify_chip(
+                target, bench, repo, choose_port=lambda ports: ports[0]
             )
+            self.assertIn("mismatch", missed)
+            self.assertIn("chip does not match the image", missed)
         self.assertEqual(bench.avr.writes, 1)
 
     def test_menu_enter_reports_a_match(self) -> None:
@@ -243,6 +246,31 @@ class VerifyTests(unittest.TestCase):
 
 
 class CommandTests(unittest.TestCase):
+    def test_programmer_failure_keeps_the_useful_lines(self) -> None:
+        text = """\
+Found T48 00.1.39 (0x127)
+Warning: T48 support is not yet complete!
+Device code: 66A42965
+Serial code: Y3J6SUKB2ERCY07RL6NF0944
+Supply voltage: 4.97 V
+Warning! JED file doesn't match the selected device!
+Declared fuse checksum: 0x2D07 Calculated: 0x2D07 ... OK
+JED file parsed OK
+Reading device...  0%\rReading device...  OK
+Verification failed at address 0x0005: File=0x00, Device=0x01
+"""
+        message = probe.command_failure("verify failed", text, 1)
+        self.assertIn("verify failed", message)
+        self.assertIn("JED file doesn't match the selected device", message)
+        self.assertIn(
+            "Verification failed at address 0x0005: File=0x00, Device=0x01",
+            message,
+        )
+        self.assertNotIn("T48 support is not yet complete", message)
+        self.assertNotIn("Reading device", message)
+        self.assertNotIn("JED file parsed OK", message)
+        self.assertEqual(probe.command_failure("write failed", "", 1), "write failed\nexit 1")
+
     def test_id_mismatch_is_not_called_a_programmed_chip(self) -> None:
         text = (
             "Warning: Firmware is out of date.\n"

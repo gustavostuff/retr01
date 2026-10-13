@@ -61,6 +61,7 @@ def burn(
         if confirm is None or not confirm():
             return "cancelled"
 
-    if not bench.program(target, path, port):
-        return "verify failed"
+    reason = bench.program(target, path, port)
+    if reason:
+        return reason
     return "done"
