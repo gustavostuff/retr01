@@ -18517,7 +18517,7 @@
 		(property "Reference" "US1"
 			(at 3.81 -2.33 90)
 			(layer "F.SilkS")
-			(uuid "3a1660d5-73d0-4d09-8621-d159814baf7a")
+			(uuid "3db51c65-30af-4d8e-ba50-701d97cf6456")
 			(effects
 				(font
 					(size 1 1)
@@ -18528,7 +18528,7 @@
 		(property "Value" "AVR128DB28"
 			(at 3.81 35.35 90)
 			(layer "F.SilkS")
-			(uuid "16c20165-9282-4977-b24d-d0a312c613d5")
+			(uuid "efda4d6c-ca02-4b9e-a7b0-fb44d5b6a4f9")
 			(effects
 				(font
 					(size 1 1)
@@ -18540,7 +18540,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "198bb3a7-5845-4df6-91e8-64609968a58c")
+			(uuid "ab477f37-9c3c-451c-b158-4f34f422c9da")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18551,7 +18551,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "c7670156-c56b-4372-ab96-1424c7e406c4")
+			(uuid "6965805d-7036-4c52-aaaf-2fa8d749a84a")
 			(effects
 				(font
 					(size 1.27 1.27)

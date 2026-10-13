@@ -30,7 +30,7 @@ PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. 
 
 ## Hardware
 
-The design uses a compact, mostly THT main system board with ~17 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is:
+The design uses a compact, mostly THT main system board with 19 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is:
 
 * For a home Console: TRS ports for pads and RCA connectors for mono audio and composite video.
 
