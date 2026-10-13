@@ -134,4 +134,4 @@ pymcuprog write -d avr128db28 -t uart -u /dev/ttyUSB0 -f firmware.hex
 
 DxCore in the Arduino IDE uses the same port, board AVR128DB28, programmer SerialUPDI. The click path is in `docs/bringup/programming-tier-abc.md`.
 
-Tier B is a third ATF22V10 on this same parallel programmer.
+Tier B is a third ATF22V10 on this same parallel programmer. Per-chip checks after the burn are in `docs/misc/irl_bring_up_log/individual_ic_test/`.
