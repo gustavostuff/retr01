@@ -34,8 +34,8 @@ KICAD_CLASSES = [
     {
         **_GEOM,
         "name": CLASS_ADDR,
-        "pcb_color": "rgb(70, 140, 210)",
-        "schematic_color": "rgb(70, 140, 210)",
+        "pcb_color": "rgb(210, 35, 136)",
+        "schematic_color": "rgb(210, 35, 136)",
     },
     {
         **_GEOM,

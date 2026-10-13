@@ -55,11 +55,11 @@ The electrical share is locked: one `CPU_D[7:0]` and one `CPU_A[15:0]`, hi-Z whe
 
 | Split | What it is |
 |-------|------------|
-| **CPU_A** net class (blue) | `CPU_A0`-`CPU_A15`. Corridor from U1 left/right A pins to U3 A, 157 I0, J36 odd/side A. |
+| **CPU_A** net class (magenta) | `CPU_A0`-`CPU_A15`. Corridor from U1 left/right A pins to U3 A, 157 I0, J36 odd/side A. |
 | **CPU_D** net class (green) | `CPU_D0`-`CPU_D7`. Corridor from U1 D pins to U3 DQ, U6 DQ, U574 D, UM port pins, J36 even/side B. |
 | **Quiet** net class (orange) | MAP `CART_A14`-`CART_A18` and `CPU_A_SAMPLE` stay off the CPU bus classes. |
 
-SKiDL already names those nets from U1 (`net_names.py`). KiCad classes and `netclass_patterns` live in `apps/sim/tier-h/skidl/retr01_kicad/bus_nets.py` and are written into `main_pcb.kicad_pro` / `v_04.kicad_pro` / `v_05.kicad_pro` on export. Wrapping the existing nets in a SKiDL `Bus()` object is optional and does not change copper.
+SKiDL already names those nets from U1 (`net_names.py`). KiCad classes and `netclass_patterns` live in `apps/sim/tier-h/skidl/retr01_kicad/bus_nets.py` and are written into `main_pcb.kicad_pro` on export. Wrapping the existing nets in a SKiDL `Bus()` object is optional and does not change copper.
 
 J36 is already interleaved: odd pads address, even pads data. Place U1 above J36 so A and D leave the CPU toward those two rows, then keep each group parallel on layer 1.
 

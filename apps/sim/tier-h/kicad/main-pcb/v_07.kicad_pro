@@ -308,7 +308,6 @@
         "bus_width": 12,
         "clearance": 0.2,
         "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
         "line_style": 0,
         "microvia_diameter": 0.3,
@@ -316,7 +315,7 @@
         "name": "CPU_A",
         "pcb_color": "rgb(210, 35, 136)",
         "priority": 0,
-        "schematic_color": "rgb(70, 140, 210)",
+        "schematic_color": "rgb(210, 35, 136)",
         "track_width": 0.25,
         "tuning_profile": "",
         "via_diameter": 0.6,
@@ -327,14 +326,13 @@
         "bus_width": 12,
         "clearance": 0.2,
         "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
         "name": "CPU_D",
         "pcb_color": "rgb(60, 180, 90)",
-        "priority": 0,
+        "priority": 1,
         "schematic_color": "rgb(60, 180, 90)",
         "track_width": 0.25,
         "tuning_profile": "",
@@ -346,14 +344,13 @@
         "bus_width": 12,
         "clearance": 0.2,
         "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
         "name": "Quiet",
-        "pcb_color": "rgb(220, 181, 34)",
-        "priority": 0,
+        "pcb_color": "rgb(220, 143, 50)",
+        "priority": 2,
         "schematic_color": "rgb(220, 143, 50)",
         "track_width": 0.25,
         "tuning_profile": "",
@@ -662,15 +659,19 @@
       },
       {
         "netclass": "Quiet",
+        "pattern": "SIG_J5_P1_TO_US2_P1"
+      },
+      {
+        "netclass": "Quiet",
         "pattern": "SIG_J5_P2_TO_US2_P22"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P3_TO_US2_P27"
+        "pattern": "SIG_J5_P3_TO_US2_P28"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P5_TO_US2_P1"
+        "pattern": "SIG_J5_P5_TO_US2_P27"
       },
       {
         "netclass": "Quiet",
@@ -746,10 +747,6 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P28_TO_J5_P1"
-      },
-      {
-        "netclass": "Quiet",
         "pattern": "SIG_US2_P2_TO_J6_P2"
       },
       {
@@ -801,7 +798,7 @@
   "pcbnew": {
     "last_paths": {
       "idf": "",
-      "netlist": "",
+      "netlist": "../../skidl/retr01_prelim.net",
       "plot": "",
       "specctra_dsn": "",
       "step": "",
@@ -815,8 +812,8 @@
     "legacy_lib_list": [],
     "top_level_sheets": [
       {
-        "filename": "v_04.kicad_sch",
-        "name": "v_04",
+        "filename": "v_01.kicad_sch",
+        "name": "v_01",
         "uuid": "00000000-0000-0000-0000-000000000000"
       }
     ]

@@ -45,6 +45,7 @@
 			)
 			(layer "F.Mask"
 				(type "Top Solder Mask")
+				(color "Purple")
 				(thickness 0.01)
 			)
 			(layer "F.Cu"
@@ -64,6 +65,7 @@
 			)
 			(layer "dielectric 2"
 				(type "core")
+				(color "#808080FF")
 				(thickness 1.24)
 				(material "FR4")
 				(epsilon_r 4.5)
@@ -86,6 +88,7 @@
 			)
 			(layer "B.Mask"
 				(type "Bottom Solder Mask")
+				(color "Purple")
 				(thickness 0.01)
 			)
 			(layer "B.Paste"
@@ -113,6 +116,7 @@
 		)
 		(capping no)
 		(filling no)
+		(zone_defaults)
 		(grid_origin 20 20)
 		(pcbplotparams
 			(layerselection 0x00000000_00000000_55555555_5755f5ff)
@@ -2001,11 +2005,11 @@
 	(footprint "Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "0cc734ce-6f45-4a23-8d71-911730d56842")
-		(at 71.725 41.725)
+		(at 74.225 25.725)
 		(descr "Through hole straight pin header, 2x02, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x02 2.54mm double row")
 		(property "Reference" "J10"
-			(at -0.575 5.525 0)
+			(at -0.725 -2.725 0)
 			(layer "F.SilkS")
 			(uuid "5a9c7e6b-df11-43cc-bfce-35b257ffe353")
 			(effects
@@ -2016,7 +2020,7 @@
 			)
 		)
 		(property "Value" "CART_PROG_HDR"
-			(at 1.275 -3.225 0)
+			(at 5.566787 3.329183 90)
 			(layer "F.SilkS")
 			(uuid "23fc389a-da51-469d-ae80-7d842bc7aee2")
 			(effects
@@ -5842,7 +5846,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at -3.819708 -0.000001 90)
+			(at 8.680329 -0.149429 270)
 			(layer "F.SilkS")
 			(uuid "cf6e2fe2-390f-45bc-ac80-b97b022e5574")
 			(effects
@@ -7972,7 +7976,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at -3.664963 0.010218 270)
+			(at 7.100675 -0.522718 0)
 			(layer "F.SilkS")
 			(uuid "8ce92cc1-1a10-4277-a7ac-25718aa5672c")
 			(effects
@@ -10966,13 +10970,13 @@
 	(footprint "Retr01_Lib:PinHeader_1x08_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "611c4d4e-212a-49d3-9a47-473f5752e1a8")
-		(at 98.01 42 90)
+		(at 98.01 40.5 90)
 		(descr "Through hole straight pin header, 1x08, 2.54mm pitch, single row")
 		(tags "Through hole pin header THT 1x08 2.54mm single row")
 		(property "Reference" "J2"
-			(at 3 -0.01 180)
+			(at 0 -5.01 180)
 			(layer "F.SilkS")
-			(uuid "5e97bcbb-395a-4283-96e4-46163c3662e5")
+			(uuid "764540ed-e069-4a51-bf7f-2f161388d68f")
 			(effects
 				(font
 					(size 1 1)
@@ -10981,9 +10985,9 @@
 			)
 		)
 		(property "Value" "RGBS_HDR"
-			(at 3 8.99 0)
+			(at -2 -8.01 0)
 			(layer "F.SilkS")
-			(uuid "ac0fdb76-84da-42d6-b319-1e9c32422290")
+			(uuid "26f44b69-c202-4101-8a2d-6ae7bea16721")
 			(effects
 				(font
 					(size 1 1)
@@ -10995,7 +10999,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "08640606-aaad-47e8-b0f2-071de9fde447")
+			(uuid "e91633a7-dd3d-440d-918a-fbf2549daeaf")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11006,7 +11010,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0b19be67-66e8-4e8f-90f7-ac93f57f8d11")
+			(uuid "a85c278e-4f8a-4fa6-978e-f78eb9e502ca")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13725,11 +13729,11 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "6d4eb917-1e36-4b74-9509-c4cdbc41547e")
-		(at 113.46 50)
+		(at 154 77.54 90)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R12"
-			(at 1.596559 -2.490969 180)
+			(at -1.30154 -3.135742 180)
 			(layer "F.SilkS")
 			(uuid "18f61662-7bab-4e3d-8d26-ad720dcd0e22")
 			(effects
@@ -13740,7 +13744,7 @@
 			)
 		)
 		(property "Value" "33R"
-			(at 1.54 -4 180)
+			(at -2.810571 -3.079183 180)
 			(layer "F.SilkS")
 			(uuid "8a30c2d7-b8a5-4511-9c98-d582ab87f9ae")
 			(effects
@@ -13751,7 +13755,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 0)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "2543d31f-d2f8-40cc-84aa-92d019d0a76a")
@@ -13762,7 +13766,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 0)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "dd3dbb82-8fdd-4fd6-80e6-d7adb5653266")
@@ -13773,7 +13777,7 @@
 			)
 		)
 		(property "KiLib_Generator" "resistor/THT"
-			(at 0 0 0)
+			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "5629c28b-d08d-4ce7-b048-3a171b822a54")
@@ -13785,7 +13789,7 @@
 			)
 		)
 		(property "SKiDL Tag" "jcoPHdQwxE"
-			(at 0 0 0)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -13798,7 +13802,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:114"
-			(at 0 0 0)
+			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -13867,7 +13871,7 @@
 			(uuid "a8ee50e9-fe98-40ed-b73b-49c407e25bd4")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0)
+			(at 0 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -13878,7 +13882,7 @@
 			(uuid "e8762dda-2fcd-4d97-a3c2-563b6879d7b4")
 		)
 		(pad "2" thru_hole circle
-			(at 2.54 0)
+			(at 2.54 0 90)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -21623,9 +21627,9 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R22"
-			(at 5.04 0 90)
+			(at 4.665685 0.035367 0)
 			(layer "F.SilkS")
-			(uuid "833c4433-d82b-422b-86f7-3dd3227ce44a")
+			(uuid "d82f43a2-3e57-4783-b612-2240c2d74a5f")
 			(effects
 				(font
 					(size 1 1)
@@ -21636,7 +21640,7 @@
 		(property "Value" "10k"
 			(at 1.27 2.37 90)
 			(layer "F.SilkS")
-			(uuid "fd16e3db-30fb-47b6-a95a-6e8bf9ae1f52")
+			(uuid "98842a10-0a44-418e-a7da-c44fdddc7d91")
 			(effects
 				(font
 					(size 1 1)
@@ -21648,7 +21652,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "cbccc529-9aa9-4a7f-9448-6028e933b696")
+			(uuid "858be673-4de6-4f59-a546-dee4a832108c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21659,7 +21663,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "4eb87b54-4d97-4da7-bf49-894d6bb2b058")
+			(uuid "0e17825b-a357-4d1c-85e8-f379361f083b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22350,7 +22354,7 @@
 	(footprint "Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "c5047024-5d2b-419a-ae21-5f3ca457255d")
-		(at 71.725 26.725)
+		(at 67.225 25.725)
 		(descr "Through hole straight pin header, 2x02, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x02 2.54mm double row")
 		(property "Reference" "J7"
@@ -22365,7 +22369,7 @@
 			)
 		)
 		(property "Value" "CAB_PWR_RST"
-			(at 0.775 5.275 0)
+			(at 0.775 5.775 0)
 			(layer "F.SilkS")
 			(uuid "1428f160-65a0-4609-a98e-ac0d68e500fd")
 			(effects
@@ -27541,6 +27545,90 @@
 		(at 97 138.644772 0)
 		(layer "F.SilkS")
 		(uuid "218e481e-5e6a-4a48-9700-89cbb0e61310")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "GND"
+		(at 98.568436 44.00656 0)
+		(layer "F.SilkS")
+		(uuid "82bb5015-43aa-46c2-92c3-671de763d668")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "C\nS\nY\nN\nC"
+		(at 102.536312 50.5 0)
+		(layer "F.SilkS")
+		(uuid "2d0cb6f2-0842-467b-8ea1-765295fd59e2")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "B"
+		(at 104.975093 43.934539 0)
+		(layer "F.SilkS")
+		(uuid "1a3ddb95-ded5-40e3-a21c-6078975cdc88")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "H\nS\nY\nN\nC"
+		(at 107.593563 50.5 0)
+		(layer "F.SilkS")
+		(uuid "7cb2d01a-68d9-473b-a404-a7deb76c46b6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "G"
+		(at 110.081109 43.934539 0)
+		(layer "F.SilkS")
+		(uuid "0d0a3fda-3580-4bb0-bfca-d8056abec5dc")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "V\nS\nY\nN\nC"
+		(at 112.722314 50.422085 0)
+		(layer "F.SilkS")
+		(uuid "432c18d3-554f-4f0c-82b4-3f0295af248e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(gr_text "R"
+		(at 115.236222 44 0)
+		(layer "F.SilkS")
+		(uuid "20fdb259-b370-4895-8634-666a9af0253b")
 		(effects
 			(font
 				(size 1 1)

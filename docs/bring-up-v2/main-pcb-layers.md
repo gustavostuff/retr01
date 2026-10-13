@@ -96,7 +96,7 @@ The CPU address and data nets stay one electrical bus (hi-Z discipline, no extra
 
 | Net | Path |
 |-----|------|
-| U1 A0-A15 | U3, mux I0, J36 odd/side A (A0-A13). Net class **CPU_A** (blue). |
+| U1 A0-A15 | U3, mux I0, J36 odd/side A (A0-A13). Net class **CPU_A** (magenta). |
 | U1 D0-D7 | U3 DQ, U574 D, UM CPU_D, J36 even/side B. Net class **CPU_D** (green). |
 | U1 RWB | Decode / PLDs |
 | U3 CE# / OE# / WE# | System RAM decode |
@@ -221,12 +221,12 @@ A whole bus that cannot finish on layer 1 is a placement problem first. The part
 
 ## KiCad net classes
 
-`main_pcb.kicad_pro`, `v_04.kicad_pro`, and `v_05.kicad_pro` carry these classes. `export_netlist.sh` rewrites them through `patch_kicad_pro` so they survive the next SKiDL export.
+`main_pcb.kicad_pro` carries these classes. `export_netlist.sh` rewrites it through `patch_kicad_pro` so they survive the next SKiDL export.
 
 | Class | Color | Nets | Layer |
 |-------|-------|------|-------|
 | **Quiet** | orange `rgb(220, 143, 50)` | Analog, reset/ready, handshake, I2C, pads, arcade, MAP A14-A18 | 4 |
-| **CPU_A** | blue `rgb(70, 140, 210)` | `CPU_A0`-`CPU_A15` (and `CART_A0`-`CART_A13` if those names remain) | 1 |
+| **CPU_A** | magenta `rgb(210, 35, 136)` | `CPU_A0`-`CPU_A15` (and `CART_A0`-`CART_A13` if those names remain) | 1 |
 | **CPU_D** | green `rgb(60, 180, 90)` | `CPU_D0`-`CPU_D7` | 1 |
 | Default | (KiCad default) | Remaining layer 1 nets | 1 |
 

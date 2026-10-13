@@ -211,7 +211,9 @@
       ],
       "track_widths": [
         0.0,
-        0.8
+        0.25,
+        0.8,
+        2.0
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -311,10 +313,10 @@
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
-        "name": "Quiet",
-        "pcb_color": "rgb(220, 143, 50)",
+        "name": "CPU_A",
+        "pcb_color": "rgb(210, 35, 136)",
         "priority": 0,
-        "schematic_color": "rgb(220, 143, 50)",
+        "schematic_color": "rgb(210, 35, 136)",
         "track_width": 0.25,
         "tuning_profile": "",
         "via_diameter": 0.6,
@@ -330,15 +332,15 @@
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
+        "name": "CPU_D",
+        "pcb_color": "rgb(60, 180, 90)",
         "priority": 0,
+        "schematic_color": "rgb(60, 180, 90)",
         "track_width": 0.25,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
-        "wire_width": 6,
-        "name": "CPU_A",
-        "pcb_color": "rgb(70, 140, 210)",
-        "schematic_color": "rgb(70, 140, 210)"
+        "wire_width": 6
       },
       {
         "bus_width": 12,
@@ -349,15 +351,15 @@
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
+        "name": "Quiet",
+        "pcb_color": "rgb(220, 143, 50)",
         "priority": 0,
+        "schematic_color": "rgb(220, 143, 50)",
         "track_width": 0.25,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
-        "wire_width": 6,
-        "name": "CPU_D",
-        "pcb_color": "rgb(60, 180, 90)",
-        "schematic_color": "rgb(60, 180, 90)"
+        "wire_width": 6
       }
     ],
     "meta": {
