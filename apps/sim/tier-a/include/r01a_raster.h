@@ -17,7 +17,7 @@
 #define R01A_VSYNC_START 243
 #define R01A_VSYNC_END 246
 
-/* Method B color bars (active X regions of 32 dots). */
+/* Eight vertical bars, 32 dots each. Active video only. */
 static const uint8_t R01A_BAR_INDEX[8] = {48, 52, 55, 58, 44, 33, 34, 16};
 
 static inline uint8_t r01a_bar_index_at_x(int x) {

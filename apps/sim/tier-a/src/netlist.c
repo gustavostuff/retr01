@@ -147,7 +147,6 @@ static void build_auto(R01aBoard *b) {
     NsEntity *c7 = ent(b, "C7");
     NsEntity *e1 = ent(b, "E1");
     int i;
-    char iname[8];
     char aname[4];
     g_nslot = 0;
     g_pins = &b->pin_net;
@@ -260,14 +259,16 @@ static void build_auto(R01aBoard *b) {
         link_n(u74, "2Q", bx, "CLK");
     }
 
-    link_n(bx, "HWRAP", by, "CLK");
-    link_n(bx, "CSYNC", j2, "CSYNC");
+    link_n(bx, "HSYNC", by, "CLK");
     link_n(bx, "HSYNC", j2, "HSYNC");
     link_n(by, "VSYNC", j2, "VSYNC");
-    for (i = 0; i < 6; i++) {
-        snprintf(iname, sizeof(iname), "INDEX%d", i);
-        snprintf(aname, sizeof(aname), "A%d", i);
-        link_n(bx, iname, u24, aname);
+    {
+        static const char *const nc[] = {"I3", "PD", "I5", "I6", "I7", "I8", "I9", "I10", "I11", "I13"};
+        size_t n;
+        for (n = 0; n < sizeof(nc) / sizeof(nc[0]); n++) {
+            link_n(u04, "GND", bx, nc[n]);
+            link_n(u04, "GND", by, nc[n]);
+        }
     }
     r01a_netlist_link_dac_rgbs((R01aNetLinkFn)link_n, u04, u24, j2, ent(b, "R1"), ent(b, "R2"),
                                  ent(b, "R3"), ent(b, "R4"), ent(b, "R5"), ent(b, "R6"),
@@ -296,8 +297,8 @@ static int name_vdd(const char *n) {
 }
 
 static int name_clk(const char *n) {
-    return n && (strcmp(n, "DOT") == 0 || strcmp(n, "CLK") == 0 || strcmp(n, "CSYNC") == 0 ||
-                 strcmp(n, "HWRAP") == 0 || strcmp(n, "1CLK") == 0 || strcmp(n, "2CLK") == 0 ||
+    return n && (strcmp(n, "DOT") == 0 || strcmp(n, "CLK") == 0 || strcmp(n, "HSYNC") == 0 ||
+                 strcmp(n, "1CLK") == 0 || strcmp(n, "2CLK") == 0 ||
                  strcmp(n, "1Q") == 0 || strcmp(n, "2Q") == 0 || strcmp(n, "1/Q") == 0 ||
                  strcmp(n, "2/Q") == 0 || strcmp(n, "1A") == 0 || strcmp(n, "1Y") == 0 ||
                  strcmp(n, "2A") == 0 || strcmp(n, "2Y") == 0);

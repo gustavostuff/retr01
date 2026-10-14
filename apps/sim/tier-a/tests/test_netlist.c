@@ -68,34 +68,36 @@ int main(void) {
 
     bx = r01a_atf22v10_entity(&board.beam_x);
     place_pin_on_hole(bx, 14, &board.breadboard, idx_h);
-    expect_true(r01a_board_jumper_add(&board, idx_h, gnd_rail), "INDEX0 to GND");
+    expect_true(r01a_board_jumper_add(&board, idx_h, gnd_rail), "HSYNC to GND");
     n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
-    expect_true(has_kind(iss, n, R01A_NET_SHORT_DATA_GND), "INDEX0 on GND rail is data-GND short");
+    expect_true(has_kind(iss, n, R01A_NET_SHORT_CLK_GND), "HSYNC on GND rail is a clock-GND short");
 
     r01a_board_jumper_clear(&board);
     expect_true(r01a_board_jumper_add(&board, vdd_h, pos_rail), "restore 5V jumper");
     {
-        NsEntity *prom = r01a_at27c256r_entity(&board.prom);
+        NsEntity *by = r01a_atf22v10_entity(&board.beam_y);
         int i;
-        int open_index = 0;
-        place_pin_on_hole(prom, 10, &board.breadboard, a0_h);
+        int open_hs = 0;
+        place_pin_on_hole(bx, 14, &board.breadboard, idx_h);
+        place_pin_on_hole(by, 1, &board.breadboard, a0_h);
         n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
         for (i = 0; i < n; i++) {
-            if (iss[i].kind == R01A_NET_MISSING && strstr(iss[i].text, "INDEX0")) {
-                open_index = 1;
+            if (iss[i].kind == R01A_NET_MISSING && strstr(iss[i].text, "HSYNC") &&
+                strstr(iss[i].text, "CLK")) {
+                open_hs = 1;
             }
         }
-        expect_true(open_index, "INDEX0 and A0 on split strips is open");
-        expect_true(r01a_board_jumper_add(&board, idx_h, a0_h), "INDEX0 to A0 jumper");
+        expect_true(open_hs, "HSYNC and Beam Y CLK on split strips is open");
+        expect_true(r01a_board_jumper_add(&board, idx_h, a0_h), "HSYNC to Beam Y CLK jumper");
         n = r01a_netlist_check(&board, iss, R01A_NET_ISSUE_MAX);
-        open_index = 0;
+        open_hs = 0;
         for (i = 0; i < n; i++) {
-            if (iss[i].kind == R01A_NET_MISSING && strstr(iss[i].text, "INDEX0") &&
-                strstr(iss[i].text, "A0")) {
-                open_index = 1;
+            if (iss[i].kind == R01A_NET_MISSING && strstr(iss[i].text, "HSYNC") &&
+                strstr(iss[i].text, "CLK")) {
+                open_hs = 1;
             }
         }
-        expect_true(!open_index, "INDEX0-A0 jumper closes that net");
+        expect_true(!open_hs, "HSYNC jumper closes that net");
     }
 
     r01a_board_shutdown(&board);

@@ -13,6 +13,7 @@
 #include "discrete_ic/pin_netlist.h"
 #include "discrete_ic/video_sink.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 enum {
@@ -95,6 +96,10 @@ static inline const char *r01a_jumper_b_ref(const R01aJumper *j) {
 }
 
 NsEntity *r01a_board_entity_by_refdes(R01aBoard *board, const char *refdes);
+
+/* Hover text. 1 and a short phrase, or 0 when this part has nothing extra. */
+int r01s_ui_tip_role(const NsEntity *e, char *out, size_t out_len);
+int r01s_ui_tip_live(const NsEntity *e, char *out, size_t out_len);
 NsPassive *r01a_board_add_passive(R01aBoard *board, NsPassiveKind kind, const char *value, int x, int y);
 NsBreadboard *r01a_board_add_breadboard(R01aBoard *board, int x, int y);
 int r01a_board_remove_breadboard(R01aBoard *board, NsBreadboard *bb);

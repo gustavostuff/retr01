@@ -6,35 +6,42 @@
 
 #include <string.h>
 
+static void drive_bit(NsEntity *e, const char *name, unsigned value, int bit) {
+    ns_entity_drive(e, name, (value & (1u << bit)) ? NS_LVL_H : NS_LVL_L);
+}
+
 static void beam_x_drive(R01aAtf22v10 *c) {
     NsEntity *e = &c->base;
-    int hb = (c->x >= R01A_BEAM_VISIBLE_W);
-    int hs = (!hb) ? 0 : (c->x >= R01A_HSYNC_START && c->x < R01A_HSYNC_END);
-    int i;
-    char name[8];
+    unsigned x = (unsigned)c->x;
+    int hs = (c->x >= R01A_HSYNC_START && c->x < R01A_HSYNC_END);
 
-    c->index = hb ? 0 : r01a_bar_index_at_x(c->x);
-    for (i = 0; i < 6; i++) {
-        name[0] = 'I';
-        name[1] = 'N';
-        name[2] = 'D';
-        name[3] = 'E';
-        name[4] = 'X';
-        name[5] = (char)('0' + i);
-        name[6] = '\0';
-        ns_entity_drive(e, name, (c->index & (1 << i)) ? NS_LVL_H : NS_LVL_L);
-    }
-    ns_entity_drive(e, "HBLANK", hb ? NS_LVL_H : NS_LVL_L);
-    ns_entity_drive(e, "CSYNC", hs ? NS_LVL_H : NS_LVL_L);
     ns_entity_drive(e, "HSYNC", hs ? NS_LVL_H : NS_LVL_L);
+    drive_bit(e, "Q0", x, 0);
+    drive_bit(e, "Q1", x, 1);
+    drive_bit(e, "Q2", x, 2);
+    drive_bit(e, "Q3", x, 3);
+    drive_bit(e, "Q4", x, 4);
+    drive_bit(e, "Q5", x, 5);
+    drive_bit(e, "Q6", x, 6);
+    drive_bit(e, "Q7", x, 7);
+    drive_bit(e, "Q8", x, 8);
 }
 
 static void beam_y_drive(R01aAtf22v10 *c) {
     NsEntity *e = &c->base;
-    int vb = (c->y >= R01A_BEAM_VISIBLE_H);
-    int vs = vb && (c->y >= R01A_VSYNC_START && c->y < R01A_VSYNC_END);
-    ns_entity_drive(e, "VBLANK", vb ? NS_LVL_H : NS_LVL_L);
+    unsigned y = (unsigned)c->y;
+    int vs = (c->y >= R01A_VSYNC_START && c->y < R01A_VSYNC_END);
+
     ns_entity_drive(e, "VSYNC", vs ? NS_LVL_H : NS_LVL_L);
+    drive_bit(e, "Q0", y, 0);
+    drive_bit(e, "Q1", y, 1);
+    drive_bit(e, "Q2", y, 2);
+    drive_bit(e, "Q3", y, 3);
+    drive_bit(e, "Q4", y, 4);
+    drive_bit(e, "Q5", y, 5);
+    drive_bit(e, "Q6", y, 6);
+    drive_bit(e, "Q7", y, 7);
+    drive_bit(e, "Q8", y, 8);
 }
 
 static int res_held(NsEntity *e) {
@@ -45,9 +52,7 @@ static void pld_reset(NsEntity *e) {
     R01aAtf22v10 *c = (R01aAtf22v10 *)e;
     c->x = 0;
     c->y = 0;
-    c->index = 0;
     c->clk_prev = NS_LVL_L;
-    ns_entity_drive(e, "HWRAP", NS_LVL_L);
     if (c->role == R01A_PLD_BEAM_X) {
         beam_x_drive(c);
     } else {
@@ -60,8 +65,6 @@ static void pld_eval(NsEntity *e) {
     if (res_held(e)) {
         c->x = 0;
         c->y = 0;
-        c->index = 0;
-        ns_entity_drive(e, "HWRAP", NS_LVL_L);
     }
     if (c->role == R01A_PLD_BEAM_X) {
         beam_x_drive(c);
@@ -79,9 +82,7 @@ static void pld_tick(NsEntity *e) {
     if (res_held(e)) {
         c->x = 0;
         c->y = 0;
-        c->index = 0;
         c->clk_prev = clk;
-        ns_entity_drive(e, "HWRAP", NS_LVL_L);
         if (c->role == R01A_PLD_BEAM_X) {
             beam_x_drive(c);
         } else {
@@ -91,12 +92,10 @@ static void pld_tick(NsEntity *e) {
     }
 
     if (c->role == R01A_PLD_BEAM_X) {
-        ns_entity_drive(e, "HWRAP", NS_LVL_L);
         if (fall) {
             c->x++;
             if (c->x >= R01A_BEAM_DOTS_X) {
                 c->x = 0;
-                ns_entity_drive(e, "HWRAP", NS_LVL_H);
             }
         }
         beam_x_drive(c);
@@ -144,27 +143,27 @@ void r01a_atf22v10_init(R01aAtf22v10 *chip, const char *refdes, int role) {
     add_unused_ins(&chip->base);
     ns_entity_add_pin(&chip->base, 12, "GND", NS_PIN_PWR);
     if (role == R01A_PLD_BEAM_X) {
-        ns_entity_add_pin(&chip->base, 14, "INDEX0", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 15, "INDEX1", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 16, "INDEX2", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 17, "INDEX3", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 18, "INDEX4", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 19, "INDEX5", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 20, "HBLANK", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 21, "HWRAP", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 22, "CSYNC", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 23, "HSYNC", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 14, "HSYNC", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 15, "Q3", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 16, "Q2", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 17, "Q4", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 18, "Q7", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 19, "Q6", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 20, "Q5", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 21, "Q0", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 22, "Q8", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 23, "Q1", NS_PIN_OUT);
     } else {
-        ns_entity_add_pin(&chip->base, 14, "IO14", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 15, "IO15", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 16, "IO16", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 17, "IO17", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 18, "IO18", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 19, "IO19", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 20, "VBLANK", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 21, "VSYNC", NS_PIN_OUT);
-        ns_entity_add_pin(&chip->base, 22, "IO22", NS_PIN_IO);
-        ns_entity_add_pin(&chip->base, 23, "IO23", NS_PIN_IO);
+        ns_entity_add_pin(&chip->base, 14, "VSYNC", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 15, "Q2", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 16, "Q3", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 17, "Q5", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 18, "Q7", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 19, "Q6", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 20, "Q4", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 21, "Q1", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 22, "Q8", NS_PIN_OUT);
+        ns_entity_add_pin(&chip->base, 23, "Q0", NS_PIN_OUT);
     }
     ns_entity_add_pin(&chip->base, 24, "VCC", NS_PIN_PWR);
     ns_entity_set_dip_mm(&chip->base, 24, 32, 8);
@@ -190,8 +189,4 @@ int r01a_atf22v10_hblank(const R01aAtf22v10 *chip) {
 
 int r01a_atf22v10_vblank(const R01aAtf22v10 *chip) {
     return chip ? (chip->y >= R01A_BEAM_VISIBLE_H) : 0;
-}
-
-uint8_t r01a_atf22v10_index(const R01aAtf22v10 *chip) {
-    return chip ? chip->index : 0;
 }

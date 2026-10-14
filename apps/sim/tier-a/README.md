@@ -1,12 +1,12 @@
 # Retr01 Tier A sim
 
-Isolated hardware lab for [docs/bringup/tier-a-video-lab.md](../../../docs/bringup/tier-a-video-lab.md). The window uses the Tier H board view: a DIGITAL island and an ANALOG island. Method B color bars on the virtual screen (256x240 CRT field).
+Isolated hardware lab for [docs/bring-up-v2/tier-a-breadboard-placement.md](../../../docs/bring-up-v2/tier-a-breadboard-placement.md). The window uses the Tier H board view: a DIGITAL island and an ANALOG island. Eight vertical kit bars on the virtual screen (256x240 CRT field).
 
 Engine: [`tools/discrete_ic/`](../../../tools/discrete_ic/). Palette SoT: [`apps/common/r01_kit_palette.c`](../../common/r01_kit_palette.c). Chips, font, and board chrome that both labs use live in [`apps/sim/common/`](../common/). Overlay font is Proggy Tiny.
 
 ## Parts
 
-DOT canned oscillator (4-leg OSC4LEGS sprite, DIP-14 can: pin 14 VDD / 8 clock / 1 OE# / 7 GND), Beam X and Beam Y (ATF22V10 shells), AT27C256R kit PROM, **J2** 2x4 male pin header, LCD sink (256x240 RGBS field). Clocks, PLDs, and the PROM sit on DIGITAL. The DAC resistors, J2, and the screen sit on ANALOG.
+21.47727 MHz crystal, 74HCU04 Pierce oscillator, 74HC74 divide-by-4, Beam X and Beam Y (ATF22V10 shells with the Tier A burns), AT27C256R kit PROM, **J2** header, LCD sink (256x240 field). The clock, PLDs, and the PROM sit on DIGITAL. The DAC resistors, J2, and the screen sit on ANALOG. The burned PLDs do not drive the color index. The sim steps PROM A5 through A0 through the eight bar indexes. J2 CSYNC stays open. HSYNC clocks Beam Y.
 
 Passives from the Tier A lab: 100 nF decoupling, 220 uF bulk, R3G3B2 DAC resistors (4.00k / 2.00k / 1.00k and 75 ohm loads), 33 ohm series on DOT. Resistors show 4-band EIA color codes from their ohm value.
 
@@ -26,7 +26,11 @@ Each price is one piece, rough USD, about September 2026. Shipping and tax are e
 | 2 | 24-pin DIP sockets, 0.3 inch | `~$0.50` | So a bad JEDEC can come out |
 | 1 | **AT27C256R-45**, PDIP-28, 600 mil | `~$3` | Color PROM. **OTP.** A wrong image means a new chip. A spare is another `~$3`. |
 | 1 | 28-pin DIP socket, 0.6 inch | `~$1` | For the PROM |
-| 1 | 5 V canned CMOS oscillator, **5.369318 MHz** | `~$4` | DOT. Not a bare crystal. Less common than 8 MHz / colorburst cans. |
+| 1 | 74HCU04, PDIP-14 | `~$1` | Pierce oscillator. Not a 74HC04. |
+| 1 | 74HC74, PDIP-14 | `~$1` | Divides 21.47727 MHz by 4 |
+| 1 | 21.47727 MHz crystal | `~$1` | Master clock |
+| 1 | 1 Mohm | `~$0.10` | Pierce feedback |
+| 2 | 18 pF to 20 pF | `~$0.10` | Crystal loads |
 | 1 | **2x4** (2.54 mm) header + RGBS/RGBHV cable or adapter | `~$5` | J2-style R/G/B/CSYNC/HSYNC/VSYNC/GND to monitor or capture card |
 | 3 | Solderless breadboards | `~$6` | The wired Tier A sim uses three. The bring-up doc does not lock a count |
 | 1 | Jumper-wire set | `~$8` | Solid core, long enough to cross boards |
@@ -66,11 +70,11 @@ Single-piece distributor prices, about September 2026. Shipping and tax are extr
 
 | Line | About |
 | --- | --- |
-| Tier A parts: two PLDs, two PROMs (one spare), DOT osc, RGBS header/cable, three breadboards, jumpers, 5 V supply, passives, sockets | **USD 55-85** |
+| Tier A parts: two PLDs, two PROMs (one spare), crystal clock, RGBS header/cable, three breadboards, jumpers, 5 V supply, passives, sockets | **USD 55-85** |
 | TL866-class programmer (PROM burn; also programs PLDs). Omit when PLDs and PROM arrive pre-programmed | **USD 50-70** |
 | Tier B later: one more PLD, socket, and 100 nF | **about USD 5** |
 
-A first bench that can program its own chips lands around **USD 110-150**. Skip the programmer line if the PLDs and PROM arrive already programmed. A hard-to-find **5.369318 MHz** can move the parts line more than the resistors do.
+A first bench that can program its own chips lands around **USD 110-150**. Skip the programmer line if the PLDs and PROM arrive already programmed.
 
 ### Do not buy for Tier A or B
 

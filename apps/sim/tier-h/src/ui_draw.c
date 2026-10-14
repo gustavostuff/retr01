@@ -613,6 +613,127 @@ static void ui_update_hover(R01sUi *ui) {
     ui->hover_pin = ui_ic_hover_pin(ui, ui->chips[chip_i], ui->mouse_lx, ui->mouse_ly);
 }
 
+__attribute__((weak)) int r01s_ui_tip_role(const R01sEntity *e, char *out, size_t out_len) {
+    (void)e;
+    (void)out;
+    (void)out_len;
+    return 0;
+}
+
+__attribute__((weak)) int r01s_ui_tip_live(const R01sEntity *e, char *out, size_t out_len) {
+    (void)e;
+    (void)out;
+    (void)out_len;
+    return 0;
+}
+
+static void tip_append(char *out, size_t out_len, const char *part) {
+    size_t len;
+    if (!out || out_len == 0 || !part || !part[0]) {
+        return;
+    }
+    len = strlen(out);
+    if (len >= out_len) {
+        return;
+    }
+    if (len > 0) {
+        if (len + 3 >= out_len) {
+            return;
+        }
+        out[len++] = ' ';
+        out[len++] = ' ';
+        out[len] = '\0';
+    }
+    snprintf(out + len, out_len - len, "%s", part);
+}
+
+static int nearly_whole(double v) {
+    double nearest = (double)(int)(v >= 0.0 ? v + 0.5 : v - 0.5);
+    double d = v - nearest;
+    if (d < 0.0) {
+        d = -d;
+    }
+    return d < 0.001;
+}
+
+/* "4.00k" -> "4 kohm", "75.0" -> "75 ohm", "1.00M" -> "1 Mohm". */
+static void format_ohms(const char *s, char *out, size_t out_len) {
+    char *end = NULL;
+    double v;
+    const char *unit = "ohm";
+    if (!s || !s[0] || !out || out_len == 0) {
+        return;
+    }
+    v = strtod(s, &end);
+    if (end == s || v <= 0.0) {
+        snprintf(out, out_len, "%s ohm", s);
+        return;
+    }
+    if (*end == 'k' || *end == 'K') {
+        v *= 1000.0;
+    } else if (*end == 'M') {
+        v *= 1000000.0;
+    }
+    if (v >= 999999.0) {
+        v /= 1000000.0;
+        unit = "Mohm";
+    } else if (v >= 999.0) {
+        v /= 1000.0;
+        unit = "kohm";
+    }
+    if (nearly_whole(v)) {
+        snprintf(out, out_len, "%.0f %s", v, unit);
+    } else if (nearly_whole(v * 10.0)) {
+        snprintf(out, out_len, "%.1f %s", v, unit);
+    } else {
+        snprintf(out, out_len, "%.2f %s", v, unit);
+    }
+}
+
+static void passive_value_text(const R01sPassive *p, char *out, size_t out_len) {
+    if (!out || out_len == 0) {
+        return;
+    }
+    out[0] = '\0';
+    if (!p || !p->value[0]) {
+        return;
+    }
+    if (p->kind == R01S_PASSIVE_R) {
+        format_ohms(p->value, out, out_len);
+        return;
+    }
+    snprintf(out, out_len, "%s", p->value);
+}
+
+static void fill_entity_tip(const R01sEntity *e, char *out, size_t out_len, int with_live) {
+    char extra[80];
+    if (!out || out_len == 0) {
+        return;
+    }
+    out[0] = '\0';
+    if (!e) {
+        return;
+    }
+    tip_append(out, out_len, e->refdes);
+    if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
+        char value[48];
+        passive_value_text((const R01sPassive *)(const void *)e, value, sizeof(value));
+        tip_append(out, out_len, value);
+    } else if (e->part && (!e->refdes || strcmp(e->part, e->refdes) != 0)) {
+        tip_append(out, out_len, e->part);
+    }
+    extra[0] = '\0';
+    if (r01s_ui_tip_role(e, extra, sizeof(extra)) == 1) {
+        tip_append(out, out_len, extra);
+    }
+    if (with_live) {
+        extra[0] = '\0';
+        if (r01s_ui_tip_live(e, extra, sizeof(extra)) == 1) {
+            tip_append(out, out_len, extra);
+        }
+    }
+}
+
 static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
     int chip_i = -1;
     int island_i = -1;
@@ -628,13 +749,23 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         const R01sEntity *e = ui->chips[ui->hover_chip];
         const R01sPin *pin;
         if (e && ui->hover_pin < e->pin_count) {
+            char role[80];
+            const char *ref = e->refdes ? e->refdes : "IC";
             pin = &e->pins[ui->hover_pin];
-            if (pin->name && pin->name[0]) {
-                snprintf(out, out_len, "%s  %d  %s  %s", e->refdes ? e->refdes : "IC", pin->number, pin->name,
+            role[0] = '\0';
+            if (r01s_ui_tip_role(e, role, sizeof(role)) != 1) {
+                role[0] = '\0';
+            }
+            if (pin->name && pin->name[0] && role[0]) {
+                snprintf(out, out_len, "%s  %s  %d  %s  %s", ref, role, pin->number, pin->name,
                          pin_level_name(pin->level));
+            } else if (pin->name && pin->name[0]) {
+                snprintf(out, out_len, "%s  %d  %s  %s", ref, pin->number, pin->name,
+                         pin_level_name(pin->level));
+            } else if (role[0]) {
+                snprintf(out, out_len, "%s  %s  %d  %s", ref, role, pin->number, pin_level_name(pin->level));
             } else {
-                snprintf(out, out_len, "%s  %d  %s", e->refdes ? e->refdes : "IC", pin->number,
-                         pin_level_name(pin->level));
+                snprintf(out, out_len, "%s  %d  %s", ref, pin->number, pin_level_name(pin->level));
             }
             return;
         }
@@ -676,13 +807,7 @@ static void ui_fill_tooltip(const R01sUi *ui, char *out, size_t out_len) {
         if (!e) {
             return;
         }
-        if (e->refdes && e->part) {
-            snprintf(out, out_len, "%s  %s", e->refdes, e->part);
-        } else if (e->part) {
-            snprintf(out, out_len, "%s", e->part);
-        } else if (e->refdes) {
-            snprintf(out, out_len, "%s", e->refdes);
-        }
+        fill_entity_tip(e, out, out_len, 1);
         if (ui->floor_on && e->refdes) {
             int zone = r01s_air_zone_for_ref(e->refdes);
             int over;

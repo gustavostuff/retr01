@@ -511,9 +511,29 @@ static void board_bind_rails(R01aBoard *b) {
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "VCC", vdd);
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "GND", NS_LVL_L);
     drive_vdd(r01a_atf22v10_entity(&b->beam_x), "RES#", NS_LVL_H);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I3", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "PD", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I5", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I6", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I7", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I8", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I9", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I10", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I11", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_x), "I13", NS_LVL_L);
     drive_vdd(r01a_atf22v10_entity(&b->beam_y), "VCC", vdd);
     drive_vdd(r01a_atf22v10_entity(&b->beam_y), "GND", NS_LVL_L);
     drive_vdd(r01a_atf22v10_entity(&b->beam_y), "RES#", NS_LVL_H);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I3", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "PD", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I5", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I6", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I7", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I8", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I9", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I10", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I11", NS_LVL_L);
+    drive_vdd(r01a_atf22v10_entity(&b->beam_y), "I13", NS_LVL_L);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VCC", vdd);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "GND", NS_LVL_L);
     drive_vdd(r01a_at27c256r_entity(&b->prom), "VPP", vdd);
@@ -531,15 +551,13 @@ static void board_tie_prom_unused_a(R01aBoard *b) {
 }
 
 static void board_wire_index(R01aBoard *b) {
-    NsEntity *bx = r01a_atf22v10_entity(&b->beam_x);
     NsEntity *prom = r01a_at27c256r_entity(&b->prom);
+    uint8_t index = r01a_bar_index_at_x(r01a_atf22v10_x(&b->beam_x));
     int i;
-    char iname[8];
     char aname[4];
     for (i = 0; i < 6; i++) {
-        snprintf(iname, sizeof(iname), "INDEX%d", i);
         snprintf(aname, sizeof(aname), "A%d", i);
-        drive_copy(prom, aname, bx, iname);
+        ns_entity_drive(prom, aname, (index & (1u << i)) ? NS_LVL_H : NS_LVL_L);
     }
 }
 
@@ -564,7 +582,7 @@ static void board_plot(R01aBoard *b) {
     if (ns_entity_sense(r01a_sn74hc74_entity(&b->u74), "2Q") != NS_LVL_H) {
         return;
     }
-    idx = r01a_atf22v10_index(&b->beam_x);
+    idx = r01a_bar_index_at_x(x);
     ns_video_sink_plot(&b->sink, x, y, idx);
 }
 
@@ -643,7 +661,7 @@ void r01a_board_step(R01aBoard *board) {
     }
     drive_copy(r01a_atf22v10_entity(&board->beam_x), "CLK", r01a_sn74hc74_entity(&board->u74), "2Q");
     ns_entity_tick(r01a_atf22v10_entity(&board->beam_x));
-    drive_copy(r01a_atf22v10_entity(&board->beam_y), "CLK", r01a_atf22v10_entity(&board->beam_x), "HWRAP");
+    drive_copy(r01a_atf22v10_entity(&board->beam_y), "CLK", r01a_atf22v10_entity(&board->beam_x), "HSYNC");
     ns_entity_tick(r01a_atf22v10_entity(&board->beam_y));
     board_settle(board);
     board_plot(board);
@@ -747,7 +765,8 @@ static void group_status(NsIslandGroup *group, char *buf, size_t buf_len) {
     R01aBoard *b = (R01aBoard *)group->impl;
     snprintf(buf, buf_len, "X=%d Y=%d HB=%d VB=%d idx=%u", r01a_atf22v10_x(&b->beam_x),
              r01a_atf22v10_y(&b->beam_y), r01a_atf22v10_hblank(&b->beam_x),
-             r01a_atf22v10_vblank(&b->beam_y), (unsigned)r01a_atf22v10_index(&b->beam_x));
+             r01a_atf22v10_vblank(&b->beam_y),
+             (unsigned)r01a_bar_index_at_x(r01a_atf22v10_x(&b->beam_x)));
 }
 
 static const NsIslandGroupVTable BOARD_GROUP_VT = {
@@ -1292,4 +1311,163 @@ int r01a_board_remove_breadboard(R01aBoard *board, NsBreadboard *bb) {
         ns_island_add_entity(island, ns_breadboard_entity(&board->extra_bb[i]));
     }
     return 1;
+}
+
+static const char *tip_job(const char *ref) {
+    if (!ref) {
+        return NULL;
+    }
+    if (strcmp(ref, "U04") == 0) {
+        return "Pierce clock";
+    }
+    if (strcmp(ref, "U74") == 0) {
+        return "divide by 4";
+    }
+    if (strcmp(ref, "UPLDX") == 0) {
+        return "Beam X";
+    }
+    if (strcmp(ref, "UPLDY") == 0) {
+        return "Beam Y";
+    }
+    if (strcmp(ref, "U24") == 0) {
+        return "color PROM";
+    }
+    if (strcmp(ref, "J2") == 0) {
+        return "RGBS header";
+    }
+    if (strcmp(ref, "SCR1") == 0) {
+        return "screen";
+    }
+    if (strcmp(ref, "Y2") == 0) {
+        return "crystal";
+    }
+    if (strcmp(ref, "C1") == 0) {
+        return "U04 bypass";
+    }
+    if (strcmp(ref, "C2") == 0) {
+        return "U74 bypass";
+    }
+    if (strcmp(ref, "C3") == 0) {
+        return "Beam X bypass";
+    }
+    if (strcmp(ref, "C4") == 0) {
+        return "Beam Y bypass";
+    }
+    if (strcmp(ref, "C5") == 0) {
+        return "PROM bypass";
+    }
+    if (strcmp(ref, "C6") == 0 || strcmp(ref, "C7") == 0) {
+        return "Pierce load";
+    }
+    if (strcmp(ref, "E1") == 0) {
+        return "bulk";
+    }
+    if (strcmp(ref, "R1") == 0) {
+        return "red O7";
+    }
+    if (strcmp(ref, "R2") == 0) {
+        return "red O6";
+    }
+    if (strcmp(ref, "R3") == 0) {
+        return "red O5";
+    }
+    if (strcmp(ref, "R4") == 0) {
+        return "green O4";
+    }
+    if (strcmp(ref, "R5") == 0) {
+        return "green O3";
+    }
+    if (strcmp(ref, "R6") == 0) {
+        return "green O2";
+    }
+    if (strcmp(ref, "R7") == 0) {
+        return "blue O1";
+    }
+    if (strcmp(ref, "R8") == 0) {
+        return "blue O0";
+    }
+    if (strcmp(ref, "R9") == 0) {
+        return "red load";
+    }
+    if (strcmp(ref, "R10") == 0) {
+        return "green load";
+    }
+    if (strcmp(ref, "R11") == 0) {
+        return "blue load";
+    }
+    if (strcmp(ref, "R12") == 0) {
+        return "DOT series";
+    }
+    if (strcmp(ref, "R13") == 0) {
+        return "Pierce feedback";
+    }
+    return NULL;
+}
+
+static const char *tip_level(NsLevel level) {
+    switch (level) {
+    case NS_LVL_L:
+        return "L";
+    case NS_LVL_H:
+        return "H";
+    case NS_LVL_X:
+        return "X";
+    default:
+        return "Z";
+    }
+}
+
+static int prom_index(const NsEntity *e) {
+    int i;
+    int idx = 0;
+    for (i = 0; i < 6; i++) {
+        char name[4];
+        snprintf(name, sizeof(name), "A%d", i);
+        if (ns_entity_sense(e, name) == NS_LVL_H) {
+            idx |= 1 << i;
+        }
+    }
+    return idx;
+}
+
+int r01s_ui_tip_role(const NsEntity *e, char *out, size_t out_len) {
+    const char *job;
+    if (!out || out_len == 0) {
+        return 0;
+    }
+    out[0] = '\0';
+    job = e ? tip_job(e->refdes) : NULL;
+    if (!job) {
+        return 0;
+    }
+    snprintf(out, out_len, "%s", job);
+    return 1;
+}
+
+int r01s_ui_tip_live(const NsEntity *e, char *out, size_t out_len) {
+    if (!out || out_len == 0) {
+        return 0;
+    }
+    out[0] = '\0';
+    if (!e || !e->refdes) {
+        return 0;
+    }
+    if (strcmp(e->refdes, "UPLDX") == 0) {
+        snprintf(out, out_len, "dot %d", ((const R01aAtf22v10 *)e)->x);
+        return 1;
+    }
+    if (strcmp(e->refdes, "UPLDY") == 0) {
+        snprintf(out, out_len, "line %d", ((const R01aAtf22v10 *)e)->y);
+        return 1;
+    }
+    if (strcmp(e->refdes, "U24") == 0) {
+        int idx = prom_index(e);
+        snprintf(out, out_len, "index %d  %02X", idx, r01a_at27c256r_peek((const R01aAt27c256r *)e, idx));
+        return 1;
+    }
+    if (strcmp(e->refdes, "U74") == 0) {
+        snprintf(out, out_len, "DOT %s", tip_level(ns_entity_sense(e, "2Q")));
+        return 1;
+    }
+    return 0;
 }
