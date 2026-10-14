@@ -1,9 +1,9 @@
 {
   "version": 4,
   "mode": "islands",
-  "pan_x": 45,
-  "pan_y": 5,
-  "zoom": 4,
+  "pan_x": -118,
+  "pan_y": -43,
+  "zoom": 1,
   "air_wires": 0,
   "present_scale": 2,
   "lcd_2x": 1,
