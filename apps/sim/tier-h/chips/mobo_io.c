@@ -79,9 +79,10 @@ static void init_j2(R01sEntity *e) {
     io_header(e, 8, 1);
 }
 
-/* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4. Odd 7/9 = GND.
-   J5 odd 1/3/5 = PA7/PA6/PA5 (US2 1/28/27). J6 odd 1/3/5 = PF6/PD3/PD2
-   (US2 18/9/8). J5 is 180 deg and J6 is 0 deg beside US2. */
+/* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4.
+   J5 odd 1/3/5 = PA7/PA6/PA5 (US2 1/28/27), odd 7/9 = GND.
+   J6 odd 1/3 = GND, odd 5/7/9 = PD2/PF6/PD3 (US2 8/18/9).
+   J5 is 180 deg and J6 is 0 deg beside US2. */
 static void init_arcade_2x5(R01sEntity *e, const char *refdes, const char *const evens[5],
                             const char *const odds[3]) {
     int i;
@@ -105,8 +106,17 @@ static void init_j5(R01sEntity *e) {
 
 static void init_j6(R01sEntity *e) {
     static const char *const even[5] = {"RIGHT", "LEFT", "DOWN", "UP", "X"};
-    static const char *const odd[3] = {"START", "COIN", "Y"};
-    init_arcade_2x5(e, "J6", even, odd);
+    int i;
+    io_begin(e, "HDR-2x5", "J6");
+    for (i = 0; i < 5; i++) {
+        io_pin(e, i * 2 + 2, even[i]);
+    }
+    io_pin(e, 1, "GND1");
+    io_pin(e, 3, "GND3");
+    io_pin(e, 5, "Y");
+    io_pin(e, 7, "START");
+    io_pin(e, 9, "COIN");
+    io_header(e, 2, 5);
 }
 
 static void init_j7(R01sEntity *e) {

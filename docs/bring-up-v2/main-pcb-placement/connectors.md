@@ -111,10 +111,11 @@ J5 is Player 1, right of US2, rotated 180 deg. J6 is Player 2, left of US2, rota
 | Pins | J5 (P1) | J6 (P2) |
 |------|---------|---------|
 | Even 2,4,6,8,10 | `PA0`-`PA4` (pin 2 = bit 0) | `PC0`-`PC3`, `PD1` (pin 2 = bit 0) |
-| Odd 1 | `PA7` (US2 1) | `PF6` Start (US2 18) |
-| Odd 3 | `PA6` (US2 28) | `PD3` Coin (US2 9) |
+| Odd 1 | `PA7` (US2 1) | `GND` |
+| Odd 3 | `PA6` (US2 28) | `GND` |
 | Odd 5 | `PA5` (US2 27) | `PD2` Y (US2 8) |
-| Odd 7,9 | `GND` | `GND` |
+| Odd 7 | `GND` | `PF6` Start (US2 18) |
+| Odd 9 | `GND` | `PD3` Coin (US2 9) |
 
 Cabinet microswitch series **47 ohm** lives on the harness ([`hardware.md`](../../general/hardware.md), [`passive_bom.md`](../../passive_bom.md)).
 

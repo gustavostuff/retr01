@@ -271,7 +271,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | **J3** | TRS_P1 | Bottom-Left front edge | Player 1 TRS. Switchcraft 35RAPC2BVN4 and CLIFF S4 in one footprint |
 | **J4** | TRS_P2 | Bottom-Left front edge | Player 2 TRS. Switchcraft 35RAPC2BVN4 and CLIFF S4 in one footprint |
 | **J5** | ARCADE_P1 | Right of US2 | 2x5. Even 2-10 = P1 bits 0-4. Odd 1 = PA7 (US2 1), 3 = PA6 (US2 28), 5 = PA5 (US2 27). Odd 7/9 = GND |
-| **J6** | ARCADE_P2 | Left of US2 | 2x5. Even 2-10 = P2 bits 0-4. Odd 1 = PF6 (US2 18), 3 = PD3 (US2 9), 5 = PD2 (US2 8). Odd 7/9 = GND |
+| **J6** | ARCADE_P2 | Left of US2 | 2x5. Even 2-10 = P2 bits 0-4. Odd 1/3 = GND. Odd 5 = PD2 (US2 8), 7 = PF6 (US2 18), 9 = PD3 (US2 9) |
 | **J7** | CAB_PWR | Bottom edge near J5 | 2x2 `+5V`/`GND` over `RESET_N`/`GND` |
 
 ---

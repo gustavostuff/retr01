@@ -14325,7 +14325,7 @@
 		(descr "Through hole straight pin header, 2x05, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x05 2.54mm double row")
 		(property "Reference" "J5"
-			(at -0.23 -3.577784 0)
+			(at 1.27 -3.187784 0)
 			(layer "F.SilkS")
 			(uuid "b10eacbf-1024-4c2d-bedd-a08c481dd0ba")
 			(effects
@@ -22110,7 +22110,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_J6_P3_TO_US2_P9")
+			(net "SIG_J6_P9_TO_US2_P9")
 			(pinfunction "9")
 			(pintype "unspecified")
 			(uuid "80aee332-e5c4-4527-a44e-db3228890606")
@@ -22209,7 +22209,7 @@
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_J6_P1_TO_US2_P18")
+			(net "SIG_J6_P7_TO_US2_P18")
 			(pinfunction "18")
 			(pintype "unspecified")
 			(uuid "55ba1f4f-6591-44c7-ab66-3a94eb2622f0")
@@ -22823,7 +22823,7 @@
 		(descr "Through hole straight pin header, 2x05, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x05 2.54mm double row")
 		(property "Reference" "J6"
-			(at 2.78 13.737042 0)
+			(at 1.28 13.347042 0)
 			(layer "F.SilkS")
 			(uuid "898aee40-d7f9-4a59-aa28-d9c94bd72e68")
 			(effects
@@ -23027,7 +23027,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_J6_P1_TO_US2_P18")
+			(net "GND")
 			(uuid "1aa72284-f296-4c1e-8d7b-c19d30c240c0")
 		)
 		(pad "2" thru_hole circle
@@ -23045,7 +23045,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "SIG_J6_P3_TO_US2_P9")
+			(net "GND")
 			(uuid "e5394e5d-cdcf-4f99-94a7-2cde562d947d")
 		)
 		(pad "4" thru_hole circle
@@ -23081,7 +23081,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "GND")
+			(net "SIG_J6_P7_TO_US2_P18")
 			(uuid "5853a42a-ff8c-498d-8b83-7d6384b46b51")
 		)
 		(pad "8" thru_hole circle
@@ -23099,7 +23099,7 @@
 			(drill 1)
 			(layers "*.Cu" "*.Mask")
 			(remove_unused_layers no)
-			(net "GND")
+			(net "SIG_J6_P9_TO_US2_P9")
 			(uuid "fe5cb10d-0408-4b46-abaf-2a7632da9295")
 		)
 		(pad "10" thru_hole circle

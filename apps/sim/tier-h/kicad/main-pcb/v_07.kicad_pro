@@ -683,11 +683,11 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P1_TO_US2_P18"
+        "pattern": "SIG_J6_P7_TO_US2_P18"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P3_TO_US2_P9"
+        "pattern": "SIG_J6_P9_TO_US2_P9"
       },
       {
         "netclass": "Quiet",

@@ -262,5 +262,5 @@ Location: between J6 (P2) and J5 (P1), behind J3 and J4. Bypass **C7** at pin 20
 | SPI and `/SS_S2` | PD4-7 | from UM |
 | `PAD_DATA` | PF0 OD | J3/J4 ring plus **R18** 4.7k |
 | `AUDIO_PWM` | PF1 | J8 |
-| P2 START | PF6 | J6 pin 1 |
+| P2 START | PF6 | J6 pin 7 |
 | UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |
