@@ -36,4 +36,4 @@ OE# and WE# are never low at the same time while the bench is driving the data p
 
 CE# high releases the data pins on the next read. The byte at address 0 is still there when CE# returns low.
 
-The latch in [`74hc573.md`](74hc573.md) is what drives A7 to A0 once MCU-S1 is on the board. This page ties those address pins directly.
+The latch in [`bench-74hc573.md`](bench-74hc573.md) is what drives A7 to A0 once MCU-S1 is on the board. This page ties those address pins directly.

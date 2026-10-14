@@ -2,7 +2,7 @@
 
 Used in Tiers B and C.
 
-The socket holds the Tier B Compositor image. Beam X and Beam Y have already passed their own pages. The color PROM has already passed [`at27c256r.md`](at27c256r.md).
+The socket holds the Tier B Compositor image. Beam X and Beam Y have already passed their own pages. The color PROM has already passed [`bench-at27c256r.md`](bench-at27c256r.md).
 
 Pin 24 is VCC. Pin 12 is GND. Pin 1 is the same dot clock as Beam X pin 1. CPU-side inputs stay at the safe ties in [`docs/bringup/tier-b-video-lab.md`](../../../bringup/tier-b-video-lab.md). Unused outputs stay open.
 

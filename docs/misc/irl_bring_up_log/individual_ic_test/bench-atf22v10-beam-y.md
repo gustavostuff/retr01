@@ -4,7 +4,7 @@ Used in Tiers A, B, and C.
 
 The socket holds `beam_y.jed`. Power, ground, the NC ties, and RES match Beam X. Pin 24 is VCC. Pin 12 is GND. Pins 3 to 11 and pin 13 tie to GND. Pin 2 ties to 5 V.
 
-Pin 1 is not the dot clock. It is Beam X pin 14, one rising edge per line. Beam X has already passed [`atf22v10-beam-x.md`](atf22v10-beam-x.md).
+Pin 1 is not the dot clock. It is Beam X pin 14, one rising edge per line. Beam X has already passed [`bench-atf22v10-beam-x.md`](bench-atf22v10-beam-x.md).
 
 Count runs 0 through 261, then returns to 0. VSYNC is high on counts 243, 244, and 245.
 

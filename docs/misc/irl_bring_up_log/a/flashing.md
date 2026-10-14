@@ -41,7 +41,7 @@ One T48 or TL866II Plus covers both chips, with Xgpro. Programmer clicks are in 
 
 Pre-programmed parts are the other path. The PROM is one-time, so the blank check and the verify are the whole safety net. On the PLDs, leave the security fuse unprogrammed so a later read-back still works.
 
-What each file does, and the full pinout, is in `docs/misc/irl_bring_up_log/firmware/a/README.md`. A breadboard read of a programmed AT27C256R, pin by pin, is in [`../individual_ic_test/at27c256r.md`](../individual_ic_test/at27c256r.md).
+What each file does, and the full pinout, is in `docs/misc/irl_bring_up_log/firmware/a/README.md`. A breadboard read of a programmed AT27C256R, pin by pin, is in [`../individual_ic_test/bench-at27c256r.md`](../individual_ic_test/bench-at27c256r.md).
 
 ## Breadboard
 

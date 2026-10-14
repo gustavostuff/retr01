@@ -6,12 +6,12 @@ Each socket gets 5 V, ground, and a 100 nF capacitor from its VCC pin to ground.
 
 | Page | Chip | Tiers |
 | --- | --- | --- |
-| [`atf22v10-beam-x.md`](atf22v10-beam-x.md) | ATF22V10, Beam X | A, B, C |
-| [`atf22v10-beam-y.md`](atf22v10-beam-y.md) | ATF22V10, Beam Y | A, B, C |
-| [`at27c256r.md`](at27c256r.md) | AT27C256R color PROM | A, B, C |
-| [`atf22v10-compositor.md`](atf22v10-compositor.md) | ATF22V10, Compositor | B, C |
-| [`avr128db28.md`](avr128db28.md) | AVR128DB28, MCU-S1 | C |
-| [`74hc573.md`](74hc573.md) | 74HC573 field address latch | C |
-| [`as6c62256.md`](as6c62256.md) | AS6C62256 field SRAM | C |
+| [`bench-atf22v10-beam-x.md`](bench-atf22v10-beam-x.md) | ATF22V10, Beam X | A, B, C |
+| [`bench-atf22v10-beam-y.md`](bench-atf22v10-beam-y.md) | ATF22V10, Beam Y | A, B, C |
+| [`bench-at27c256r.md`](bench-at27c256r.md) | AT27C256R color PROM | A, B, C |
+| [`bench-atf22v10-compositor.md`](bench-atf22v10-compositor.md) | ATF22V10, Compositor | B, C |
+| [`bench-avr128db28.md`](bench-avr128db28.md) | AVR128DB28, MCU-S1 | C |
+| [`bench-74hc573.md`](bench-74hc573.md) | 74HC573 field address latch | C |
+| [`bench-as6c62256.md`](bench-as6c62256.md) | AS6C62256 field SRAM | C |
 
 The optional 74HC574 scroll latch stays off this list. Scroll stays at 0. The 21.47727 MHz Pierce pair is an alternate dot clock, and these pages use the Si5351 instead.
