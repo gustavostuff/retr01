@@ -145,7 +145,7 @@ A5 is the 32s bit. A0 is the 1s bit. The first check uses index 48, byte `0xFF`,
 5. Connect PROM pin 9 (A1) to ground.
 6. Connect PROM pin 10 (A0) to ground.
 
-Another index is the same six pins, from the table in [`docs/misc/irl_bring_up_log/individual_ic_test/at27c256r.md`](../misc/irl_bring_up_log/individual_ic_test/at27c256r.md). Index 0 is byte `0x00`, which is black, so a dark screen at that index is the kit and not a dead DAC.
+Another index is the same six pins, from the index table in [`docs/misc/irl_bring_up_log/individual_ic_test/at27c256r.md`](../misc/irl_bring_up_log/individual_ic_test/at27c256r.md). Index 0 is byte `0x00`, which is black, so a dark screen at that index is the kit and not a dead DAC.
 
 ## 10. Red gun
 
