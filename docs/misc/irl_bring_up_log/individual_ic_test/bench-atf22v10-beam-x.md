@@ -14,6 +14,8 @@ The socket holds `beam_x.jed`. The package is 300 mil, so it sits across the bre
 | 18 pF | 2 | Crystal load |
 | 100 nF | 3 | One across each IC |
 | 33 ohm | 1 | Series resistor on the dot clock |
+| LED, red | 10 | Nine count bits and HSYNC |
+| 2.2 kohm | 10 | LED series resistor |
 
 The oscillator chip is a 74HCU04. A 74HC04 is a different part. The same stage is the console dot clock.
 
@@ -54,8 +56,11 @@ The crystal, the 1 Mohm resistor, the two 18 pF capacitors, and 74HCU04 pins 1 a
 | 100 nF | +5 V rail to the ground rail, beside pin 24 |
 | Pins 3 through 11, and pin 13 | Ground |
 | Pin 2 (RES) | +5 V |
-| Pin 1 (CLK) | 74HC74 pin 9, through 33 ohm |
-| Pins 14 through 23 | Open. These are the probe points |
+| Pin 1 (CLK) | 74HC74 pin 9, through 33 ohm. Off during the step check |
+| Pins 22, 18, 19, 20, 17, 15, 16, 23, 21 | Q8 through Q0, left to right. Pin, then 2.2 kohm, then the LED anode. Cathode to ground |
+| Pin 14 | HSYNC. Same LED wiring. This lamp is not a count bit |
+
+A lit LED is a 1. A dark LED is a 0. The nine count lamps read as one binary word, Q8 on the left.
 
 Count runs 0 through 340, then returns to 0. HSYNC is high on counts 264 through 288. The color index is not on this chip. Q pins are the count.
 
@@ -72,7 +77,56 @@ Count runs 0 through 340, then returns to 0. HSYNC is high on counts 264 through
 | 22 | Q8 (most significant bit) |
 | 23 | Q1 |
 
+## Step
+
+The 33 ohm resistor stays off pin 1. DTR is the only clock. A mechanical switch on pin 1 bounces, so one click is many counts.
+
+The HiLetgo CH340 jumper sits on 5 V. Adapter ground ties to breadboard ground. The adapter 5 V pin stays open while the breadboard rail is powered. DTR ties to pin 1. On this adapter DTR rests low while `dtr` is true.
+
+`python-pyserial` provides `serial`. The port is `/dev/ttyUSB0`.
+
+```python
+import time
+import serial
+
+ser = serial.Serial("/dev/ttyUSB0", 9600)
+ser.dtr = True
+time.sleep(0.05)
+
+def steps(n):
+    for _ in range(n):
+        ser.dtr = False
+        time.sleep(0.001)
+        ser.dtr = True
+        time.sleep(0.001)
+
+input("reset, then enter")
+while True:
+    line = input("steps: ")
+    if line.strip():
+        steps(int(line))
+```
+
+The number on the `steps:` line is how many rising edges follow. The count advances on each rising edge.
+
+Ground pin 2, then return pin 2 to +5 V, before the first edge. That is count 0. Every count LED is dark. The HSYNC LED is dark.
+
+| Steps from 0 | Q8 to Q0 | HSYNC |
+| --- | --- | --- |
+| 0 | 000000000 | dark |
+| 1 | 000000001 | dark |
+| 2 | 000000010 | dark |
+| 3 | 000000011 | dark |
+| 4 | 000000100 | dark |
+| 264 | 100001000 | lit |
+| 289 | 100100001 | dark |
+| 341 | 000000000 | dark |
+
+Q0 changes on every edge. Enter 1 for one count. Enter 264 from count 0 to light HSYNC. HSYNC stays lit through count 288. Enter 25 more to land on 289, and HSYNC goes dark. Enter 52 more to land on 0.
+
 ## Check
+
+Pin 1 returns to 74HC74 pin 9 through the 33 ohm resistor. DTR stays off pin 1.
 
 Analyzer ground ties to breadboard ground. D0 is Beam X pin 1. D1 is Beam X pin 14. D2 is Beam X pin 21. Sample rate is 24 MHz.
 
