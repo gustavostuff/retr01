@@ -46,7 +46,7 @@ AVR tiny core with flash firmware. Pad job:
 
 ### Light-gun roadmap (same TRS bus)
 
-Future firmware: photodiode + LM393 + 16-bit beam timer. Identify `0xFF` -> `0x02` (gun) vs pad `0x01`. Not required for baseline pads.
+Future firmware: photodiode + LM393 + 16-bit beam timer. Identify `0xFF` -> `0x02` (gun) vs pad `0x01`. Not required for baseline pads. Frame sequence and the tick-to-box test: `../general/light-gun.md`.
 
 ---
 

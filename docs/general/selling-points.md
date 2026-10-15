@@ -52,7 +52,7 @@ One DIY tool: **Adafruit's UPDI Friend**. Cart work clips onto motherboard **J10
 
 ## Light-gun ready hit detect (later)
 
-The beam path is sketched so a light gun can land later without redesigning the console. Hit detect paints a black anti-spoof frame, then **all target hitboxes as white rectangles in one frame**, then reads the gun timer (`0x5A` / proposed `$7F80`-`$7F81`). That is a roadmap feature, not a v1 ship requirement. See `hardware.md`.
+The beam path is sketched so a light gun can land later without redesigning the console. Hit detect paints a black anti-spoof frame, then **all target hitboxes as white rectangles in one frame**, then reads the gun timer (`0x5A` / proposed `$7F80`-`$7F81`). That is a roadmap feature, not a v1 ship requirement. See `hardware.md` and `light-gun.md`.
 
 ## Closing note
 

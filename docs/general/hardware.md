@@ -457,8 +457,8 @@ Same TRS bus as pads. ATtiny85 + photodiode + LM393 + 16-bit beam timer (1 us ti
 | `0x55`/`0xAA` | VBlank poll. Stop bit resets timer. Reply bit5 = Trigger |
 | Host `0x5A` | Timer HI, LO. Miss = `0xFFFF` |
 
-Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash frames + one read. Proposed `$7F80`/`$7F81` (GUN_HI/LO).
+Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash frames + one read. Proposed `$7F80`/`$7F81` (GUN_HI/LO). Scan timing and how one capture names a box: `light-gun.md`.
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `palette/` | `world-scrolling.md` | `software-api.md` | `sound.md` | `open-questions.md` | `../ic_behavior/` | `ic-comms-risks.md`
+`memory.md` | `cartridge.md` | `video-graphics.md` | `palette/` | `world-scrolling.md` | `software-api.md` | `sound.md` | `light-gun.md` | `open-questions.md` | `../ic_behavior/` | `ic-comms-risks.md`
