@@ -156,7 +156,7 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
       {"C7", "US2", "VDD"},    {"C8", "UPLDX", "VCC"}, {"C9", "UPLDY", "VCC"},
       {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},  {"C12", "U7B", "VCC"},
       {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"}, {"C15", "U574", "VCC"},
-      {"C16", "U24", "VCC"},   {"C17", "U130", "VDD"}, {"C18", "U725", "APOS"},
+      {"C16", "U24", "VCC"},   {"C17", "U130", "VDD"}, {"C18", "U725", "VCC"},
       {"C19", "U04", "VCC"},   {"C20", "U74", "VCC"},
   };
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
@@ -387,8 +387,7 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
   tie_gnd(nl, pwr, r01s_i2c_eeprom_entity(&board->cart_module.save), "WP#");
   tie_gnd(nl, pwr, r01s_atf22v10_entity(&board->pld_beam_y), "GND");
   tie_gnd(nl, pwr, r01s_compositor_entity(&board->compositor), "GND");
-  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "AGND");
-  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "DGND");
+  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "GND");
   tie_gnd(nl, pwr, r01a_sn74hcu04_entity(&board->u04), "GND");
   tie_gnd(nl, pwr, r01a_sn74hc74_entity(&board->u74), "GND");
   tie_gnd(nl, pwr, r01s_sn74hc157_entity(&board->mux157[0]), "GND");
@@ -421,11 +420,6 @@ static void apply_rca_av(R01sBoard *board, R01sPinNetlist *nl) {
   int i;
 
   if (enc) {
-    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "DPOS");
-    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "STND");
-    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "ENCD");
-    r01s_pin_netlist_link(nl, pwr, "VDD", enc, "VSYNC");
-    r01s_pin_netlist_link(nl, pwr, "GND", enc, "SELECT");
     r01s_pin_netlist_name_net(nl, enc, "HSYNC", "CSYNC");
     r01s_pin_netlist_name_net(nl, enc, "COMP", "COMPOSITE_OUT");
   }

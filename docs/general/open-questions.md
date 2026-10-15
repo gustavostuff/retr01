@@ -122,6 +122,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-14 | IC budget | AD724 counted on the motherboard. |
 | 2026-09-14 | AD724 mount | **SOIC-16** on motherboard (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). No DIP adapter. |
 | 2026-10-11 | AD724 mount | **DIP-16** THT adapter landing (`Retr01_Lib:DIP-16_W7.62mm`, typical PA0006). SOIC-16 silicon. |
+| 2026-10-15 | AD724 mount | **DIP-8** THT adapter (`Retr01_Lib:DIP-8_W7.62mm`). SOIC-16 silicon. Adapter holds STND, ENCD, and VSYNC high, holds SELECT low. Board pins are +5 V, GND, FIN, R, G, B, COMP, HSYNC. |
 | 2026-09-14 | Reset supervisor | MCP130 in TO-92 for power-on delay, brown-out, and switch debounce. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). |
 | 2026-09-17 | Other screens | Cap **8** (ids 0..7). |

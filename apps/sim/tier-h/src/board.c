@@ -2148,14 +2148,8 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
 
     if (ctx->video_impl.ad724) {
         R01sEntity *enc = r01s_ad724_entity(ctx->video_impl.ad724);
-        r01s_entity_drive(enc, "APOS", vdd);
-        r01s_entity_drive(enc, "DPOS", vdd);
-        r01s_entity_drive(enc, "AGND", R01S_LVL_L);
-        r01s_entity_drive(enc, "DGND", R01S_LVL_L);
-        r01s_entity_drive(enc, "ENCD", R01S_LVL_H);
-        r01s_entity_drive(enc, "STND", R01S_LVL_H);
-        r01s_entity_drive(enc, "SELECT", R01S_LVL_L);
-        r01s_entity_drive(enc, "VSYNC", R01S_LVL_H);
+        r01s_entity_drive(enc, "VCC", vdd);
+        r01s_entity_drive(enc, "GND", R01S_LVL_L);
         r01s_entity_eval(enc);
     }
 }

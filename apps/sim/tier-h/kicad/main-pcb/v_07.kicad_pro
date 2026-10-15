@@ -563,10 +563,6 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_U725*"
-      },
-      {
-        "netclass": "Quiet",
         "pattern": "SIG_J3*"
       },
       {
@@ -700,14 +696,6 @@
       {
         "netclass": "Quiet",
         "pattern": "SIG_J6_P8_TO_US2_P5"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_U725_CRMA"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_U725_LUMA"
       },
       {
         "netclass": "Quiet",

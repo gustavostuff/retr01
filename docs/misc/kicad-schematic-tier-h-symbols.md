@@ -37,7 +37,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U7A**, **U7B**, **U7C** | SN74HC157 | `74xx_74LS157` (same DIP pinout) | DIP-16 |
 | **U573** | SN74HC573 | `74xx_74LS573` | DIP-20 |
 | **U574** | SN74HC574 | `74xx_74LS574` | DIP-20 |
-| **U725** | AD724 | Project symbol or Analog Devices pin names | **DIP-16** `Retr01_Lib:DIP-16_W7.62mm` (SOIC-16-to-DIP adapter) |
+| **U725** | AD724 | Adapter pin names VCC, GND, FIN, RIN, GIN, BIN, COMP, HSYNC | **DIP-8** `Retr01_Lib:DIP-8_W7.62mm` |
 | **U04** | 74HCU04 | `74xx_74HC04` / unbuffered hex inverter | DIP-14 |
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |

@@ -29,7 +29,7 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 | C15 | U574 | 74HC574 Scroll X Latch | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
 | C16 | U24 | AT27C256R Color PROM | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
 | C17 | U130 | MCP130 Reset Supervisor | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
-| C18 | U725 | AD724 Composite Video Encoder | Pin 4 (APOS), pin 14 (DPOS) | Pin 2 (AGND), pin 13 (DGND) | Zone 2 (Top-Right) |
+| C18 | U725 | AD724 Composite Video Encoder | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) |
 | C19 | U04 | 74HCU04 clock inverter | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 

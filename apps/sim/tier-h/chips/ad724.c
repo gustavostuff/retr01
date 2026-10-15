@@ -5,25 +5,19 @@
 #include <string.h>
 
 static int ad724_powered(R01sEntity *e) {
-    return r01s_level_is_high(r01s_entity_sense(e, "APOS")) &&
-           r01s_level_is_high(r01s_entity_sense(e, "DPOS")) &&
-           r01s_level_is_low(r01s_entity_sense(e, "AGND")) &&
-           r01s_level_is_low(r01s_entity_sense(e, "DGND"));
+    return r01s_level_is_high(r01s_entity_sense(e, "VCC")) &&
+           r01s_level_is_low(r01s_entity_sense(e, "GND"));
 }
 
 static void ad724_reset(R01sEntity *e) {
     r01s_entity_drive(e, "COMP", R01S_LVL_Z);
-    r01s_entity_drive(e, "LUMA", R01S_LVL_Z);
-    r01s_entity_drive(e, "CRMA", R01S_LVL_Z);
 }
 
 static void ad724_eval(R01sEntity *e) {
     R01sLevel present;
 
-    if (!ad724_powered(e) || !r01s_level_is_high(r01s_entity_sense(e, "ENCD"))) {
+    if (!ad724_powered(e)) {
         r01s_entity_drive(e, "COMP", R01S_LVL_Z);
-        r01s_entity_drive(e, "LUMA", R01S_LVL_Z);
-        r01s_entity_drive(e, "CRMA", R01S_LVL_Z);
         return;
     }
     present = r01s_level_is_high(r01s_entity_sense(e, "RIN")) ||
@@ -32,8 +26,6 @@ static void ad724_eval(R01sEntity *e) {
                   ? R01S_LVL_H
                   : R01S_LVL_L;
     r01s_entity_drive(e, "COMP", present);
-    r01s_entity_drive(e, "LUMA", present);
-    r01s_entity_drive(e, "CRMA", present);
 }
 
 static void ad724_tick(R01sEntity *e) {
@@ -53,24 +45,15 @@ void r01s_ad724_init(R01sAd724 *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &AD724_VT, "AD724", refdes ? refdes : "U725");
     chip->base.impl = chip;
-    r01s_entity_add_pin(&chip->base, 1, "STND", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 2, "AGND", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 1, "VCC", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 2, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 3, "FIN", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 4, "APOS", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 5, "ENCD", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 6, "RIN", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 7, "GIN", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 8, "BIN", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 9, "CRMA", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 10, "COMP", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 11, "LUMA", R01S_PIN_OUT);
-    r01s_entity_add_pin(&chip->base, 12, "SELECT", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 13, "DGND", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 14, "DPOS", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 15, "VSYNC", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 16, "HSYNC", R01S_PIN_IN);
-    /* KiCad and canvas both use DIP-16 (adapter landing, 1:1 to SOIC-16 pins). */
-    r01s_entity_set_dip(&chip->base, 16);
+    r01s_entity_add_pin(&chip->base, 4, "RIN", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 5, "GIN", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 6, "BIN", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 7, "COMP", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 8, "HSYNC", R01S_PIN_IN);
+    r01s_entity_set_dip(&chip->base, 8);
     r01s_entity_reset(&chip->base);
 }
 

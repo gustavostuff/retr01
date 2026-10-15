@@ -5,9 +5,10 @@
 
 /*
  * Analog Devices AD724 RGB-to-NTSC/PAL encoder (U725).
- * PCB footprint is DIP-16 (SOIC-16-to-DIP adapter). The canvas also draws DIP-16.
+ * Silicon is SOIC-16. The motherboard footprint is DIP-8. The adapter joins
+ * the two supplies and the two grounds, holds STND, ENCD, and VSYNC high,
+ * holds SELECT low, and leaves CRMA and LUMA off the board.
  * Logic stub: COMP is a video-present flag. No NTSC waveform.
- * Pin names match docs/ic_behavior/AD724.md.
  */
 typedef struct R01sAd724 {
     R01sEntity base;

@@ -235,12 +235,10 @@ M328_XTAL1, M328_XTAL2 = "9", "10"
 M328_DQ = ("2", "3", "4", "5", "6", "11", "12", "13")  # PD0-4, PD5-7
 M328_AUD = ("14", "15", "16", "17", "18", "19", "23", "24")  # PB0-5, PC0-1 = AUD0(LSB)..AUD7(MSB)
 
-# AD724/AD725 RGB->NTSC/PAL encoder. Silicon is SOIC-16. U725 is DIP-16
-# (Retr01_Lib:DIP-16_W7.62mm) for a SOIC-16-to-DIP adapter (typical PA0006).
-AD725_STND, AD725_AGND, AD725_4FSC, AD725_APOS = "1", "2", "3", "4"
-AD725_CE, AD725_RIN, AD725_GIN, AD725_BIN = "5", "6", "7", "8"
-AD725_CRMA, AD725_COMP, AD725_LUMA, AD725_YTRAP = "9", "10", "11", "12"
-AD725_DGND, AD725_DPOS, AD725_VSYNC, AD725_HSYNC = "13", "14", "15", "16"
+# AD724 RGB->NTSC/PAL encoder. Silicon is SOIC-16. U725 is DIP-8
+# (Retr01_Lib:DIP-8_W7.62mm). Straps live on the adapter, not on these pads.
+AD724_VCC, AD724_GND, AD724_FIN, AD724_RIN = "1", "2", "3", "4"
+AD724_GIN, AD724_BIN, AD724_COMP, AD724_HSYNC = "5", "6", "7", "8"
 
 # ---------------------------------------------------------------------------
 # Passives / connectors / oscillators (KiCad Device R/C = pins 1,2)
@@ -603,6 +601,6 @@ def power_pin_nums(mpn: str) -> Optional[Tuple[str, str]]:
         "SN74HC74": (HC14_VCC, HC14_GND),
         "SN74HC573": ("20", "10"),
         "SN74HC574": ("20", "10"),
-        "AD724": ("14", "13"),
+        "AD724": ("1", "2"),
     }
     return table.get(mpn)
