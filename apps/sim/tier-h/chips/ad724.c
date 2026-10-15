@@ -53,6 +53,7 @@ void r01s_ad724_init(R01sAd724 *chip, const char *refdes) {
     r01s_entity_add_pin(&chip->base, 6, "BIN", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 7, "COMP", R01S_PIN_OUT);
     r01s_entity_add_pin(&chip->base, 8, "HSYNC", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 9, "STND", R01S_PIN_IN);
     r01s_entity_set_dip(&chip->base, 8);
     r01s_entity_reset(&chip->base);
 }

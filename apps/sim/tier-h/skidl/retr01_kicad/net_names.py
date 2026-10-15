@@ -195,6 +195,8 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U04", "6"): "XTAL_10M_OUT",
     ("U725", "3"): "FSC_FIN",
     ("U725", "7"): "COMPOSITE_OUT",
+    ("U725", "9"): "STND",
+    ("J11", "2"): "STND",
 
     # Connectors
     ("J2", "1"): "GND",
@@ -236,6 +238,7 @@ _PRESERVED_NETS = frozenset(
         "DOT_INV",
         "FSC_XTAL",
         "FSC_FIN",
+        "STND",
         "CSYNC",
         "HSYNC",
         "VSYNC",

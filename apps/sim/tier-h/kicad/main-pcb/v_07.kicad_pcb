@@ -7135,11 +7135,11 @@
 			)
 		)
 	)
-	(footprint "Retr01_Lib:DIP-8_W7.62mm"
+	(footprint "Retr01_Lib:AD724_9_W7.62mm"
 		(layer "F.Cu")
 		(uuid "47874949-70ea-4e76-861d-1d1d24b45f04")
-		(at 143.5 28.69)
-		(descr "8-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
+		(at 141.88 25.88)
+		(descr "9-lead THT adapter, row spacing 7.62 mm. Pin 9 (STND) sits below pin 4.")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U725"
 			(at 6.955665 -3.045831 0)
@@ -7201,7 +7201,7 @@
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start 1.16 -1.33)
-			(end 1.16 8.95)
+			(end 1.16 11.49)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -7210,8 +7210,8 @@
 			(uuid "205bcfb3-7923-44eb-b100-669cd87c1324")
 		)
 		(fp_line
-			(start 1.16 8.95)
-			(end 6.46 8.95)
+			(start 1.16 11.49)
+			(end 6.46 11.49)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -7240,7 +7240,7 @@
 			(uuid "1b6c367c-d6ce-483b-bcdd-ccbb88c44b90")
 		)
 		(fp_line
-			(start 6.46 8.95)
+			(start 6.46 11.49)
 			(end 6.46 -1.33)
 			(stroke
 				(width 0.12)
@@ -7262,7 +7262,7 @@
 		)
 		(fp_rect
 			(start -1.06 -1.52)
-			(end 8.67 9.14)
+			(end 8.67 11.68)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -7282,7 +7282,7 @@
 			(uuid "04eeed72-c4bc-4032-b4b0-042aea602c8d")
 		)
 		(fp_line
-			(start 0.635 8.89)
+			(start 0.635 11.43)
 			(end 0.635 -0.27)
 			(stroke
 				(width 0.1)
@@ -7303,7 +7303,7 @@
 		)
 		(fp_line
 			(start 6.985 -1.27)
-			(end 6.985 8.89)
+			(end 6.985 11.43)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -7312,8 +7312,8 @@
 			(uuid "784d40f9-4e3f-4f8a-b413-dd305f8f5dc6")
 		)
 		(fp_line
-			(start 6.985 8.89)
-			(end 0.635 8.89)
+			(start 6.985 11.43)
+			(end 0.635 11.43)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -7322,7 +7322,7 @@
 			(uuid "24e7d7a6-eaca-4b6d-9b58-d522055693cc")
 		)
 		(point
-			(at 147.31 32.5)
+			(at 145.69 30.96)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "453b524b-d3dd-42fe-b765-20885203153b")
@@ -7399,6 +7399,15 @@
 			(remove_unused_layers no)
 			(net "VIDEO_CSYNC")
 			(uuid "0d2ff66f-d20d-4be5-824c-317e7cd97c49")
+		)
+		(pad "9" thru_hole circle
+			(at 0 10.16)
+			(size 1.6 1.6)
+			(drill 0.8)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "STND")
+			(uuid "4399870c-5b81-48b7-87e6-3131d2019991")
 		)
 		(embedded_fonts no)
 		(model "${KICAD10_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-8_W7.62mm.step"
@@ -14247,6 +14256,87 @@
 				(xyz 0 0 0)
 			)
 		)
+	)
+	(footprint "Retr01_Lib:PinHeader_1x03_P2.54mm_Vertical"
+		(layer "F.Cu")
+		(uuid "72cde650-32b5-4f09-91d5-c48c8e6d3edd")
+		(at 143.92 41.5 90)
+		(descr "Through hole straight pin header, 1x03, 2.54mm pitch, single row")
+		(tags "Through hole pin header THT 1x03 2.54mm single row")
+		(property "Reference" "J11"
+			(at 0 -2.38 90)
+			(layer "F.SilkS")
+			(uuid "140d8c5e-07f3-40ad-98cf-486456f59586")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "NTSC/PAL"
+			(at -2.5 2.58 180)
+			(layer "F.SilkS")
+			(uuid "838d6007-3a71-47d1-a6b0-5821f6ba5391")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 90)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "1451f9bd-40b3-40f9-8f1f-04dfcf62259d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 0 0 90)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "d86ace09-52ac-463d-bfda-716409251f6f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(attr through_hole)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" thru_hole rect
+			(at 0 0 90)
+			(size 1.7 1.7)
+			(drill 1)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "+5V")
+			(uuid "ed0caa65-0014-4e62-bbc8-24e0571f524f")
+		)
+		(pad "2" thru_hole circle
+			(at 0 2.54 90)
+			(size 1.7 1.7)
+			(drill 1)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "STND")
+			(uuid "9f86d203-8caf-4ef9-80a1-92ee5a31cf3f")
+		)
+		(pad "3" thru_hole circle
+			(at 0 5.08 90)
+			(size 1.7 1.7)
+			(drill 1)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "GND")
+			(uuid "3d61e671-36e4-4397-bdd8-59acc2d411bd")
+		)
+		(embedded_fonts no)
 	)
 	(footprint "Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical"
 		(layer "F.Cu")

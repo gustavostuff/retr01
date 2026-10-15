@@ -130,6 +130,15 @@ static void init_j7(R01sEntity *e) {
     io_header(e, 2, 2);
 }
 
+static void init_j11(R01sEntity *e) {
+    /* 1x3: 1 = +5 V (NTSC), 2 = STND, 3 = GND (PAL). Shunt is off the netlist. */
+    io_begin(e, "HDR-1x3", "J11");
+    io_pin(e, 1, "NTSC");
+    io_pin(e, 2, "STND");
+    io_pin(e, 3, "PAL");
+    io_header(e, 3, 1);
+}
+
 static void init_j10(R01sEntity *e) {
     /* 2x2 male: 1=PWR NC  2=GND
                  3=DATA     4=GND */
@@ -177,12 +186,13 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
     init_j6(&io->j6);
     init_j7(&io->j7);
     init_j10(&io->j10);
+    init_j11(&io->j11);
     init_j36(&io->j36);
     init_u130(&io->u130);
 }
 
 void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
-    R01sEntity *list[10];
+    R01sEntity *list[11];
     int i;
     if (!io || !nl) {
         return;
@@ -195,9 +205,10 @@ void r01s_mobo_io_register(R01sMoboIo *io, R01sPinNetlist *nl) {
     list[5] = &io->j6;
     list[6] = &io->j7;
     list[7] = &io->j10;
-    list[8] = &io->j36;
-    list[9] = &io->u130;
-    for (i = 0; i < 10; i++) {
+    list[8] = &io->j11;
+    list[9] = &io->j36;
+    list[10] = &io->u130;
+    for (i = 0; i < 11; i++) {
         r01s_pin_netlist_register_entity(nl, list[i]);
     }
 }

@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 120 mm**. The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
-**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **DIP-8** THT landing (`Retr01_Lib:DIP-8_W7.62mm`) for a small adapter. The adapter joins the two +5 V pins and the two grounds, holds STND, ENCD, and VSYNC high, holds SELECT low, and leaves CRMA and LUMA on the adapter. The eight motherboard pins are +5 V, GND, FIN, R, G, B, COMP, and HSYNC (CSYNC). Cart and pad stay THT.
+**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **9-pin** THT landing (`Retr01_Lib:AD724_9_W7.62mm`) for a small adapter. Pins 1-8 sit on a DIP-8 grid. Pin 9, below pin 4, is **STND**. The adapter joins the two +5 V pins and the two grounds, holds ENCD and VSYNC high, holds SELECT low, and leaves CRMA and LUMA on the adapter. **J11** is the 1x3 shunt header for STND. Cart and pad stay THT.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -19,7 +19,7 @@ Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules
 Discrete crystal clock generation:
 - **PHI2 (8.000 MHz):** An 8.000 MHz crystal with an unbuffered **74HCU04** inverter gate and 1 M ohm feedback resistor forms the Pierce oscillator, buffered by a second gate to feed the CPU clock.
 - **DOT (5.369318 MHz):** A 21.47727 MHz master crystal with a second 74HCU04 gate and 1 M ohm feedback resistor feeds an **SN74HC74** dual flip-flop. The flip-flop divides the frequency by 4 to produce a symmetrical 50% duty-cycle 5.369318 MHz square wave.
-- **FSC (3.579545 MHz):** A 3.579545 MHz crystal connects directly to the on-chip oscillator pins of the **AD724** composite video encoder.
+- **FSC:** Y3 connects to AD724 FIN. Stuff **3.579545 MHz** when J11 is on NTSC, or **4.433618 MHz** when J11 is on PAL. C23 and C24 stay 22 pF for either can.
 
 Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by default (`SCALE` open). Closing `SCALE_1X` to +5 V selects 1x. Raster size stays the same.
 
@@ -71,7 +71,7 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | AD724 | RGB to NTSC/PAL composite encoder | DIP-8 THT adapter (SOIC-16 silicon) | Same silicon (Analog sells SOIC-16 only) |
+| 1 | AD724 | RGB to NTSC/PAL composite encoder | 9-pin THT adapter (SOIC-16 silicon) | Same silicon (Analog sells SOIC-16 only) |
 | 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
 | 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
@@ -102,9 +102,9 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on a DIP-8 adapter in **U725** (socket optional) with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
+**AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on the 9-pin adapter in **U725** (socket optional) with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
 
-The adapter holds VSYNC high and SELECT low, so **U725** encodes NTSC from an FSC crystal on FIN and takes **CSYNC** on its HSYNC pin. J2 still carries CSYNC, HSYNC, and VSYNC for the cable. **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+The adapter holds VSYNC high and SELECT low. **U725** takes **CSYNC** on its HSYNC pin. **J11** sets the color standard: shunt pins 1-2 for NTSC (STND high), or pins 2-3 for PAL (STND low). Y3 matches that choice. The raster stays **341 x 262** at about **60 Hz** either way. J2 still carries CSYNC, HSYNC, and VSYNC for the cable. **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
 RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
 
@@ -352,7 +352,7 @@ Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all liv
 | 7 | VSYNC |
 | 8 | Red |
 
-**RGBS** cables use R/G/B + CSYNC + GND. **RGBHV** cables use R/G/B + HSYNC + VSYNC + GND. **U725** pin 8 takes the CSYNC wire. VSYNC is held high on the adapter.
+**RGBS** cables use R/G/B + CSYNC + GND. **RGBHV** cables use R/G/B + HSYNC + VSYNC + GND. **U725** pin 8 takes the CSYNC wire. VSYNC is held high on the adapter. **J11** chooses NTSC or PAL chroma for the composite jack.
 
 **Composite:** AD724 -> J9 RCA. CRMA and LUMA stay on the adapter.
 
@@ -389,8 +389,9 @@ Cart and pad PCBs are **2-layer**.
 | J8 | CUI **RCJ-012** audio RCA |
 | J9 | CUI **RCJ-014** composite RCA |
 | J10 | 2x2 cart program (Friend DATA on pin 3) |
+| J11 | 1x3 NTSC/PAL shunt. Pin 1 +5 V, pin 2 STND, pin 3 GND |
 | J36 | EDAC **395-036-520-201** cart socket, 36 contacts |
-| Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / **3.579545 MHz** (74HCU04 + 74HC74 clock stage) |
+| Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / FSC (74HCU04 + 74HC74 clock stage). Y3 is **3.579545 MHz** or **4.433618 MHz** |
 
 Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart OE#/WE#/SDA/SCL series **33 ohm**. Cart **D[7:0]** ties straight to J36. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 

@@ -8,7 +8,7 @@ int main(void) {
 
     r01s_ad724_init(&chip, "U725");
     e = r01s_ad724_entity(&chip);
-    expect_true(e->pin_count == 8, "8 pins");
+    expect_true(e->pin_count == 9, "9 pins");
 
     r01s_entity_drive(e, "VCC", R01S_LVL_L);
     r01s_entity_drive(e, "GND", R01S_LVL_L);

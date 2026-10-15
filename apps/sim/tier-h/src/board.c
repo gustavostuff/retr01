@@ -3559,6 +3559,7 @@ int r01s_board_build(R01sBoard *board, R01sIslandBuilder *b) {
         r01s_island_builder_mount_rel(b, prom_e, R01S_ISLAND_VIDEO, x, 0);
         x += prom_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, enc_e, R01S_ISLAND_VIDEO, x, 0);
+        r01s_island_builder_mount_rel(b, &board->io.j11, R01S_ISLAND_VIDEO, x, enc_e->body_h + R01S_CHIP_GAP);
         x += enc_e->body_w + R01S_CHIP_GAP;
         r01s_island_builder_mount_rel(b, sink_e, R01S_ISLAND_VIDEO, x, 0);
     }

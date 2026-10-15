@@ -146,6 +146,15 @@ int main(void) {
     expect_true(r01s_pin_netlist_same_net(nl, r01s_rca_jack_entity(&board.j8), "1A",
                                           r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J8 shell GND");
+    expect_true(board.io.j11.pin_count == 3, "J11 is 1x3");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "NTSC", r01s_pwr5v_entity(&board.pwr), "VDD"),
+                "J11 pin 1 on +5V");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "PAL", r01s_pwr5v_entity(&board.pwr), "GND"),
+                "J11 pin 3 on GND");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "STND", r01s_ad724_entity(&board.ad724), "STND"),
+                "J11 pin 2 on AD724 STND");
+    expect_true(!r01s_pin_netlist_same_net(nl, &board.io.j11, "STND", r01s_pwr5v_entity(&board.pwr), "VDD"),
+                "STND stays open until the shunt is fitted");
     expect_true(board.io.j10.pin_count == 4, "J10 is 2x2");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j10, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J10 pin 2 GND");

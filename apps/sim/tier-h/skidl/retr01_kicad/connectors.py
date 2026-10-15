@@ -19,6 +19,7 @@ CONNECTOR_REFDES = (
     "J8",
     "J9",
     "J10",
+    "J11",
     "J36",
 )
 
@@ -98,6 +99,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J7", "4"),
             ("J10", "2"),
             ("J10", "4"),
+            ("J11", "3"),
             ("J1", "2"),
             ("J1", "3"),
             ("J36", "1"),   # A1 GND
@@ -111,6 +113,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         for ref, pin in (
             ("J1", "1"),
             ("J7", "1"),
+            ("J11", "1"),
             ("J3", P.TRS_TIP),
             ("J4", P.TRS_TIP),
             ("J36", "3"),  # A2 VCC

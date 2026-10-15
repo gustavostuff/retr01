@@ -65,7 +65,7 @@ Video alone does **not** need 24 resistors. Clock and cart-control damping + pul
 |----:|-----------|-------|-------|
 | 1 | Y1 / CPU PHI2 | HC-49/US **8.000 MHz** | Driven by two 74HCU04 inverter gates |
 | 1 | Y2 / DOT | HC-49/US **21.47727 MHz** | Driven by two 74HCU04 inverter gates, divided by 4 via 74HC74 to 5.369318 MHz |
-| 1 | Y3 / AD724 FSC | HC-49/US **3.579545 MHz** | Connected to AD724 on-chip oscillator pins (NTSC subcarrier) |
+| 1 | Y3 / AD724 FSC | HC-49/US **3.579545 MHz** (NTSC) or **4.433618 MHz** (PAL) | FIN on the AD724. Same 22 pF loads. J11 picks the standard |
 
 **Load capacitors:** **2 per crystal** (**6** total). Exact pF from the crystal CL rating (typically 18 to 20 pF each).
 
@@ -76,7 +76,7 @@ DB28 parts run on **internal HFOSC @ 24 MHz**. No extra MCU crystals on the lock
 The motherboard clock network uses standard through-hole quartz crystals and dedicated 74HC logic:
 - **Y1 (8.000 MHz):** An 8.000 MHz crystal with an unbuffered **74HCU04** inverter gate and 1 M ohm feedback resistor forms the Pierce oscillator, buffered by a second inverter gate to drive the CPU PHI2 clock net.
 - **Y2 (21.47727 MHz):** A 21.47727 MHz crystal with a second 74HCU04 inverter gate and 1 M ohm feedback resistor forms the master oscillator, buffered by an inverter gate, and divided by 4 using both stages of an **SN74HC74** dual D-type flip-flop. This produces a clean, symmetrical 50% duty-cycle **5.369318 MHz** dot clock.
-- **Y3 (3.579545 MHz):** Directly drives the internal oscillator pins of the **AD724** composite video encoder with two load capacitors.
+- **Y3:** Drives AD724 FIN with two 22 pF load capacitors. The can is 3.579545 MHz for NTSC or 4.433618 MHz for PAL, matching J11.
 
 On solderless breadboards, an Si5351A breakout board or the same 21.47727 MHz 74HCU04/74HC74 circuit supplies the 5.369318 MHz clock directly.
 

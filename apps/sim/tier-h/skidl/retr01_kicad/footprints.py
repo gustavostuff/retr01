@@ -15,8 +15,9 @@ DIP14 = f"{_R}:DIP-14_W7.62mm"
 DIP14_74HC74 = f"{_R}:DIP-14_W7.62mm_74HC74"
 DIP14_74HCU04 = f"{_R}:DIP-14_W7.62mm_74HCU04"
 DIP8 = f"{_R}:DIP-8_W7.62mm"
-# U725 is a DIP-8 landing. The SOIC-16 sits on a small adapter that straps the other pins.
-AD724_DIP = DIP8
+# U725 is a 9-pin landing. Pins 1-8 match the DIP-8 map. Pin 9 is STND.
+AD724_DIP = f"{_R}:AD724_9_W7.62mm"
+HDR1x3 = f"{_R}:PinHeader_1x03_P2.54mm_Vertical"
 
 C_CER = f"{_R}:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 C_ELEC = f"{_R}:CP_Radial_D8.0mm_P3.50mm"

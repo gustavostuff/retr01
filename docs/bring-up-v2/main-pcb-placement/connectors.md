@@ -14,6 +14,7 @@ Board-edge and cart I/O. Zones and sequence: [README.md](README.md). Series resi
 | J8 | Audio RCA |
 | J9 | Composite RCA |
 | J10 | Cart program header, 2x2 |
+| J11 | NTSC/PAL shunt, 1x3, beside U725 |
 | J36 | Cart socket, 36 contacts |
 
 J3 is player 1. J4 is player 2. Each footprint carries both jack outlines. Stuff one size per player. Tip, ring, and sleeve are the same nets on both outlines.
@@ -142,6 +143,18 @@ Layout (top view, pin 1 at top-left):
 U130 holds the supervisor path on RESB ([ics.md](ics.md)).
 
 ---
+
+## J11, NTSC/PAL shunt 1x3 (beside U725), Zone 2
+
+1x3 male, 2.54 mm. Pin 1 at the top.
+
+| Pin | Net | Shunt |
+|----:|-----|-------|
+| 1 | +5 V | NTSC, with pin 2 |
+| 2 | STND | U725 pin 9 |
+| 3 | GND | PAL, with pin 2 |
+
+One shunt. Pins 1-2 select NTSC. Pins 2-3 select PAL. Y3 matches the shunt ([crystals.md](crystals.md)). The copper does not bridge the shunt. An empty header leaves STND open.
 
 ## J10, cart program header 2x2 (near UM)
 

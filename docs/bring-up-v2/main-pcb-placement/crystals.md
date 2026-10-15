@@ -66,9 +66,9 @@ U74 divides by 4. **DOT** leaves U74 pin 9 through **R13** to UPLDX. That digita
 
 ---
 
-## Y3, 3.579545 MHz (AD724 FSC)
+## Y3, FSC (AD724)
 
-Can stands next to **U725**, not next to U04. AD724 runs the oscillator on-chip.
+Can stands next to **U725**, not next to U04. AD724 runs the oscillator on-chip. The can is **3.579545 MHz** when **J11** is shunted NTSC, and **4.433618 MHz** when **J11** is shunted PAL. **C23** and **C24** stay 22 pF for either can.
 
 ```text
 Y3 pin 1 ---- U725 pin 3 (FIN) ---- C23 ---- GND

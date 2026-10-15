@@ -535,6 +535,10 @@
       },
       {
         "netclass": "Quiet",
+        "pattern": "STND"
+      },
+      {
+        "netclass": "Quiet",
         "pattern": "SDA_PULLUP*"
       },
       {
