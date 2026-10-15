@@ -2,7 +2,7 @@
 
 One page per chip in the Tier A, B, and C labs. Each page lists the parts, where each pin goes, and the check. The burn is already done. Programming steps stay in [`../a/flashing.md`](../a/flashing.md).
 
-Each socket gets 5 V, ground, and a 100 nF capacitor from its VCC pin to ground. The dot clock is the Si5351 on the flashing page. The 8-channel analyzer is the capture tool.
+Each socket gets 5 V, ground, and a 100 nF capacitor from its VCC pin to ground. The dot clock is the 21.47727 MHz Pierce stage on the Beam X page. The 8-channel analyzer is the capture tool.
 
 | Page | Chip | Tiers |
 | --- | --- | --- |
@@ -14,4 +14,4 @@ Each socket gets 5 V, ground, and a 100 nF capacitor from its VCC pin to ground.
 | [`bench-74hc573.md`](bench-74hc573.md) | 74HC573 field address latch | C |
 | [`bench-as6c62256.md`](bench-as6c62256.md) | AS6C62256 field SRAM | C |
 
-The optional 74HC574 scroll latch stays off this list. Scroll stays at 0. The 21.47727 MHz Pierce pair is an alternate dot clock, and these pages use the Si5351 instead.
+The optional 74HC574 scroll latch stays off this list. Scroll stays at 0.
