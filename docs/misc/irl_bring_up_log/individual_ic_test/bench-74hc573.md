@@ -1,12 +1,27 @@
 # 74HC573 field address latch
 
-Used in Tier C.
+The package is 300 mil, so it sits across the breadboard center. The notch is pin 1. Power is off while the chip goes in or comes out. No image to burn. The chip is the latch between MCU-S1 AD7 to AD0 and field SRAM A7 to A0. This check uses jumpers, with the AVR and the SRAM off the board.
 
-No image to burn. The chip is the latch between MCU-S1 AD7 to AD0 and field SRAM A7 to A0. This check uses jumpers, with the AVR and the SRAM off the board.
+## Parts
 
-Pin 20 is VCC. Pin 10 is GND. Pin 1 (/OE) ties to GND so the Q pins drive. Pin 11 is LE.
+| Part | Qty | Role |
+| --- | --- | --- |
+| 74HC573, PDIP-20 | 1 | Transparent latch |
+| 100 nF | 1 | Bypass from VCC to ground |
 
-One bit is enough to prove the latch. D0 is pin 3. Q0 is pin 2. The other pairs follow the same rule.
+## Place
+
+| What | Where |
+| --- | --- |
+| Pin 20 (VCC) | +5 V |
+| Pin 10 (GND) | Ground |
+| 100 nF | +5 V rail to the ground rail, beside pin 20 |
+| Pin 1 (OE#) | Ground, so the Q pins drive |
+| Pin 11 (LE) | Jumper to +5 V or ground |
+| D pins | Jumpers to +5 V or ground |
+| Q pins | Open. These are the probe points |
+
+One bit is enough to prove the latch. The other pairs follow the same rule.
 
 | Data | Q |
 | --- | --- |
@@ -19,7 +34,7 @@ One bit is enough to prove the latch. D0 is pin 3. Q0 is pin 2. The other pairs 
 | D6 pin 17 | Q6 pin 16 |
 | D7 pin 18 | Q7 pin 19 |
 
-## Pass
+## Check
 
 | LE (pin 11) | D0 | Q0 |
 | --- | --- | --- |
@@ -28,4 +43,4 @@ One bit is enough to prove the latch. D0 is pin 3. Q0 is pin 2. The other pairs 
 | Low | Changed after the fall | Holds the level it had when LE fell |
 | High pulse, then low, D0 high during the pulse | Left low after the pulse | Stays high |
 
-Pin 1 high releases every Q pin. The same ground resistor used on a PROM data pin sits low while /OE is high, and it shows Q0 again when pin 1 returns to ground.
+Pin 1 high releases every Q pin. The same ground resistor used on a PROM data pin sits low while OE# is high, and it shows Q0 again when pin 1 returns to ground.

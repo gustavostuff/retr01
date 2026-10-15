@@ -1,10 +1,30 @@
 # ATF22V10 Beam X
 
-Used in Tiers A, B, and C.
+The socket holds `beam_x.jed`. The package is 300 mil, so it sits across the breadboard center. The notch is pin 1. Power is off while the chip goes in or comes out.
 
-The socket holds `beam_x.jed`. Pin 24 is VCC. Pin 12 is GND. Pins 3 to 11 and pin 13 tie to GND. Pin 2 (RES) ties to 5 V so the counter runs. Pin 1 is the dot clock, Si5351 CLK0 through 33 ohm.
+## Parts
 
-This burn is a 9-bit counter plus HSYNC. Count runs 0 through 340, then returns to 0. HSYNC is high on counts 264 through 288. The color index is not on this chip. Q pins are the count, for a probe.
+| Part | Qty | Role |
+| --- | --- | --- |
+| ATF22V10C, PDIP-24, `beam_x.jed` | 1 | Dot counter and HSYNC |
+| 100 nF | 1 | Bypass from VCC to ground |
+| 33 ohm | 1 | Series resistor on the dot clock |
+
+The dot clock is Si5351 CLK0 from [`../a/flashing.md`](../a/flashing.md).
+
+## Place
+
+| What | Where |
+| --- | --- |
+| Pin 24 (VCC) | +5 V |
+| Pin 12 (GND) | Ground |
+| 100 nF | +5 V rail to the ground rail, beside pin 24 |
+| Pins 3 through 11, and pin 13 | Ground |
+| Pin 2 (RES) | +5 V |
+| Pin 1 (CLK) | Si5351 CLK0, through 33 ohm |
+| Pins 14 through 23 | Open. These are the probe points |
+
+Count runs 0 through 340, then returns to 0. HSYNC is high on counts 264 through 288. The color index is not on this chip. Q pins are the count.
 
 | Pin | Name |
 | --- | --- |
@@ -19,7 +39,7 @@ This burn is a 9-bit counter plus HSYNC. Count runs 0 through 340, then returns 
 | 22 | Q8 (most significant bit) |
 | 23 | Q1 |
 
-## Pass
+## Check
 
 Analyzer ground ties to breadboard ground. D0 is pin 1. D1 is pin 14. D2 is pin 21. Sample rate is 24 MHz.
 

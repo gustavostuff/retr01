@@ -1,6 +1,6 @@
 # Individual IC tests
 
-One page per chip in the Tier A, B, and C labs. The burn is already done. Programming steps stay in [`../a/flashing.md`](../a/flashing.md).
+One page per chip in the Tier A, B, and C labs. Each page lists the parts, where each pin goes, and the check. The burn is already done. Programming steps stay in [`../a/flashing.md`](../a/flashing.md).
 
 Each socket gets 5 V, ground, and a 100 nF capacitor from its VCC pin to ground. The dot clock is the Si5351 on the flashing page. The 8-channel analyzer is the capture tool.
 

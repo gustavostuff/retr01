@@ -517,7 +517,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C15"
-			(at 2.5 -0.020381 90)
+			(at -2.02 0.04 180)
 			(layer "F.SilkS")
 			(uuid "92c3fafa-1b93-4329-8986-2dda60553042")
 			(effects
@@ -1368,7 +1368,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C11"
-			(at 2.5 0 90)
+			(at -2 0 180)
 			(layer "F.SilkS")
 			(uuid "75f42bdd-daf1-424d-8779-9fddc450fc3b")
 			(effects
@@ -4743,9 +4743,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C14"
-			(at 2.534678 0.058698 0)
+			(at 2.534678 -2.6 0)
 			(layer "F.SilkS")
-			(uuid "076ba59e-a747-49de-b6e4-4f16e2ef6b67")
+			(uuid "48e8bcac-ee88-4ae8-86e9-cccf5a8e1cbf")
 			(effects
 				(font
 					(size 1 1)
@@ -4756,7 +4756,7 @@
 		(property "Value" "100nF"
 			(at 9 0 0)
 			(layer "F.SilkS")
-			(uuid "f7733df8-984c-4bbc-a89d-dc4207917eca")
+			(uuid "afa3fca2-a6b0-404c-9b29-fba9c1e3e857")
 			(effects
 				(font
 					(size 1 1)
@@ -4768,7 +4768,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "bc019d8c-165f-4f35-a61e-5103da8760a3")
+			(uuid "abff4790-57eb-408b-b445-9951310b01d9")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4779,7 +4779,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "339a0434-c3fd-4006-a98a-0f1a7372698c")
+			(uuid "b9628224-498f-4067-9e4d-15542d6a7b51")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4951,7 +4951,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C3"
-			(at 2.5 0 0)
+			(at -2 0 90)
 			(layer "F.SilkS")
 			(uuid "615ec101-de34-41e8-8894-bfd6050fa61b")
 			(effects
@@ -5624,7 +5624,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C21"
-			(at 2.54648 0.135078 0)
+			(at 5.25 2.5 0)
 			(layer "F.SilkS")
 			(uuid "c7093ec9-51b5-4959-ba07-655858d5544b")
 			(effects
@@ -5635,7 +5635,7 @@
 			)
 		)
 		(property "Value" "22pF"
-			(at 2.467366 -2.36997 180)
+			(at 0.5 2.5 180)
 			(layer "F.SilkS")
 			(uuid "8ff35866-b021-4538-b0d6-ef41d2bf49d4")
 			(effects
@@ -5832,7 +5832,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C16"
-			(at 2.456657 0.086686 0)
+			(at -2.759037 -0.799097 0)
 			(layer "F.SilkS")
 			(uuid "b6d09302-2ebc-4f1c-b4a7-d3e2b6498219")
 			(effects
@@ -5843,7 +5843,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 2.5 2.5 0)
+			(at -3.544578 0.673793 0)
 			(layer "F.SilkS")
 			(uuid "cf6e2fe2-390f-45bc-ac80-b97b022e5574")
 			(effects
@@ -6755,9 +6755,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C7"
-			(at 2.5 0 90)
+			(at 1.46 -3.15 180)
 			(layer "F.SilkS")
-			(uuid "ee208488-610a-4c9f-9319-0f00f2b1ffa5")
+			(uuid "3893b512-6de7-4bd6-bb33-ea74faaada2e")
 			(effects
 				(font
 					(size 1 1)
@@ -6766,9 +6766,9 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 3 -2.5 90)
+			(at 3.21 -4.15 180)
 			(layer "F.SilkS")
-			(uuid "bf5766f1-e2d3-4280-b9b3-27f65e918b36")
+			(uuid "a9fed26a-ff4e-44a9-9a9e-76a1ab9a8b07")
 			(effects
 				(font
 					(size 1 1)
@@ -6780,7 +6780,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d278e155-5743-4025-898a-701b063598a3")
+			(uuid "11854717-c125-4996-b7c1-f3ded8507ff4")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6791,7 +6791,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "2b1386f4-b76e-4c90-969d-3141b0509b50")
+			(uuid "207050f4-3aaa-4f7d-9158-4c1e6e826342")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7962,7 +7962,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C19"
-			(at 2.522555 -0.052012 90)
+			(at -2.75 0 90)
 			(layer "F.SilkS")
 			(uuid "fceff457-39b4-40ed-94b2-be3f13fb6651")
 			(effects
@@ -8678,7 +8678,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C24"
-			(at 2.47554 -0.073381 0)
+			(at 5 2.5 0)
 			(layer "F.SilkS")
 			(uuid "8d141f7e-9d31-4e69-b295-c6d189dde885")
 			(effects
@@ -8689,7 +8689,7 @@
 			)
 		)
 		(property "Value" "22pF"
-			(at 2.284718 2.509936 0)
+			(at 0.5 2.5 0)
 			(layer "F.SilkS")
 			(uuid "b280b315-b44a-436a-9091-e9a2c49e7465")
 			(effects
@@ -8886,7 +8886,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C17"
-			(at 2.5 0 0)
+			(at 2.5 2.85 0)
 			(layer "F.SilkS")
 			(uuid "7cbef5a0-fcf2-4734-bc41-430bddb514f2")
 			(effects
@@ -9345,7 +9345,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C13"
-			(at 2.5 0.019186 90)
+			(at 2.75 -2.5 90)
 			(layer "F.SilkS")
 			(uuid "49518811-dd45-4726-8702-6dfdd4dc8cc5")
 			(effects
@@ -13909,9 +13909,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C8"
-			(at 2.660418 -0.082841 0)
+			(at 0 -2.5 0)
 			(layer "F.SilkS")
-			(uuid "f9b4dc40-66e5-4773-ad34-81d5f59641b0")
+			(uuid "8e0445c0-ccb0-452b-b6d7-902406a23c6a")
 			(effects
 				(font
 					(size 1 1)
@@ -13920,9 +13920,9 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 2.646959 -2.474869 0)
+			(at 4.5 -2.5 0)
 			(layer "F.SilkS")
-			(uuid "00bdcf69-e28c-4db7-9fe4-41d0afdf2e7f")
+			(uuid "eba442b4-1d46-43e4-a373-b796de120386")
 			(effects
 				(font
 					(size 1 1)
@@ -13934,7 +13934,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "89ef6c1a-29c8-4754-87e4-94c9b0b85558")
+			(uuid "41ccdd7c-f802-426c-9097-ffea0597862b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13945,7 +13945,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "fe394f99-9c74-479e-afb5-6fbf1c653db0")
+			(uuid "46a4ae1d-7cf5-44d0-be6a-cbcc2946db49")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14117,9 +14117,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C2"
-			(at 2.5 0 0)
+			(at -2.05 0 90)
 			(layer "F.SilkS")
-			(uuid "70b7367b-3bdb-45ad-a294-b54e15dd2b1d")
+			(uuid "a60f860f-62f5-4c07-9438-c0583aff1c41")
 			(effects
 				(font
 					(size 1 1)
@@ -14130,7 +14130,7 @@
 		(property "Value" "100nF"
 			(at 2.4 -2.6 0)
 			(layer "F.SilkS")
-			(uuid "24110b2d-7a8c-4894-8a8a-a8fdea96cd10")
+			(uuid "218a0f7b-eaab-4566-b5c3-dafb7151efe7")
 			(effects
 				(font
 					(size 1 1)
@@ -14142,7 +14142,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "05aac26b-2364-4cf7-895d-75cf3f25d43a")
+			(uuid "e7a89ed1-0ccc-474f-a0b9-c6490fcbff9c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14153,7 +14153,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f21c862f-10ff-4ace-9602-4a2a612f88f5")
+			(uuid "065e9d80-dc3d-4cf4-b7e5-c87f031f021d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15294,13 +15294,12 @@
 		)
 	)
 	(footprint "Retr01_Lib:CUI_RCJ-014_Audio"
-		(locked yes)
 		(layer "F.Cu")
 		(uuid "792ca2c6-9973-461a-b392-1ea8ab8a16e5")
 		(at 104.5 23.55 -90)
 		(descr "Same Sky RCJ-01x edge RCA; 3D ring white (audio). Pads match CUI_RCJ-014.")
 		(property "Reference" "J8"
-			(at -7.213709 -5.12975 90)
+			(at 9.2 4.5 180)
 			(layer "F.SilkS")
 			(uuid "4bc0c650-836e-4313-ba03-0c2da4a13684")
 			(effects
@@ -18191,7 +18190,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C20"
-			(at 2.555462 -0.052011 0)
+			(at 7.774716 -0.905736 0)
 			(layer "F.SilkS")
 			(uuid "1234be99-3db2-4a6a-a209-5939b88cf5f6")
 			(effects
@@ -18202,7 +18201,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 9 0 180)
+			(at 8.740931 0.743901 180)
 			(layer "F.SilkS")
 			(uuid "4a22981f-dab9-474d-ae0c-456581b9a2bf")
 			(effects
@@ -18502,7 +18501,7 @@
 	(footprint "Retr01_Lib:DIP-28_W7.62mm"
 		(layer "F.Cu")
 		(uuid "a3031499-744e-4436-958a-212ba2c41351")
-		(at 107.3 135.62 90)
+		(at 105.52 135.62 90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "US1"
@@ -18713,7 +18712,7 @@
 			(uuid "e3734b3d-3a4e-4964-bf44-630c4e8c5a4d")
 		)
 		(point
-			(at 123.81 131.81)
+			(at 122.03 131.81)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "69897cca-bde8-418d-b1fb-29fd5953b03b")
@@ -19058,9 +19057,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C23"
-			(at 2.5 0 0)
+			(at 4.75 -2.5 0)
 			(layer "F.SilkS")
-			(uuid "ee317ad5-42c8-4f15-8801-5f0745eefabf")
+			(uuid "03cd3553-cf15-45d2-80cf-856cb9733f25")
 			(effects
 				(font
 					(size 1 1)
@@ -19071,7 +19070,7 @@
 		(property "Value" "22pF"
 			(at 8.5 0 180)
 			(layer "F.SilkS")
-			(uuid "36dacc2c-0d57-4bae-ac22-80111b02ecd2")
+			(uuid "149ad9df-e8b7-4a22-a79f-84521c496b9b")
 			(effects
 				(font
 					(size 1 1)
@@ -19083,7 +19082,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3f6414cb-4135-4370-b672-b1034916f0c6")
+			(uuid "06fc1dc1-aecc-400b-89b7-c56e9b9c1d3f")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19094,7 +19093,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "32119aa1-d797-416e-9649-eaa7ac5785b2")
+			(uuid "cdc913b8-6683-4697-a977-3fdaac9823dd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19266,7 +19265,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C25"
-			(at 2.486803 -0.081534 0)
+			(at 7.85 -0.05 0)
 			(layer "F.SilkS")
 			(uuid "9df89bd5-7dea-4372-ae83-0a7cc068811a")
 			(effects
@@ -19277,7 +19276,7 @@
 			)
 		)
 		(property "Value" "22pF"
-			(at -2.063021 0.054323 90)
+			(at 3.85 -2.55 180)
 			(layer "F.SilkS")
 			(uuid "c49fd845-e280-406b-8ea7-faf3c1f056f5")
 			(effects
@@ -20851,7 +20850,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C4"
-			(at 2.398094 0.040763 90)
+			(at -2 2.5 180)
 			(layer "F.SilkS")
 			(uuid "5683d88b-f25b-4587-ae03-494ae8805461")
 			(effects
@@ -20862,7 +20861,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 8.5 0 90)
+			(at -2 -1.75 180)
 			(layer "F.SilkS")
 			(uuid "1f5c7641-6ce5-4901-98c5-6c82a9fb2187")
 			(effects
@@ -23417,7 +23416,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C18"
-			(at 2.562783 -0.024658 0)
+			(at 3.5 2.5 0)
 			(layer "F.SilkS")
 			(uuid "18021ff2-35f7-4e3e-82af-ea465f664a33")
 			(effects
@@ -23428,7 +23427,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 2.1 2.6 0)
+			(at 0.75 4 90)
 			(layer "F.SilkS")
 			(uuid "8eca80d1-0e1f-4759-bfe9-f1f95482961f")
 			(effects
@@ -24177,9 +24176,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C10"
-			(at 2.49398 0.015616 90)
+			(at 3.75 2.5 90)
 			(layer "F.SilkS")
-			(uuid "9acb9aa8-75b6-4769-9e45-c32f381d1cf5")
+			(uuid "4a88715a-a684-486e-933d-359663357581")
 			(effects
 				(font
 					(size 1 1)
@@ -24190,7 +24189,7 @@
 		(property "Value" "100nF"
 			(at 2.5 -2.5 90)
 			(layer "F.SilkS")
-			(uuid "237e88cb-368c-4d2d-8d2d-f45ed6701667")
+			(uuid "d9ae2a4c-95f1-4733-b89b-f18518ae0745")
 			(effects
 				(font
 					(size 1 1)
@@ -24202,7 +24201,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "04c46750-16c0-4b01-a342-e36be8d51ecb")
+			(uuid "ad846ffe-ab84-481c-918f-7ba465e94dd5")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -24213,7 +24212,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "156fd111-93b0-410d-9812-776d0072081f")
+			(uuid "3aecb6f4-cd11-4fd5-9788-d3436092cde2")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -24381,11 +24380,11 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "d1f89e5c-bcdd-459e-b253-2c1158516048")
-		(at 143 113.5 -90)
+		(at 143.5 113.5 -90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C9"
-			(at 2.554244 0.067937 90)
+			(at -2 0 180)
 			(layer "F.SilkS")
 			(uuid "17151876-1ee4-4f4d-b323-16ace1fcb7c9")
 			(effects
@@ -24593,9 +24592,9 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C26"
-			(at 2.5 -0.042178 90)
+			(at 5.75 -3.25 180)
 			(layer "F.SilkS")
-			(uuid "ecbb1546-c7dd-4027-b08d-0518f01c75d9")
+			(uuid "5ae58395-3d36-41f2-b68a-755bf485f0ab")
 			(effects
 				(font
 					(size 1 1)
@@ -24604,9 +24603,9 @@
 			)
 		)
 		(property "Value" "22pF"
-			(at -2.051174 -1.066474 180)
+			(at -1.982884 -0.433613 180)
 			(layer "F.SilkS")
-			(uuid "e69fdafb-7103-4eeb-ad26-7d0a7a4a9174")
+			(uuid "3a4d8292-fb4d-41b6-b08f-8014b25fe727")
 			(effects
 				(font
 					(size 1 1)
@@ -24618,7 +24617,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8fe57ce3-7376-4a47-a4da-fc2609180eee")
+			(uuid "0750a16c-0540-4e75-be2c-8b0b86375a26")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -24629,7 +24628,7 @@
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "b052895a-bbef-4e86-8045-a8ee1d66c619")
+			(uuid "6db3f511-785e-4e08-a102-f24a7a146fdd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -24795,7 +24794,6 @@
 		)
 	)
 	(footprint "Retr01_Lib:CUI_RCJ-014"
-		(locked yes)
 		(layer "F.Cu")
 		(uuid "dfe8d21b-806c-44f3-8ea6-6e02611b744d")
 		(at 120.625 23.55 -90)
@@ -25283,7 +25281,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C5"
-			(at 2.5 -0.040763 0)
+			(at 2.5 2.5 0)
 			(layer "F.SilkS")
 			(uuid "1f05b19d-996a-4466-b5fe-29ef2e645db7")
 			(effects
@@ -25956,7 +25954,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C22"
-			(at 2.5 0 0)
+			(at 5 2.475668 0)
 			(layer "F.SilkS")
 			(uuid "0560c611-4569-41e6-9dd4-bc4326a86310")
 			(effects
@@ -25967,7 +25965,7 @@
 			)
 		)
 		(property "Value" "22pF"
-			(at 4.5 2.475668 0)
+			(at 0.5 2.475668 0)
 			(layer "F.SilkS")
 			(uuid "791819a1-9805-4619-b60b-119d9daaafb9")
 			(effects
@@ -26349,7 +26347,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C6"
-			(at 2.441302 0.029349 0)
+			(at -2.5 0.5 0)
 			(layer "F.SilkS")
 			(uuid "7b1e40a9-cc42-424f-b786-7a6134cc1de5")
 			(effects
@@ -26557,7 +26555,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C12"
-			(at 2.520382 -0.040762 90)
+			(at 2.5 -2.5 90)
 			(layer "F.SilkS")
 			(uuid "ff209730-c55e-40bf-b615-0368bf72999b")
 			(effects
@@ -26940,7 +26938,7 @@
 	(footprint "Retr01_Lib:DIP-28_W15.24mm"
 		(layer "F.Cu")
 		(uuid "fd17b3ee-e4dd-43d3-8d89-b9a264c2ea48")
-		(at 104.49 120.5 90)
+		(at 105.52 120.5 90)
 		(descr "28-lead though-hole mounted DIP package, row spacing 15.24mm (600 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 15.24mm 600mil")
 		(property "Reference" "U41"
@@ -27151,7 +27149,7 @@
 			(uuid "a39e428e-1695-4a04-9888-6fc63fc4bfe1")
 		)
 		(point
-			(at 121 112.88)
+			(at 122.03 112.88)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "90b5d132-c464-4b5c-b67f-73f3ee29edd3")
@@ -27499,6 +27497,18 @@
 		(fill no)
 		(layer "F.SilkS")
 		(uuid "f9c478af-de2d-4f81-aa6d-9f336c42e632")
+	)
+	(gr_rect
+		(start 217.75 32)
+		(end 297.75 112)
+		(radius 2)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill no)
+		(layer "Dwgs.User")
+		(uuid "78cd2700-3bbc-4e19-b4ca-ee976ef8954e")
 	)
 	(gr_rect
 		(start 20 20)

@@ -1,12 +1,29 @@
 # ATF22V10 Beam Y
 
-Used in Tiers A, B, and C.
+The socket holds `beam_y.jed`. The package is 300 mil, so it sits across the breadboard center. The notch is pin 1. Power is off while the chip goes in or comes out. Beam X has already passed [`bench-atf22v10-beam-x.md`](bench-atf22v10-beam-x.md).
 
-The socket holds `beam_y.jed`. Power, ground, the NC ties, and RES match Beam X. Pin 24 is VCC. Pin 12 is GND. Pins 3 to 11 and pin 13 tie to GND. Pin 2 ties to 5 V.
+## Parts
 
-Pin 1 is not the dot clock. It is Beam X pin 14, one rising edge per line. Beam X has already passed [`bench-atf22v10-beam-x.md`](bench-atf22v10-beam-x.md).
+| Part | Qty | Role |
+| --- | --- | --- |
+| ATF22V10C, PDIP-24, `beam_y.jed` | 1 | Line counter and VSYNC |
+| 100 nF | 1 | Bypass from VCC to ground |
 
-Count runs 0 through 261, then returns to 0. VSYNC is high on counts 243, 244, and 245.
+Pin 1 is Beam X pin 14, one rising edge per line.
+
+## Place
+
+| What | Where |
+| --- | --- |
+| Pin 24 (VCC) | +5 V |
+| Pin 12 (GND) | Ground |
+| 100 nF | +5 V rail to the ground rail, beside pin 24 |
+| Pins 3 through 11, and pin 13 | Ground |
+| Pin 2 (RES) | +5 V |
+| Pin 1 (CLK) | Beam X pin 14 (HSYNC) |
+| Pins 14 through 23 | Open. These are the probe points |
+
+Count runs 0 through 261, then returns to 0. VSYNC is high on counts 243, 244, and 245. Q0 on this chip is pin 23. On Beam X, Q0 is pin 21.
 
 | Pin | Name |
 | --- | --- |
@@ -21,11 +38,9 @@ Count runs 0 through 261, then returns to 0. VSYNC is high on counts 243, 244, a
 | 22 | Q8 (most significant bit) |
 | 23 | Q0 (least significant bit) |
 
-Q0 on this chip is pin 23. On Beam X, Q0 is pin 21.
+## Check
 
-## Pass
-
-D0 is pin 1 (the line pulse from Beam X). D1 is pin 14. D2 is pin 23.
+Analyzer ground ties to breadboard ground. D0 is pin 1. D1 is pin 14. D2 is pin 23.
 
 | Probe | A good trace |
 | --- | --- |

@@ -1,17 +1,24 @@
 # AVR128DB28 MCU-S1
 
-Used in Tier C.
+The socket holds the Tier C field-fill image. The package is 300 mil, so it sits across the breadboard center. The notch is pin 1. Power is off while the chip goes in or comes out. This page is MCU-S1 only. MCU-M and MCU-S2 are later tiers.
 
-The socket holds the Tier C field-fill image. This page is MCU-S1 only. MCU-M and MCU-S2 are later tiers.
+## Parts
 
-## Power
+| Part | Qty | Role |
+| --- | --- | --- |
+| AVR128DB28, SPDIP-28, Tier C field-fill image | 1 | MCU-S1 |
+| 100 nF | 1 | Bypass from VDD to ground |
+| 10 kohm | 1 | Holds /WE high while that pin is still an input |
 
-| Pin | Tie |
+## Place
+
+| What | Where |
 | --- | --- |
-| 6 VDDIO2, 14 AVDD, 20 VDD | 5 V, one source |
-| 15 and 21 | GND |
-
-Pin 19 stays the UPDI pin. The CH340 lead from the flashing page is off the pin during this check.
+| Pins 6 (VDDIO2), 14 (AVDD), and 20 (VDD) | +5 V, one source |
+| Pins 15 and 21 | Ground |
+| 100 nF | +5 V rail to the ground rail, beside pin 20 |
+| Pin 19 (UPDI) | Open during this check. The CH340 lead from the flashing page is off this pin |
+| 10 kohm on /WE | Pin 17 to +5 V |
 
 Field pins, from [`docs/general/hardware.md`](../../../general/hardware.md):
 
@@ -23,9 +30,9 @@ Field pins, from [`docs/general/hardware.md`](../../../general/hardware.md):
 | /WE | 17 (PF1) |
 | S1_RDY | 18 (PF6) |
 
-## Pass
+The SRAM and the latch can stay off the board.
 
-The SRAM and the latch can stay off the board. A resistor from /WE to 5 V holds that net high if the pin is still an input.
+## Check
 
 After reset, and with no vertical timing pulse, ALE sits low and /WE sits high. AD pins are hi-Z. A resistor from one AD pin to ground sits low in that state.
 

@@ -11,8 +11,8 @@ One kit chip in the socket at a time. The package is 600 mil, so it sits in a 28
 | 100 nF | 1 | Bypass from VCC to ground |
 | Switch | 6 | A5 through A0. One 6-position DIP switch covers the same pins |
 | 10 kohm | 6 | Hold an open address switch at 0 |
-| LED | 8 | One per data bit |
-| 2.2 kohm | 8 | LED series resistor |
+| LED, red | 8 | One per data bit |
+| 2.2 kohm | 8 | LED series resistor. Output pin sinks 2.1 mA |
 
 ## Place
 
