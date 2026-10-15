@@ -28932,30 +28932,75 @@
 		(layer "Dwgs.User")
 		(uuid "78cd2700-3bbc-4e19-b4ca-ee976ef8954e")
 	)
-	(gr_rect
+	(gr_line
 		(start 20 20)
-		(end 190 140)
-		(radius 2)
-		(stroke
-			(width 0.1)
-			(type default)
-		)
-		(fill no)
-		(locked yes)
-		(layer "Edge.Cuts")
-		(uuid "1b5207b6-40a1-4847-8b3b-3694c334443a")
-	)
-	(gr_rect
-		(start 78.5 133.5)
-		(end 190 148)
-		(radius 1)
+		(end 17 25.5)
 		(stroke
 			(width 0.05)
 			(type default)
 		)
-		(fill no)
 		(layer "Edge.Cuts")
-		(uuid "5ce80a5b-6697-4640-9059-0dfcbb1f49c8")
+		(uuid "b7268d49-d560-46be-b4a1-25eb71056ea0")
+	)
+	(gr_line
+		(start 20 20)
+		(end 190 20)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "fb5ed399-e235-45a0-a0c7-5a1c50346d4d")
+	)
+	(gr_line
+		(start 20 140)
+		(end 20 20)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "3b9353f1-b417-4dba-9492-bd9c395227b8")
+	)
+	(gr_line
+		(start 77.5 140)
+		(end 20 140)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "c570bef4-ce79-4749-849e-b558ef4ca2d8")
+	)
+	(gr_line
+		(start 77.5 149)
+		(end 77.5 140)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "b5042592-e796-498b-8725-64df77d8e9cb")
+	)
+	(gr_line
+		(start 190 20)
+		(end 190 149)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "07272260-58c2-418f-b4c2-53656b15871d")
+	)
+	(gr_line
+		(start 190 149)
+		(end 77.5 149)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "4b3bcad2-1f0b-40d0-bb9a-1626ae2cb1f2")
 	)
 	(gr_text "Player 1\nConsole"
 		(at 36.5 114 0)
