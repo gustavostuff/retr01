@@ -87,7 +87,7 @@ Also open: coin counters (P8, S8), lockouts (P9, S9), pin 11 on both sides, and 
 
 One female 9-pin mini-DIN replaces J2, J8, and J9 for a single AV cable. The Kycon **KMDGX-9S-AS** is that shell: right-angle, through-hole, 9 sockets, side-and-back shield, board locks. The shield ties to GND.
 
-KiCad has no footprint for this part, and no Mini-DIN-9 symbol. `Connector:Mini-DIN-*` stops at 8 pins and ships with an empty footprint field.
+Footprint `Retr01_Lib:Kycon_KMDGX-9S-AS`. There is no Mini-DIN-9 symbol. `Connector:Mini-DIN-*` stops at 8 pins and ships with an empty footprint field.
 
 Pin numbers are the Genesis 2 / Mega Drive 2 / 32X / Nomad map.
 
