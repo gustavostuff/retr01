@@ -15,8 +15,6 @@ DIP14 = f"{_R}:DIP-14_W7.62mm"
 DIP14_74HC74 = f"{_R}:DIP-14_W7.62mm_74HC74"
 DIP14_74HCU04 = f"{_R}:DIP-14_W7.62mm_74HCU04"
 DIP8 = f"{_R}:DIP-8_W7.62mm"
-# U725 is a 9-pin landing. Pins 1-8 match the DIP-8 map. Pin 9 is STND.
-AD724_DIP = f"{_R}:AD724_9_W7.62mm"
 HDR1x3 = f"{_R}:PinHeader_1x03_P2.54mm_Vertical"
 
 C_CER = f"{_R}:C_Disc_D5.0mm_W2.5mm_P5.00mm"
@@ -32,6 +30,8 @@ HDR2x2 = f"{_R}:PinHeader_2x02_P2.54mm_Vertical"
 HDR2x3 = f"{_R}:PinHeader_2x03_P2.54mm_Vertical"
 HDR2x4 = f"{_R}:PinHeader_2x04_P2.54mm_Vertical"
 HDR2x5 = f"{_R}:PinHeader_2x05_P2.54mm_Vertical"
+# U725 uses the same 2x5 male header as J5 and J6. Pin 10 is a second GND.
+AD724_DIP = HDR2x5
 HDR6 = f"{_R}:PinHeader_1x06_P2.54mm_Vertical"
 HDR1x8 = f"{_R}:PinHeader_1x08_P2.54mm_Vertical"
 HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"

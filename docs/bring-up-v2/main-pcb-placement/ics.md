@@ -113,9 +113,9 @@ Bypass **C16** at pin 28.
 
 DAC **R1-R11** sit between U24 and J2 ([resistors.md](resistors.md)).
 
-### U725, AD724 (9-pin adapter)
+### U725, AD724 (2x5 header)
 
-Bypass **C18** at pin 1. Crystal **Y3** with **C23/C24** ([crystals.md](crystals.md)). The SOIC-16 sits on the adapter. The adapter holds ENCD and VSYNC at +5 V, holds SELECT at GND, joins the two supplies onto pin 1, joins the two grounds onto pin 2, and keeps CRMA and LUMA off the motherboard. Pin 9 is STND and runs to **J11** ([connectors.md](connectors.md)).
+Same male header as J5 and J6. Bypass **C18** at pin 1. Crystal **Y3** with **C23/C24** ([crystals.md](crystals.md)). The SOIC-16 sits on the small board that plugs in here. That board holds ENCD and VSYNC at +5 V, holds SELECT at GND, joins the two supplies onto pin 1, joins the two grounds onto pins 2 and 10, and keeps CRMA and LUMA off the motherboard. Pin 9 is STND and runs to **J11** ([connectors.md](connectors.md)).
 
 | U725 pin | Name | Destination |
 |---------:|------|-------------|
@@ -128,6 +128,7 @@ Bypass **C18** at pin 1. Crystal **Y3** with **C23/C24** ([crystals.md](crystals
 | 7 | COMP | J9 center |
 | 8 | HSYNC | CSYNC (J2 pin 3) |
 | 9 | STND | J11 pin 2 |
+| 10 | GND | rails |
 
 This corner stays clear of CPU and cart buses.
 

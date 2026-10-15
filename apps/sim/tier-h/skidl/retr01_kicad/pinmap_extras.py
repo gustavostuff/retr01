@@ -36,7 +36,7 @@ def apply_pinmap_extras() -> None:
     t["AVR128DB28"] = _nums(28)
     t["ATtiny85"] = _nums(8)
     t["OSC4LEGS"] = _nums(14)
-    t["AD724"] = _nums(9)
+    t["AD724"] = _nums(10)
     a["AD724"] = {
         "1": "VCC",
         "2": "GND",
@@ -47,6 +47,7 @@ def apply_pinmap_extras() -> None:
         "7": "COMP",
         "8": "HSYNC",
         "9": "STND",
+        "10": "GND2",
     }
     t["STND_HDR"] = _nums(3)
     a["STND_HDR"] = {"1": "NTSC", "2": "STND", "3": "PAL"}

@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 120 mm**. The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
-**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **9-pin** THT landing (`Retr01_Lib:AD724_9_W7.62mm`) for a small adapter. Pins 1-8 sit on a DIP-8 grid. Pin 9, below pin 4, is **STND**. The adapter joins the two +5 V pins and the two grounds, holds ENCD and VSYNC high, holds SELECT low, and leaves CRMA and LUMA on the adapter. **J11** is the 1x3 shunt header for STND. Cart and pad stay THT.
+**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **2x5** male header, the same footprint as J5 and J6 (`Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical`). A small board carries the SOIC-16 and the mating socket. Pins 1-9 are +5 V, GND, FIN, R, G, B, COMP, CSYNC, and STND. Pin 10 is a second GND. The small board joins the two +5 V pins and the two grounds, holds ENCD and VSYNC high, holds SELECT low, and leaves CRMA and LUMA on that board. **J11** is the 1x3 shunt header for STND. Cart and pad stay THT.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -71,7 +71,7 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | AD724 | RGB to NTSC/PAL composite encoder | 9-pin THT adapter (SOIC-16 silicon) | Same silicon (Analog sells SOIC-16 only) |
+| 1 | AD724 | RGB to NTSC/PAL composite encoder | 2x5 header (SOIC-16 on a plug-in board) | Same silicon (Analog sells SOIC-16 only) |
 | 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
 | 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
@@ -102,7 +102,7 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 ### Composite encoder (frozen): AD724
 
-**AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on the 9-pin adapter in **U725** (socket optional) with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
+**AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on the small board that plugs into **U725**, with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
 
 The adapter holds VSYNC high and SELECT low. **U725** takes **CSYNC** on its HSYNC pin. **J11** sets the color standard: shunt pins 1-2 for NTSC (STND high), or pins 2-3 for PAL (STND low). Y3 matches that choice. The raster stays **341 x 262** at about **60 Hz** either way. J2 still carries CSYNC, HSYNC, and VSYNC for the cable. **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 

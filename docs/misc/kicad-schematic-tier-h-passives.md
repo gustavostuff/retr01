@@ -42,7 +42,7 @@ Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND*
 | C15 | U574 | 74HC574 Scroll X Latch | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
 | C16 | U24 | AT27C256R Color PROM | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
 | C17 | U130 | MCP130 Reset Supervisor | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
-| C18 | U725 | AD724 Composite Video Encoder | 9-pin adapter | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) |
+| C18 | U725 | AD724 Composite Video Encoder | 2x5 header | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) |
 | C19 | U04 | 74HCU04 clock inverter | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 

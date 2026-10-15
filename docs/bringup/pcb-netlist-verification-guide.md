@@ -118,7 +118,7 @@ A manual datasheet audit covers every counted IC package:
 | **74HC157** | DIP-16 (300 mil) | Pin 16 (VCC), Pin 8 (GND), Pin 1 (S), Pin 15 (G) |
 | **74HCU04** | DIP-14 (300 mil) | Pin 14 (VCC), Pin 7 (GND) |
 | **74HC74** | DIP-14 (300 mil) | Pin 14 (VCC), Pin 7 (GND) |
-| **AD724** | 9-pin adapter | Pin 1 (+5 V), pin 2 (GND), pin 3 (FIN), pin 9 (STND to J11 pin 2) |
+| **AD724** | 2x5 header | Pin 1 (+5 V), pins 2 and 10 (GND), pin 3 (FIN), pin 9 (STND to J11 pin 2) |
 | **Player TRS, 3.5 mm and 6.35 mm** | `Retr01_Lib:Jack_TRS_3.5mm_and_6.35mm` | Tip=4, ring=2, sleeve=1 on both outlines. Pads 3, 5, TN, RN, and SN stay NC |
 | **GCT DCJ200 barrel** | `Retr01_Lib:BarrelJack_GCT_DCJ200-10-A_Horizontal` | Center pin (+5.0 V) vs sleeve (GND) |
 

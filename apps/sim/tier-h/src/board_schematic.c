@@ -388,6 +388,7 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
   tie_gnd(nl, pwr, r01s_atf22v10_entity(&board->pld_beam_y), "GND");
   tie_gnd(nl, pwr, r01s_compositor_entity(&board->compositor), "GND");
   tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "GND");
+  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "GND2");
   tie_gnd(nl, pwr, r01a_sn74hcu04_entity(&board->u04), "GND");
   tie_gnd(nl, pwr, r01a_sn74hc74_entity(&board->u74), "GND");
   tie_gnd(nl, pwr, r01s_sn74hc157_entity(&board->mux157[0]), "GND");

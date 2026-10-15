@@ -146,7 +146,7 @@ U130 holds the supervisor path on RESB ([ics.md](ics.md)).
 
 ## J11, NTSC/PAL shunt 1x3 (beside U725), Zone 2
 
-1x3 male, 2.54 mm. Pin 1 at the top.
+1x3 male, 2.54 mm. Pin 1 at the top. U725 is the same 2x5 male header as J5 and J6. Pin 10 on that header is a second GND.
 
 | Pin | Net | Shunt |
 |----:|-----|-------|

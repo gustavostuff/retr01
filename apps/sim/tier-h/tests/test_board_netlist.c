@@ -155,6 +155,10 @@ int main(void) {
                 "J11 pin 2 on AD724 STND");
     expect_true(!r01s_pin_netlist_same_net(nl, &board.io.j11, "STND", r01s_pwr5v_entity(&board.pwr), "VDD"),
                 "STND stays open until the shunt is fitted");
+    expect_true(r01s_ad724_entity(&board.ad724)->pin_count == 10, "U725 is 2x5");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "GND2",
+                                          r01s_pwr5v_entity(&board.pwr), "GND"),
+                "U725 pin 10 on GND");
     expect_true(board.io.j10.pin_count == 4, "J10 is 2x2");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j10, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J10 pin 2 GND");

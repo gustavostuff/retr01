@@ -45,6 +45,10 @@ def wire_power_rails(parts: Dict[str, object], nets_map: dict, pin_connect: Call
         for pin in (str(P.AVR128_GND_A), str(P.AVR128_GND_B)):
             _connect(part, pin, gnd, pin_connect)
 
+    u725 = parts.get("U725")
+    if u725 is not None:
+        _connect(u725, "10", gnd, pin_connect)
+
 
 def _pin_name_upper(pin) -> str:
     return (getattr(pin, "name", "") or "").upper()
