@@ -1,6 +1,6 @@
 # Main PCB: crystals and clock island
 
-Three HC-49/US cans in Zone 2 (top-right). **Y1** and **Y2** form analog Pierce loops on **U04**. **Y3** forms a second analog loop on **U725** FIN.
+Three HC-49/US cans in Zone 2 (top-right). **Y1** and **Y2** form analog Pierce loops on **U04**. **Y3** is the subcarrier into the CXA2075M. The current netlist still names that net on the 2x5 header.
 
 Each crystal pin copper run is a few millimeters. The whole loop (can, both load caps, feedback part if present, and the two IC pads) stays inside about **20 mm**. Those nets sit on **layer 4**. Digital clocks leave the island after the buffer.
 
@@ -20,7 +20,7 @@ Y1 and Y2 also need a 1 M ohm across the same two U04 pads as the crystal. That 
 |------|----------------------|----------------------|--------|
 | Y1 | U04 pin 5, **C25** pin 1, **R23** | U04 pin 6, **C26** pin 1, **R23** | Few mm per pin. Loop under 20 mm |
 | Y2 | U04 pin 1, **C21** pin 1, **R24** | U04 pin 2, **C22** pin 1, **R24** | Few mm per pin. Loop under 20 mm |
-| Y3 | U725 pin 3 (FIN), **C23** pin 1 | **C24** pin 1 only (`FSC_XTAL`) | Few mm per pin. Can beside U725 |
+| Y3 | Subcarrier toward the CXA2075M, **C23** pin 1 | **C24** pin 1 (`FSC_XTAL`) | Few mm per pin. Can beside U725 |
 
 No via in a Pierce or FSC tank if the pads can share layer 4. No digital bus under or beside those pads. No long stub off a crystal pin.
 
@@ -66,16 +66,9 @@ U74 divides by 4. **DOT** leaves U74 pin 9 through **R13** to UPLDX. That digita
 
 ---
 
-## Y3, FSC (AD724)
+## Y3, subcarrier (CXA2075M)
 
-Can stands next to **U725**, not next to U04. AD724 runs the oscillator on-chip. The can is **3.579545 MHz** when **J11** is shunted NTSC, and **4.433618 MHz** when **J11** is shunted PAL. **C23** and **C24** stay 22 pF for either can.
-
-```text
-Y3 pin 1 ---- U725 pin 3 (FIN) ---- C23 ---- GND
-Y3 pin 2 ---- C24 ---- GND
-```
-
-Y3 pin 2 has no second AD724 pad on this board. **C23** and **C24** still sit on the two crystal pins.
+Can stands next to **U725**, not next to U04. Y3 is the subcarrier into the CXA2075M **SCIN** pin. The can is **3.579545 MHz** when **J11** is shunted NTSC, and **4.433618 MHz** when **J11** is shunted PAL. **C23** and **C24** stay 22 pF for either can. The current netlist still names that net on the 2x5 header, which is not the SOP-24 pin.
 
 ---
 

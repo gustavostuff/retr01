@@ -14,7 +14,7 @@ Retr01 is a multi-clock, multi-driver board. The 6502, three AVRs, three PLDs, S
 | **SPI** | firmware-chosen | M master <-> S1 / S2 slaves |
 | **I2C** | firmware-chosen | M <-> cart save (24C64 or I2C FRAM) |
 | **Pad UART** | 115200 8N1 | S2 <-> ATtiny85 |
-| **FSC** | 3.58 / 4.43 MHz | AD724 only |
+| **FSC** | 3.58 / 4.43 MHz | CXA2075M only |
 
 These domains are mostly asynchronous to each other. Crossing them without clear ownership, Hi-Z rules, or a stall (`RDY`) is where bugs hide.
 
@@ -128,7 +128,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 ### 9. Color PROM and compositor per-dot path (Med)
 
-**What:** Every DOT (~186 ns) the compositor presents a 6-bit index to the AT27C256R (45 ns) and the resistor DAC. No CPU on this bus, but beam + PROM + AD724 must stay coherent with sync.
+**What:** Every DOT (~186 ns) the compositor presents a 6-bit index to the AT27C256R (45 ns) and the resistor DAC. No CPU on this bus, but beam + PROM + CXA2075M must stay coherent with sync.
 
 **When it bites:** Index changes too late for `tACC`. Unused PROM address pins float. Digital bus noise couples into RGB or FSC.
 
@@ -154,7 +154,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 ### 11. Reset and power-up bus chaos (High)
 
-**What:** At power-up, AVR GPIO may be inputs or undefined until firmware runs. Blank PLDs do not decode. CPU may fetch before cart OE is sane. AD724 and clocks start at different times.
+**What:** At power-up, AVR GPIO may be inputs or undefined until firmware runs. Blank PLDs do not decode. CPU may fetch before cart OE is sane. The CXA2075M and the clocks start at different times.
 
 **When it bites:** Boot fights on D. Running garbage until reset release. One AVR comes up late and drives SPI or AD early.
 
@@ -229,7 +229,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 | 6 | S1 BG0 HBlank fill | Parallax show-through |
 | 7 | SPI M->S1 / M->S2 | Mailboxes |
 | 8 | Cart OE# / WE# play vs program | Cart integrity |
-| 9 | Pads / I2C / AD724 | Peripherals and analog |
+| 9 | Pads / I2C / CXA2075M | Peripherals and analog |
 
 ## Design rules of thumb
 

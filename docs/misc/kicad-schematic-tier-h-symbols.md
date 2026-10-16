@@ -37,8 +37,8 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U7A**, **U7B**, **U7C** | SN74HC157 | `74xx_74LS157` (same DIP pinout) | DIP-16 |
 | **U573** | SN74HC573 | `74xx_74LS573` | DIP-20 |
 | **U574** | SN74HC574 | `74xx_74LS574` | DIP-20 |
-| **U725** | AD724 | Header pins VCC, GND, FIN, RIN, GIN, BIN, COMP, HSYNC, STND, GND2 | **2x5** `Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical` |
-| **J11** | STND header | NTSC, STND, PAL | `Retr01_Lib:PinHeader_1x03_P2.54mm_Vertical` |
+| **U725** | CXA2075M | Current export is a 2x5 header. Those pin names are not the SOP-24 pinout | **2x5** `Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical` |
+| **J11** | NTSC/PAL shunt | +5 V, NPIN, GND | `Retr01_Lib:PinHeader_1x03_P2.54mm_Vertical` |
 | **U04** | 74HCU04 | `74xx_74HC04` / unbuffered hex inverter | DIP-14 |
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |
@@ -81,7 +81,7 @@ Use global labels (not hidden net names only) for buses that cross sheet areas:
 | `CPU_A0`..`CPU_A15` or `A[0:15]` | CPU address (match symbol pin names) |
 | `CPU_D0`..`CPU_D7` | CPU data |
 | `CART_OE#`, `CART_WE#` | Mobo-side cart control (before **R14** / **R15**) |
-| `FSC_XTAL` | **Y3** output toward AD724 |
+| `FSC_XTAL` | **Y3** subcarrier toward the CXA2075M |
 | `SPI_MOSI`, `SPI_MISO`, `SPI_SCK`, `/SS_S1`, `/SS_S2` | MCU SPI mailbox |
 
 Match [`hardware.md`](../general/hardware.md) net names on MCU ports (`CPU_D0`, `I2C_SDA`, `ALE`, ...).

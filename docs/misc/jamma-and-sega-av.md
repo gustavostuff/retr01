@@ -96,7 +96,7 @@ Pin numbers are the Kycon recommended PCB layout with the connector facing up, w
 | 1 | Blue | Blue gun (R11) |
 | 2 | +5 V | +5 V |
 | 3 | Green | Green gun (R10) |
-| 4 | Composite | AD724 COMP |
+| 4 | Composite | CXA2075M CVOUT |
 | 5 | Sync | CSYNC |
 | 6 | Audio mono | `AUDIO_PWM` after the RC |
 | 7 | Red | Red gun (R9) |
@@ -106,7 +106,7 @@ Pin numbers are the Kycon recommended PCB layout with the connector facing up, w
 
 Pins 8 and 9 carry the one PWM channel, so a stereo cable plays it on both sides. HSYNC and VSYNC are not on this socket. RGBS uses pin 5. Composite picture uses pin 4.
 
-RGB at J2 is already about 0.7 Vpp into 75 ohm (R9, R10, R11). A Genesis RGB cable that adds another 75 ohm in series, plus a coupling capacitor, is built for an unbuffered encoder. That cable does not match these levels. Composite on pin 4 is the AD724 output, already arranged for a 75 ohm load. Pin 2 is the board +5 V rail, the same feed a Genesis cable uses for SCART switching.
+RGB at J2 is already about 0.7 Vpp into 75 ohm (R9, R10, R11). A Genesis RGB cable that adds another 75 ohm in series, plus a coupling capacitor, is built for an unbuffered encoder. That cable does not match these levels. Composite on pin 4 is the CXA2075M CVOUT, a 75 ohm driver. Pin 2 is the board +5 V rail, the same feed a Genesis cable uses for SCART switching.
 
 ## Sources
 

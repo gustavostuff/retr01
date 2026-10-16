@@ -6,7 +6,7 @@ A single motherboard footprint set covers **home console** and **arcade** instal
 
 ## Dual sync RGB + composite
 
-One RGB header carries **CSYNC**, **HSYNC**, and **VSYNC**, so RGBS and RGBHV cables share it. Composite is the **AD724** path, with CSYNC into the encoder. Cabinets and RGBHV upscalers share the same connector family.
+J2 carries RGB, CSYNC, and composite. Composite is the **CXA2075M** path, with CSYNC into the encoder. HSYNC and VSYNC stay on the beam PLDs.
 
 ## Hardware does the picture
 

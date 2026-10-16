@@ -24,7 +24,7 @@ Breadboard path from a video-only lab to full counted-BOM console behavior (CPU,
 The ladder is **feasible** against the locked design:
 
 1. **Risk isolation matches SoT.** Clocks, soft `$7Fxx`, VRAM interleave, S1 field ALE/`/WE`, cart OE, and pads are separate failure domains in `ic-comms-risks.md`. One domain per tier is the right shape.
-2. **Video-first (A-C) is the right start.** RGBS sync lock and Compositor priority do not need AVRs, a CPU, or AD724. Field fill (C) is the first hard real-time AVR window and can be proven without M or the 6502.
+2. **Video-first (A-C) is the right start.** RGBS sync lock and Compositor priority do not need AVRs, a CPU, or the CXA2075M. Field fill (C) is the first hard real-time AVR window and can be proven without M or the 6502.
 3. **D before E/F is deliberate.** Separating "who owns OAM" (M) from "who paints the field" (S1) matches final SPI mailbox rules before PHI2 interleave and soft I/O complexity land.
 4. **E before F is deliberate.** VRAM mux + PHI2-low beam fetch is a pure digital timing problem. A lab PHI2-high writer may stand in for `$7F10-$7F12` until the 6502 exists. The interleave itself must not wait on full soft I/O.
 5. **G before H is deliberate.** Cart OE/MAP fights are orthogonal to pads/audio. S2 is the remaining AVR and is safe last.
@@ -38,7 +38,7 @@ The ladder is **feasible** against the locked design:
 
 **Add:** DOT, Beam X/Y, PROM, DAC, J2-style RGBS header. 
 **Prove:** Stable CSYNC (or H/V), kit colors on an RGB monitor. 
-**Skip:** AD724, FSC, RCA, all AVRs, CPU, cart, SRAM, 74xx mux/latches.
+**Skip:** CXA2075M, subcarrier, all AVRs, CPU, cart, SRAM, 74xx mux/latches.
 
 ### B - Compositor
 
@@ -72,7 +72,7 @@ The ladder is **feasible** against the locked design:
 
 ### G - Cart and MAP
 
-**Add:** SST39SF040 (or lab equivalent). OE# gated for PRG and intentional MAP/CHR windows. MAP `$7F90-$7F93`. Optional 24C64/FRAM (chunked, short RDY). 
+**Add:** SST39SF040-55-4C-TU (or lab equivalent). OE# gated for PRG and intentional MAP/CHR windows. MAP `$7F90-$7F93`. Optional 24C64/FRAM (chunked, short RDY). 
 **Exit:** `.retr01`-style image boots and shows authored BG + entities driven by PRG.
 
 ### H - Pads and audio

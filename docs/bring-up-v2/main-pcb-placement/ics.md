@@ -113,24 +113,11 @@ Bypass **C16** at pin 28.
 
 DAC **R1-R11** sit between U24 and J2 ([resistors.md](resistors.md)).
 
-### U725, AD724 (2x5 header)
+### U725, CXA2075M
 
-Same male header as J5 and J6. Bypass **C18** at pin 1. Crystal **Y3** with **C23/C24** ([crystals.md](crystals.md)). The SOIC-16 sits on the small board that plugs in here. That board holds ENCD and VSYNC at +5 V, holds SELECT at GND, joins the two supplies onto pin 1, joins the two grounds onto pins 2 and 10, and keeps CRMA and LUMA off the motherboard. Pin 9 is STND and runs to **J11** ([connectors.md](connectors.md)).
+SOP-24 encoder. Bypass at each VCC pin. Crystal **Y3** with **C23/C24** is the subcarrier ([crystals.md](crystals.md)). RGB comes from the DAC. CSYNC goes to SYNCIN and also to J2 pin 5. CVOUT goes to J2 pin 4. **J11** pin 2 is NPIN ([connectors.md](connectors.md)).
 
-| U725 pin | Name | Destination |
-|---------:|------|-------------|
-| 1 | +5 V | rails and **C18** |
-| 2 | GND | rails |
-| 3 | FIN | Y3 pin 1 |
-| 4 | R | DAC red sum |
-| 5 | G | DAC green sum |
-| 6 | B | DAC blue sum |
-| 7 | COMP | J2 pin 4 |
-| 8 | HSYNC | CSYNC (J2 pin 5) |
-| 9 | STND | J11 pin 2 |
-| 10 | GND | rails |
-
-This corner stays clear of CPU and cart buses.
+The current footprint is still the 2x5 header. Those header pin numbers are not the SOP-24 pinout. This corner stays clear of CPU and cart buses.
 
 ---
 

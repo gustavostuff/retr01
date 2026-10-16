@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 120 mm**. The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
-**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints. Analog only sells **AD724** as **SOIC-16**, so **U725** is a **2x5** male header, the same footprint as J5 and J6 (`Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical`). A small board carries the SOIC-16 and the mating socket. Pins 1-9 are +5 V, GND, FIN, R, G, B, COMP, CSYNC, and STND. Pin 10 is a second GND. The small board joins the two +5 V pins and the two grounds, holds ENCD and VSYNC high, holds SELECT low, and leaves CRMA and LUMA on that board. **J11** is the 1x3 shunt header for STND. Cart and pad stay THT.
+**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints, except the composite encoder. That part is a Sony **CXA2075M** in a 24-pin SOP. Generic parts (AliExpress and similar) are the supply. Datasheet: [CXA2075M](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html). **J11** is the 1x3 shunt that selects NTSC or PAL. Cart and pad stay THT. The current KiCad landing at **U725** is still a 2x5 header and is not the SOP-24 pinout.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -14,12 +14,12 @@ Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules
 | Dot | **5.369318 MHz** |
 | Each AVR128DB28 | **24 MHz** internal HFOSC |
 | Raster | **341 x 262**, about **60.098 Hz** |
-| Composite subcarrier | FSC crystal for **AD724** (NTSC **3.579545 MHz** or PAL **4.433618 MHz**) |
+| Composite subcarrier | Y3 into the **CXA2075M** (NTSC **3.579545 MHz** or PAL **4.433618 MHz**) |
 
 Discrete crystal clock generation:
 - **PHI2 (8.000 MHz):** An 8.000 MHz crystal with an unbuffered **74HCU04** inverter gate and 1 M ohm feedback resistor forms the Pierce oscillator, buffered by a second gate to feed the CPU clock.
 - **DOT (5.369318 MHz):** A 21.47727 MHz master crystal with a second 74HCU04 gate and 1 M ohm feedback resistor feeds an **SN74HC74** dual flip-flop. The flip-flop divides the frequency by 4 to produce a symmetrical 50% duty-cycle 5.369318 MHz square wave.
-- **FSC:** Y3 connects to AD724 FIN. Stuff **3.579545 MHz** when J11 is on NTSC, or **4.433618 MHz** when J11 is on PAL. C23 and C24 stay 22 pF for either can.
+- **FSC:** Y3 is the subcarrier into the CXA2075M **SCIN** pin. Stuff **3.579545 MHz** when J11 is on NTSC, or **4.433618 MHz** when J11 is on PAL.
 
 Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by default (`SCALE` open). Closing `SCALE_1X` to +5 V selects 1x. Raster size stays the same.
 
@@ -64,14 +64,14 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | W65C02S | Game CPU @ 8 MHz | PDIP-40 | Yes (PLCC-44, QFP-44) |
 | 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
 | 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 | Yes (SOP-28, sTSOP-28) |
-| 1 | SST39SF040 | 512 KB cart flash. Purchased PDIP `SST39SF040-70-4C-PHE` is obsolete | PDIP-32 | Yes (PLCC-32, TSOP-32) |
+| 1 | SST39SF040-55-4C-TU | 512 KB cart NOR flash. 55 ns, 5 V. 32-lead TSOP | Surface mount | This TSOP is the cart package |
 | 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP) |
 | 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
 | 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP) |
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | AD724 | RGB to NTSC/PAL composite encoder. `AD724JRZ` is last-time buy | 2x5 header (SOIC-16 on a plug-in board) | Same silicon (Analog sells SOIC-16 only) |
+| 1 | CXA2075M | RGB to NTSC/PAL composite encoder. Generic SOP-24 supply | SOP-24 | Same package |
 | 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
 | 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
@@ -79,32 +79,32 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 
 ### Parts on hand
 
-Pieces received. DigiKey order `9910000377148189`. Mouser invoice `92826838`, shipped 2 Oct 2026. A part that appears on both orders is one row, with the two quantities added. `AD724JRZ` was cancelled on 29 Sep 2026, so none of that encoder is on hand. `SN74HC14N` is a Schmitt-trigger inverter and is not the Pierce `74HCU04`.
+Pieces received. DigiKey order `9910000377148189`. Mouser invoice `92826838`, shipped 2 Oct 2026. A part that appears on both orders is one row, with the two quantities added. The CXA2075M was not in either order. `SN74HC14N` is a Schmitt-trigger inverter and is not the Pierce `74HCU04`. An Si5351A breakout (Adafruit 2045) is a bench clock tool and is not in this table.
 
-`SST39SF040-70-4C-PHE` is obsolete. Last orders closed 1 Jul 2026. Last shipments 1 Jan 2027. `AD724JRZ` is last time buy through 29 Jul 2027.
+The purchased `SST39SF040-70-4C-PHE` (PDIP-32, 70 ns) is obsolete. Last orders closed 1 Jul 2026. Last shipments 1 Jan 2027. The cart flash is `SST39SF040-55-4C-TU`: the same device in a 32-lead TSOP (8 mm x 14 mm), 55 ns, commercial. Same 5 V command set. It does not drop into the PDIP-32 socket.
 
 | On hand | Manufacturer part | Distributor | Role | Status | Link |
 | --- | --- | --- | --- | --- | --- |
-| 1 | W65C02S6TPG-14 | Mouser `955-W65C02S6TPG-14` | CPU, PDIP-40 | - | [link]() |
-| 2 | AVR128DB28-I/SP | DigiKey `150-AVR128DB28-I/SP-ND` | MCU, SPDIP-28, industrial | - | [link]() |
-| 2 | AVR128DB28-E/SP | Mouser `579-AVR128DB28-E/SP` | MCU, SPDIP-28, extended | - | [link]() |
-| 3 | AS6C62256-55PCN | DigiKey `1450-1033-ND` (1), Mouser `913-AS6C62256-55PCN` (2) | 32K x 8 SRAM, 55 ns, PDIP-28 | - | [link]() |
-| 1 | SST39SF040-70-4C-PHE | Mouser `804-39SF0407CPHE` | 512K x 8 cart flash, 70 ns, PDIP-32 | Obsolete | [link]() |
-| 1 | 24LC64-I/P | Mouser `579-24LC64-I/P` | Cart EEPROM, DIP-8 | - | [link]() |
-| 4 | ATF22V10C-15PU | DigiKey `ATF22V10C-15PU-ND` | PLD, 15 ns, PDIP-24 | - | [link]() |
-| 3 | SN74HC157N | Mouser `595-SN74HC157N` | Quad 2-to-1 mux, PDIP-16 | - | [link]() |
-| 2 | SN74HC573AN | DigiKey `296-1596-5-ND` | Octal latch, PDIP-20 | - | [link]() |
-| 1 | SN74HC574N | Mouser `595-SN74HC574N` | Octal flip-flop, PDIP-20 | - | [link]() |
-| 2 | AT27C256R-45PU | DigiKey `AT27C256R-45PU-ND` | Color PROM, 45 ns, PDIP-28 | - | [link]() |
-| 0 | AD724JRZ | Mouser `584-AD724JRZ` | Composite encoder, SOIC-16. Order cancelled | Last time buy | [link]() |
-| 1 | SN74HCU04N | Mouser `595-SN74HCU04N` | Unbuffered hex inverter, PDIP-14 | - | [link]() |
-| 3 | SN74HC74N | DigiKey `296-1602-5-ND` (2), Mouser `595-SN74HC74N` (1) | Dual flip-flop, PDIP-14 | - | [link]() |
-| 2 | ATTINY85-20PU | Mouser `556-ATTINY85-20PU` | Pad MCU, PDIP-8 | - | [link]() |
-| 1 | SN74HC14N | Mouser `595-SN74HC14N` | Hex Schmitt-trigger inverter, PDIP-14 | - | [link]() |
-| 1 | Adafruit 2045 | DigiKey `1528-1206-ND` | Si5351A breakout | - | [link]() |
-| 3 | HC-49/U-S21477270ABJB | Mouser `695-HC49US-214-U` | 21.477270 MHz crystal, 18 pF, HC-49/US | - | [link]() |
-| 3 | FOXSLF/036S | Mouser `559-FOXS036S-LF` | 3.579545 MHz crystal, 18 pF | - | [link]() |
-| 3 | XT9S20ANA8M | Mouser `73-XT49S800-20` | 8.000 MHz crystal, 20 pF | - | [link]() |
+| 1 | W65C02S6TPG-14 | Mouser `955-W65C02S6TPG-14` | CPU, PDIP-40 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/955-W65C02S6TPG-14) |
+| 2 | AVR128DB28-I/SP | DigiKey `150-AVR128DB28-I/SP-ND` | MCU, SPDIP-28, industrial | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/AVR128DB28-I-SP/12807495) |
+| 2 | AVR128DB28-E/SP | Mouser `579-AVR128DB28-E/SP` | MCU, SPDIP-28, extended | - | [Mouser](https://www.mouser.mx/en/ProductDetail/Microchip-Technology/AVR128DB28-E-SP?qs=vmHwEFxEFR9lzuat%2Fan%252Bvw%3D%3D) |
+| 3 | AS6C62256-55PCN | DigiKey `1450-1033-ND` (1), Mouser `913-AS6C62256-55PCN` (2) | 32K x 8 SRAM, 55 ns, PDIP-28 | - | [DigiKey](https://www.digikey.com/en/products/detail/alliance-memory-inc/AS6C62256-55PCN/4234592) |
+| 1 | SST39SF040-70-4C-PHE | Mouser `804-39SF0407CPHE` | Purchased 512K x 8 flash, 70 ns, PDIP-32 | Obsolete | [Mouser](https://www.mouser.mx/en/ProductDetail/804-39SF0407CPHE) |
+| 0 | SST39SF040-55-4C-TU | Microchip | 512K x 8 cart flash, 55 ns, 32-lead TSOP | Active | [Microchip](https://www.microchipdirect.com/product/SST39SF040-55-4C-TU) |
+| 1 | 24LC64-I/P | Mouser `579-24LC64-I/P` | Cart EEPROM, DIP-8 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/Microchip-Technology/24LC64-I-P?qs=EkZBwCRGcSvc%252BCDluHmdqw%3D%3D) |
+| 4 | ATF22V10C-15PU | DigiKey `ATF22V10C-15PU-ND` | PLD, 15 ns, PDIP-24 | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/ATF22V10C-15PU/1008580) |
+| 3 | SN74HC157N | Mouser `595-SN74HC157N` | Quad 2-to-1 mux, PDIP-16 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC157N) |
+| 2 | SN74HC573AN | DigiKey `296-1596-5-ND` | Octal latch, PDIP-20 | - | [DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/SN74HC573AN/277242) |
+| 1 | SN74HC574N | Mouser `595-SN74HC574N` | Octal flip-flop, PDIP-20 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC574N) |
+| 2 | AT27C256R-45PU | DigiKey `AT27C256R-45PU-ND` | Color PROM, 45 ns, PDIP-28 | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/AT27C256R-45PU/1118860) |
+| 0 | CXA2075M | Generic (AliExpress and similar) | Composite encoder, SOP-24 | Not a current Sony catalog part | [datasheet](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html) |
+| 1 | SN74HCU04N | Mouser `595-SN74HCU04N` | Unbuffered hex inverter, PDIP-14 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HCU04N) |
+| 3 | SN74HC74N | DigiKey `296-1602-5-ND` (2), Mouser `595-SN74HC74N` (1) | Dual flip-flop, PDIP-14 | - | [DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/SN74HC74N/277248) |
+| 2 | ATTINY85-20PU | Mouser `556-ATTINY85-20PU` | Pad MCU, PDIP-8 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/556-ATTINY85-20PU) |
+| 1 | SN74HC14N | Mouser `595-SN74HC14N` | Hex Schmitt-trigger inverter, PDIP-14 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC14N) |
+| 3 | HC-49/U-S21477270ABJB | Mouser `695-HC49US-214-U` | 21.477270 MHz crystal, 18 pF, HC-49/US | - | [Mouser](https://www.mouser.mx/en/ProductDetail/695-HC49US-214-U) |
+| 3 | FOXSLF/036S | Mouser `559-FOXS036S-LF` | 3.579545 MHz crystal, 18 pF | - | [Mouser](https://www.mouser.mx/en/ProductDetail/559-FOXS036S-LF) |
+| 3 | XT9S20ANA8M | Mouser `73-XT49S800-20` | 8.000 MHz crystal, 20 pF | - | [Mouser](https://www.mouser.mx/en/ProductDetail/73-XT49S800-20) |
 
 ### Reset generation: MCP130 supervisor
 
@@ -124,18 +124,18 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 | **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only | No |
 | **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
 | **Clock generation** | 74HCU04, 74HC74 | **No.** Discrete crystal oscillator and divider | No |
-| **Composite encoder** | AD724 | Fixed analog (RGB to NTSC/PAL) | No |
+| **Composite encoder** | CXA2075M | Fixed analog (RGB to NTSC/PAL) | No |
 | **Reset supervisor** | MCP130 | Fixed supervisory timing | No |
 | **Outside the 21** | crystals | Fixed timing | No |
 | **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
 
-### Composite encoder (frozen): AD724
+### Composite encoder: CXA2075M
 
-**AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on the small board that plugs into **U725**, with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
+The **CXA2075M** is on the motherboard BOM (one of the **19**). Package is SOP-24. Behavior and pin roles: [`docs/ic_behavior/CXA2075M.md`](../ic_behavior/CXA2075M.md).
 
-The adapter holds VSYNC high and SELECT low. **U725** takes **CSYNC** on its HSYNC pin. **J11** sets the color standard: shunt pins 1-2 for NTSC (STND high), or pins 2-3 for PAL (STND low). Y3 matches that choice. The raster stays **341 x 262** at about **60 Hz** either way. **J2** pin 5 carries that CSYNC. HSYNC and VSYNC stay on the beam PLDs. **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+RGB from the color PROM DAC goes to **RIN**, **GIN**, and **BIN**. CSYNC from the beam PLDs goes to **SYNCIN**. That same CSYNC is **J2** pin 5. **Y3** drives **SCIN**. **J11** drives **NPIN**: shunt pins 1-2 for NTSC (NPIN at +5 V, Y3 at 3.579545 MHz), or pins 2-3 for PAL (NPIN at GND, Y3 at 4.433618 MHz). The raster stays **341 x 262** at about **60 Hz** either way. HSYNC and VSYNC stay on the beam PLDs. Composite is **CVOUT** on **J2** pin 4.
 
-RGB analog always comes from the color PROM DAC. Composite is AD724 COMP on **J2** pin 4.
+The current netlist still lands **U725** on a 2x5 header. That header is not the SOP-24 pinout.
 
 ## MCU roles (3x AVR128DB28)
 
@@ -260,7 +260,7 @@ Cart palettes are **indices only** into this PROM. See `memory.md`, `video-graph
 
 ## Cartridge
 
-Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play (**board pull-up**). Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
+Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040-55-4C-TU** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play (**board pull-up**). The flash is a 32-lead TSOP. Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
 
 ### Cart edge pinout (2x18 = 36 contacts)
 
@@ -367,7 +367,7 @@ Analog RGB from the PROM DAC. One Kycon **KMDGX-9S-AS** female 9-pin mini-DIN (*
 | 1 | Blue |
 | 2 | +5 V |
 | 3 | Green |
-| 4 | Composite (AD724 COMP) |
+| 4 | Composite (CXA2075M CVOUT) |
 | 5 | CSYNC |
 | 6 | Audio (`AUDIO_PWM` after the RC) |
 | 7 | Red |
@@ -375,7 +375,7 @@ Analog RGB from the PROM DAC. One Kycon **KMDGX-9S-AS** female 9-pin mini-DIN (*
 | 9 | Audio (same net as pin 6) |
 | S | GND (three shield holes) |
 
-HSYNC and VSYNC stay on the beam PLDs. They have no pin on this socket. **U725** pin 8 takes the CSYNC wire. VSYNC is held high on the adapter. **J11** chooses NTSC or PAL chroma for composite on pin 4. CRMA and LUMA stay on the adapter.
+HSYNC and VSYNC stay on the beam PLDs. They have no pin on this socket. **J11** chooses NTSC or PAL for composite on pin 4.
 
 ## PCB layout practices
 
@@ -394,7 +394,7 @@ Net-by-net assignment, the half/half outer-layer target, the analog keepout, and
 
 **Layer 1:** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, U24 digital outputs to the DAC resistors, S1 `AD[7:0]` / ALE / field `/WE`, SPI MOSI/MISO/SCK, scroll X data, and +5V.
 
-**Layer 4:** Pierce loops (Y1, Y2, U04 analog pins, feedback resistors, load caps), Y3 and FSC into the AD724, the R-2R gun nodes to J2 pins 7 / 3 / 1, composite to J2 pin 4, audio to J2 pins 6 / 8 / 9, pad UART, I2C, `RESB`, `CPU_RDY`, UPDI, arcade and pad GPIO, LED anodes, line/frame strobes, soft SELs, SPI chip-selects, and MAP A14-A18.
+**Layer 4:** Pierce loops (Y1, Y2, U04 analog pins, feedback resistors, load caps), Y3 and the subcarrier into the CXA2075M, the R-2R gun nodes to J2 pins 7 / 3 / 1, composite to J2 pin 4, audio to J2 pins 6 / 8 / 9, pad UART, I2C, `RESB`, `CPU_RDY`, UPDI, arcade and pad GPIO, LED anodes, line/frame strobes, soft SELs, SPI chip-selects, and MAP A14-A18.
 
 Cart and pad PCBs are **2-layer**.
 
@@ -408,7 +408,7 @@ Cart and pad PCBs are **2-layer**.
 | J6 | 2x5 arcade P2 (left of US2) |
 | J7 | 2x2 power/reset |
 | J10 | 2x2 cart program (Friend DATA on pin 3) |
-| J11 | 1x3 NTSC/PAL shunt. Pin 1 +5 V, pin 2 STND, pin 3 GND |
+| J11 | 1x3 NTSC/PAL shunt. Pin 1 +5 V, pin 2 NPIN, pin 3 GND |
 | J36 | EDAC **395-036-520-201** cart socket, 36 contacts |
 | Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / FSC (74HCU04 + 74HC74 clock stage). Y3 is **3.579545 MHz** or **4.433618 MHz** |
 
@@ -455,7 +455,7 @@ These track common practice for this **4-layer** digital and video board:
 - **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
 - **Board edges:** High-speed and clock traces stay off the PCB perimeter. Edge copper couples into chassis and EMI. Clocks sit toward the middle of the board. Connectors and video out may sit on the edge by nature. Their stub lengths stay short.
 - **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
-- **Analog video:** AD724 / DAC area quieter. Local decoupling. Short RGB, composite, and sync runs to J2. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
+- **Analog video:** CXA2075M / DAC area quieter. Local decoupling. Short RGB, composite, and sync runs to J2. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 - **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
 - **Silkscreen:** Refdes, polarity, J10 `CART`, TP names, LED names.

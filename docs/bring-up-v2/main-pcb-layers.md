@@ -41,7 +41,7 @@ Every net in the layer 4 tables below belongs on layer 4. Leaving a safe net on 
 | +5V | 1 |
 | Digital square clock (PHI2, DOT, U04 buffer, U74, 157 pin S) | 1 |
 | Parallel bus that changes on PHI2 or DOT (A, D, AD, mux, index, field, scroll, SPI clock/data) | 1 |
-| Analog (crystal Pierce, DAC guns, AD724, composite, audio after PWM) | 4 |
+| Analog (crystal Pierce, DAC guns, CXA2075M, composite, audio after PWM) | 4 |
 | Reset, ready, selects, handshake, I2C, pads, arcade, LEDs, line/frame strobes, MAP high bits | 4 |
 
 A via may pass through layers 2 and 3. Signal copper does not stop on layers 2 or 3.
@@ -53,7 +53,7 @@ A via may pass through layers 2 and 3. Signal copper does not stop on layers 2 o
 Layer 4 analog copper sits in Zone 2:
 
 - Y1 / Y2 Pierce loops at U04 (crystal pins, R23, R24, C21, C22, C25, C26)
-- Y3 and FSC into U725 FIN (C23, C24)
+- Y3 subcarrier into the CXA2075M (C23, C24)
 - DAC gun nodes after R1-R8, plus R9-R11, into J2 pins 7 / 3 / 1
 - U725 RIN / GIN / BIN / COMP and J2 pin 4
 - CSYNC into J2 pin 5 (short, in this corner). HSYNC and VSYNC stay on the beam PLDs
@@ -148,7 +148,7 @@ The S1 triangle stays local. Layer 1 keeps the AD burst on this island.
 |-----|------|
 | Y2 Pierce | U04 pins 1-2, **R24**, **C21**, **C22** |
 | Y1 Pierce | U04 pins 5-6, **R23**, **C25**, **C26** |
-| Y3 / FSC | U725 FIN, **C23**, **C24** |
+| Y3 / subcarrier | CXA2075M SCIN, **C23**, **C24** |
 | Red / Green / Blue guns | After **R1-R8**, through **R9-R11**, to J2 pins 7 / 3 / 1 and U725 RIN/GIN/BIN |
 | U725 COMP | J2 pin 4 |
 | AUDIO_PWM | US2 PF1 to J2 pins 6 / 8 / 9, Zone 5 corridor only |

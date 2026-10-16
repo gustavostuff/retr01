@@ -161,7 +161,7 @@ Before inserting CPU or microcontrollers, the video generation path is confirmed
   - Resistor DAC (R1-R11) and RGBS video header J2.
 - **Leave unpopulated:**
   - Sockets: U1 (W65C02S), U3 (System RAM), U6 (VRAM), U7A-C (HC157), UM (MCU-M), US2 (MCU-S2).
-  - Header: U725 (AD724 2x5). J11 shunt on pins 1-2 for NTSC.
+  - Header: U725 (CXA2075M). J11 shunt on pins 1-2 for NTSC.
 - **Verification:**
   - Power up with JP_PWR1 and JP_PWR2 installed.
   - Connect monitor to J2 RGBS header.
@@ -221,7 +221,7 @@ Brings the game CPU and system memory online:
 Validates the physical cartridge edge connector and memory mapping:
 - **Populate:**
   - Solder cartridge edge connector J36.
-  - Insert physical cartridge containing SST39SF040 Flash and optional 24C64 EEPROM.
+  - Insert physical cartridge containing the SST39SF040-55-4C-TU and optional 24C64 EEPROM.
 - **Verification:**
   - Remove temporary Tier F PRG mapping.
   - Power up and boot PRG directly from the physical cartridge.
@@ -237,12 +237,12 @@ Brings the remaining peripherals online to complete the console:
   - Socket US2 (AVR128DB28 for MCU-S2).
   - Controller TRS jacks J3 and J4 (3.5 mm or 6.35 mm CLIFF S4, one size per player), pull-up resistor R18.
   - Audio output filter passives into J2 pins 6, 8, and 9.
-  - Optional: plug the AD724 board onto the U725 2x5 header, Y3 (3.579545 MHz with J11 on NTSC, or 4.433618 MHz with J11 on PAL). COMP lands on J2 pin 4.
+  - Optional: seat the CXA2075M at U725, Y3 (3.579545 MHz with J11 on NTSC, or 4.433618 MHz with J11 on PAL). CVOUT lands on J2 pin 4. The current footprint is still the 2x5 header and is not the SOP-24 pinout.
   - Install JP_PWR4 shunt.
 - **Verification:**
   - Game controllers on J3 and J4. Button inputs register in software during VBlank.
   - Verify PWM audio on J2 pins 6, 8, and 9 produces clean sound without digital buzz.
-  - If AD724 is populated, verify composite video on J2 pin 4.
+  - If the CXA2075M is populated, verify composite video on J2 pin 4.
 
 ---
 
@@ -250,7 +250,7 @@ Brings the remaining peripherals online to complete the console:
 
 The Tier H board layout includes:
 
-1. **IC sockets:** DIP/SPDIP sockets for the through-hole motherboard ICs, plus the U725 2x5 header (AD724 plug-in board) and the J11 shunt header.
+1. **IC sockets:** DIP/SPDIP sockets for the through-hole motherboard ICs, plus the U725 landing (CXA2075M; the current footprint is still a 2x5 header) and the J11 shunt header.
 2. **Four power jumpers:** JP_PWR1 (Core/Video), JP_PWR2 (AVRs), JP_PWR3 (CPU/Memory), JP_PWR4 (Audio).
 3. **Tap headers:** 6-pin SPI header and 8-pin timing header on 2.54 mm pitch.
 4. **Pull-up resistors:** Active-low control pins (`/OE`, `/WE`, `/CE`, `RESB`, `RDY`) have pull-ups at the socket so an empty socket does not float those nets.

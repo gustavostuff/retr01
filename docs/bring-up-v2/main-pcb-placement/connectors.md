@@ -124,15 +124,15 @@ U130 holds the supervisor path on RESB ([ics.md](ics.md)).
 
 ## J11, NTSC/PAL shunt 1x3 (beside U725), Zone 2
 
-1x3 male, 2.54 mm. Pin 1 at the top. U725 is the same 2x5 male header as J5 and J6. Pin 10 on that header is a second GND.
+1x3 male, 2.54 mm. Pin 1 at the top. Pin 2 is NPIN on the CXA2075M. The current U725 footprint is still a 2x5 header, and that header is not the SOP-24 pinout.
 
 | Pin | Net | Shunt |
 |----:|-----|-------|
 | 1 | +5 V | NTSC, with pin 2 |
-| 2 | STND | U725 pin 9 |
+| 2 | NPIN | CXA2075M pin 7 |
 | 3 | GND | PAL, with pin 2 |
 
-One shunt. Pins 1-2 select NTSC. Pins 2-3 select PAL. Y3 matches the shunt ([crystals.md](crystals.md)). The copper does not bridge the shunt. An empty header leaves STND open.
+One shunt. Pins 1-2 select NTSC. Pins 2-3 select PAL. Y3 matches the shunt ([crystals.md](crystals.md)). The copper does not bridge the shunt. An empty header leaves NPIN open, which is not a valid standard.
 
 ## J10, cart program header 2x2 (near UM)
 

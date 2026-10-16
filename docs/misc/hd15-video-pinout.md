@@ -95,7 +95,7 @@ The older Analogue Nt puts every format on the shell at once: RGB on 1, 2, 3, co
 
 ## Retr01 signals
 
-RGB comes from the color PROM DAC at about 0.7 Vpp into 75 ohm (R9, R10, R11). J2 carries red, green, blue, CSYNC, and composite. HSYNC and VSYNC stay on the beam PLDs and are not on J2. AD724 CRMA (S-video C) and LUMA (S-video Y) stay on the U725 adapter. The encoder drives 75 ohm reverse-terminated loads. Datasheet levels on those pins are about 2.5 Vpp composite, about 2 Vpp luma, and about 1.8 Vpp chroma, before the series resistor.
+RGB comes from the color PROM DAC at about 0.7 Vpp into 75 ohm (R9, R10, R11). J2 carries red, green, blue, CSYNC, and composite. HSYNC and VSYNC stay on the beam PLDs and are not on J2. The CXA2075M drives composite on CVOUT, luma on YOUT, and chroma on COUT, each through a 75 ohm driver.
 
 | Signal | Where it is | DE-15 on the VESA and Extron map |
 | --- | --- | --- |
@@ -106,15 +106,15 @@ RGB comes from the color PROM DAC at about 0.7 Vpp into 75 ohm (R9, R10, R11). J
 | VSYNC | Beam Y, not on J2 | 14 |
 | CSYNC | J2 pin 5 | 13 when the cable is RGBS |
 | GND | J2 shield | 5, 6, 7, 8, 10 |
-| Composite | J2 pin 4, AD724 COMP | 2, return 7 |
-| Luma | U725 adapter, AD724 LUMA | 2, return 7 |
-| Chroma | U725 adapter, AD724 CRMA | 3, return 8 |
+| Composite | J2 pin 4, CXA2075M CVOUT | 2, return 7 |
+| Luma | CXA2075M YOUT | 2, return 7 |
+| Chroma | CXA2075M COUT | 3, return 8 |
 
 Pins 2 and 3 are the collision. Green and composite and luma share pin 2. Blue and chroma share pin 3. A VGA monitor cable and a live composite driver cannot use that pin at the same time.
 
 Two published ways through that:
 
-- One format at a time, Extron/AMX and the Analogue Nt Mini shorts. RGBHV or RGBS uses the VESA pins, so a normal VGA cable still works while the port is in RGB mode. Composite and S-video move onto pins 2 and 3 only while that cable is the one fitted. S-video also needs LUMA and CRMA brought off the adapter.
+- One format at a time, Extron/AMX and the Analogue Nt Mini shorts. RGBHV or RGBS uses the VESA pins, so a normal VGA cable still works while the port is in RGB mode. Composite and S-video move onto pins 2 and 3 only while that cable is the one fitted. S-video also needs YOUT and COUT brought off the encoder.
 - Every format at once, spare pins, as on the older Analogue Nt. RGB stays on 1, 2, and 3. Composite and chroma need pins a VGA cable does not use for video. Pins 12 and 15 are the DDC pair, and a plain VGA cable ties them to the display EEPROM. Pin 9 is the +5 V DDC supply, not a video pin.
 
 The PROM DAC is RGB, not YPbPr. Component on this shell would be a different analog path.

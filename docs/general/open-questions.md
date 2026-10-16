@@ -74,7 +74,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 
 ### 13. IC budget + composite IC
 
-**Resolved:** 19 motherboard + 2 cart = 21. **AD724** on the motherboard BOM (dual-sync composite), plus 74HCU04 and 74HC74 clock logic. See `hardware.md`.
+**Resolved:** 19 motherboard + 2 cart = 21. **CXA2075M** on the motherboard BOM (composite), plus 74HCU04 and 74HC74 clock logic. See `hardware.md`.
 
 ### 14. Scroll edge cases
 
@@ -118,13 +118,8 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-13 | PRG vs I/O | Contiguous PRG `$8000-$FFFF`. I/O `$7F00-$7FFF`. |
 | 2026-09-13 | MCU set | 3x AVR128DB28 (M / S1 / S2). |
 | 2026-09-13 | Color path | AT27C256R master colors. |
-| 2026-09-13 | Composite | **AD724** frozen (CSYNC or H/V). |
-| 2026-09-14 | IC budget | AD724 counted on the motherboard. |
-| 2026-09-14 | AD724 mount | **SOIC-16** on motherboard (`Retr01_Lib:SOIC-16_3.9x9.9mm_P1.27mm`). No DIP adapter. |
-| 2026-10-11 | AD724 mount | **DIP-16** THT adapter landing (`Retr01_Lib:DIP-16_W7.62mm`, typical PA0006). SOIC-16 silicon. |
-| 2026-10-15 | AD724 mount | **DIP-8** THT adapter (`Retr01_Lib:DIP-8_W7.62mm`). SOIC-16 silicon. Adapter holds STND, ENCD, and VSYNC high, holds SELECT low. Board pins are +5 V, GND, FIN, R, G, B, COMP, HSYNC. |
-| 2026-10-15 | AD724 standard | **J11** 1x3 on the motherboard. Pin 1 +5 V, pin 2 STND (U725 pin 9), pin 3 GND. Shunt 1-2 is NTSC with Y3 at 3.579545 MHz. Shunt 2-3 is PAL with Y3 at 4.433618 MHz. Adapter is `Retr01_Lib:AD724_9_W7.62mm`. |
-| 2026-10-15 | AD724 header | **2x5** male, same footprint as J5/J6 (`Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical`). Pins 1-9 are +5 V, GND, FIN, R, G, B, COMP, CSYNC, STND. Pin 10 is a second GND. The SOIC-16 sits on a small board with the mating socket. |
+| 2026-10-16 | Composite | Encoder is the Sony **CXA2075M** (SOP-24). J11 selects NTSC or PAL. The earlier encoder choice is withdrawn. The netlist header is unchanged. |
+| 2026-10-16 | Cart memory | Cart flash is **SST39SF040-55-4C-TU** (32-lead TSOP). The purchased PDIP stays on the shelf. The sim pin diagram is still the PDIP numbering. |
 | 2026-09-14 | Reset supervisor | MCP130 in TO-92 for power-on delay, brown-out, and switch debounce. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). |
 | 2026-09-17 | Other screens | Cap **8** (ids 0..7). |
@@ -139,7 +134,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-14 | Video timing | Sprites VBlank pass. BG0 HBlank ping-pong only. |
 | 2026-10-01 | PCB layers | Motherboard is 4-layer: signal, GND, GND, signal. Clock-rate digital and +5V on layer 1. Analog and every slower control/I/O net on layer 4. Target about half the signal traces on each outer layer. Cart and pad PCBs are 2-layer. See `docs/bring-up-v2/main-pcb-layers.md`. |
 | 2026-10-12 | Mobo size | **170 x 120 mm**. |
-| 2026-09-28 | IC budget | **19** motherboard (includes 74HCU04, 74HC74, AD724) + **2** cart = **21**. |
+| 2026-09-28 | IC budget | **19** motherboard (includes 74HCU04, 74HC74, the composite encoder) + **2** cart = **21**. |
 | 2026-09-14 | BG autoscroll | BG0 and BG1 may each autoscroll and/or wrap strips. Default is clamp. |
 | 2026-09-16 | Missing BG1 slots | Default: show BG0 (then backdrop under BG0). Optional clip-to-BG1 flag restores backdrop-only outside BG1 slots. |
 | 2026-09-14 | Player vs camera | Separate systems. Dead zone (e.g. 32x30). Axis lock, follow, or auto camera. |

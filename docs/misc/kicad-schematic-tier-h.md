@@ -39,10 +39,10 @@ The KiCad project is **`main_pcb.kicad_pro`** under `apps/sim/tier-h/kicad/main-
 
 | Item | Where it lives |
 | --- | --- |
-| Cart **SST39SF040** / **24C64** silicon | Cart PCB (nets continue through **J36**) |
+| Cart **SST39SF040-55-4C-TU** / **24C64** silicon | Cart PCB (nets continue through **J36**). The current sim pin diagram is still the PDIP numbering |
 | Pad **ATtiny85** | Controller PCB (**J3** / **J4** TRS path only on mobo) |
 | PLD JEDEC equations | Pre-programmed ATF22V10 images (document as named nets into PLD pins, not fuse tables in KiCad) |
-| Full AD724 analog network | [`hardware.md`](../general/hardware.md) + datasheet (sim uses **SCR1** sink stub for DAC only) |
+| Full CXA2075M analog network | [`hardware.md`](../general/hardware.md) + datasheet (sim uses **SCR1** sink stub for DAC only) |
 
 ---
 

@@ -1,7 +1,7 @@
 # Retr01 Tier A - Video-only breadboard lab (RGBS)
 
 **Goal:** Stable **RGBS** picture on an RGB monitor (or capture card) using only the video path.  
-**Out of scope:** Cart, CPU, AVRs, controllers, audio, saves, **AD724 / composite / RCA** (those belong on the full motherboard at [Tier H](tier-h-pads-audio.md), not on the A-C breadboard path).
+**Out of scope:** Cart, CPU, AVRs, controllers, audio, saves, **CXA2075M / composite** (those belong on the full motherboard at [Tier H](tier-h-pads-audio.md), not on the A-C breadboard path).
 
 Smallest setup that still exercises Retr01's real color path:
 
@@ -35,7 +35,7 @@ Optional third ATF22V10 (Compositor) is **not** required for Tier A if the 6-bit
 
 Flashing procedures for PLDs and the color PROM are detailed in [`programming-tier-abc.md`](programming-tier-abc.md).
 
-**Not used in Tier A-C:** **AD724**, FSC oscillator, RCA jack.
+**Not used in Tier A-C:** **CXA2075M**, subcarrier oscillator.
 
 ### Clocks (required)
 
@@ -74,7 +74,7 @@ The dot clock requires a clean 5.369318 MHz CMOS square wave. Three common optio
 - 74HC157 / 74HC573 / 74HC574
 - SST39SF040, 24C64, ATtiny85
 - PHI2 8 MHz oscillator (not used without CPU/VRAM interleave)
-- **AD724**, **FSC** clock, composite encoder passives
+- **CXA2075M**, subcarrier clock, composite encoder passives
 
 ---
 
@@ -114,7 +114,7 @@ If any of those fail, fix that layer before adding S1, VRAM, or a CPU.
 6. **Studio/Emu Play expectations.** This lab only proves the raster + kit color path.
 7. **Skipping decoupling** on a breadboard at 5 MHz. Noise looks like wrong colors or unstable sync.
 8. **Random PROM data.** The locked 64-color kit (or a simple ramp) keeps index N a known color.
-9. **Adding AD724 "just to use a TV."** Use RGBS for A-C; composite encoder is integrated on the PCB path later.
+9. **Adding the CXA2075M just to use a TV.** Use RGBS for A-C. The composite encoder is on the PCB path later.
 
 ---
 
@@ -242,7 +242,7 @@ The motherboard socket is the mini-DIN in [`docs/general/hardware.md`](../genera
 
 **Cable:** Use a known-good **RGBS** (or SCART/RGB with sync on composite sync pin) cable. Termination is usually **75 ohm** per gun at the monitor; the DAC network is designed for that load.
 
-**Composite out (J2 pin 4 / AD724):** Not part of Tier A-C. When the full board is built, encoded NTSC/PAL is optional via AD724; the breadboard ladder never depends on it.
+**Composite out (J2 pin 4 / CXA2075M):** Not part of Tier A-C. When the full board is built, encoded NTSC/PAL is optional via the CXA2075M. The breadboard ladder never depends on it.
 
 ---
 
@@ -315,7 +315,7 @@ Detailed measurement sketches and individual IC truth table verification steps a
 | **Tier B** | Third ATF22V10 as Compositor (priority / index formalization) |
 | **Tier C** | MCU-S1 + field SRAM + HC573 for VBlank pattern fill |
 | **Full video** | Interleaved VRAM, HC157s, PHI2, MCU-M, 6502, cart |
-| **Composite (AD724 + FSC + J2 pin 4)** | Full motherboard integration (see Tier H / PCB), not A-C breadboard |
+| **Composite (CXA2075M + subcarrier + J2 pin 4)** | Full motherboard integration (see Tier H / PCB), not A-C breadboard |
 
 Those stay out of the first breadboard until Tier A is boringly reliable.
 

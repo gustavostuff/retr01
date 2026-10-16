@@ -49,7 +49,7 @@ One 5 V source and one ground. The Arduino 5 V pin can be that source. The Si535
 
 ### Clock
 
-The Adafruit 2045 (DigiKey 1528-1206-ND) is the 5.369318 MHz dot clock on CLK0. The chip keeps that setting in volatile registers, so the write happens again after every power-up. I2C address is 0x60.
+An Si5351A breakout (Adafruit 2045) is the 5.369318 MHz dot clock on CLK0. The chip keeps that setting in volatile registers, so the write happens again after every power-up. I2C address is 0x60.
 
 | Breakout | Goes to |
 | --- | --- |

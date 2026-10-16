@@ -191,9 +191,9 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 
 ---
 
-## 13. Optional **U725** (AD724)
+## 13. Optional **U725** (CXA2075M)
 
-When populated: RGB inputs from DAC nodes, **FSC_XTAL** from **Y3**, CSYNC from the beam PLDs, composite out to **J2** pin 4. Follow Analog Devices datasheet for remaining caps (beyond **C18** bypass). Tier H sim does not model full AD724 ([`schematic-netlist-tier-h.md`](../bringup/schematic-netlist-tier-h.md) gaps).
+When populated: RGB inputs from DAC nodes, **FSC_XTAL** from **Y3**, CSYNC from the beam PLDs, composite out to **J2** pin 4. Follow the CXA2075M datasheet for the remaining caps (beyond **C18** bypass) and for YTRAP. Tier H sim does not model the CXA2075M ([`schematic-netlist-tier-h.md`](../bringup/schematic-netlist-tier-h.md) gaps). The current export header is not the SOP-24 pinout.
 
 ---
 

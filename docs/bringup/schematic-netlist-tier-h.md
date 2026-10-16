@@ -1,6 +1,6 @@
 # Tier H schematic netlist (pin graph)
 
-The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC + passive pins) for wire overlay and KiCad/Skidl export. It does **not** model passive analog behavior or AD724 composite encoding.
+The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC + passive pins) for wire overlay and KiCad/Skidl export. It does **not** model passive analog behavior or CXA2075M composite encoding.
 
 **Source code:** `apps/sim/tier-h/src/board_schematic.c`, invoked from `r01s_board_netlist_rebuild()`.
 
@@ -29,7 +29,7 @@ The Tier H sim builds a **schematic-complete pin netlist** (union-find over IC +
 | C15 | U574 | 74HC574 Scroll X Latch | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
 | C16 | U24 | AT27C256R Color PROM | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
 | C17 | U130 | MCP130 Reset Supervisor | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
-| C18 | U725 | AD724 Composite Video Encoder | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) |
+| C18 | U725 | CXA2075M composite encoder | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) |
 | C19 | U04 | 74HCU04 clock inverter | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 
@@ -41,7 +41,7 @@ Each bypass: cap `1` to IC VCC, cap `2` to `PS1` GND, `PS1` VDD to IC VCC.
 
 - **E1:** `+` to `+5V`, `-` to GND.
 - **Y1/Y2/Y3** (HC-49/US crystals): load **C21-C26**. **Y1** and **Y2** Pierce loops sit on **U04**. **U74** divides Y2 by 4 for DOT. Sim time steps canned **OSC8M** / **OSC_DOT** engines. Export carries Y1/Y2/Y3 plus U04/U74.
-- **Y3:** load caps plus **`FSC_XTAL`** into AD724 FIN when that path is modeled.
+- **Y3:** load caps plus **`FSC_XTAL`** toward the CXA2075M subcarrier input when that path is modeled.
 
 ## Video DAC
 
@@ -80,7 +80,7 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 ## Gaps (not schematic-complete on silicon)
 
 - **PLD signal pins** use DIP-24 legs so each air wire leaves a pin. Those numbers are a placement stand-in until a JEDEC map exists. Pin 12 is GND and pin 24 is VCC.
-- **AD724** analog NTSC encode (COMP is a logic video-present flag; RGB and J2 pin 4 are netlisted).
+- **CXA2075M** analog encode (the sim stub flags composite as present; RGB and J2 pin 4 are netlisted). The export header is not the SOP-24 pinout.
 - VRAM mux **B** inputs and the **A/B** select wait on the PLD phase decode. **A** inputs are the CPU address and **Y** outputs are VRAM A[11:0].
 - Cart MAP **A14-A18** on **J36** wait on the compositor fuse map.
 - Extra PLD helpers (`UPLDA`, `UPLDB`, `UPLDI`, ...) are not motherboard placements.

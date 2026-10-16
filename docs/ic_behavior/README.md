@@ -16,7 +16,7 @@ Docs are per **part**, tagged by where they live:
 
 | Area | Examples |
 | --- | --- |
-| Main motherboard | CPU, AVRs, SRAM, PLDs, mux/latches, color PROM, AD724, 74HCU04, 74HC74 |
+| Main motherboard | CPU, AVRs, SRAM, PLDs, mux/latches, color PROM, CXA2075M, 74HCU04, 74HC74 |
 | Cart | Flash, save EEPROM |
 | Pads / controllers | ATtiny85 in the TRS pad (outside the 21-IC count) |
 | Reset supervisor | MCP130 in TO-92 (outside the 21-IC count) |
@@ -35,7 +35,7 @@ Docs are per **part**, tagged by where they live:
 | [74HC573.md](74HC573.md) | 74HC573 | 1 | Field A[7:0] ALE latch |
 | [74HC574.md](74HC574.md) | 74HC574 | 1 | BG1 scroll X `$7F02` |
 | [AT27C256R.md](AT27C256R.md) | AT27C256R | 1 | Color PROM (R3G3B2). Kit RGB: [`../general/palette/`](../general/palette/README.md) |
-| [AD724.md](AD724.md) | AD724 | 1 | RGB to NTSC/PAL composite |
+| [CXA2075M.md](CXA2075M.md) | CXA2075M | 1 | RGB to NTSC/PAL composite |
 | [74HCU04.md](74HCU04.md) | 74HCU04 | 1 | Hex unbuffered inverter (crystal oscillator tanks + buffers) |
 | [74HC74.md](74HC74.md) | 74HC74 | 1 | Dual D-type flip-flop (divide-by-4 for dot clock) |
 

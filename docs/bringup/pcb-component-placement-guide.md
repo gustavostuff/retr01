@@ -24,7 +24,7 @@ The physical motherboard outline is **170 mm by 120 mm**.
 
 1. **Routing room:** Four-layer THT buses (CPU, cart, VRAM mux, color index, field) need channel space between islands. The 170 mm width leaves copper for those runs without packing parts against the side edges.
 2. **Mounting:** Four M3 holes, one toward each corner, with keepout so sockets and jacks stay clear of the screws.
-3. **Component density and breathing room:** The counted motherboard BOM (19 through-hole DIP/SPDIP ICs including the AD724 2x5 header, 36-pin cartridge edge connector, discrete jacks, and the passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin and socket clearance for test clips.
+3. **Component density and breathing room:** The counted motherboard BOM (19 ICs, including the CXA2075M, the 36-pin cartridge edge connector, discrete jacks, and the passives) sits with room for 0.1 uF bypass capacitors within 5 mm of each IC power pin and socket clearance for test clips.
 4. **Geometry for 3-column physical bus topology:** The 170 mm width holds three columns:
    - Left column: System RAM, VRAM, and multiplexers.
    - Center column: CPU package, cartridge slot, and central MCU-M.
@@ -156,7 +156,7 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - Color PROM AT27C256R (U24, DIP-28)
 - Discrete R-2R resistor ladder network (R1 through R11)
 - AV mini-DIN J2 (Kycon KMDGX-9S-AS)
-- Optional composite video encoder: AD724 (U725, 2x5 header), J11 NTSC/PAL shunt, Y3 (3.579545 MHz or 4.433618 MHz). COMP lands on J2 pin 4
+- Optional composite video encoder: CXA2075M (U725), J11 NTSC/PAL shunt, Y3 (3.579545 MHz or 4.433618 MHz). CVOUT lands on J2 pin 4. The current footprint is still a 2x5 header and is not the SOP-24 pinout
 - Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U725), C19 (U04), C20 (U74)
 - Crystal load capacitors: C21, C22 (Y2), C23, C24 (Y3), C25, C26 (Y1)
 
@@ -306,7 +306,7 @@ The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 super
 | C15 | 100 nF | Ceramic | U574 (Scroll X Latch) | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 20 |
 | C16 | 100 nF | Ceramic | U24 (Color PROM) | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 28 |
 | C17 | 100 nF | Ceramic | U130 (MCP130 Supervisor) | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 2 |
-| C18 | 100 nF | Ceramic | U725 (AD724 Composite) | 2x5 header | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) | Mount adjacent to pin 1 |
+| C18 | 100 nF | Ceramic | U725 (CXA2075M) | 2x5 header (not the SOP-24 pinout) | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) | Mount adjacent to pin 1 |
 | C19 | 100 nF | Ceramic | U04 (74HCU04) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C20 | 100 nF | Ceramic | U74 (74HC74) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C21 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |

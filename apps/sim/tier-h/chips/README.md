@@ -1,6 +1,6 @@
 # Chip models
 
-Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`. Parts follow `docs/general/hardware.md`. The AD724 model is a logic stub (COMP as video-present).
+Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`. Parts follow `docs/general/hardware.md`. The encoder model is a logic stub (COMP as video-present). The part is the CXA2075M. This stub is not the SOP-24 pinout.
 
 | Role | File | Part |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`
 | BG1 scroll X | `sn74hc574.c` | 74HC574 |
 | MCU-M / S1 / S2 | `avr128db28_m.c`, `avr128db28_s1.c`, `avr128db28_s2.c` | AVR128DB28 |
 | S2 APU core | `atmega328p.c` | Behavioral core behind the S2 part name |
-| Cart flash | `sst39sf040.c` | SST39SF040 |
+| Cart flash | `sst39sf040.c` | SST39SF040. Cart orderable is the TSOP `SST39SF040-55-4C-TU` |
 | Cart save | `i2c_eeprom.c` | 24C64 |
 | Pad MCU | `attiny85.c`, `pad_uart.c`, `pads.c` | ATtiny85 |
 | Sprite field stats | `sprite_fetch.c` | SPRITE_FETCH |
