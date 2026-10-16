@@ -39,7 +39,7 @@ The physical layout arranges connectors along the edges for ergonomics, with int
 
 ```
 +----------------------------------------------------------------------------------+
-| [REAR I/O]   Power (J1)    Audio (J8)     Composite (J9)                         |
+| [REAR I/O]   Power (J1)    AV mini-DIN (J2)                                   |
 +-----------------------+--------------------------------+-------------------------+
 | SYSTEM RAM AND RESET  | W65C02S CPU (U1, DIP-40)       | VIDEO ENGINE & DAC      |
 | (Top-Left)            | (Top-Center, Horizontal)       | (Top-Right)             |
@@ -78,9 +78,9 @@ The physical zoning succeeds because it aligns component placement directly with
 
 In mixed-signal systems containing high-speed digital buses alongside sensitive analog outputs, noise coupling occurs primarily through shared ground return paths.
 
-1. **Digital return current isolation:** High-frequency currents returning through the ground plane flow directly beneath their respective signal traces. In this layout, CPU bus switching stays on the left and top-center, and S1 blitter traffic stays in the middle-right (Zone 4). Those return paths stay off the analog video DAC (Zone 2) and the audio jack run (Zone 5 up to J8).
-2. **Analog video quiet zone:** By placing the video engine, Color PROM, and R-2R ladder in the upper-right corner directly next to the RGBS header (J2), the entire analog video signal path spans less than 20 mm of total copper. No high-speed digital buses cut through or run parallel to these analog nodes, preventing visual sparkling, pixel noise, and 60 Hz hum on CRT monitors.
-3. **Audio line protection:** The PWM audio line from MCU-S2 is filtered locally in Zone 5 before traveling up to RCA jack J8. Keeping controller lines and audio generation on the opposite end of the board from CPU memory buses prevents digital bus activity from leaking into the sound output as high-pitched whine.
+1. **Digital return current isolation:** High-frequency currents returning through the ground plane flow directly beneath their respective signal traces. In this layout, CPU bus switching stays on the left and top-center, and S1 blitter traffic stays in the middle-right (Zone 4). Those return paths stay off the analog video DAC (Zone 2) and the audio run (Zone 5 up to J2).
+2. **Analog video quiet zone:** By placing the video engine, Color PROM, and R-2R ladder in the upper-right corner directly next to the mini-DIN (J2), the entire analog video signal path spans less than 20 mm of total copper. No high-speed digital buses cut through or run parallel to these analog nodes, preventing visual sparkling, pixel noise, and 60 Hz hum on CRT monitors.
+3. **Audio line protection:** The PWM audio line from MCU-S2 is filtered locally in Zone 5 before traveling up to J2 pins 6, 8, and 9. Keeping controller lines and audio generation on the opposite end of the board from CPU memory buses prevents digital bus activity from leaking into the sound output as high-pitched whine.
 
 ---
 
@@ -155,18 +155,18 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - Compositor PLD (UPLDV, ATF22V10)
 - Color PROM AT27C256R (U24, DIP-28)
 - Discrete R-2R resistor ladder network (R1 through R11)
-- RGBS video output header J2
-- Optional composite video encoder: AD724 (U725, 2x5 header), J11 NTSC/PAL shunt, Y3 (3.579545 MHz or 4.433618 MHz), RCA jack J9
+- AV mini-DIN J2 (Kycon KMDGX-9S-AS)
+- Optional composite video encoder: AD724 (U725, 2x5 header), J11 NTSC/PAL shunt, Y3 (3.579545 MHz or 4.433618 MHz). COMP lands on J2 pin 4
 - Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U725), C19 (U04), C20 (U74)
 - Crystal load capacitors: C21, C22 (Y2), C23, C24 (Y3), C25, C26 (Y1)
 
 **Placement and routing rules:**
 - Arranged in a strict sequential line:
-  `Oscillator -> Beam X/Y -> Compositor -> Color PROM -> DAC Resistors -> J2 Video Header`
+  `Oscillator -> Beam X/Y -> Compositor -> Color PROM -> DAC Resistors -> J2`
 - Y1, Y2, U04, feedback resistors, and load capacitors C21/C22/C25/C26 form one clock island (loop area under 20 mm). Analog Pierce loops stay at U04. Buffered PHI2 and DOT leave that island as digital clocks.
 - The 6-bit color index bus runs directly from Compositor outputs to Color PROM address inputs A[5:0] with trace lengths under 25 mm.
 - Resistors R1 through R8 mount immediately adjacent to PROM data output pins DQ[7:0].
-- The analog video header J2 sits on the top board edge directly adjacent to the DAC termination resistors R9, R10, and R11.
+- The mini-DIN J2 sits on the top board edge directly adjacent to the DAC termination resistors R9, R10, and R11.
 - No digital address or CPU buses pass through the Zone 2 analog corner.
 
 ---
@@ -246,14 +246,13 @@ Interfaces with external gamepads, arcade controls, and audio output.
 - 2x TRS jacks (J3 player 1, J4 player 2). Each footprint carries the Switchcraft 35RAPC2BVN4 3.5 mm outline and the CLIFF S4 6.35 mm outline. Stuff one size per player.
 - Arcade control headers J5 (P1) and J6 (P2), 2x5 each, sandwiching US2
 - Cabinet power/reset header J7 (2x2)
-- RCA audio output jack J8 (top rear edge)
-- PWM from US2 pin PF1 runs to J8. The locked BOM has no extra audio filter capacitors.
+- PWM from US2 pin PF1 runs to J2 pins 6, 8, and 9. The locked BOM has no extra audio filter capacitors.
 - Decoupling capacitor: C7 (for US2)
 
 **Placement and routing rules:**
 - US2 sits in the lower-left corner immediately behind controller jacks J3 and J4, with J6 on its left and J5 on its right.
 - Open-drain UART controller data lines connect to the TRS rings through short traces with local 4.7 kohm pull-up resistors.
-- Audio PWM output from US2 pin PF1 routes up to the rear audio jack J8.
+- Audio PWM output from US2 pin PF1 routes up to J2 pins 6, 8, and 9.
 
 ---
 
@@ -264,9 +263,7 @@ All mechanical interfaces are positioned along the board perimeter according to 
 | Connector | Label | Location on PCB | Purpose |
 | --- | --- | --- | --- |
 | **J1** | DC_IN | Top-Left rear edge | 5.0 V regulated DC barrel jack (center positive) |
-| **J8** | AUDIO | Top-Center rear edge | RCA mono/stereo audio line out |
-| **J9** | COMPOSITE | Top-Center rear edge | RCA composite video out (yellow) |
-| **J2** | RGBS_HDR | Top-Right rear edge | 1x8 0.1 inch header for raw RGB + CSYNC/HSYNC/VSYNC |
+| **J2** | KMDGX-9S-AS | Top rear edge | 9-pin mini-DIN: RGB, CSYNC, composite, audio, +5 V |
 | **J36** | CART_EDGE | Center board spine | 36-pin 2.54 mm edge connector for game carts |
 | **J3** | TRS_P1 | Bottom-Left front edge | Player 1 TRS. Switchcraft 35RAPC2BVN4 and CLIFF S4 in one footprint |
 | **J4** | TRS_P2 | Bottom-Left front edge | Player 2 TRS. Switchcraft 35RAPC2BVN4 and CLIFF S4 in one footprint |

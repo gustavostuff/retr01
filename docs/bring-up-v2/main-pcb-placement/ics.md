@@ -125,8 +125,8 @@ Same male header as J5 and J6. Bypass **C18** at pin 1. Crystal **Y3** with **C2
 | 4 | R | DAC red sum |
 | 5 | G | DAC green sum |
 | 6 | B | DAC blue sum |
-| 7 | COMP | J9 center |
-| 8 | HSYNC | CSYNC (J2 pin 3) |
+| 7 | COMP | J2 pin 4 |
+| 8 | HSYNC | CSYNC (J2 pin 5) |
 | 9 | STND | J11 pin 2 |
 | 10 | GND | rails |
 
@@ -265,6 +265,6 @@ Location: between J6 (P2) and J5 (P1), behind J3 and J4. Bypass **C7** at pin 20
 | P2 X/Y/COIN | PD1-3 | J6 |
 | SPI and `/SS_S2` | PD4-7 | from UM |
 | `PAD_DATA` | PF0 OD | J3/J4 ring plus **R18** 4.7k |
-| `AUDIO_PWM` | PF1 | J8 |
+| `AUDIO_PWM` | PF1 | J2 pins 6, 8, and 9 |
 | P2 START | PF6 | J6 pin 7 |
 | UPDI | pin 19 | Off-board SerialUPDI. Not on J10 |

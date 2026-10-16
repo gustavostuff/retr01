@@ -66,17 +66,19 @@ static void init_j36(R01sEntity *e) {
 }
 
 static void init_j2(R01sEntity *e) {
-    /* 1x8 male: 1=GND1 2=GND2 3=CSYNC 4=B 5=HSYNC 6=G 7=VSYNC 8=R */
-    io_begin(e, "HDR-1x8", "J2");
-    io_pin(e, 1, "GND1");
-    io_pin(e, 2, "GND2");
-    io_pin(e, 3, "CSYNC");
-    io_pin(e, 4, "B");
-    io_pin(e, 5, "HSYNC");
-    io_pin(e, 6, "G");
-    io_pin(e, 7, "VSYNC");
-    io_pin(e, 8, "R");
-    io_header(e, 8, 1);
+    /* Kycon KMDGX-9S-AS. Numbers are the recommended layout, connector facing up.
+       Shield pad S is GND on the footprint. It is not a sim pin. */
+    io_begin(e, "KMDGX-9S-AS", "J2");
+    io_pin(e, 1, "BLUE");
+    io_pin(e, 2, "VCC");
+    io_pin(e, 3, "GREEN");
+    io_pin(e, 4, "COMP");
+    io_pin(e, 5, "CSYNC");
+    io_pin(e, 6, "AUDIO");
+    io_pin(e, 7, "RED");
+    io_pin(e, 8, "AUDIO_L");
+    io_pin(e, 9, "AUDIO_R");
+    io_panel(e, 56, 40);
 }
 
 /* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4.

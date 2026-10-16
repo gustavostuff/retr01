@@ -34,6 +34,8 @@ HDR2x5 = f"{_R}:PinHeader_2x05_P2.54mm_Vertical"
 AD724_DIP = HDR2x5
 HDR6 = f"{_R}:PinHeader_1x06_P2.54mm_Vertical"
 HDR1x8 = f"{_R}:PinHeader_1x08_P2.54mm_Vertical"
+# Kycon recommended layout, connector facing up (top view of the bottom-view drawing).
+MINI_DIN = f"{_R}:Kycon_KMDGX-9S-AS"
 HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"
 HDR2x10 = f"{_R}:PinHeader_2x10_P2.54mm_Vertical"
 EDGE36_MOBO = f"{_R}:EDAC_395_MoboSocket_2x18_2.54x5.08mm"

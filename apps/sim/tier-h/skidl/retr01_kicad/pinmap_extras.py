@@ -59,6 +59,7 @@ def apply_pinmap_extras() -> None:
     t["R_1M"] = _nums(2)
     t["BARREL_5V"] = ["1", "2", "3"]
     t["RGBS_HDR"] = _nums(8)
+    t["KMDGX-9S-AS"] = _nums(9) + ["S"]
     t["CART_PROG_HDR"] = _nums(4)
     t["ARCADE_P1"] = _nums(10)
     t["ARCADE_P2"] = _nums(10)
@@ -79,6 +80,19 @@ def apply_pinmap_extras() -> None:
         "6": "G",
         "7": "VSYNC",
         "8": "R",
+    }
+    # Datasheet pin numbers, connector facing up.
+    a["KMDGX-9S-AS"] = {
+        "1": "BLUE",
+        "2": "+5V",
+        "3": "GREEN",
+        "4": "COMP",
+        "5": "CSYNC",
+        "6": "AUDIO",
+        "7": "RED",
+        "8": "AUDIO_L",
+        "9": "AUDIO_R",
+        "S": "GND",
     }
     a["CART_PROG_HDR"] = {
         "1": "PWR",

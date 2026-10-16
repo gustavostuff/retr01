@@ -82,8 +82,8 @@ int main(void) {
                 "U74 DOT into R13");
 
     expect_true(r01s_pin_netlist_same_net(nl, r01s_avr128db28_s2_entity(&board.mcu_s2), "AUDIO_PWM",
-                                          r01s_rca_jack_entity(&board.j8), "2"),
-                "J8 tip on MCU-S2 PWM");
+                                          &board.io.j2, "AUDIO"),
+                "J2 pin 6 on MCU-S2 PWM");
     expect_true(r01s_pin_netlist_same_net(nl, r01s_w65c02s_entity(&board.cpu), "A0",
                                           r01s_sn74hc157_entity(&board.mux157[0]), "1A"),
                 "CPU A0 on U7A 1A");
@@ -121,31 +121,29 @@ int main(void) {
                 "J6 pin 9 on US2 9");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "Y", r01s_avr128db28_s2_entity(&board.mcu_s2), "P2_Y"),
                 "J6 pin 5 on US2 8");
-    expect_true(board.io.j2.pin_count == 8, "J2 is 1x8");
+    expect_true(board.io.j2.pin_count == 9, "J2 is 9-pin mini-DIN");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "CSYNC", r01s_ad724_entity(&board.ad724), "HSYNC"),
-                "J2 CSYNC on AD724 HSYNC");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J2 pin 1 GND");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GND2", r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J2 pin 2 GND");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "R", passive_by_refdes(&board, "R9"), "1"),
-                "J2 pin 8 on R9");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "G", passive_by_refdes(&board, "R10"), "1"),
-                "J2 pin 6 on R10");
-    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "B", passive_by_refdes(&board, "R11"), "1"),
-                "J2 pin 4 on R11");
+                "J2 pin 5 CSYNC on AD724 HSYNC");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "VCC", r01s_pwr5v_entity(&board.pwr), "VDD"),
+                "J2 pin 2 on +5V");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "RED", passive_by_refdes(&board, "R9"), "1"),
+                "J2 pin 7 on R9");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "GREEN", passive_by_refdes(&board, "R10"), "1"),
+                "J2 pin 3 on R10");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "BLUE", passive_by_refdes(&board, "R11"), "1"),
+                "J2 pin 1 on R11");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "AUDIO_L", &board.io.j2, "AUDIO"),
+                "J2 pins 6 and 8 share audio");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j2, "AUDIO_R", &board.io.j2, "AUDIO"),
+                "J2 pins 6 and 9 share audio");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j5, "GND7", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J5 pin 7 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "GND1", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J6 pin 1 GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j6, "GND3", r01s_pwr5v_entity(&board.pwr), "GND"),
                 "J6 pin 3 GND");
-    expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP",
-                                          r01s_rca_jack_entity(&board.j9), "2"),
-                "J9 tip on AD724 COMP");
-    expect_true(r01s_pin_netlist_same_net(nl, r01s_rca_jack_entity(&board.j8), "1A",
-                                          r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J8 shell GND");
+    expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "COMP", &board.io.j2, "COMP"),
+                "J2 pin 4 on AD724 COMP");
     expect_true(board.io.j11.pin_count == 3, "J11 is 1x3");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "NTSC", r01s_pwr5v_entity(&board.pwr), "VDD"),
                 "J11 pin 1 on +5V");

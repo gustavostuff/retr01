@@ -83,7 +83,7 @@ Power rails split from the main +5.0 V input jack (J1) through 2-pin 2.54 mm hea
 | **JP_PWR1** | VCC_CORE | Clocks, Beam PLDs, Compositor, Color PROM, DAC | Allows video subsystem testing without powering processors |
 | **JP_PWR2** | VCC_AVR | MCU-M, MCU-S1, MCU-S2 | Isolates microcontrollers for independent current and programming checks |
 | **JP_PWR3** | VCC_CPU | W65C02S, System RAM, VRAM, 74HC157 muxes | Keeps CPU and main memory unpowered during early SPI lab stages |
-| **JP_PWR4** | VCC_AUDIO | Audio filter passives, J8 | Keeps audio circuitry unpowered until Tier H |
+| **JP_PWR4** | VCC_AUDIO | Audio filter passives, J2 audio pins | Keeps audio circuitry unpowered until Tier H |
 
 Removing a shunt allows measuring supply current to that domain with a multimeter in series, or keeping a domain completely unpowered while debugging a short circuit.
 
@@ -236,13 +236,13 @@ Brings the remaining peripherals online to complete the console:
 - **Populate:**
   - Socket US2 (AVR128DB28 for MCU-S2).
   - Controller TRS jacks J3 and J4 (3.5 mm or 6.35 mm CLIFF S4, one size per player), pull-up resistor R18.
-  - Audio output filter passives, RCA audio jack J8.
-  - Optional: plug the AD724 board onto the U725 2x5 header, Y3 (3.579545 MHz with J11 on NTSC, or 4.433618 MHz with J11 on PAL), and RCA composite jack J9.
+  - Audio output filter passives into J2 pins 6, 8, and 9.
+  - Optional: plug the AD724 board onto the U725 2x5 header, Y3 (3.579545 MHz with J11 on NTSC, or 4.433618 MHz with J11 on PAL). COMP lands on J2 pin 4.
   - Install JP_PWR4 shunt.
 - **Verification:**
   - Game controllers on J3 and J4. Button inputs register in software during VBlank.
-  - Verify PWM audio output on J8 produces clean sound without digital buzz.
-  - If AD724 is populated, verify composite video output on J9.
+  - Verify PWM audio on J2 pins 6, 8, and 9 produces clean sound without digital buzz.
+  - If AD724 is populated, verify composite video on J2 pin 4.
 
 ---
 

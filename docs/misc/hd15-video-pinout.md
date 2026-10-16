@@ -2,7 +2,7 @@
 
 One female DE-15 (also called HD-15, and often DB-15) can carry RGB, S-video, and composite. VESA defines the RGBHV pinout. S-video and composite on that same shell come from later equipment maps. Two of those maps are in wide use, and they do not agree on which pin is luma, chroma, or composite.
 
-The motherboard video connectors stay the J2 1x8 header and the J9 composite RCA. This page is the pin map for the case where those outputs share one DE-15. Audio stays on J8. The DE-15 video standard has no audio pin.
+The motherboard AV socket is J2, the Kycon KMDGX-9S-AS mini-DIN. This page is the pin map for a cable that puts those video signals on one DE-15. The DE-15 video standard has no audio pin. Audio on J2 pins 6, 8, and 9 stays off this shell.
 
 KiCad symbol `Connector:DE15_Socket_HighDensity`. The board port is a female socket. A right-angle through-hole footprint in the same library is `Connector_Dsub:DSUB-15-HD_Socket_Horizontal_P2.29x2.54mm_EdgePinOffset8.35mm_Housed_MountingHolesOffset10.89mm`. Names that contain `HD` are the 3-row VGA pitch. Plain `DSUB-15` footprints are the wider 2-row connector.
 
@@ -95,18 +95,18 @@ The older Analogue Nt puts every format on the shell at once: RGB on 1, 2, 3, co
 
 ## Retr01 signals
 
-RGB comes from the color PROM DAC at about 0.7 Vpp into 75 ohm (R9, R10, R11). J2 carries red, green, blue, CSYNC, HSYNC, and VSYNC. J9 carries AD724 composite. AD724 CRMA (S-video C) and LUMA (S-video Y) stay on the U725 adapter. The encoder drives 75 ohm reverse-terminated loads. Datasheet levels on those pins are about 2.5 Vpp composite, about 2 Vpp luma, and about 1.8 Vpp chroma, before the series resistor.
+RGB comes from the color PROM DAC at about 0.7 Vpp into 75 ohm (R9, R10, R11). J2 carries red, green, blue, CSYNC, and composite. HSYNC and VSYNC stay on the beam PLDs and are not on J2. AD724 CRMA (S-video C) and LUMA (S-video Y) stay on the U725 adapter. The encoder drives 75 ohm reverse-terminated loads. Datasheet levels on those pins are about 2.5 Vpp composite, about 2 Vpp luma, and about 1.8 Vpp chroma, before the series resistor.
 
 | Signal | Where it is | DE-15 on the VESA and Extron map |
 | --- | --- | --- |
-| Red | J2 pin 8 | 1, return 6 |
-| Green | J2 pin 6 | 2, return 7 |
-| Blue | J2 pin 4 | 3, return 8 |
-| HSYNC | J2 pin 5 | 13 |
-| VSYNC | J2 pin 7 | 14 |
-| CSYNC | J2 pin 3 | 13 when the cable is RGBS |
-| GND | J2 pins 1 and 2 | 5, 6, 7, 8, 10 |
-| Composite | J9, AD724 COMP | 2, return 7 |
+| Red | J2 pin 7 | 1, return 6 |
+| Green | J2 pin 3 | 2, return 7 |
+| Blue | J2 pin 1 | 3, return 8 |
+| HSYNC | Beam X, not on J2 | 13 |
+| VSYNC | Beam Y, not on J2 | 14 |
+| CSYNC | J2 pin 5 | 13 when the cable is RGBS |
+| GND | J2 shield | 5, 6, 7, 8, 10 |
+| Composite | J2 pin 4, AD724 COMP | 2, return 7 |
 | Luma | U725 adapter, AD724 LUMA | 2, return 7 |
 | Chroma | U725 adapter, AD724 CRMA | 3, return 8 |
 

@@ -136,7 +136,7 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 
 - Tie unused PROM address lines to GND.
 - Prefer a 1-dot index latch in the compositor if fit allows.
-- Keep analog island quiet (see layout rules in `hardware.md`). Short RGB/sync to J2/J9.
+- Keep analog island quiet (see layout rules in `hardware.md`). Short RGB, composite, and sync to J2.
 - `$7F08`/`$7F09` stay inside VBlank.
 
 ### 10. Async clocks: PHI2 vs DOT vs AVR (Med)

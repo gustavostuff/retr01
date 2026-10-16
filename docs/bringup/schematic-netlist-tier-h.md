@@ -80,7 +80,7 @@ Weighted **R1-R8** from **U24** `O7`..`O0` to **SCR1** `RIN`/`GIN`/`BIN` (tier-a
 ## Gaps (not schematic-complete on silicon)
 
 - **PLD signal pins** use DIP-24 legs so each air wire leaves a pin. Those numbers are a placement stand-in until a JEDEC map exists. Pin 12 is GND and pin 24 is VCC.
-- **AD724** analog NTSC encode (COMP is a logic video-present flag; RGB and J9 are netlisted).
+- **AD724** analog NTSC encode (COMP is a logic video-present flag; RGB and J2 pin 4 are netlisted).
 - VRAM mux **B** inputs and the **A/B** select wait on the PLD phase decode. **A** inputs are the CPU address and **Y** outputs are VRAM A[11:0].
 - Cart MAP **A14-A18** on **J36** wait on the compositor fuse map.
 - Extra PLD helpers (`UPLDA`, `UPLDB`, `UPLDI`, ...) are not motherboard placements.

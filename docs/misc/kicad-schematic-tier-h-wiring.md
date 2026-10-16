@@ -182,20 +182,18 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 | Ref | Function | Schematic nets |
 | --- | --- | --- |
 | **J1** | 5 V in | +5V, GND |
-| **J2** | RGB + sync out | DAC R/G/B, CSYNC, HSYNC, VSYNC (1x8) |
+| **J2** | Kycon KMDGX-9S-AS | Blue 1, +5V 2, Green 3, COMP 4, CSYNC 5, audio 6/8/9, Red 7, shield S |
 | **J3**, **J4** | TRS pads, 3.5 mm and 6.35 mm | Tip +5V, Ring **PAD_DATA**, Sleeve GND |
 | **J5** | Arcade P1 | 2x5. US2 `PA0`-`PA7`. GND on pins 7 and 9 |
 | **J6** | Arcade P2 | 2x5. US2 `PC0`-`PC3`, `PD1`-`PD3`, `PF6`. GND on pins 1 and 3 |
 | **J7** | Cab power/reset 2x2 | +5V, GND, **RESB** / reset (pins 1-4) |
-| **J8** | Audio RCA | PWM / mix from **US2** |
-| **J9** | Composite RCA | **U725** output when populated |
 | **J10** | Cart program 2x2 | Pin 1 PWR NC, pins 2/4 GND, pin 3 DATA to UM PC1 |
 
 ---
 
 ## 13. Optional **U725** (AD724)
 
-When populated: RGB inputs from DAC nodes, **FSC_XTAL** from **Y3**, sync from **J2** mode, composite out to **J9**. Follow Analog Devices datasheet for remaining caps (beyond **C18** bypass). Tier H sim does not model full AD724 ([`schematic-netlist-tier-h.md`](../bringup/schematic-netlist-tier-h.md) gaps).
+When populated: RGB inputs from DAC nodes, **FSC_XTAL** from **Y3**, CSYNC from the beam PLDs, composite out to **J2** pin 4. Follow Analog Devices datasheet for remaining caps (beyond **C18** bypass). Tier H sim does not model full AD724 ([`schematic-netlist-tier-h.md`](../bringup/schematic-netlist-tier-h.md) gaps).
 
 ---
 

@@ -5,14 +5,12 @@ Board-edge and cart I/O. Zones and sequence: [README.md](README.md). Series resi
 | Ref | Connector |
 | --- | --- |
 | J1 | DC barrel, 5 V |
-| J2 | RGB + sync header, 1x8 |
+| J2 | Kycon KMDGX-9S-AS, 9-pin mini-DIN |
 | J3 | Player 1 TRS, 3.5 mm and 6.35 mm |
 | J4 | Player 2 TRS, 3.5 mm and 6.35 mm |
 | J5 | Arcade player 1, 2x5 |
 | J6 | Arcade player 2, 2x5 |
 | J7 | Cabinet power and reset, 2x2 |
-| J8 | Audio RCA |
-| J9 | Composite RCA |
 | J10 | Cart program header, 2x2 |
 | J11 | NTSC/PAL shunt, 1x3, beside U725 |
 | J36 | Cart socket, 36 contacts |
@@ -52,44 +50,24 @@ Cart series **33 ohm** sit in line between the motherboard buses and J36: **R14*
 
 ---
 
-## J2, RGBS header 1x8 (rear, top-right), Zone 2
+## J2, Kycon KMDGX-9S-AS (rear), Zone 2
+
+Pin numbers are the recommended PCB layout with the connector facing up. HSYNC and VSYNC stay on the beam PLDs.
 
 | Pin | Net |
 |-----|-----|
-| 1 | `GND` |
-| 2 | `GND` |
-| 3 | CSYNC |
-| 4 | Blue (DAC) |
-| 5 | HSYNC |
-| 6 | Green (DAC) |
-| 7 | VSYNC |
-| 8 | Red (DAC) |
-
-Layout (top view, pin 1 at the left):
-
-```text
-1 (GND)  2 (GND)  3 (CSYNC)  4 (B)  5 (HSYNC)  6 (G)  7 (VSYNC)  8 (R)
-```
+| 1 | Blue (DAC) |
+| 2 | `+5V` |
+| 3 | Green (DAC) |
+| 4 | U725 `COMP` |
+| 5 | CSYNC |
+| 6 | US2 `AUDIO_PWM` (PF1) |
+| 7 | Red (DAC) |
+| 8 | same audio net as pin 6 |
+| 9 | same audio net as pin 6 |
+| S | `GND` (three shield holes) |
 
 DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md) **U725**.
-
----
-
-## J8, audio RCA (rear), driven from Zone 5
-
-| Pin | Destination |
-|-----|-------------|
-| Center | US2 `AUDIO_PWM` (PF1) |
-| Shell | `GND` |
-
----
-
-## J9, composite RCA (rear), Zone 2
-
-| Pin | Destination |
-|-----|-------------|
-| Center | U725 `COMP` |
-| Shell | `GND` |
 
 ---
 

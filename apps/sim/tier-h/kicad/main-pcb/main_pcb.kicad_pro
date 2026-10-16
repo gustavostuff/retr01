@@ -313,44 +313,6 @@
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
-        "name": "CPU_A",
-        "pcb_color": "rgb(210, 35, 136)",
-        "priority": 0,
-        "schematic_color": "rgb(210, 35, 136)",
-        "track_width": 0.25,
-        "tuning_profile": "",
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "CPU_D",
-        "pcb_color": "rgb(60, 180, 90)",
-        "priority": 0,
-        "schematic_color": "rgb(60, 180, 90)",
-        "track_width": 0.25,
-        "tuning_profile": "",
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
         "name": "Quiet",
         "pcb_color": "rgb(220, 143, 50)",
         "priority": 0,
@@ -360,6 +322,44 @@
         "via_diameter": 0.6,
         "via_drill": 0.3,
         "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "priority": 0,
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6,
+        "name": "CPU_A",
+        "pcb_color": "rgb(210, 35, 136)",
+        "schematic_color": "rgb(210, 35, 136)"
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "priority": 0,
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6,
+        "name": "CPU_D",
+        "pcb_color": "rgb(60, 180, 90)",
+        "schematic_color": "rgb(60, 180, 90)"
       }
     ],
     "meta": {
@@ -538,6 +538,10 @@
       },
       {
         "netclass": "Quiet",
+        "pattern": "STND"
+      },
+      {
+        "netclass": "Quiet",
         "pattern": "SDA_PULLUP*"
       },
       {
@@ -566,10 +570,6 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_U725*"
-      },
-      {
-        "netclass": "Quiet",
         "pattern": "SIG_J3*"
       },
       {
@@ -579,14 +579,6 @@
       {
         "netclass": "Quiet",
         "pattern": "SIG_J7*"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J8*"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J9*"
       },
       {
         "netclass": "Quiet",
@@ -658,11 +650,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SCROLL_CLK_1"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J5_P1_TO_US2_P1"
+        "pattern": "SIG_J5_P10_TO_US2_P26"
       },
       {
         "netclass": "Quiet",
@@ -674,7 +662,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P5_TO_US2_P27"
+        "pattern": "SIG_J5_P4_TO_US2_P23"
       },
       {
         "netclass": "Quiet",
@@ -682,15 +670,15 @@
       },
       {
         "netclass": "Quiet",
+        "pattern": "SIG_J5_P8_TO_US2_P25"
+      },
+      {
+        "netclass": "Quiet",
         "pattern": "SIG_J6_P10_TO_US2_P7"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P1_TO_US2_P18"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J6_P3_TO_US2_P9"
+        "pattern": "SIG_J6_P2_TO_US2_P2"
       },
       {
         "netclass": "Quiet",
@@ -698,19 +686,11 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P5_TO_US2_P8"
+        "pattern": "SIG_J6_P6_TO_US2_P4"
       },
       {
         "netclass": "Quiet",
         "pattern": "SIG_J6_P8_TO_US2_P5"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_U725_CRMA"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_U725_LUMA"
       },
       {
         "netclass": "Quiet",
@@ -738,23 +718,23 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P23_TO_J5_P4"
+        "pattern": "SIG_US2_P18_TO_J6_P7"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P25_TO_J5_P8"
+        "pattern": "SIG_US2_P1_TO_J5_P1"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P26_TO_J5_P10"
+        "pattern": "SIG_US2_P27_TO_J5_P5"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P2_TO_J6_P2"
+        "pattern": "SIG_US2_P8_TO_J6_P5"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P4_TO_J6_P6"
+        "pattern": "SIG_US2_P9_TO_J6_P9"
       },
       {
         "netclass": "Quiet",

@@ -10,7 +10,7 @@ Silicon and pins: `hardware.md`. Soft map: `memory.md`. SPI / VBlank: `ic-comms-
 | --- | --- |
 | Sequencer / tracker | **W65C02S** (cart PRG), **NMI** at ~60 Hz |
 | Synthesizer / mixer | **MCU-S2** (AVR128DB28) @ 24 MHz |
-| Analog out | MCU-S2 **TCA0 WO1** on **PF1** (`AUDIO_PWM`) into RC / amp / RCA **J8**. On-chip DAC on PD6 is unused (SPI1 ALT1 SCK owns PD6) |
+| Analog out | MCU-S2 **TCA0 WO1** on **PF1** (`AUDIO_PWM`) into RC / amp / **J2** pins 6, 8, and 9. On-chip DAC on PD6 is unused (SPI1 ALT1 SCK owns PD6) |
 
 ```text
   Cart BGM region (FD/FE/FA bytecode)
@@ -210,7 +210,7 @@ Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker 
 ## Related
 
 - Soft `$7Fxx` / APU range: `memory.md`
-- MCU-S2 pins, RCA **J8**, SPI `/SS_S2`: `hardware.md`
+- MCU-S2 pins, **J2** audio pins, SPI `/SS_S2`: `hardware.md`
 - Mailbox SPI vs OAM VBlank: `ic-comms-risks.md`
 - S2 process / PWM pin: `../ic_behavior/AVR128DB28.md`
 - Bring-up: `../bringup/tier-h-pads-audio.md`

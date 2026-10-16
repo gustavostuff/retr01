@@ -134,7 +134,7 @@ Termination to GND (75 ohm, ~0.7 Vpp):
 | R10 | 75 ohm | **G** gun node | GND |
 | R11 | 75 ohm | **B** gun node | GND |
 
-**J2** pins 8 / 6 / 4 tie to **R/G/B** gun nodes (after resistors, per [`hardware.md`](../general/hardware.md) J2 table). **U725** RGB inputs share the same analog nets when populated.
+**J2** pins 7 / 3 / 1 tie to **R/G/B** gun nodes (after resistors, per [`hardware.md`](../general/hardware.md) J2 table). **U725** RGB inputs share the same analog nets when populated.
 
 Unused **U24** address pins: tie to **GND** on schematic ([`hardware.md`](../general/hardware.md)).
 

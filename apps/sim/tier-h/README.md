@@ -2,7 +2,7 @@
 
 Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
 
-Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. **U725** (AD724) is a logic stub; **J8**/**J9** RCA tips follow PWM and COMP.
+Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. **U725** (AD724) is a logic stub. **J2** (KMDGX-9S-AS) carries RGB, CSYNC, COMP, and PWM audio.
 
 # Retr01 Board Simulator
 

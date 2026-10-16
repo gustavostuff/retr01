@@ -133,9 +133,9 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 **AD724** is on the motherboard BOM (one of the **19**). Seat the SOIC-16 on the small board that plugs into **U725**, with local bypass (**C18**) and the datasheet coupling network when the composite path is populated.
 
-The adapter holds VSYNC high and SELECT low. **U725** takes **CSYNC** on its HSYNC pin. **J11** sets the color standard: shunt pins 1-2 for NTSC (STND high), or pins 2-3 for PAL (STND low). Y3 matches that choice. The raster stays **341 x 262** at about **60 Hz** either way. J2 still carries CSYNC, HSYNC, and VSYNC for the cable. **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
+The adapter holds VSYNC high and SELECT low. **U725** takes **CSYNC** on its HSYNC pin. **J11** sets the color standard: shunt pins 1-2 for NTSC (STND high), or pins 2-3 for PAL (STND low). Y3 matches that choice. The raster stays **341 x 262** at about **60 Hz** either way. **J2** pin 5 carries that CSYNC. HSYNC and VSYNC stay on the beam PLDs. **AD725** stays off the BOM (4FSC-oriented, luma-trap focused, worse fit here).
 
-RGB analog always comes from the color PROM DAC. Composite is AD724 -> J9 RCA.
+RGB analog always comes from the color PROM DAC. Composite is AD724 COMP on **J2** pin 4.
 
 ## MCU roles (3x AVR128DB28)
 
@@ -358,32 +358,24 @@ Prefer programming PLDs, the color PROM, and the three AVRs **before** they go i
 
 **TRS (home shell):** 3.5 mm or 6.35 mm (1/4") jacks. Same nets on both sizes. Tip=5 V, Ring=DATA, Sleeve=GND. Populate one size per player. **J3** is player 1 and **J4** is player 2. Each footprint carries the Switchcraft **35RAPC2BVN4** 3.5 mm outline and the **CLIFF S4** 6.35 mm outline (typical **S4/BMB/PC-C**). **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
 
-## Video out / sync header
+## Video out
 
-Analog RGB from the PROM DAC always. **CSYNC**, **HSYNC**, and **VSYNC** all live on **one** 1x8 header so RGBS and RGBHV cables pick a story without a mode jumper or a second connector family.
-
-### J2 sync-capable RGB header (locked with AD724)
-
-1x8 male, 2.54 mm. KiCad numbering, pin 1 at the left:
-
-```text
-1 (GND)  2 (GND)  3 (CSYNC)  4 (B)  5 (HSYNC)  6 (G)  7 (VSYNC)  8 (R)
-```
+Analog RGB from the PROM DAC. One Kycon **KMDGX-9S-AS** female 9-pin mini-DIN (**J2**) carries RGB, CSYNC, composite, mono audio, and +5 V. Pin numbers are the official recommended PCB layout. That drawing is the bottom view. The footprint is the same layout with the connector facing up, so each pad number is the drawing's pin number.
 
 | Pin | Net |
 | --- | --- |
-| 1 | GND |
-| 2 | GND |
-| 3 | CSYNC |
-| 4 | Blue |
-| 5 | HSYNC |
-| 6 | Green |
-| 7 | VSYNC |
-| 8 | Red |
+| 1 | Blue |
+| 2 | +5 V |
+| 3 | Green |
+| 4 | Composite (AD724 COMP) |
+| 5 | CSYNC |
+| 6 | Audio (`AUDIO_PWM` after the RC) |
+| 7 | Red |
+| 8 | Audio (same net as pin 6) |
+| 9 | Audio (same net as pin 6) |
+| S | GND (three shield holes) |
 
-**RGBS** cables use R/G/B + CSYNC + GND. **RGBHV** cables use R/G/B + HSYNC + VSYNC + GND. **U725** pin 8 takes the CSYNC wire. VSYNC is held high on the adapter. **J11** chooses NTSC or PAL chroma for the composite jack.
-
-**Composite:** AD724 -> J9 RCA. CRMA and LUMA stay on the adapter.
+HSYNC and VSYNC stay on the beam PLDs. They have no pin on this socket. **U725** pin 8 takes the CSYNC wire. VSYNC is held high on the adapter. **J11** chooses NTSC or PAL chroma for composite on pin 4. CRMA and LUMA stay on the adapter.
 
 ## PCB layout practices
 
@@ -402,21 +394,19 @@ Net-by-net assignment, the half/half outer-layer target, the analog keepout, and
 
 **Layer 1:** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, U24 digital outputs to the DAC resistors, S1 `AD[7:0]` / ALE / field `/WE`, SPI MOSI/MISO/SCK, scroll X data, and +5V.
 
-**Layer 4:** Pierce loops (Y1, Y2, U04 analog pins, feedback resistors, load caps), Y3 and FSC into the AD724, the R-2R gun nodes to J2, composite to J9, audio to J8, pad UART, I2C, `RESB`, `CPU_RDY`, UPDI, arcade and pad GPIO, LED anodes, line/frame strobes, soft SELs, SPI chip-selects, and MAP A14-A18.
+**Layer 4:** Pierce loops (Y1, Y2, U04 analog pins, feedback resistors, load caps), Y3 and FSC into the AD724, the R-2R gun nodes to J2 pins 7 / 3 / 1, composite to J2 pin 4, audio to J2 pins 6 / 8 / 9, pad UART, I2C, `RESB`, `CPU_RDY`, UPDI, arcade and pad GPIO, LED anodes, line/frame strobes, soft SELs, SPI chip-selects, and MAP A14-A18.
 
 Cart and pad PCBs are **2-layer**.
 
 | Ref | Locked |
 | --- | --- |
 | J1 | GCT **DCJ200-10-A** barrel 5 V |
-| J2 | 1x8 RGB + CSYNC/HSYNC/VSYNC (table above) |
+| J2 | Kycon **KMDGX-9S-AS** 9-pin mini-DIN (table above) |
 | J3 | Player 1 TRS. Switchcraft **35RAPC2BVN4** and CLIFF **S4** in one footprint |
 | J4 | Player 2 TRS. Switchcraft **35RAPC2BVN4** and CLIFF **S4** in one footprint |
 | J5 | 2x5 arcade P1 (right of US2) |
 | J6 | 2x5 arcade P2 (left of US2) |
 | J7 | 2x2 power/reset |
-| J8 | CUI **RCJ-012** audio RCA |
-| J9 | CUI **RCJ-014** composite RCA |
 | J10 | 2x2 cart program (Friend DATA on pin 3) |
 | J11 | 1x3 NTSC/PAL shunt. Pin 1 +5 V, pin 2 STND, pin 3 GND |
 | J36 | EDAC **395-036-520-201** cart socket, 36 contacts |
@@ -465,7 +455,7 @@ These track common practice for this **4-layer** digital and video board:
 - **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
 - **Board edges:** High-speed and clock traces stay off the PCB perimeter. Edge copper couples into chassis and EMI. Clocks sit toward the middle of the board. Connectors and video out may sit on the edge by nature. Their stub lengths stay short.
 - **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
-- **Analog video:** AD724 / DAC / RCA area quieter. Local decoupling. Short RGB and sync runs to J2/J9. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
+- **Analog video:** AD724 / DAC area quieter. Local decoupling. Short RGB, composite, and sync runs to J2. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
 - **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
 - **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
 - **Silkscreen:** Refdes, polarity, J10 `CART`, TP names, LED names.

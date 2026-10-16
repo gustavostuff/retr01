@@ -25,7 +25,7 @@ Pin-level R/C wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../mis
 ## Quick map
 
 ```
-TOP (rear I/O)     J1 power | J8 audio | J9 composite | J2 RGBS
+TOP (rear I/O)     J1 power | J2 mini-DIN (RGB, CSYNC, composite, audio)
 ----------------------------------------------------------------
  Zone1 SYSTEM RAM  |  CPU U1 (above cart)  |  Zone2 VIDEO / DAC
                    |                       |
@@ -40,7 +40,7 @@ BOTTOM (front)     J3/J4 TRS (3.5 mm and 6.35 mm) | J6/US2/J5 arcade | J7 cab
 |------|------|-------|
 | **Z1** | Top-left | U3, U130, E1, C2, C17, **R22** |
 | **CPU** | Top-center | U1, C1, **R21**, directly above J36 |
-| **Z2** | Top-right | Clock island (Y1-Y3, R12/R13/R23/R24, C19/C20/C21-C26), PLDs, U24, DAC R1-R11, J2, U725, J9 |
+| **Z2** | Top-right | Clock island (Y1-Y3, R12/R13/R23/R24, C19/C20/C21-C26), PLDs, U24, DAC R1-R11, J2, U725 |
 | **CART** | Center | J36, cart series **R14-R17** |
 | **Z3** | Middle-left | U6, U7A/B/C, U574 and their Cs |
 | **HUB** | Middle-center | UM, C5, I2C series **R16/R17**, pull-ups **R19/R20** |
@@ -70,7 +70,7 @@ BOTTOM (front)     J3/J4 TRS (3.5 mm and 6.35 mm) | J6/US2/J5 arcade | J7 cab
 
 1. Board outline and mounting holes
 2. J36 at center, then U1 above it
-3. J1 / E1 at top-left. J2 / J8 / J9 on the top edge. J3-J6 / J7 at bottom-left
+3. J1 / E1 at top-left. J2 on the top edge. J3-J6 / J7 at bottom-left
 4. Zone 2 clock island, then PLDs, U24, DAC, encoder
 5. Zone 1 U3 and reset
 6. Zone 3 U6, three HC157, U574

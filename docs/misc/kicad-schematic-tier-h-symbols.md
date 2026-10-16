@@ -43,12 +43,11 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |
 | **J1** | Barrel 5 V | `Connector:Barrel_Jack` | GCT DCJ200-10-A class |
-| **J2** | RGB + CSYNC/HSYNC/VSYNC 1x8 | Connector symbol | 1x8 header |
+| **J2** | Kycon KMDGX-9S-AS mini-DIN | Connector symbol, pins 1-9 and S | `Retr01_Lib:Kycon_KMDGX-9S-AS` |
 | **J3**, **J4** | TRS pad jacks, 3.5 mm and 6.35 mm | `Connector_Audio:AudioJack3_SwitchTR` | `Retr01_Lib:Jack_TRS_3.5mm_and_6.35mm` |
 | **J5** | Arcade P1 2x5 | Pin header | 2x5 |
 | **J6** | Arcade P2 2x5 | Pin header | 2x5 |
 | **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
-| **J8**, **J9** | RCA | Custom | `Retr01_Lib` RCJ |
 | **J10** | Cart program 2x2 | Pin header | 2x2 (`PinHeader_2x02_P2.54mm_Vertical`) |
 | **J36** | Cart socket 2x18 | Custom | `EDAC_395_MoboSocket_2x18_2.54x5.08mm` |
 | **C1-C26**, **R1-R24**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |
@@ -63,7 +62,7 @@ Reset supervisor **MCP130** (TO-92): provides power-on delay, brown-out protecti
 
 1. **Place -> Symbol** (or hotkey). Pick library + symbol from section 2.
 2. Set **Reference** immediately (U1, UM, ...). **Value** field = MPN or role (`AS6C62256`, `MCU-M`).
-3. **Properties -> Footprint** = `Retr01_Lib:FootprintName` when custom (J36, J3, J8, ...). Use stock KiCad DIP footprints for generic ICs if Retr01 copy is not synced yet.
+3. **Properties -> Footprint** = `Retr01_Lib:FootprintName` when custom (J36, J3, J2, ...). Use stock KiCad DIP footprints for generic ICs if Retr01 copy is not synced yet.
 4. Repeat until every BOM line has a symbol. Use **Place -> Power Symbol** for `+5V` and `GND` (global labels propagate).
 5. **Place -> No Connection** on unused MCU pins, PROM address lines tied to GND in hardware, and NC footprint pads documented in Skidl export.
 

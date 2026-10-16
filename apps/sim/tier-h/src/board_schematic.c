@@ -412,32 +412,20 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
 }
 
 static void apply_rca_av(R01sBoard *board, R01sPinNetlist *nl) {
-  R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
   R01sEntity *enc = r01s_ad724_entity(&board->ad724);
-  R01sEntity *j8 = r01s_rca_jack_entity(&board->j8);
-  R01sEntity *j9 = r01s_rca_jack_entity(&board->j9);
   R01sEntity *apu = r01s_avr128db28_s2_entity(&board->mcu_s2);
-  const char *shell[3] = {"1A", "1B", "1C"};
-  int i;
+  R01sEntity *j2 = &board->io.j2;
 
   if (enc) {
     r01s_pin_netlist_name_net(nl, enc, "HSYNC", "CSYNC");
     r01s_pin_netlist_name_net(nl, enc, "COMP", "COMPOSITE_OUT");
+    r01s_pin_netlist_link(nl, enc, "COMP", j2, "COMP");
   }
-  if (j8) {
-    for (i = 0; i < 3; i++) {
-      r01s_pin_netlist_link(nl, j8, shell[i], pwr, "GND");
-    }
-    if (apu) {
-      r01s_pin_netlist_link(nl, apu, "AUDIO_PWM", j8, "2");
-    }
-    r01s_pin_netlist_name_net(nl, j8, "2", "AUDIO_OUT");
-  }
-  if (j9 && enc) {
-    for (i = 0; i < 3; i++) {
-      r01s_pin_netlist_link(nl, j9, shell[i], pwr, "GND");
-    }
-    r01s_pin_netlist_link(nl, enc, "COMP", j9, "2");
+  if (apu) {
+    r01s_pin_netlist_link(nl, apu, "AUDIO_PWM", j2, "AUDIO");
+    r01s_pin_netlist_link(nl, apu, "AUDIO_PWM", j2, "AUDIO_L");
+    r01s_pin_netlist_link(nl, apu, "AUDIO_PWM", j2, "AUDIO_R");
+    r01s_pin_netlist_name_net(nl, j2, "AUDIO", "AUDIO_OUT");
   }
 }
 
@@ -531,14 +519,11 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, &io->u130, "VDD", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->u130, "VSS", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->u130, "RESET#", cpu, "RESB");
-  r01s_pin_netlist_link(nl, &io->j2, "R", sink, "RIN");
-  r01s_pin_netlist_link(nl, &io->j2, "G", sink, "GIN");
-  r01s_pin_netlist_link(nl, &io->j2, "B", sink, "BIN");
+  r01s_pin_netlist_link(nl, &io->j2, "RED", sink, "RIN");
+  r01s_pin_netlist_link(nl, &io->j2, "GREEN", sink, "GIN");
+  r01s_pin_netlist_link(nl, &io->j2, "BLUE", sink, "BIN");
   r01s_pin_netlist_link(nl, &io->j2, "CSYNC", r01s_ad724_entity(&board->ad724), "HSYNC");
-  r01s_pin_netlist_name_net(nl, &io->j2, "HSYNC", "HSYNC");
-  r01s_pin_netlist_name_net(nl, &io->j2, "VSYNC", "VSYNC");
-  r01s_pin_netlist_link(nl, &io->j2, "GND1", pwr, "GND");
-  r01s_pin_netlist_link(nl, &io->j2, "GND2", pwr, "GND");
+  r01s_pin_netlist_link(nl, &io->j2, "VCC", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j3, "TIP", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j3, "RING", s2, "PAD_DATA");
   r01s_pin_netlist_link(nl, &io->j3, "SLEEVE", pwr, "GND");

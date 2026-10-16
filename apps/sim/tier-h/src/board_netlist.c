@@ -28,8 +28,6 @@ static void netlist_register_silicon(R01sBoard *board, R01sPinNetlist *nl) {
     netlist_register(nl, r01a_sn74hcu04_entity(&board->u04));
     netlist_register(nl, r01a_sn74hc74_entity(&board->u74));
     netlist_register(nl, r01s_ad724_entity(&board->ad724));
-    netlist_register(nl, r01s_rca_jack_entity(&board->j8));
-    netlist_register(nl, r01s_rca_jack_entity(&board->j9));
     r01s_mobo_io_register(&board->io, nl);
     netlist_register(nl, r01s_w65c02s_entity(&board->cpu));
     netlist_register(nl, r01s_as6c62256_entity(&board->ram));

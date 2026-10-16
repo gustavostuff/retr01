@@ -223,9 +223,9 @@ Preview RGB (8-bit, not PROM bytes), GIMP/Aseprite palettes, and the C SoT live 
 
 ---
 
-## 7. RGBS output (J2-style lab header)
+## 7. RGBS output (lab header)
 
-Match product **J2** from `docs/general/hardware.md` (1x8, all three syncs present):
+The motherboard socket is the mini-DIN in [`docs/general/hardware.md`](../general/hardware.md). This 1x8 is the bench cable only:
 
 | Pin | Lab net | Source |
 | --- | --- | --- |
@@ -242,7 +242,7 @@ Match product **J2** from `docs/general/hardware.md` (1x8, all three syncs prese
 
 **Cable:** Use a known-good **RGBS** (or SCART/RGB with sync on composite sync pin) cable. Termination is usually **75 ohm** per gun at the monitor; the DAC network is designed for that load.
 
-**Composite out (J9 / AD724):** Not part of Tier A-C. When the full board is built, encoded NTSC/PAL is optional via AD724; the breadboard ladder never depends on it.
+**Composite out (J2 pin 4 / AD724):** Not part of Tier A-C. When the full board is built, encoded NTSC/PAL is optional via AD724; the breadboard ladder never depends on it.
 
 ---
 
@@ -315,7 +315,7 @@ Detailed measurement sketches and individual IC truth table verification steps a
 | **Tier B** | Third ATF22V10 as Compositor (priority / index formalization) |
 | **Tier C** | MCU-S1 + field SRAM + HC573 for VBlank pattern fill |
 | **Full video** | Interleaved VRAM, HC157s, PHI2, MCU-M, 6502, cart |
-| **Composite (AD724 + FSC + J9)** | Full motherboard integration (see Tier H / PCB), not A-C breadboard |
+| **Composite (AD724 + FSC + J2 pin 4)** | Full motherboard integration (see Tier H / PCB), not A-C breadboard |
 
 Those stay out of the first breadboard until Tier A is boringly reliable.
 

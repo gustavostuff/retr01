@@ -1,6 +1,6 @@
 # JAMMA edge and Sega AV socket
 
-The locked arcade headers stay J5 and J6, with J7 for reset. Video stays the J2 1x8 header. Audio stays the J8 RCA. Composite stays the J9 RCA. This page is the pin map for a cabinet build that puts the arcade harness on one JAMMA finger edge at the bottom of the board, and puts RGB, composite, sync, and audio on one Sega Model 2 socket.
+The locked arcade headers stay J5 and J6, with J7 for reset. RGB, CSYNC, composite, and mono audio share **J2**, a Kycon **KMDGX-9S-AS**. This page is the pin map for a cabinet build that puts the arcade harness on one JAMMA finger edge at the bottom of the board, and uses that mini-DIN as the Sega Model 2 socket.
 
 Home pads stay on J3 and J4. Those jacks are not part of either connector.
 
@@ -29,10 +29,10 @@ Video on this edge is RGBS. HSYNC and VSYNC have no JAMMA pin.
 
 | Signal | Finger | Board net |
 | --- | --- | --- |
-| Red | P12 | J2 pin 8 |
-| Green | S12 | J2 pin 6 |
-| Blue | P13 | J2 pin 4 |
-| CSYNC | S13 | J2 pin 3 |
+| Red | P12 | J2 pin 7 |
+| Green | S12 | J2 pin 3 |
+| Blue | P13 | J2 pin 1 |
+| CSYNC | S13 | J2 pin 5 |
 | Video ground | P14 | GND |
 
 Composite stays off this edge. It belongs on the Sega socket.
@@ -48,7 +48,7 @@ The board has no -5 V rail and no +12 V rail. P5, S5, P6, and S6 stay open. A ha
 
 Parts pin 15 is the JAMMA test switch, a contact to ground. That is the finger that can share `RESB` with J7. Service (S14) and tilt (S15) stay open.
 
-The speaker pair is P10 and S10. Retr01 audio is PWM through an RC into the J8 line jack. That path is not a loudspeaker driver, so P10 and S10 stay open. Mono audio uses the Sega socket instead.
+The speaker pair is P10 and S10. Retr01 audio is PWM through an RC into J2 pins 6, 8, and 9. That path is not a loudspeaker driver, so P10 and S10 stay open.
 
 Also open: coin counters (P8, S8), lockouts (P9, S9), pin 11 on both sides, and pins 25 and 26 on both sides.
 
@@ -85,24 +85,24 @@ Also open: coin counters (P8, S8), lockouts (P9, S9), pin 11 on both sides, and 
 
 ## Sega Model 2 socket
 
-One female 9-pin mini-DIN replaces J2, J8, and J9 for a single AV cable. The Kycon **KMDGX-9S-AS** is that shell: right-angle, through-hole, 9 sockets, side-and-back shield, board locks. The shield ties to GND.
+**J2** is one female 9-pin mini-DIN. The Kycon **KMDGX-9S-AS** is that shell: right-angle, through-hole, 9 sockets, side-and-back shield, board locks. The shield ties to GND.
 
 Footprint `Retr01_Lib:Kycon_KMDGX-9S-AS`. There is no Mini-DIN-9 symbol. `Connector:Mini-DIN-*` stops at 8 pins and ships with an empty footprint field.
 
-Pin numbers are the Genesis 2 / Mega Drive 2 / 32X / Nomad map.
+Pin numbers are the Kycon recommended PCB layout with the connector facing up, which is the top view of the bottom-view drawing. Those numbers are also the Genesis 2 / Mega Drive 2 / 32X / Nomad map.
 
-| Pin | Sega signal | Retr01 net |
+| Pin | Sega signal | Board net |
 | --- | --- | --- |
-| 1 | Blue | J2 pin 4 |
+| 1 | Blue | Blue gun (R11) |
 | 2 | +5 V | +5 V |
-| 3 | Green | J2 pin 6 |
-| 4 | Composite | J9, AD724 COMP |
-| 5 | Sync | J2 pin 3, CSYNC |
-| 6 | Audio mono | J8, `AUDIO_PWM` after the RC |
-| 7 | Red | J2 pin 8 |
-| 8 | Stereo left | same mono as pin 6 |
-| 9 | Stereo right | same mono as pin 6 |
-| Shield | Ground | GND |
+| 3 | Green | Green gun (R10) |
+| 4 | Composite | AD724 COMP |
+| 5 | Sync | CSYNC |
+| 6 | Audio mono | `AUDIO_PWM` after the RC |
+| 7 | Red | Red gun (R9) |
+| 8 | Stereo left | same net as pin 6 |
+| 9 | Stereo right | same net as pin 6 |
+| S | Shield | GND |
 
 Pins 8 and 9 carry the one PWM channel, so a stereo cable plays it on both sides. HSYNC and VSYNC are not on this socket. RGBS uses pin 5. Composite picture uses pin 4.
 

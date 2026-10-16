@@ -290,6 +290,8 @@ PIN_TEMPLATES: Dict[str, List[str]] = {
     "CART_EDGE_36": _nums(36),
     "BARREL_5V": ["1", "2", "3"],  # GCT DCJ200-10-A: 1=Center(+5V), 2=Shunt(GND), 3=Sleeve(GND)
     "RGBS_HDR": _nums(8),
+    # 1-9 signals plus S (three shield holes share the number).
+    "KMDGX-9S-AS": _nums(9) + ["S"],
     # Both jack outlines. Tip=4 Ring=2 Sleeve=1. NC: 3, 5, TN, RN, SN.
     "TRS_P1": _nums(5) + ["TN", "RN", "SN"],
     "TRS_P2": _nums(5) + ["TN", "RN", "SN"],
