@@ -34,7 +34,7 @@ HDR2x5 = f"{_R}:PinHeader_2x05_P2.54mm_Vertical"
 AD724_DIP = HDR2x5
 HDR6 = f"{_R}:PinHeader_1x06_P2.54mm_Vertical"
 HDR1x8 = f"{_R}:PinHeader_1x08_P2.54mm_Vertical"
-# Kycon recommended layout, connector facing up (top view of the bottom-view drawing).
+# Kycon recommended layout, connector facing up. Signal pads mirrored in X: pin 1 at +1.30 mm.
 MINI_DIN = f"{_R}:Kycon_KMDGX-9S-AS"
 HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"
 HDR2x10 = f"{_R}:PinHeader_2x10_P2.54mm_Vertical"

@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "Kycon KMDGX-9S-AS right-angle 9-pin mini-DIN receptacle, sides-and-back shield. Signal drill 1.10 mm, shield drill 2.30 mm. Shield pads share number S. Mating face is the -Y edge. Top view of the bottom-view recommended layout. https://www.kycon.com/Pub_Eng_Draw/KMDGX-9S-AS.pdf")
+	(descr "Kycon KMDGX-9S-AS right-angle 9-pin mini-DIN receptacle, sides-and-back shield. Signal drill 1.10 mm, shield drill 2.30 mm. Shield pads share number S. Mating face is the -Y edge. Signal pads are mirrored in X from the first top-view pass: pin 1 is 1.30 mm to +X, pin 2 is 0.70 mm to -X, matching the bottom view with the socket at the top of that drawing. https://www.kycon.com/Pub_Eng_Draw/KMDGX-9S-AS.pdf")
 	(property "Reference" "REF**"
 		(at 0 -13.3 0)
 		(layer "F.SilkS")
@@ -190,7 +190,7 @@
 		(uuid "f4a0c829-a978-4522-8b59-ca935d094452")
 	)
 	(pad "1" thru_hole circle
-		(at -1.3 -3.8)
+		(at 1.3 -3.8)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -198,7 +198,7 @@
 		(uuid "b39473a3-2153-4e1d-969d-68b55ea21884")
 	)
 	(pad "2" thru_hole circle
-		(at 0.7 -3.8)
+		(at -0.7 -3.8)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -206,7 +206,7 @@
 		(uuid "bd7a5d24-dd32-4cf3-b205-ab74acdf5661")
 	)
 	(pad "3" thru_hole circle
-		(at -4 -3.8)
+		(at 4 -3.8)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -214,7 +214,7 @@
 		(uuid "e85fc809-a920-4b16-83ab-b96f8d1aa4fd")
 	)
 	(pad "4" thru_hole circle
-		(at -2 -6.3)
+		(at 2 -6.3)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -230,7 +230,7 @@
 		(uuid "45dde5bb-26d4-4b3d-b23c-1325df88aaad")
 	)
 	(pad "6" thru_hole circle
-		(at 4 -3.8)
+		(at -4 -3.8)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -238,7 +238,7 @@
 		(uuid "608009c4-8cde-4ce9-94e2-62a0477529b1")
 	)
 	(pad "7" thru_hole circle
-		(at -4 -6.3)
+		(at 4 -6.3)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -246,7 +246,7 @@
 		(uuid "b25f8478-3ac7-42a8-b311-12ec1436b987")
 	)
 	(pad "8" thru_hole circle
-		(at 2 -6.3)
+		(at -2 -6.3)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
@@ -254,7 +254,7 @@
 		(uuid "4c2ee726-f5b9-4b53-84dc-2010993c86e9")
 	)
 	(pad "9" thru_hole circle
-		(at 4 -6.3)
+		(at -4 -6.3)
 		(size 1.7 1.7)
 		(drill 1.1)
 		(layers "*.Cu" "*.Mask")
