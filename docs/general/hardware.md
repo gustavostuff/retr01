@@ -64,18 +64,47 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | W65C02S | Game CPU @ 8 MHz | PDIP-40 | Yes (PLCC-44, QFP-44) |
 | 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
 | 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 | Yes (SOP-28, sTSOP-28) |
-| 1 | SST39SF040 | 512 KB cart flash | PDIP-32 | Yes (PLCC-32, TSOP-32) |
+| 1 | SST39SF040 | 512 KB cart flash. Purchased PDIP `SST39SF040-70-4C-PHE` is obsolete | PDIP-32 | Yes (PLCC-32, TSOP-32) |
 | 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP) |
 | 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
 | 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP) |
 | 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
 | 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | AD724 | RGB to NTSC/PAL composite encoder | 2x5 header (SOIC-16 on a plug-in board) | Same silicon (Analog sells SOIC-16 only) |
+| 1 | AD724 | RGB to NTSC/PAL composite encoder. `AD724JRZ` is last-time buy | 2x5 header (SOIC-16 on a plug-in board) | Same silicon (Analog sells SOIC-16 only) |
 | 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
 | 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
 
 **Still outside the count:** crystals (common THT HC-49/US), reset supervisor (MCP130 in TO-92). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
+
+### Parts on hand
+
+Pieces received. DigiKey order `9910000377148189`. Mouser invoice `92826838`, shipped 2 Oct 2026. A part that appears on both orders is one row, with the two quantities added. `AD724JRZ` was cancelled on 29 Sep 2026, so none of that encoder is on hand. `SN74HC14N` is a Schmitt-trigger inverter and is not the Pierce `74HCU04`.
+
+`SST39SF040-70-4C-PHE` is obsolete. Last orders closed 1 Jul 2026. Last shipments 1 Jan 2027. `AD724JRZ` is last time buy through 29 Jul 2027.
+
+| On hand | Manufacturer part | Distributor | Role | Status | Link |
+| --- | --- | --- | --- | --- | --- |
+| 1 | W65C02S6TPG-14 | Mouser `955-W65C02S6TPG-14` | CPU, PDIP-40 | - | [link]() |
+| 2 | AVR128DB28-I/SP | DigiKey `150-AVR128DB28-I/SP-ND` | MCU, SPDIP-28, industrial | - | [link]() |
+| 2 | AVR128DB28-E/SP | Mouser `579-AVR128DB28-E/SP` | MCU, SPDIP-28, extended | - | [link]() |
+| 3 | AS6C62256-55PCN | DigiKey `1450-1033-ND` (1), Mouser `913-AS6C62256-55PCN` (2) | 32K x 8 SRAM, 55 ns, PDIP-28 | - | [link]() |
+| 1 | SST39SF040-70-4C-PHE | Mouser `804-39SF0407CPHE` | 512K x 8 cart flash, 70 ns, PDIP-32 | Obsolete | [link]() |
+| 1 | 24LC64-I/P | Mouser `579-24LC64-I/P` | Cart EEPROM, DIP-8 | - | [link]() |
+| 4 | ATF22V10C-15PU | DigiKey `ATF22V10C-15PU-ND` | PLD, 15 ns, PDIP-24 | - | [link]() |
+| 3 | SN74HC157N | Mouser `595-SN74HC157N` | Quad 2-to-1 mux, PDIP-16 | - | [link]() |
+| 2 | SN74HC573AN | DigiKey `296-1596-5-ND` | Octal latch, PDIP-20 | - | [link]() |
+| 1 | SN74HC574N | Mouser `595-SN74HC574N` | Octal flip-flop, PDIP-20 | - | [link]() |
+| 2 | AT27C256R-45PU | DigiKey `AT27C256R-45PU-ND` | Color PROM, 45 ns, PDIP-28 | - | [link]() |
+| 0 | AD724JRZ | Mouser `584-AD724JRZ` | Composite encoder, SOIC-16. Order cancelled | Last time buy | [link]() |
+| 1 | SN74HCU04N | Mouser `595-SN74HCU04N` | Unbuffered hex inverter, PDIP-14 | - | [link]() |
+| 3 | SN74HC74N | DigiKey `296-1602-5-ND` (2), Mouser `595-SN74HC74N` (1) | Dual flip-flop, PDIP-14 | - | [link]() |
+| 2 | ATTINY85-20PU | Mouser `556-ATTINY85-20PU` | Pad MCU, PDIP-8 | - | [link]() |
+| 1 | SN74HC14N | Mouser `595-SN74HC14N` | Hex Schmitt-trigger inverter, PDIP-14 | - | [link]() |
+| 1 | Adafruit 2045 | DigiKey `1528-1206-ND` | Si5351A breakout | - | [link]() |
+| 3 | HC-49/U-S21477270ABJB | Mouser `695-HC49US-214-U` | 21.477270 MHz crystal, 18 pF, HC-49/US | - | [link]() |
+| 3 | FOXSLF/036S | Mouser `559-FOXS036S-LF` | 3.579545 MHz crystal, 18 pF | - | [link]() |
+| 3 | XT9S20ANA8M | Mouser `73-XT49S800-20` | 8.000 MHz crystal, 20 pF | - | [link]() |
 
 ### Reset generation: MCP130 supervisor
 
