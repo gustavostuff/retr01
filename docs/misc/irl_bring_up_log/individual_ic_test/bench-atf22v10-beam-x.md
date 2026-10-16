@@ -16,6 +16,7 @@ The socket holds `beam_x.jed`. The package is 300 mil, so it sits across the bre
 | 33 ohm | 1 | Series resistor on the dot clock |
 | LED, red | 10 | Nine count bits and HSYNC |
 | 2.2 kohm | 10 | LED series resistor |
+| 1 kohm | 1 | RTS series resistor for the count row |
 
 The oscillator chip is a 74HCU04. A 74HC04 is a different part. The same stage is the console dot clock.
 
@@ -123,6 +124,21 @@ Ground pin 2, then return pin 2 to +5 V, before the first edge. That is count 0.
 | 341 | 000000000 | dark |
 
 Q0 changes on every edge. Enter 1 for one count. Enter 264 from count 0 to light HSYNC. HSYNC stays lit through count 288. Enter 25 more to land on 289, and HSYNC goes dark. Enter 52 more to land on 0.
+
+## Count
+
+[`apps/flasher_tool/verify.py`](../../../../apps/flasher_tool/verify.py) adds the row `Beam X count`. The row stays at `no programmer` until a CH340 port is present. Enter on that row does not talk to the programmer socket.
+
+| Adapter | Beam X |
+| --- | --- |
+| GND | Breadboard ground |
+| DTR | Pin 1 |
+| RTS | Pin 2, through 1 kohm |
+| CTS | Pin 14 |
+
+Pin 2 stays off the +5 V rail for this row. The 33 ohm resistor stays off pin 1. The adapter 5 V pin stays open. The jumper sits on 5 V.
+
+Enter drives RTS low, which clears the count, then clocks DTR. A pass prints `count ok`. HSYNC is low at count 0, high at 264, low at 289, and low again at 0. CTS is the only pin the lead reads. The lamps still show the other bits.
 
 ## Check
 

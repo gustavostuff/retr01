@@ -27,6 +27,8 @@ The color PROM row stops unless the chip reads blank, then waits for `y`, becaus
 
 `verify.py` is the read-back for the same five rows and the same two programmers. Up and Down move the highlight. Enter compares the chip in the socket with the image file and prints `match` or `mismatch`. The script does not write a chip. `--virtual` compares the in-memory chips.
 
+The extra row `Beam X count` is on the verify menu only. It stays at `no programmer` until a CH340 port is present. Enter clocks the breadboard Beam X from that lead and prints `count ok`, or `count failed` with the HSYNC count that disagreed. Wiring is on the Beam X bench page. The row does not read the programmer socket.
+
 ```bash
 python3 apps/flasher_tool/verify.py
 ```

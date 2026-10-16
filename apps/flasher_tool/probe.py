@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from catalog import CH340_VENDOR, Target
@@ -161,6 +162,83 @@ def _vendor(tty_name: str, sysfs: Path) -> str | None:
     return None
 
 
+# Beam X count is 0..340. HSYNC is high on 264..288 inclusive.
+BEAM_X_MOD = 341
+BEAM_X_HSYNC_LO = 264
+BEAM_X_HSYNC_HI = 288
+
+
+def beam_x_hsync(count: int) -> bool:
+    return BEAM_X_HSYNC_LO <= count <= BEAM_X_HSYNC_HI
+
+
+def check_beam_x_count(pins) -> str | None:
+    """Clock a Beam X and read HSYNC. None when the pulse lands on 264..288.
+
+    `pins` supplies res_low, res_high, clock_low, rising_edge, and hsync.
+    hsync() is true when pin 14 is high.
+    """
+    pins.clock_low()
+    pins.res_low()
+    reason = _want_hsync(pins, 0, False)
+    if reason:
+        return reason
+    pins.res_high()
+    reason = _want_hsync(pins, 0, False)
+    if reason:
+        return reason
+    count = 0
+    for edges, high in ((264, True), (25, False), (52, False)):
+        for _ in range(edges):
+            pins.rising_edge()
+            count += 1
+            if count == BEAM_X_MOD:
+                count = 0
+        reason = _want_hsync(pins, count, high)
+        if reason:
+            return reason
+    return None
+
+
+def _want_hsync(pins, count: int, high: bool) -> str | None:
+    got = pins.hsync()
+    if got == high:
+        return None
+    state = "high" if got else "low"
+    want = "high" if high else "low"
+    return f"count failed\nHSYNC {state} at count {count}, want {want}"
+
+
+class Ch340BeamPins:
+    """DTR is the clock, RTS is RES, CTS is HSYNC.
+
+    On the CH340 header, pyserial True drives the pin low. CTS reads true
+    while the header pin is low, so HSYNC high is `not cts`.
+    """
+
+    def __init__(self, ser) -> None:
+        self.ser = ser
+
+    def clock_low(self) -> None:
+        self.ser.dtr = True
+
+    def res_low(self) -> None:
+        self.ser.rts = True
+
+    def res_high(self) -> None:
+        self.ser.rts = False
+
+    def rising_edge(self) -> None:
+        self.ser.dtr = False
+        time.sleep(0.001)
+        self.ser.dtr = True
+        time.sleep(0.001)
+
+    def hsync(self) -> bool:
+        time.sleep(0.005)
+        return not self.ser.cts
+
+
 def ch340_ports(sysfs: Path = Path("/sys/class/tty")) -> list[str]:
     found: list[str] = []
     if not sysfs.is_dir():
@@ -235,3 +313,20 @@ class RealBench:
         if code != 0:
             return command_failure("verify failed", text, code)
         return None
+
+    def count_beam_x(self, port: str) -> str | None:
+        """None when HSYNC follows the Beam X count. Otherwise the failure text."""
+        try:
+            import serial
+        except ImportError:
+            return "count failed\npython-pyserial missing"
+        try:
+            ser = serial.Serial(port, 9600, timeout=0)
+        except serial.SerialException as exc:
+            return f"count failed\n{exc}"
+        try:
+            return check_beam_x_count(Ch340BeamPins(ser))
+        finally:
+            ser.dtr = True
+            ser.rts = False
+            ser.close()

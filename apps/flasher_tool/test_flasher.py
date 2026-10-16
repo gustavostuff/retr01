@@ -234,6 +234,41 @@ class VerifyTests(unittest.TestCase):
             self.assertIn("chip does not match the image", missed)
         self.assertEqual(bench.avr.writes, 1)
 
+    def test_beam_x_count_needs_a_ch340(self) -> None:
+        bench = VirtualBench()
+        bench.ports = []
+        message = verify.verify_chip(verify.COUNT, bench)
+        self.assertEqual(message, "no programmer")
+        self.assertEqual(bench.count_ports, [])
+
+    def test_beam_x_count_passes_on_the_ch340_port(self) -> None:
+        bench = VirtualBench()
+        bench.ports = ["/dev/ttyUSB0", "/dev/ttyUSB1"]
+        message = verify.verify_chip(
+            verify.COUNT, bench, choose_port=lambda ports: ports[1]
+        )
+        self.assertEqual(message, "count ok")
+        self.assertEqual(bench.count_ports, ["/dev/ttyUSB1"])
+
+    def test_stuck_hsync_fails_the_count(self) -> None:
+        bench = VirtualBench()
+        bench.stuck_hsync = True
+        message = verify.verify_chip(verify.COUNT, bench)
+        self.assertIn("count failed", message)
+        self.assertIn("HSYNC high at count 0, want low", message)
+
+    def test_count_row_stays_off_the_burn_menu(self) -> None:
+        self.assertNotIn("Beam X count", [target.name for target in TARGETS])
+
+    def test_menu_enter_on_the_count_row_reports_count_ok(self) -> None:
+        bench = VirtualBench()
+        downs = "".join("\x1b[B" for _ in range(len(TARGETS)))
+        out = io.StringIO()
+        verify.run_menu(bench, catalog.REPO, io.StringIO(downs + "\rq"), out)
+        self.assertIn("\ncount ok\n", "\n" + out.getvalue())
+        self.assertIn("Beam X count", out.getvalue())
+        self.assertEqual(bench.count_ports, ["/dev/ttyUSB0"])
+
     def test_menu_enter_reports_a_match(self) -> None:
         bench = VirtualBench()
         target = _target("Color PROM")

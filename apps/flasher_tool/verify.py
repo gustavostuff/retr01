@@ -20,8 +20,25 @@ Programmers:
   XGecu T48 or TL866II Plus    color PROM, Beam X, Beam Y, Compositor
   HiLetgo CH340 SerialUPDI     MCU-S1 (AVR pin 19)
 
+Beam X count clocks the breadboard part from the CH340 lead.
 Up/Down select, Enter verify, q quit
 """
+
+COUNT = Target(
+    name="Beam X count",
+    chip="ATF22V10C",
+    kind="count",
+    image="",
+    device="",
+)
+
+ROWS = TARGETS + (COUNT,)
+
+
+def row_label(target: Target, bench, repo: Path = REPO) -> str:
+    if target.kind == "count":
+        return "ready" if bench.updi_ports() else "no programmer"
+    return row_status(target, bench, repo)
 
 
 def verify_chip(
@@ -30,6 +47,20 @@ def verify_chip(
     repo: Path = REPO,
     choose_port=None,
 ) -> str:
+    if target.kind == "count":
+        ports = bench.updi_ports()
+        if not ports:
+            return "no programmer"
+        port = ports[0]
+        if len(ports) != 1:
+            if choose_port is None:
+                return "no CH340 port chosen"
+            port = choose_port(ports)
+        reason = bench.count_beam_x(port)
+        if reason:
+            return reason
+        return "count ok"
+
     status = row_status(target, bench, repo)
     if status == "no image":
         return f"image missing: {image_path(target, repo)}"
@@ -68,19 +99,19 @@ def run_menu(bench, repo: Path = REPO, stdin=None, out=None) -> None:
         tty.setcbreak(stdin)
     try:
         while True:
-            statuses = [row_status(target, bench, repo) for target in TARGETS]
+            statuses = [row_label(target, bench, repo) for target in ROWS]
             clear_console(out)
-            out.write(format_screen(selected, statuses, note, BANNER))
+            out.write(format_screen(selected, statuses, note, BANNER, ROWS))
             out.flush()
             key = _read_key(stdin)
             if key == "quit":
                 return
             if key == "up":
-                selected = (selected - 1) % len(TARGETS)
+                selected = (selected - 1) % len(ROWS)
             elif key == "down":
-                selected = (selected + 1) % len(TARGETS)
+                selected = (selected + 1) % len(ROWS)
             elif key == "enter":
-                target: Target = TARGETS[selected]
+                target: Target = ROWS[selected]
                 clear_console(out)
                 note = verify_chip(
                     target,

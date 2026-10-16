@@ -15,10 +15,15 @@ from virtual import VirtualBench
 
 
 def format_screen(
-    selected: int, statuses: list[str], note: str = "", banner: str = BANNER
+    selected: int,
+    statuses: list[str],
+    note: str = "",
+    banner: str = BANNER,
+    targets: tuple[Target, ...] | None = None,
 ) -> str:
+    rows = TARGETS if targets is None else targets
     lines = [banner.rstrip("\n"), ""]
-    for index, target in enumerate(TARGETS):
+    for index, target in enumerate(rows):
         mark = ">" if index == selected else " "
         lines.append(
             f"  {mark} {target.name:<16} {target.chip:<12} {statuses[index]}"

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from catalog import Target
+from probe import BEAM_X_MOD, beam_x_hsync, check_beam_x_count
 
 PROM_SIZE = 32 * 1024
 BLANK = 0xFF
@@ -62,6 +63,36 @@ class VirtualAvr:
         return self.image == payload
 
 
+class VirtualBeamPins:
+    """Beam X counter. stuck_hsync forces the pin when set."""
+
+    def __init__(self, stuck_hsync: bool | None = None) -> None:
+        self.count = 0
+        self.res_is_high = True
+        self.edges = 0
+        self.stuck_hsync = stuck_hsync
+
+    def clock_low(self) -> None:
+        return None
+
+    def res_low(self) -> None:
+        self.res_is_high = False
+        self.count = 0
+
+    def res_high(self) -> None:
+        self.res_is_high = True
+
+    def rising_edge(self) -> None:
+        self.edges += 1
+        if self.res_is_high:
+            self.count = (self.count + 1) % BEAM_X_MOD
+
+    def hsync(self) -> bool:
+        if self.stuck_hsync is not None:
+            return self.stuck_hsync
+        return self.res_is_high and beam_x_hsync(self.count)
+
+
 class VirtualBench:
     """Stand-in for the T48 and the CH340 lead."""
 
@@ -73,6 +104,8 @@ class VirtualBench:
         self.programmer_connected = True
         self.ports = ["/dev/ttyUSB0"]
         self.fail_verify = False
+        self.stuck_hsync: bool | None = None
+        self.count_ports: list[str] = []
 
     def zif_status(self) -> str:
         if not self.minipro_installed:
@@ -125,3 +158,7 @@ class VirtualBench:
         if self.fail_verify or not ok:
             return "mismatch\nchip does not match the image"
         return None
+
+    def count_beam_x(self, port: str) -> str | None:
+        self.count_ports.append(port)
+        return check_beam_x_count(VirtualBeamPins(self.stuck_hsync))
