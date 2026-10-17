@@ -19,6 +19,7 @@ CONNECTOR_REFDES = (
     "J10",
     "J11",
     "J36",
+    "JAMMA",
 )
 
 # Nets that exist in Tier H JSON today (pad bus on US2).
@@ -103,6 +104,12 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J36", "1"),   # A1 GND
             ("J36", "2"),   # B1 GND
             ("J36", "35"),  # A18 GND
+            ("JAMMA", "1"),
+            ("JAMMA", "2"),
+            ("JAMMA", "28"),
+            ("JAMMA", "A"),
+            ("JAMMA", "B"),
+            ("JAMMA", "f"),
         ):
             if ref in parts:
                 pin_connect(parts[ref], "", pin, gnd)
@@ -116,6 +123,10 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J4", P.TRS_TIP),
             ("J36", "3"),  # A2 VCC
             ("J36", "4"),  # B2 VCC
+            ("JAMMA", "3"),
+            ("JAMMA", "4"),
+            ("JAMMA", "C"),
+            ("JAMMA", "D"),
         ):
             if ref in parts:
                 pin_connect(parts[ref], "", pin, v5)
@@ -195,3 +206,24 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         if data is None:
             data = _ensure_net(nets_map, "SPI_MISO")
         pin_connect(parts["J10"], "", 3, data)
+
+    # JAMMA control fingers share the J5 / J6 nets. Image order:
+    # Coin, Start, Up, Down, Left, Right, button 1 (X), button 2 (Y).
+    # Parts pads 16-23 are player 1. Solder pads T-a are player 2.
+    if "JAMMA" in parts:
+        p1 = (
+            ("16", "3"), ("17", "1"), ("18", "8"), ("19", "6"),
+            ("20", "4"), ("21", "2"), ("22", "10"), ("23", "5"),
+        )
+        p2 = (
+            ("T", "9"), ("U", "7"), ("V", "8"), ("W", "6"),
+            ("X", "4"), ("Y", "2"), ("Z", "10"), ("a", "5"),
+        )
+        for pad, j5_pin in p1:
+            net = _find_net_for_part_pin(nets_map, "J5", j5_pin)
+            if net is not None:
+                pin_connect(parts["JAMMA"], "", pad, net)
+        for pad, j6_pin in p2:
+            net = _find_net_for_part_pin(nets_map, "J6", j6_pin)
+            if net is not None:
+                pin_connect(parts["JAMMA"], "", pad, net)

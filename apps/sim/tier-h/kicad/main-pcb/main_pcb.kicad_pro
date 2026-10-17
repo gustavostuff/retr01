@@ -638,59 +638,51 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "PAD_DATA_BUS_1"
+        "pattern": "PAD_DATA_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P10_TO_US2_P26"
+        "pattern": "SIG_J5_P10_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P2_TO_US2_P22"
+        "pattern": "SIG_J5_P2_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P4_TO_US2_P23"
+        "pattern": "SIG_J5_P4_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P5_TO_US2_P27"
+        "pattern": "SIG_J5_P5_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P6_TO_US2_P24"
+        "pattern": "SIG_J5_P6_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P8_TO_US2_P25"
+        "pattern": "SIG_J5_P8_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P10_TO_US2_P7"
+        "pattern": "SIG_J6_P10_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P2_TO_US2_P2"
+        "pattern": "SIG_J6_P2_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P4_TO_US2_P3"
+        "pattern": "SIG_J6_P4_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P6_TO_US2_P4"
+        "pattern": "SIG_J6_P8_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P7_TO_US2_P18"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J6_P8_TO_US2_P5"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J6_P9_TO_US2_P9"
+        "pattern": "SIG_J6_P9_BUS"
       },
       {
         "netclass": "Quiet",
@@ -718,15 +710,23 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P1_TO_J5_P1"
+        "pattern": "SIG_US2_P18_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P28_TO_J5_P3"
+        "pattern": "SIG_US2_P1_BUS"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P8_TO_J6_P5"
+        "pattern": "SIG_US2_P28_BUS"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_US2_P4_BUS"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_US2_P8_BUS"
       },
       {
         "netclass": "Quiet",
@@ -758,7 +758,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "XTAL_21M_IN"
+        "pattern": "XTAL_DOT_IN"
       },
       {
         "netclass": "Quiet",

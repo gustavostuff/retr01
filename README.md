@@ -34,7 +34,7 @@ The design uses a compact, mostly THT main system board with 19 ICs (CPU + MCUs 
 
 * For a home Console: TRS ports for pads and RCA connectors for mono audio and composite video.
 
-* For an Arcade setup: pin headers for RGBS/RGBHV video output and more pins for micro switches (sticks and buttons).
+* For an Arcade setup: pin headers for RGBS/RGBHV video output and more pins for micro switches (sticks and buttons). The JAMMA connector is a WIP and it will share the same copper lines as the two 2x5 pin headers.
 
 As for the cartridge, it's a small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold fingers per side.
 

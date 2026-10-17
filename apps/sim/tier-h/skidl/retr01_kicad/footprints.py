@@ -40,6 +40,8 @@ HDR10 = f"{_R}:PinHeader_1x10_P2.54mm_Vertical"
 HDR2x10 = f"{_R}:PinHeader_2x10_P2.54mm_Vertical"
 EDGE36_MOBO = f"{_R}:EDAC_395_MoboSocket_2x18_2.54x5.08mm"
 JAMMA = f"{_R}:JAMMA_56_Edge_P3.96mm"
+# Board edge. Numbered pads are F.Cu. Letter pads are B.Cu. Pin 7 is the key.
+JAMMA56 = f"{_R}:JAMMA-56"
 # One footprint per player jack: Switchcraft 3.5 mm outline and Neutrik 6.35 mm outline.
 TRS = f"{_R}:Jack_TRS_3.5mm_and_6.35mm"
 # Edge-mount RCJ-01x (1A/1B/1C shell + pad 2 tip); from gametank avboard_tht2.

@@ -59,6 +59,21 @@ def apply_pinmap_extras() -> None:
     }
     t["STND_HDR"] = _nums(4)
     a["STND_HDR"] = {"1": "NTSC", "2": "NPIN", "3": "NPIN2", "4": "PAL"}
+    # JAMMA fingers on the netlist. Parts 16-23 are P1. Letters T-a are P2.
+    # Supply: parts 1, 2, 28 and solder A, B, f are GND. Parts 3, 4 and solder C, D are +5V.
+    t["JAMMA"] = [
+        "1", "2", "3", "4", "28", "A", "B", "C", "D", "f",
+        "16", "17", "18", "19", "20", "21", "22", "23",
+        "T", "U", "V", "W", "X", "Y", "Z", "a",
+    ]
+    a["JAMMA"] = {
+        "1": "GND", "2": "GND", "28": "GND", "A": "GND", "B": "GND", "f": "GND",
+        "3": "+5V", "4": "+5V", "C": "+5V", "D": "+5V",
+        "16": "P1_COIN", "17": "P1_START", "18": "P1_UP", "19": "P1_DOWN",
+        "20": "P1_LEFT", "21": "P1_RIGHT", "22": "P1_X", "23": "P1_Y",
+        "T": "P2_COIN", "U": "P2_START", "V": "P2_UP", "W": "P2_DOWN",
+        "X": "P2_LEFT", "Y": "P2_RIGHT", "Z": "P2_X", "a": "P2_Y",
+    }
     t["74HCU04"] = _nums(14)
     t["SN74HCU04"] = _nums(14)
     t["74HC74"] = _nums(14)

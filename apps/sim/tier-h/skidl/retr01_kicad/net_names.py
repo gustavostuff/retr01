@@ -324,8 +324,9 @@ def _suggest_name_for_pins(pins: list) -> Optional[str]:
         return f"SIG_{r1}_P{n1}"
 
     if len(valid_pins) > 2:
-        r1 = getattr(valid_pins[0].part, "ref", "")
-        n1 = str(getattr(valid_pins[0], "num", ""))
+        named = [p for p in valid_pins if getattr(p.part, "ref", "") != "JAMMA"] or valid_pins
+        r1 = getattr(named[0].part, "ref", "")
+        n1 = str(getattr(named[0], "num", ""))
         return f"SIG_{r1}_P{n1}_BUS"
 
     return None
