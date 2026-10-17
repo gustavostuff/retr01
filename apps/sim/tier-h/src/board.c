@@ -1460,7 +1460,7 @@ static void linebuf_drive_addr(R01sBoard *ctx, uint16_t addr, int mcu_sel) {
 
 #define R01S_CHR_TILE_BYTES 16u
 #define R01S_CHR_BANK_BYTES 0x1000u
-/* Attr pack: docs/general/video-graphics.md (bits 0-3 bank, 4-5 palette, 6 H, 7 V). */
+/* Attr pack: docs/video-graphics.md (bits 0-3 bank, 4-5 palette, 6 H, 7 V). */
 #define R01S_ATTR_BANK R01_ATTR_BANK_MASK
 #define R01S_ATTR_PAL R01_ATTR_PAL_MASK
 #define R01S_ATTR_PAL_SHIFT R01_ATTR_PAL_SHIFT

@@ -25,7 +25,7 @@
 #endif
 
 /* Packed dead-zone width/height. Follow snaps edges to viewport-center
- * parity (docs/general/world-scrolling.md). Live box may be 1 px smaller. */
+ * parity (docs/world-scrolling.md). Live box may be 1 px smaller. */
 void r01_play_camera_update(uint16_t *cam_x, uint16_t *cam_y, uint16_t anchor_x, uint16_t anchor_y,
                             uint8_t player_w, uint8_t player_h, uint8_t screen_w, uint8_t screen_h,
                             uint8_t deadzone_x, uint8_t deadzone_y, uint8_t axis_lock);

@@ -146,11 +146,11 @@ Macrocell pressure note: SY(8)+Q(8)+MAP(5)+CART_ARM(1) = **22** vs **30** MC on 
 | AS6C62256 #1 | System RAM behind `$0000-$7EFF` |
 | AS6C62256 #2 | Interleaved VRAM (CPU PHI2 high, beam PHI2 low) |
 | AS6C62256 #3 | Sprite field (filled in VBlank) + BG0 **ping-pong line buffers** (filled in HBlank) |
-| AT27C256R | **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads by 6-bit index. No CPU runtime access. Kit RGB and tool palettes: [`palette/`](palette/README.md) |
+| AT27C256R | **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads by 6-bit index. No CPU runtime access. Kit RGB: `video-graphics.md` |
 
 **Color DAC** (1% metal film). LSB->MSB: R/G **4.00 / 2.00 / 1.00 kohm**. B **2.00 / 1.00 kohm**. **75.0 ohm** to GND each gun -> **~0.7 Vpp**. Unused PROM address pins to GND.
 
-Cart palettes are **indices only** into this PROM. See `memory.md`, `video-graphics.md`, and [`palette/`](palette/README.md).
+Cart palettes are **indices only** into this PROM. See `memory.md` and `video-graphics.md`.
 
 ## Cartridge
 
@@ -288,7 +288,7 @@ HSYNC and VSYNC stay on the beam PLDs. They have no pin on this socket. **J11** 
 
 Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart OE#/WE#/SDA/SCL series **33 ohm**. Cart **D[7:0]** ties straight to J36. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 
-Layer assignment, keepout, and trace widths: [`../pcb.md`](../pcb.md). Shared-net failure rules: [`ic-comms-risks.md`](ic-comms-risks.md).
+Layer assignment, keepout, and trace widths: [`pcb.md`](pcb.md). Shared-net failure rules: [`ic-comms-risks.md`](ic-comms-risks.md).
 
 ## Light gun (roadmap)
 
@@ -304,4 +304,4 @@ Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash fram
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `palette/` | `world-scrolling.md` | `software-api.md` | `sound.md` | `light-gun.md` | `ic-comms-risks.md` | [`../pcb.md`](../pcb.md)
+`memory.md` | `cartridge.md` | `video-graphics.md` | `world-scrolling.md` | `software-api.md` | `sound.md` | `light-gun.md` | `ic-comms-risks.md` | [`pcb.md`](pcb.md)

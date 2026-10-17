@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 SDK="$ROOT/apps/sdk/r01_c"
-MOS="${LLVM_MOS:-$ROOT/tools/llvm-mos}"
+MOS="${LLVM_MOS:-$ROOT/apps/tools/llvm-mos}"
 CC="$MOS/bin/mos-common-clang"
 OBJDUMP="$MOS/bin/llvm-objdump"
 SIZEBIN="$MOS/bin/llvm-size"

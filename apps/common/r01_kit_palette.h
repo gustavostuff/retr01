@@ -4,7 +4,8 @@
 #include <stdint.h>
 
 /* Locked motherboard 64-color kit (AT27C256R indices 0..63).
- * SoT for Studio and Emu preview RGB. PROM burn uses R3G3B2 of these values. */
+ * RGB values are the kit table in docs/video-graphics.md.
+ * Studio and Emu preview RGB use this array. PROM burn uses R3G3B2 of these values. */
 
 #define R01_KIT_COLORS 64
 

@@ -10,7 +10,7 @@ pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 
 # apps/sim/tier-h. Engine and shared sources are this repo's.
-set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../tools/discrete_ic")
+set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/discrete_ic")
 
 if(NOT TARGET discrete_ic)
   add_subdirectory("${DISCRETE_IC_DIR}" "${CMAKE_BINARY_DIR}/discrete_ic")

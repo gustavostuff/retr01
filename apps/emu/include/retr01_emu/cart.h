@@ -104,7 +104,7 @@ const uint8_t *r01e_cart_prg(const R01eCart *c);
 int r01e_cart_is_c_prg(const R01eCart *c);
 int r01e_cart_world(const R01eCart *c, int index, R01eWorldView *out);
 
-/* EntityDef catalog (docs/general/software-api.md). */
+/* EntityDef catalog (docs/software-api.md). */
 const uint8_t *r01e_cart_entity_def(const R01eCart *c, const R01eWorldView *wv, int type_id);
 int r01e_cart_entity_frame(const uint8_t *def, int state, int frame, const uint8_t **out_sprites,
                            int *out_count);

@@ -2,7 +2,7 @@
 
 Retr01 is a multi-clock, multi-driver board. The 6502, three AVRs, three PLDs, SRAM, cart flash, glue, and the video path all share nets and must take turns talking. This note catalogs the main failure modes when those parts share a net, and how to avoid them.
 
-**Related:** `hardware.md` (wiring, BOM), [`../pcb.md`](../pcb.md) (layers), `video-graphics.md` (VBlank / HBlank jobs), `memory.md` (CPU map).
+**Related:** `hardware.md` (wiring, BOM), [`pcb.md`](pcb.md) (layers), `video-graphics.md` (VBlank / HBlank jobs), `memory.md` (CPU map).
 
 ## Clock domains at a glance
 

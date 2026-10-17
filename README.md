@@ -1,4 +1,4 @@
-<img src="img/v_01.png" alt="Logo V1" />
+<img src="img/logo/v_01.png" alt="Logo V1" />
 
 Retr01 is an MCU-assisted 8-bit gaming system for arcade and console setups, plus an emulator and a studio for making games and content.
 
@@ -26,7 +26,7 @@ Graphics are tile based, 8x8 pixels, 2bpp.
 
 Retr01 uses 8 channels, 5 meant to be used for BGM and the rest for SFX. 
 
-PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. The Adventure Kid Waveforms library is used as a built-in sound repository. See [sound.md](docs/general/sound.md).
+PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. The Adventure Kid Waveforms library is used as a built-in sound repository. See [sound.md](docs/sound.md).
 
 ## Hardware
 
@@ -60,15 +60,14 @@ BGM tracker:
 
 ## Doc map
 
-- [hardware.md](docs/general/hardware.md): Board, BOM, clocks, connectors, cart edge, and JAMMA fingers.
+- [hardware.md](docs/hardware.md): Board, BOM, clocks, connectors, cart edge, and JAMMA fingers.
 - [pcb.md](docs/pcb.md): Motherboard copper layers, analog keepout, and trace widths.
-- [ic-comms-risks.md](docs/general/ic-comms-risks.md): Shared-bus and multi-clock failure rules.
-- [video-graphics.md](docs/general/video-graphics.md): Resolution, tile layout, sprites, palettes, background layers, and the hardware work behind the graphics pipeline.
-- [palette/](docs/general/palette/README.md): The fixed 64-color palette kit and export guidance for GIMP and Aseprite.
-- [world-scrolling.md](docs/general/world-scrolling.md): World and screen structure, VRAM buffering, sparse map organization, and scrolling over large areas.
-- [cartridge.md](docs/general/cartridge.md): Cartridge hardware, passive memory model, save support, flash workflow, and the basic cart layout.
-- [memory.md](docs/general/memory.md): CPU address map, soft $7Fxx windows, MAP port behavior, .retr01 image format, and flash capacity limits.
-- [software-api.md](docs/general/software-api.md): Runtime model for entities, data structure sizing, C and ASM API, and expected game modes.
-- [sound.md](docs/general/sound.md): Audio architecture, 8-channel software mix, $7F40 register window, 6502 NMI tracker bytecode, and PWM output.
-- [irl_bring_up_log/](docs/irl_bring_up_log/bench-at27c256r.md): Bench notes. The color PROM check is the one on file.
+- [ic-comms-risks.md](docs/ic-comms-risks.md): Shared-bus and multi-clock failure rules.
+- [video-graphics.md](docs/video-graphics.md): Resolution, tiles, sprites, the 64-color kit, and the two background layers.
+- [world-scrolling.md](docs/world-scrolling.md): World and screen structure, VRAM buffering, sparse map organization, and scrolling over large areas.
+- [cartridge.md](docs/cartridge.md): Cartridge hardware, passive memory model, save support, flash workflow, and the basic cart layout.
+- [memory.md](docs/memory.md): CPU address map, soft $7Fxx windows, MAP port behavior, .retr01 image format, and flash capacity limits.
+- [software-api.md](docs/software-api.md): Runtime model for entities, data structure sizing, C and ASM API, and expected game modes.
+- [sound.md](docs/sound.md): Audio architecture, 8-channel software mix, $7F40 register window, 6502 NMI tracker bytecode, and PWM output.
+- [irl_bring_up_log/](irl_bring_up_log/bench-at27c256r.md): Bench notes. The color PROM check is the one on file.
 - [apps/README.md](apps/README.md): Studio authoring app, Emu runtime, and the discrete-IC board simulation app.

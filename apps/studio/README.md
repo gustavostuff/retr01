@@ -5,7 +5,7 @@ Visual authoring for Retr01 worlds, screens, and `.retr01` carts. Two jobs in on
 1. **Authoring.** Edit worlds, tiles, palettes, sprites, entities, and instances.
 2. **Export + Play.** **Ctrl+E** or **Play** packs a cart (llvm-mos PRG from `game_logic.c`). **Play** then embeds the shared emu so preview matches `./scripts/emu.sh`.
 
-Play always uses the shared emu after export. Hardware: [`docs/general/video-graphics.md`](../../docs/general/video-graphics.md). Runtime: [`apps/emu/`](../emu/README.md).
+Play always uses the shared emu after export. Hardware: [`docs/video-graphics.md`](../../docs/video-graphics.md). Runtime: [`apps/emu/`](../emu/README.md).
 
 Stack: C11, SDL2, FreeType, `retr01_ui`, `libretr01_studio_core`, shared `retr01_emu`.
 
@@ -47,9 +47,9 @@ Logical canvas **640x360** or **1280x720** (**Ctrl+Shift+R**). Window scale **Ct
 
 **Worlds.** Eight slots. A pager steps the active world (**N/8**). A **BG1** / **BG0** control picks the map plane. World 1 starts as a 3x3 on a 16x16 map. Cart export packs **world 0** only (Studio World 1). BG1 is the playfield, BG0 is the parallax plane. Double-click an empty cell to create a screen. Right-click a BG1 cell for default screen / default world. PNG drop imports an atlas into the active world, BG bank 0.
 
-**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. That JSON list packs to PRG `$8700` and copies into system RAM at boot. `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras. Palette and H/V flip do not matter. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16** banks cart-wide. A pager steps the bank (**N/16**). Caps: [`memory.md`](../../docs/general/memory.md).
+**Paint.** Right-column **Work on** / **Hide** radios (BG, Sprite, Both). **Ctrl+click** stamps tiles. Set Solid marks a BG pattern (bank + tile) as collidable. That JSON list packs to PRG `$8700` and copies into system RAM at boot. `r01_solid_pattern_add` in `game_logic.c` is optional RAM extras. Palette and H/V flip do not matter. Drag an Entities row onto the preview to place an instance (switches to Sprite layer). CHR is **16** banks cart-wide. A pager steps the bank (**N/16**). Caps: [`memory.md`](../../docs/memory.md).
 
-**Entities.** Up to **4** states x **8** frames x **6** sprites. **Add** opens compose. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Right-click **Mark as player**. The playable player belongs on world 0. Hitbox is per state. Draw origin is per frame. Caps and pack: [`software-api.md`](../../docs/general/software-api.md). Kit palettes: [`docs/general/palette/`](../../docs/general/palette/README.md).
+**Entities.** Up to **4** states x **8** frames x **6** sprites. **Add** opens compose. **Import** reads `aseprite_entities/` next to the saved `.r01proj` (manual, never on open). Right-click **Mark as player**. The playable player belongs on world 0. Hitbox is per state. Draw origin is per frame. Caps and pack: [`software-api.md`](../../docs/software-api.md). Kit colors: [`video-graphics.md`](../../docs/video-graphics.md).
 
 ## Play
 
@@ -97,7 +97,7 @@ void r01_game_on_vblank(R01GameCtx *ctx) {
 | `data/r01p.bin` | `R01P` marker (`$80F0`) |
 | `data/` | Studio binaries (CHR, maps, pals, PRG tables) |
 
-PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/general/memory.md).
+PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../docs/memory.md).
 
 ## Keys
 
@@ -114,8 +114,7 @@ PROM and 512 KB flash images sit beside the cart. Layout: [`memory.md`](../../do
 
 ## Related
 
-- [`docs/general/video-graphics.md`](../../docs/general/video-graphics.md) - video, entities, palettes
-- [`docs/general/palette/`](../../docs/general/palette/README.md) - kit RGB
-- [`docs/general/software-api.md`](../../docs/general/software-api.md) - entity pack, PRG vs hardware
-- [`docs/general/memory.md`](../../docs/general/memory.md) - cart image
+- [`docs/video-graphics.md`](../../docs/video-graphics.md) - video, entities, palettes, and the 64-color kit
+- [`docs/software-api.md`](../../docs/software-api.md) - entity pack, PRG vs hardware
+- [`docs/memory.md`](../../docs/memory.md) - cart image
 - [`apps/emu/README.md`](../emu/README.md) - cart emulator

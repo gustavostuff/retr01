@@ -193,7 +193,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
     # J5 odd 7/9 = GND. J5 odd 1/3/5 = PA7/PA6/PA5 (US2 1/28/27).
     # J6 odd 1/3 = GND. J6 odd 5/7/9 = PD2/PF6/PD3 (US2 8/18/9).
 
-    # J10 2x2 cart program (docs/general/hardware.md).
+    # J10 2x2 cart program (docs/hardware.md).
     # 1 PWR NC   2 GND
     # 3 DATA     4 GND
     if "J10" in parts:

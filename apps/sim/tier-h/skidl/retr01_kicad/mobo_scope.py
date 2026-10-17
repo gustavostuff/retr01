@@ -1,4 +1,4 @@
-"""Motherboard-only Tier H Skidl export (19 counted ICs per docs/general/hardware.md).
+"""Motherboard-only Tier H Skidl export (19 counted ICs per docs/hardware.md).
 
 Drops cart silicon, pad MCUs, sim-only PLD helpers, and the sim PMIC (PS1).
 Remaps cart flash/EEPROM nodes onto J36. Maps PS1 power pins onto J1.

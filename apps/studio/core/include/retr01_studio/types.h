@@ -29,11 +29,11 @@
 
 /* Sprite catalog (CHR patterns in chr_banks + authoring metadata). */
 #define R01_MAX_SPRITES 256
-/* Authoring leftovers in project JSON (not cart / C API). See docs/general/video-graphics.md. */
+/* Authoring leftovers in project JSON (not cart / C API). See docs/video-graphics.md. */
 #define R01_MAX_METASPRITES 64
 #define R01_MAX_METATILES 64
 
-/* Entity types (docs/general/video-graphics.md). Soft on-screen live cap is 16. */
+/* Entity types (docs/video-graphics.md). Soft on-screen live cap is 16. */
 #define R01_MAX_ENTITY_TYPES 32
 #define R01_ENTITY_STATES_MAX R01_CART_ENTITY_STATES_MAX
 #define R01_ENTITY_FRAMES_MAX R01_CART_ENTITY_FRAMES_MAX
@@ -201,7 +201,7 @@ typedef struct R01WarpExit {
     uint8_t flags; /* R01_WARP_FADE_* */
 } R01WarpExit;
 
-/* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/general/graphics. */
+/* Global off-grid MAP payloads (title, interstitial, credits pages). See docs/video-graphics.md. */
 typedef struct R01OtherScreen {
     int present; /* 0 = omit from cart; title/inter always present after init */
     uint8_t tiles[R01_TILES_PER_SCREEN];
@@ -236,7 +236,7 @@ typedef struct R01Project {
     int default_world; /* Play entry world. Cart export packs every present world. */
     int active_world;  /* 0..R01_MAX_WORLDS-1 */
     int active_screen; /* index into worlds[active_world].screens */
-    /* 8 rows x 4 pals each (docs/general/graphics). Index [row][pal]. */
+    /* 8 rows x 4 pals each (docs/video-graphics.md). Index [row][pal]. */
     R01PalRow global_pal_bg[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01PalRow global_pal_spr[R01_PAL_ROWS][R01_PALS_PER_ROW];
     R01ChrBank chr_banks[R01_CHR_BANKS];

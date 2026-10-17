@@ -3,7 +3,7 @@
 
 #include "discrete_ic/entity.h"
 
-/* Breadboard RGBS sprite. Product J2 is 1x8 (docs/general/hardware.md). */
+/* Breadboard RGBS sprite. Product J2 is 1x8 (docs/hardware.md). */
 typedef struct R01aRgbsHdr {
     NsEntity base;
 } R01aRgbsHdr;

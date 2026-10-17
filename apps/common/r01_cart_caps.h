@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /* Cart / world / picture caps shared by Studio packer and emu.
- * SoT: docs/general/memory.md, video-graphics.md. */
+ * SoT: docs/memory.md, video-graphics.md. */
 
 #define R01_CART_MAGIC "retr01"
 #define R01_CART_FORMAT_VER 7

@@ -1,14 +1,14 @@
 # Retr01 Tier H sim (imported)
 
-Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
+Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `apps/tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
 
-Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. **U2075** is a logic stub for the CXA2075M. **CVOUT** is a video-present flag, not an NTSC waveform. The footprint is the SOP-24. **J2** (KMDGX-9S-AS) carries RGB, CSYNC, COMP, and PWM audio.
+Matches [`docs/hardware.md`](../../../docs/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. **U2075** is a logic stub for the CXA2075M. **CVOUT** is a video-present flag, not an NTSC waveform. The footprint is the SOP-24. **J2** (KMDGX-9S-AS) carries RGB, CSYNC, COMP, and PWM audio.
 
 # Retr01 Board Simulator
 
-IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). BOM and islands: [`docs/general/hardware.md`](../../../docs/general/hardware.md).
+IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). BOM and islands: [`docs/hardware.md`](../../../docs/hardware.md).
 
-**Engine:** discrete IC / island / bus core lives in drop-in [`discrete_ic/`](../../../tools/discrete_ic/) (`Ns` / `ns_` API). This tree is the Retr01 board recipe, chips, Host Play, and SDL host. Temporary `R01s*` shims: [`include/retr01_sim/ns_compat.h`](include/retr01_sim/ns_compat.h).
+**Engine:** discrete IC / island / bus core lives in drop-in [`discrete_ic/`](../../tools/discrete_ic/) (`Ns` / `ns_` API). This tree is the Retr01 board recipe, chips, Host Play, and SDL host. Temporary `R01s*` shims: [`include/retr01_sim/ns_compat.h`](include/retr01_sim/ns_compat.h).
 
 **Goal:** simulate the Retr01 motherboard as discrete ICs (pins, package, datasheet behavior) wired like the real board. End state: boot a cart, accept pad input, show a digital playfield (logical 128x120 inside a 256x240 RGBS field / LCD sink). Accuracy tightens as tests demand it.
 
@@ -44,7 +44,7 @@ Motherboard passives: **64** parts below the ICs, ordered XTAL, CCAP, ECAP, 5V/G
 | **R** | DAC + 33 ohm series + pull-ups + crystal feedback | 32 total. Only 11 are video DAC |
 | **D** | Art present | Not spawned (not on this BOM) |
 
-Sprites: `tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c`). Breadboard strip merge and bus settle through passives are still TODO.
+Sprites: `apps/tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c`). Breadboard strip merge and bus settle through passives are still TODO.
 
 **Preliminary Skidl export (not fab-ready):** [`skidl/export_netlist.sh`](skidl/export_netlist.sh) or `export_tier_h_netlist` + [`scripts/skidl_from_tier_h.py`](../../../scripts/skidl_from_tier_h.py). Outputs under [`skidl/`](skidl/). Illustrative only. The motherboard PCB is not ready for production.
 
@@ -66,7 +66,7 @@ Sprites: `tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels a
 
 Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8000+`.
 
-**Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/general/hardware.md`](../../../docs/general/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
+**Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/hardware.md`](../../../docs/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
 
 **BOM:** mounted VIS_IC count includes U2075. Picture and sound leave on J2, the KMDGX-9S-AS mini-DIN. Helper tick domain is 24 MHz.
 
@@ -92,7 +92,7 @@ Why the worker exists: [`CATCHUP_THREADING.md`](CATCHUP_THREADING.md).
   Layer 1: Unit (one IC)
        |
        v
-  Layer 2: Island (few ICs + wires). See docs/general/hardware.md + test_island_abcdeghiojklmnp.c
+  Layer 2: Island (few ICs + wires). See docs/hardware.md + test_island_abcdeghiojklmnp.c
        |
        v
   Layer 3: System (full board + cart + input + screen)
@@ -110,7 +110,7 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 |-------|----------|----------------------|--------|
 | **Studio editor** | `output/test.r01proj` (+ UI) | **No** | Authoring only. Does not execute PRG |
 | **Studio Play** | export then shared emu | **Yes** (via cart) | Same path as **Ctrl+E** + emu render. No Studio-only soft preview |
-| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/general/memory.md`](../../../docs/general/memory.md) |
+| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/memory.md`](../../../docs/memory.md) |
 | **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit to R3G3B2. Target part **AT27C256R** |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$7Fxx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |
@@ -202,7 +202,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 Same keyboard map is used by standalone **emu** and Studio Play.
 
-**Wave monitor (island K):** bottom-left overlay (drag, position in `ui_layout.json`). Lanes **B1-B5** / **S6-S8** draw stable math waveforms from the active voice (period = pitch). **A** is the mixed analog scope ring. After Host Play, silent BGM matches emu: scans `custom_logic.c` for `r01_bgm_play(ctx, N)` and drives B1-B5 from `output/data/bgm_trackN.bin` (Studio **Export**). No host speaker. See [`docs/general/sound.md`](../../../docs/general/sound.md).
+**Wave monitor (island K):** bottom-left overlay (drag, position in `ui_layout.json`). Lanes **B1-B5** / **S6-S8** draw stable math waveforms from the active voice (period = pitch). **A** is the mixed analog scope ring. After Host Play, silent BGM matches emu: scans `custom_logic.c` for `r01_bgm_play(ctx, N)` and drives B1-B5 from `output/data/bgm_trackN.bin` (Studio **Export**). No host speaker. See [`docs/sound.md`](../../../docs/sound.md).
 
 Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / `AB` / phase / cycle count.
 

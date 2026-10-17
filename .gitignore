@@ -25,12 +25,12 @@ apps/emu/build/
 apps/sim/tier-a/build/
 apps/sim/tier-b/build/
 apps/sim/tier-h/build/
-tools/discrete_ic/build/
+apps/tools/discrete_ic/build/
 bin/
 output/
 temp/
-tools/llvm-mos/
-tools/llvm-mos-linux.tar.xz
+apps/tools/llvm-mos/
+apps/tools/llvm-mos-linux.tar.xz
 *.o
 *.a
 **/r01_custom.so

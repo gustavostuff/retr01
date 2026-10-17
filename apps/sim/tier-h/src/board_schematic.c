@@ -4,7 +4,7 @@
 #include <string.h>
 
 /*
- * Passive to silicon links follow docs/general/hardware.md.
+ * Passive to silicon links follow docs/hardware.md.
  * CXA2075M encoding is stubbed. C17 bypasses the MCP130.
  */
 

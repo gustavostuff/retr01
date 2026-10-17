@@ -72,10 +72,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     add_test(NAME ${_t} COMMAND ${_t})
   endforeach()
 
-  # Optional llvm-mos PRG boot test (tools/llvm-mos or $LLVM_MOS).
+  # Optional llvm-mos PRG boot test (apps/tools/llvm-mos or $LLVM_MOS).
   set(R01_LLVM_MOS "$ENV{LLVM_MOS}")
   if(NOT R01_LLVM_MOS)
-    set(R01_LLVM_MOS "${R01_REPO_ROOT}/tools/llvm-mos")
+    set(R01_LLVM_MOS "${R01_REPO_ROOT}/apps/tools/llvm-mos")
   endif()
   set(R01_SDK_PRG "${R01_REPO_ROOT}/apps/sdk/r01_c/build/retr01.prg")
   add_executable(test_sdk_prg tests/test_sdk_prg.c)

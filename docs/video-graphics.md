@@ -32,7 +32,7 @@ If more than 16 sprites land on one scanline, **later OAM entries on that line a
 
 These two ideas stay separate:
 
-1. **64 RGB values** live in the board **AT27C256R** color PROM (packed R3G3B2). These are the real colors. Video reads them by 6-bit index. No CPU runtime poke path. Preview RGB, GIMP/Aseprite exports, and regenerate notes: [`palette/`](palette/README.md).
+1. **64 RGB values** live in the board **AT27C256R** color PROM (packed R3G3B2). These are the real colors. Video reads them by 6-bit index. No CPU runtime poke path. The kit table below is those 64 colors.
 2. **64 individual palettes** live in the cartridge. Each individual palette is four numbers. Each number is a color index in 0..63 pointing into the PROM.
 
 ### Rows and selection
@@ -67,13 +67,80 @@ Typical boot fill (matches Phase 1 PRG):
 4. Seek MAP to the SPR plane for the same row.
 5. Copy 16 more bytes into `$7F09` (cursor continues at offset 16).
 
-### Motherboard color kit (locked SoT)
+### Motherboard color kit
 
-The AT27C256R holds the **64-color** kit. Preview RGB SoT is [`apps/common/r01_kit_palette.c`](../../apps/common/r01_kit_palette.c) (shared by Studio and Emu). Human list and GIMP / Aseprite palettes: [`palette/`](palette/README.md). Burn tools write packed **R3G3B2** (`{RRRGGGBB}`) into PROM address `N` for kit index `N`.
+The AT27C256R holds this **64-color** kit. Index **N** is PROM address **N**. Preview RGB is the **R**, **G**, and **B** columns (0..255). The PROM byte is packed **R3G3B2** (`{RRRGGGBB}`) of that triple. Studio, Emu, and the color-PROM burn use the same values from [`apps/common/r01_kit_palette.c`](../apps/common/r01_kit_palette.c).
 
 Indices **0..15** are darkest, **16..31** mid-dark, **32..47** mid, **48..63** bright. Cart palette bytes are kit indices only.
 
-Studio export may also write `<stem>_prom.bin` (64 packed R3G3B2 bytes) for OTP burners. That file must match this kit.
+Studio export may also write `<stem>_prom.bin` (64 packed R3G3B2 bytes) for OTP burners. That file matches this kit.
+
+| Index | R | G | B | Hex |
+| --- | --- | --- | --- | --- |
+| 0 | 0 | 0 | 0 | `000000` |
+| 1 | 41 | 5 | 20 | `290514` |
+| 2 | 42 | 5 | 7 | `2A0507` |
+| 3 | 35 | 15 | 6 | `230F06` |
+| 4 | 30 | 19 | 6 | `1E1306` |
+| 5 | 26 | 22 | 5 | `1A1605` |
+| 6 | 20 | 24 | 7 | `141807` |
+| 7 | 6 | 26 | 7 | `061A07` |
+| 8 | 5 | 26 | 19 | `051A13` |
+| 9 | 7 | 25 | 24 | `071918` |
+| 10 | 8 | 24 | 28 | `08181C` |
+| 11 | 7 | 23 | 34 | `071722` |
+| 12 | 3 | 11 | 61 | `030B3D` |
+| 13 | 22 | 3 | 58 | `16033A` |
+| 14 | 32 | 5 | 45 | `20052D` |
+| 15 | 38 | 4 | 32 | `260420` |
+| 16 | 54 | 54 | 54 | `363636` |
+| 17 | 116 | 10 | 64 | `740A40` |
+| 18 | 119 | 9 | 26 | `77091A` |
+| 19 | 105 | 53 | 18 | `693512` |
+| 20 | 93 | 63 | 14 | `5D3F0E` |
+| 21 | 81 | 70 | 23 | `514617` |
+| 22 | 66 | 76 | 25 | `424C19` |
+| 23 | 19 | 81 | 26 | `13511A` |
+| 24 | 22 | 80 | 63 | `16503F` |
+| 25 | 17 | 78 | 77 | `114E4D` |
+| 26 | 22 | 77 | 88 | `164D58` |
+| 27 | 22 | 74 | 102 | `164A66` |
+| 28 | 22 | 55 | 148 | `163794` |
+| 29 | 71 | 41 | 144 | `472990` |
+| 30 | 95 | 22 | 125 | `5F167D` |
+| 31 | 108 | 17 | 95 | `6C115F` |
+| 32 | 148 | 148 | 148 | `949494` |
+| 33 | 192 | 74 | 122 | `C04A7A` |
+| 34 | 197 | 74 | 77 | `C54A4D` |
+| 35 | 184 | 96 | 27 | `B8601B` |
+| 36 | 162 | 115 | 38 | `A27326` |
+| 37 | 143 | 126 | 47 | `8F7E2F` |
+| 38 | 119 | 135 | 45 | `77872D` |
+| 39 | 32 | 144 | 48 | `209030` |
+| 40 | 46 | 142 | 114 | `2E8E72` |
+| 41 | 49 | 139 | 137 | `318B89` |
+| 42 | 31 | 136 | 156 | `1F889C` |
+| 43 | 36 | 131 | 181 | `2483B5` |
+| 44 | 77 | 119 | 215 | `4D77D7` |
+| 45 | 126 | 106 | 211 | `7E6AD3` |
+| 46 | 157 | 93 | 191 | `9D5DBF` |
+| 47 | 179 | 82 | 160 | `B352A0` |
+| 48 | 255 | 255 | 255 | `FFFFFF` |
+| 49 | 241 | 162 | 187 | `F1A2BB` |
+| 50 | 241 | 166 | 161 | `F1A6A1` |
+| 51 | 241 | 169 | 131 | `F1A983` |
+| 52 | 238 | 172 | 68 | `EEAC44` |
+| 53 | 212 | 186 | 51 | `D4BA33` |
+| 54 | 176 | 200 | 65 | `B0C841` |
+| 55 | 115 | 210 | 117 | `73D275` |
+| 56 | 34 | 208 | 166 | `22D0A6` |
+| 57 | 59 | 205 | 201 | `3BCDC9` |
+| 58 | 72 | 201 | 228 | `48C9E4` |
+| 59 | 136 | 196 | 237 | `88C4ED` |
+| 60 | 164 | 189 | 239 | `A4BDEF` |
+| 61 | 187 | 181 | 241 | `BBB5F1` |
+| 62 | 213 | 169 | 239 | `D5A9EF` |
+| 63 | 240 | 155 | 221 | `F09BDD` |
 
 ## Background layers
 

@@ -408,7 +408,7 @@ int r01_prg_needs_rebuild(const char *prg_path, const char *logic_c) {
         "/apps/sdk/r01_c/data/worlddir.bin",
         "/apps/sdk/r01_c/data/solids.bin",
         "/apps/sdk/r01_c/data/r01p.bin",
-        "/tools/llvm-mos/bin/mos-common-clang",
+        "/apps/tools/llvm-mos/bin/mos-common-clang",
         NULL
     };
     unsigned i;

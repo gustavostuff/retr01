@@ -9,7 +9,7 @@
 
 /* Engine levels/dirs come from discrete_ic (see ns_compat.h for R01s* aliases). */
 
-/* Cart image caps follow docs/general/memory.md via r01_cart_caps.h. */
+/* Cart image caps follow docs/memory.md via r01_cart_caps.h. */
 #define R01S_CART_FORMAT_VER R01_CART_FORMAT_VER
 #define R01S_CART_HDR_BYTES R01_CART_HDR_BYTES
 #define R01S_CART_PTR_TABLE_BYTES R01_CART_PTR_TABLE_BYTES

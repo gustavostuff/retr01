@@ -1,6 +1,6 @@
 # Chip models
 
-Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`. Parts follow `docs/general/hardware.md`. The encoder model is a logic stub (CVOUT as video-present). The part is the CXA2075M on the SOP-24 pinout.
+Each IC is a struct that starts with an `R01sEntity`, plus an `R01sEntityVTable`. Parts follow `docs/hardware.md`. The encoder model is a logic stub (CVOUT as video-present). The part is the CXA2075M on the SOP-24 pinout.
 
 | Role | File | Part |
 | --- | --- | --- |

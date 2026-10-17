@@ -6,9 +6,8 @@
 #include <SDL.h>
 
 /*
- * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D / 5V / GND). Canvas sprites + pin netlist nodes.
- * Bus settle / analog behavior is not modeled yet (null entity vtable).
- * Pin pixels live in tools/discrete_ic/assets/passives/pin_map.json.
+ * Passives (R / CCAP / ECAP / OSC / OSC4LEGS / D / 5V / GND). UI sprites only.
+ * Pin pixels live in apps/tools/discrete_ic/assets/passives/pin_map.json.
  * The first pin is the rotation pivot. Air wires end on those pixels.
  * OSC4LEGS (DIP-14 metal can): pivot = pin 14 VDD, then pin 8 OUT, pin 1 OE#, pin 7 GND.
  * Polarized parts mark the second pin negative: ECAP pin 1 is +, pin 2 is -.

@@ -109,7 +109,7 @@ TEST_MAIN() {
     }
 
     {
-        const char *cc = R01_REPO_ROOT "/tools/llvm-mos/bin/mos-common-clang";
+        const char *cc = R01_REPO_ROOT "/apps/tools/llvm-mos/bin/mos-common-clang";
         struct stat stcc;
         if (stat(cc, &stcc) == 0) {
             char err[256];

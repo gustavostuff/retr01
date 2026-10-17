@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Pin pixels from tools/discrete_ic/assets/passives/pin_map.json.
+/* Pin pixels from apps/tools/discrete_ic/assets/passives/pin_map.json.
  * pins[0] is the rotation pivot. negative (JSON) is index 1 for ECAP and D. */
 typedef struct PassivePinDef {
     int number;
