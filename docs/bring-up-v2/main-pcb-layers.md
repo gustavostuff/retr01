@@ -170,7 +170,7 @@ U24 O0-O7 arrive on layer 1. The analog net begins at the R1-R8 pad on the gun s
 | `VBL` | Beam Y to UM PD3 (and US1 VBL if wired) |
 | `S1_RDY` | US1 PF6 to UM PF6 |
 | IRQB / NMI / HBLANK / VBLANK | Beam PLDs to CPU / MCU |
-| HSYNC / VSYNC / CSYNC | HSYNC and VSYNC stay on the beam PLDs. CSYNC to J2 pin 5 and to U2075 pin 8, inside the analog corner, short |
+| HSYNC / VSYNC / CSYNC | HSYNC and VSYNC stay on the beam PLDs. CSYNC to J2 pin 5 and to U2075 pin 10 (SYNCIN), inside the analog corner, short |
 | `SEL_SOFT0` / `1` / `2` | Compositor to UM |
 | `CPU_A_SAMPLE` | To UM PD4 |
 | `/SS_S1` / `/SS_S2` | UM to US1 / US2 (selects only, not MOSI/MISO/SCK) |

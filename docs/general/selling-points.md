@@ -6,7 +6,7 @@ A single motherboard footprint set covers **home console** and **arcade** instal
 
 ## Dual sync RGB + composite
 
-J2 carries RGB, CSYNC, and composite. Composite is the **CXA2075M** path, with CSYNC into the encoder. HSYNC and VSYNC stay on the beam PLDs.
+J2 carries RGB, CSYNC, composite, and mono audio on one Kycon **KMDGX-9S-AS** 9-pin mini-DIN. Composite is the **CXA2075M** path, with CSYNC into the encoder. HSYNC and VSYNC stay on the beam PLDs.
 
 ## Hardware does the picture
 

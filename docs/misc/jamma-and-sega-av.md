@@ -1,6 +1,6 @@
 # JAMMA edge and Sega AV socket
 
-The locked arcade headers stay J5 and J6, with J7 for reset. RGB, CSYNC, composite, and mono audio share **J2**, a Kycon **KMDGX-9S-AS**. This page is the pin map for a cabinet build that puts the arcade harness on one JAMMA finger edge at the bottom of the board, and uses that mini-DIN as the Sega Model 2 socket.
+The locked arcade headers stay J5 and J6, with J7 for reset. RGB, CSYNC, composite, and mono audio share **J2**, a Kycon **KMDGX-9S-AS**. This page is the pin map for a cabinet build that puts the arcade harness on one JAMMA finger edge at the bottom of the board, and uses that mini-DIN as the Genesis Model 2 / Model 3 AV socket.
 
 Home pads stay on J3 and J4. Those jacks are not part of either connector.
 
@@ -8,7 +8,7 @@ Home pads stay on J3 and J4. Those jacks are not part of either connector.
 
 The JAMMA connector is a work in progress. The pin map below is a draft.
 
-Footprint `Retr01_Lib:JAMMA_56_Edge_P3.96mm`. Pitch is 3.96 mm (0.156 in). Each finger is 2.30 mm by 8.00 mm. Front-copper pads P1 to P28 are the parts side. Back-copper pads S1 to S28 are the solder side. Pin 7 is the key on both sides, so P7 and S7 are missing and the footprint carries the notch.
+Footprint `Retr01_Lib:JAMMA-56`. Pitch is 3.96 mm (0.156 in). Each finger is 2.30 mm by 8.00 mm. Numbered pads are the parts side on F.Cu. Letter pads are the solder side on B.Cu (A, B, C, and so on, skipping G, I, O, and Q). Pin 7 is the key, so that pad is missing and the footprint carries the notch. In the draft tables below, P is the parts number and S is the solder mate (S16 is pad T).
 
 The finger row is 106.92 mm from P1 to P28. The board edge is 170 mm, so the row fits on the bottom with room at both ends. Pin 1 is at one end of that edge. The mating edge of the footprint is x = 0.
 
@@ -29,7 +29,7 @@ X is JAMMA button 1. Y is JAMMA button 2. Button 3 (P24 and S24) has no Retr01 c
 
 The KiCad netlist ties parts pads 16-23 to the J5 button nets, and solder pads T-a to the J6 button nets, in the order coin, start, up, down, left, right, button 1, button 2. Parts pads 1, 2, and 28 and solder pads A, B, and f are GND. Parts pads 3 and 4 and solder pads C and D are +5V. The other fingers stay off the netlist.
 
-Video on this edge is RGBS. HSYNC and VSYNC have no JAMMA pin.
+RGBS on this edge is a draft. HSYNC and VSYNC have no JAMMA pin.
 
 | Signal | Finger | Board net |
 | --- | --- | --- |
@@ -41,16 +41,16 @@ Video on this edge is RGBS. HSYNC and VSYNC have no JAMMA pin.
 
 Composite stays off this edge. It belongs on the Sega socket.
 
-| Rail | Fingers |
+| Rail | Fingers on the netlist |
 | --- | --- |
-| +5 V | P3, P4, S3, S4 |
-| GND | P1, P2, P14, P27, P28, S1, S2, S27, S28 |
+| +5 V | P3, P4, S3, S4 (pads 3, 4, C, D) |
+| GND | P1, P2, P28, S1, S2, S28 (pads 1, 2, 28, A, B, f) |
 
 J1 and these +5 V fingers are one rail. A cabinet harness feeds the edge. The barrel jack is the bench feed onto that same rail.
 
 The board has no -5 V rail and no +12 V rail. P5, S5, P6, and S6 stay open. A harness that still carries those voltages does not connect them to copper.
 
-Parts pin 15 is the JAMMA test switch, a contact to ground. That is the finger that can share `RESB` with J7. Service (S14) and tilt (S15) stay open.
+Parts pin 15 is the JAMMA test switch. Service (S14), tilt (S15), video ground (P14), and pin 27 on both sides stay open. Pin 27 is button 6.
 
 The speaker pair is P10 and S10. Retr01 audio is PWM through an RC into J2 pins 6, 8, and 9. That path is not a loudspeaker driver, so P10 and S10 stay open.
 
@@ -71,8 +71,8 @@ Also open: coin counters (P8, S8), lockouts (P9, S9), pin 11 on both sides, and 
 | 11 | open | open |
 | 12 | Red | Green |
 | 13 | Blue | CSYNC |
-| 14 | video GND | service, open |
-| 15 | test, `RESB` | tilt, open |
+| 14 | video GND, open | service, open |
+| 15 | test, open | tilt, open |
 | 16 | P1 coin | P2 coin |
 | 17 | P1 start | P2 start |
 | 18 | P1 up | P2 up |
@@ -84,7 +84,7 @@ Also open: coin counters (P8, S8), lockouts (P9, S9), pin 11 on both sides, and 
 | 24 | button 3, open | button 3, open |
 | 25 | open | open |
 | 26 | open | open |
-| 27 | GND | GND |
+| 27 | button 6, open | button 6, open |
 | 28 | GND | GND |
 
 ## Sega Model 2 socket
@@ -93,7 +93,7 @@ Also open: coin counters (P8, S8), lockouts (P9, S9), pin 11 on both sides, and 
 
 Footprint `Retr01_Lib:Kycon_KMDGX-9S-AS`. There is no Mini-DIN-9 symbol. `Connector:Mini-DIN-*` stops at 8 pins and ships with an empty footprint field.
 
-Pin numbers are the Kycon recommended PCB layout with the connector facing up, which is the top view of the bottom-view drawing. Those numbers are also the Genesis 2 / Mega Drive 2 / 32X / Nomad map.
+Pin numbers are the Kycon recommended PCB layout with the connector facing up, which is the top view of the bottom-view drawing. Those numbers are also the Genesis Model 2, Genesis Model 3, Mega Drive 2, 32X, and Nomad map.
 
 | Pin | Sega signal | Board net |
 | --- | --- | --- |

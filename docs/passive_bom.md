@@ -90,7 +90,7 @@ On solderless breadboards, an Si5351A breakout board or the same 21.47727 MHz 74
 | 1 | **220 uF** electrolytic (or polymer) | Entry bulk at 5 V input |
 | 6 | Crystal load (see above) | Y1/Y2/Y3 (18 to 20 pF) |
 
-The CXA2075M wants a bypass at each VCC pin, plus the YTRAP network when CVOUT is used. Treat those as datasheet add-ons, not locked here.
+The motherboard bypasses VCC1 only (**C18**, 100 nF). **YTRAP** is open, so the encoder uses its internal trap.
 
 ---
 

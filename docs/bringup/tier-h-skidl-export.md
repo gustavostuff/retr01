@@ -79,7 +79,7 @@ KiCad import of `apps/sim/tier-h/skidl/retr01_prelim.net` is limited to visual e
 
 ### KiCad custom library and board
 
-- **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/`. 3D offset/scale/rotate for U130 (`TO-92_Inline`: offset X 1.25 mm, rotate Z 180 deg), RCA (`CUI_RCJ-014*`), and TRS jacks live in `scripts/retr01_patch_3d_poses.py`. `export_netlist.sh` stamps those values into the `.kicad_mod` files and into matching `(model ...)` blocks on each `v_0*.kicad_pcb`.
+- **Footprints + WRL:** `apps/sim/tier-h/skidl/library/Retr01_Lib.pretty` and `Retr01_Lib.3dshapes/`. 3D offset/scale/rotate for U130 (`TO-92_Inline`: offset X 1.25 mm, rotate Z 180 deg) and the TRS jacks live in `scripts/retr01_patch_3d_poses.py`. `export_netlist.sh` stamps the poses into the `.kicad_mod` files and into matching `(model ...)` blocks on each `v_0*.kicad_pcb`.
 - **Project:** `apps/sim/tier-h/kicad/main-pcb/main_pcb.kicad_pro`. Board revisions are the `v_*.kicad_pcb` files in that folder. Open the project from **`main-pcb/`** so `${KIPRJMOD}` resolves.
 - **Export copy:** `export_netlist.sh` copies the library tree into `main-pcb/library/` for KiCad (`fp-lib-table` -> `${KIPRJMOD}/library/Retr01_Lib.pretty`).
 

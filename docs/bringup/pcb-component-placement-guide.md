@@ -99,7 +99,7 @@ Every millimeter of PCB trace adds approximately 1 nH of parasitic inductance an
 
 The floor plan also sets cable paths and mechanical load:
 
-1. **Cable segregation (front vs rear):** Stationary cables (5 V DC barrel, RGBS, composite RCA, audio line out) attach along the rear (top) edge. Player cables (gamepads and arcade controls) plug into the front (bottom) edge. Cables stay off the board during play.
+1. **Cable segregation (front vs rear):** Stationary cables (5 V DC barrel, and the J2 mini-DIN for RGB, CSYNC, composite, and mono audio) attach along the rear (top) edge. Player cables (gamepads and arcade controls) plug into the front (bottom) edge. Cables stay off the board during play.
 2. **Mechanical balance for cartridge insertion:** Cartridges impose vertical insertion and extraction forces. Placing the heavy 36-pin edge connector dead-center horizontally distributes mechanical strain symmetrically across all four PCB corner mounting holes, preventing board flexing and solder joint fatigue.
 3. **Structured bus highways and retro aesthetics:** By grouping communicating chips in parallel rows (such as CPU and System RAM, or the three 74HC157 multiplexers), traces run in uniform, parallel ribbons with minimal vias. This produces an orderly, clean visual appearance reminiscent of classic arcade and console printed circuit boards rather than an unstructured prototype layout.
 

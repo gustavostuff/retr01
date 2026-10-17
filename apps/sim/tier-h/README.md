@@ -16,7 +16,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 **Netlist / bring-up:** 9 canvas islands (O first) + wired-only E/I/P sprite glue. Soft `$7Fxx` via **MCU-M** on L. Cart image from argv (default `example_01/example_01.retr01`). The console has no USB. Cart programming is the MCU-M bridge.
 
-**UI chrome:** Compact board view only. LIVE / MANUAL, ARCADE / PADS, and SAVE layout controls are **removed** for now (revisit with breadboard electrical later). Bottom-right gamepad overlays remain. IC bodies use health-colored 1px outlines from `discrete_ic` (`ns_outline_rgb`).
+**UI chrome:** Compact board view. Bottom-right gamepad overlays remain. IC bodies use health-colored 1px outlines from `discrete_ic` (`ns_outline_rgb`).
 
 ### Breadboard proto
 
@@ -68,7 +68,7 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **Letter note:** Silicon bring-up docs use **N** for the sprite path ([`docs/general/hardware.md`](../../../docs/general/hardware.md)). On the sim canvas, **N** is the detachable **cart module** island. Sprite milestones still show as **N** in the health strip detail line.
 
-**BOM:** mounted VIS_IC count includes U2075. RCA jacks are netlist-only (no chip glyph). Helper tick domain is 24 MHz.
+**BOM:** mounted VIS_IC count includes U2075. Picture and sound leave on J2, the KMDGX-9S-AS mini-DIN. Helper tick domain is 24 MHz.
 
 **Cart load:** argv, or `example_01/example_01.retr01` when omitted, is copied into cart `SST39SF040`. The cart orderable is the TSOP `SST39SF040-55-4C-TU`. The app then overlays a short boot program that streams the palette and the start screen through `$7Fxx` on the pin netlist. That catchup is the boot wait. Host Play starts after it and drives the wave monitor from `game_logic.c` beside the cart. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`.
 
@@ -193,7 +193,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 **Layout persistence:** island frames, chip positions, pan, zoom, and the wire view save to `apps/sim/tier-h/ui_layout.json` (cwd does not matter). `R01S_LAYOUT` overrides that path. `S` writes immediately. Edits also save about half a second after the last change, and again on quit.
 
-**Gamepads (island E -> `$7F60`/`$7F61`):** bottom-right panels or keyboard. HUD **ARCADE** (default) injects the bitfield directly. **PADS** routes through ATtiny85 poll/reply (`0x55`/`0xAA`) then into the same ports. Top-right **LIVE** / **MANUAL** toggles soft bus settle (see Status). After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
+**Gamepads (island E -> `$7F60`/`$7F61`):** bottom-right panels or keyboard. Arcade input injects the bitfield directly. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
 | Player | Stick | X | Y | Coin | Start |
 |--|-------|---|---|------|-------|

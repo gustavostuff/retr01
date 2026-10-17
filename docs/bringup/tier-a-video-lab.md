@@ -99,7 +99,7 @@ If any of those fail, fix that layer before adding S1, VRAM, or a CPU.
 
 1. **PLDs and the color PROM are programmed before first power-up**, with the CPU-side bus absent. Blank PLDs and a random PROM make debugging impossible.
 2. **Unused PROM address lines A[14:6] (and any unused) tie to GND.** Only A[5:0] carry the color index for 64 entries.
-3. **Sync mode is explicit.** Product **J2** carries CSYNC, HSYNC, and VSYNC together. Default breadboard lab: **RGBS** = R/G/B + **CSYNC**. **RGBHV** uses HSYNC and VSYNC on the same header; never drive two meanings on one pin.
+3. **Sync mode is explicit.** Product **J2** carries CSYNC on pin 5. HSYNC and VSYNC stay on the beam PLDs. Default breadboard lab: **RGBS** = R/G/B + **CSYNC**. **RGBHV** uses HSYNC and VSYNC on the lab header. One pin carries one sync meaning.
 4. **Analog island stays short:** PROM -> DAC resistors -> RGB header. Keep digital switching noise off that path as much as breadboard allows.
 5. **Bring-up order is solid color first** (fixed index), then color bars, then spatial patterns. One change at a time.
 6. **DOT, CSYNC (or H/V), and one RGB gun are scoped** before blaming the monitor.

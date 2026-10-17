@@ -21,7 +21,7 @@ Silicon and pins: `hardware.md`. Soft map: `memory.md`. SPI / VBlank: `ic-comms-
         |
         |  STA $7F40 + 4*ch   (4 bytes per dirty voice)
         v
-  MCU-M  --SPI /SS_S2-->  MCU-S2 mix 8 ch --> PWM PF1 --> RCA
+  MCU-M  --SPI /SS_S2-->  MCU-S2 mix 8 ch --> PWM PF1 --> J2 pins 6, 8, 9
 ```
 
 ## Cart mailbox (`$7F40`-`$7F5F`)

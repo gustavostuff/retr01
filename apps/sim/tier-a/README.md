@@ -31,7 +31,7 @@ Each price is one piece, rough USD, about September 2026. Shipping and tax are e
 | 1 | 21.47727 MHz crystal | `~$1` | Master clock |
 | 1 | 1 Mohm | `~$0.10` | Pierce feedback |
 | 2 | 18 pF to 20 pF | `~$0.10` | Crystal loads |
-| 1 | **2x4** (2.54 mm) header + RGBS/RGBHV cable or adapter | `~$5` | J2-style R/G/B/CSYNC/HSYNC/VSYNC/GND to monitor or capture card |
+| 1 | **2x4** (2.54 mm) header + RGBS/RGBHV cable or adapter | `~$5` | Bench header for R, G, B, CSYNC, HSYNC, VSYNC, and GND. Product J2 is the 9-pin mini-DIN |
 | 3 | Solderless breadboards | `~$6` | The wired Tier A sim uses three. The bring-up doc does not lock a count |
 | 1 | Jumper-wire set | `~$8` | Solid core, long enough to cross boards |
 | 1 | Regulated **5 V** supply, a few hundred mA | `~$8` | Plus a way to land 5 V and GND on one breadboard's rails |
