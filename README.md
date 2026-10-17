@@ -32,7 +32,7 @@ PRG writes notes and a helper chip (an AVR128DB28) mixes them to analog output. 
 
 The design uses a compact, mostly THT main system board with 19 ICs (CPU + MCUs + SPLDs + some 74xx glue) for both home-console and arcade cabinet builds. That is:
 
-* Home console: TRS ports for the pads. Picture and sound leave on one Kycon KMDGX-9S-AS 9-pin mini-DIN (J2): RGB, CSYNC, composite, mono audio, and +5 V. The shell is the Genesis Model 2, Genesis Model 3, and Mega Drive 2 AV socket.
+* Home console: TRS ports for the pads. Picture and sound leave on one Kycon KMDGX-9S-AS 9-pin mini-DIN. RGB, CSYNC, composite, mono audio, and +5 V. The shell is the Genesis Model 2, Genesis Model 3, and Mega Drive 2 AV socket.
 
 * Arcade: the same mini-DIN for picture and sound, plus 2x5 headers for sticks and buttons. The JAMMA edge shares those header nets for the controls, and it shares +5 V and GND.
 
