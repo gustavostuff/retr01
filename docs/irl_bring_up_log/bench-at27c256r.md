@@ -20,15 +20,36 @@ One kit chip in the socket at a time. The package is 600 mil, so it sits in a 28
 
 ## Place
 
-| What | Where |
-| --- | --- |
-| Pin 28 (VCC) and pin 1 (VPP) | +5 V |
-| Pin 14 (GND) | Ground |
-| 100 nF | +5 V rail to the ground rail, beside pin 28 |
-| Pins 2, 3, 4, 21, 23, 24, 25, 26, 27 (A12, A7, A6, A10, A11, A9, A8, A13, A14) | Ground |
-| Pin 20 (CE#) and pin 22 (OE#) | Ground |
-| Pins 5, 6, 7, 8, 9, 10 | Switches 5, 4, 3, 2, 1, 0. Each pin gets 10 kohm to ground and a switch to +5 V |
-| Pins 19, 18, 17, 16, 15, 13, 12, 11 | O7 through O0, left to right. +5 V, then 2.2 kohm, then the LED anode. Cathode to the pin |
+| Mark | What | Where |
+| --- | --- | --- |
+| V+ | Pin 28 (VCC) and pin 1 (VPP) | +5 V |
+| GD | Pin 14 (GND). Pins 2, 3, 4, 21, 23, 24, 25, 26, 27 (A12, A7, A6, A10, A11, A9, A8, A13, A14). Pin 20 (CE#) and pin 22 (OE#) | Ground |
+| C | 100 nF | +5 V rail to the ground rail, beside pin 28 |
+| S5 to S0 | Pins 5, 6, 7, 8, 9, 10 | Switches 5, 4, 3, 2, 1, 0. S5 is pin 5. Each pin gets 10 kohm to ground and a switch to +5 V |
+| D7 to D0 | Pins 19, 18, 17, 16, 15, 13, 12, 11 | O7 through O0. D7 is pin 19. +5 V, then 2.2 kohm, then the LED anode. Cathode to the pin |
+
+```text
+ +5V ------------------------------------------------
+                         notch
+                    +------U------+
+                 V+ |  1       28 | V+
+                 GD |  2       27 | GD
+                 GD |  3       26 | GD
+                 GD |  4       25 | GD
+                 S5 |  5       24 | GD
+                 S4 |  6       23 | GD
+                 S3 |  7       22 | GD
+                 S2 |  8       21 | GD
+                 S1 |  9       20 | GD
+                 S0 | 10       19 | D7
+                 D0 | 11       18 | D6
+                 D1 | 12       17 | D5
+                 D2 | 13       16 | D4
+                 GD | 14       15 | D3
+                    +-------------+
+                 C from V+ to GD, beside pin 28
+ GND ------------------------------------------------
+```
 
 A high on A14 selects the upper 16 KB. Those bytes are `0xFF`. CE# or OE# high turns the data pins off. Pin 14 is ground, so the LED after pin 15 goes on pin 13. Closed is 1. A lit LED is a 0. A dark LED is a 1.
 
