@@ -2,19 +2,13 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 120 mm**. The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
-**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints, except the composite encoder. That part is a Sony **CXA2075M** in a 24-pin SOP. Generic parts (AliExpress and similar) are the supply. Datasheet: [CXA2075M](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html). **J11** is the 2x2 shunt that selects NTSC or PAL. Cart and pad stay THT. **U2075** uses `SOP-24_7.5x15.4mm_P1.27mm`.
+Counted motherboard ICs use DIP, SPDIP, or PDIP footprints, except the composite encoder. That part is a Sony **CXA2075M** in a 24-pin SOP (`SOP-24_7.5x15.4mm_P1.27mm`, refdes **U2075**). Datasheet: [CXA2075M](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html). **J11** is the 2x2 shunt that selects NTSC or PAL. Cart and pad stay through-hole.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
 ## Clocks and raster
 
-| Net | Rate / shape |
-| --- | --- |
-| CPU | **8.000 MHz** (W65C02S) |
-| Dot | **5.369318 MHz** |
-| Each AVR128DB28 | **24 MHz** internal HFOSC |
-| Raster | **341 x 262**, about **60.098 Hz** |
-| Composite subcarrier | Y3 into the **CXA2075M** (NTSC **3.579545 MHz** or PAL **4.433618 MHz**) |
+The W65C02S runs at **8.000 MHz**. Each AVR128DB28 runs its **24 MHz** internal oscillator. The raster is **341 x 262** at about **60.098 Hz**.
 
 Discrete crystal clock generation:
 - **PHI2 (8.000 MHz):** An 8.000 MHz crystal with an unbuffered **74HCU04** inverter gate and 1 M ohm feedback resistor forms the Pierce oscillator, buffered by a second gate to feed the CPU clock.
@@ -25,13 +19,7 @@ Logical playfield **128 x 120**, hardware-scaled **2x** to **256 x 240** by defa
 
 ## IC budget
 
-**19** ICs on the motherboard + **2** on the cart = **21** counted parts.
-
-| Scope | Count |
-| --- | --- |
-| Motherboard | 19 |
-| Cart (flash + save EEPROM) | 2 |
-| Outside the 21 | Crystals, reset supervisor (MCP130). **Adafruit's UPDI Friend** is the DIY programming accessory, not a BOM IC |
+**19** ICs on the motherboard and **2** on the cart make **21** counted parts. Crystals and the MCP130 reset supervisor sit outside that count. **Adafruit's UPDI Friend** is a programming accessory, not a BOM IC.
 
 ### Bus discipline
 
@@ -55,25 +43,25 @@ MCU-M after reset: CPU D pins stay **inputs / hi-Z** until a proven soft-read wi
 
 If soft decode ever runs out of PLD room, preferred escapes in order: demux more SELs on MCU-M, add a fourth ATF22V10, move MAP onto M GPIO with `RDY` stalls, and only then add an HC245 on CPU D (that last step breaks the 19-mobo count).
 
-Full failure modes and bring-up order: `ic-comms-risks.md`.
+Shared-net failure rules: `ic-comms-risks.md`.
 
 ## BOM (locked 21)
 
-| Qty | Part | Role | THT (v1) | SMD also? |
-| --- | --- | --- | --- | --- |
-| 1 | W65C02S | Game CPU @ 8 MHz | PDIP-40 | Yes (PLCC-44, QFP-44) |
-| 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
-| 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 | Yes (SOP-28, sTSOP-28) |
-| 1 | SST39SF040-55-4C-NHE | 512 KB cart NOR flash. 55 ns, 5 V. PLCC-32 | PLCC-32 socket | The PLCC can be soldered down |
-| 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP) |
-| 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
-| 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP) |
-| 1 | 74HC573 | Field A[7:0] latch (ALE from S1) | DIP-20 | Yes (SOIC/TSSOP) |
-| 1 | 74HC574 | BG1 scroll X `$7F02` | DIP-20 | Yes (SOIC/TSSOP) |
-| 1 | AT27C256R | Color PROM (45 ns OTP, packed R3G3B2) | PDIP-28 | Yes (SOIC-28, PLCC-32, TSOP-28) |
-| 1 | CXA2075M | RGB to NTSC/PAL composite encoder. Generic SOP-24 supply | SOP-24 | Same package |
-| 1 | 74HCU04 | Crystal oscillator driver and clock buffer | DIP-14 | Yes (SOIC-14, TSSOP) |
-| 1 | 74HC74 | Dual D-type flip-flop (divide-by-4 for 5.369318 MHz dot clock) | DIP-14 | Yes (SOIC-14, TSSOP) |
+| Qty | Part | Role | Package |
+| --- | --- | --- | --- |
+| 1 | W65C02S | Game CPU at 8 MHz | PDIP-40 |
+| 3 | AVR128DB28-I/SP | MCU-M, MCU-S1, MCU-S2 at 24 MHz | SPDIP-28 |
+| 3 | AS6C62256 | System RAM, interleaved VRAM, sprite field plus BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 |
+| 1 | SST39SF040-55-4C-NHE | 512 KB cart NOR flash, 55 ns, 5 V, in a PLCC-32 socket | PLCC-32 |
+| 1 | 24C64 | Cart save EEPROM, 8 KB I2C | DIP-8 |
+| 3 | ATF22V10 | Beam X, Beam Y, Compositor and decode | PDIP-24 |
+| 3 | 74HC157 | VRAM address mux, CPU versus beam | DIP-16 |
+| 1 | 74HC573 | Field address latch, ALE from S1 | DIP-20 |
+| 1 | 74HC574 | BG1 scroll X at `$7F02` | DIP-20 |
+| 1 | AT27C256R | Color PROM, 45 ns, one-time, packed R3G3B2 | PDIP-28 |
+| 1 | CXA2075M | RGB to NTSC/PAL composite encoder | SOP-24 |
+| 1 | 74HCU04 | Crystal oscillator and clock buffer | DIP-14 |
+| 1 | 74HC74 | Divide-by-4 for the 5.369318 MHz dot clock | DIP-14 |
 
 **Still outside the count:** crystals (common THT HC-49/US), reset supervisor (MCP130 in TO-92). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
 
@@ -91,29 +79,11 @@ RGB from the color PROM DAC goes to **RIN**, **GIN**, and **BIN**. CSYNC from th
 
 ## MCU roles (3x AVR128DB28)
 
-```text
-                    +------------------+
-                    |     MCU-M        |
-                    |  Soft $7Fxx,     |
-                    |  SPI master,     |
-                    |  cart I2C, RDY   |
-                    +---------+--------+
-                              | SPI + RDY flags
-              +---------------+---------------+
-              |                               |
-   +----------v-----------+       +-----------v----------+
-   |       MCU-S1         |       |       MCU-S2         |
-   |  OAM + field + BG0   |       |  Pads + APU PWM      |
-   +----------+-----------+       +----------------------+
-              |
-         74HC573 ALE --> field AS6C62256
-```
+**MCU-M** owns soft `$7Fxx`, the OAM and APU mailboxes, a **512 B** machine EEPROM, cart **24C64** I2C, `RDY`, and SPI as master to S1 and S2. It is also the cart-flash bridge when Adafruit's UPDI Friend is on **J10** and **CART_ARM** is set.
 
-| Chip | Owns |
-| --- | --- |
-| **MCU-M** | Soft `$7Fxx`, OAM/APU mailboxes, machine EEPROM **512 B**, cart **24C64** I2C, `RDY`, SPI master to S1/S2, **cart-flash bridge** when Adafruit's UPDI Friend is on **J10** and **CART_ARM** is set |
-| **MCU-S1** | OAM apply, **full sprite field in VBlank**, **BG0 next-line fill in HBlank only** (ping-pong), field SRAM via AD mux + HC573 |
-| **MCU-S2** | `$7F60`/`$7F61` pads, `$7F40`-`$7F5F` APU mailbox, DPCM samples in S2 flash, **PWM** audio on PF1 |
+**MCU-S1** applies OAM, fills the sprite field in one VBlank pass, and fills the next BG0 line in HBlank only. Field SRAM uses an AD mux and a 74HC573.
+
+**MCU-S2** serves `$7F60` and `$7F61` for the pads, the `$7F40`-`$7F5F` APU mailbox, DPCM samples in S2 flash, and **PWM** audio on PF1.
 
 OAM `$7F20`/`$7F21` latches on M then SPI to S1. APU forwards M to S2. Cart I2C `$7F22`-`$7F24` on M. Machine EE `$7F70`-`$7F72` on M.
 
@@ -127,11 +97,11 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 
 ## PLD roles (3x ATF22V10)
 
-| PLD | Owns |
-| --- | --- |
-| **Beam X** | Dot / H inside 341. Scroll Y `$7F03`. HBlank / VBlank / NMI |
-| **Beam Y** | Line / V. Raster Y `$7F04` + cascaded EQ -> IRQB |
-| **Compositor** | Priority, Color PROM index, MAP A14-A18. `LE_7F02`/`03`/`04`, `SEL_VRAM`, `LE_MAP`, three `SEL_SOFT*`, residual `/OE`. Cart `WE#` gated by **CART_ARM** |
+**Beam X** counts the dot and the horizontal position inside 341. It holds scroll Y at `$7F03`, and it produces HBlank, VBlank, and NMI.
+
+**Beam Y** counts the line and the vertical position. Raster Y at `$7F04` plus a cascaded compare produces IRQB.
+
+**Compositor** owns priority, the color PROM index, and MAP bits A14-A18. It produces `LE_7F02`, `LE_7F03`, `LE_7F04`, `SEL_VRAM`, `LE_MAP`, the three `SEL_SOFT*` lines, and the residual `/OE`. Cart `WE#` is gated by **CART_ARM**.
 
 Hard LE and beam stay out of MCU paths. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, PHI2 low = BG fetch (3x HC157). Prefer **AS6C62256-55**. Keep VRAM mux / decode traces short. HC157 **G** must never float (G high forces Y low, not Hi-Z).
 
@@ -139,14 +109,11 @@ Hard LE and beam stay out of MCU paths. VRAM: PHI2 high = CPU `$7F10`-`$7F12`, P
 
 Macrocell pressure note: SY(8)+Q(8)+MAP(5)+CART_ARM(1) = **22** vs **30** MC on a 22V10. That budget is a hard limit when adding features. A **1-dot** Color PROM index latch in the Compositor is preferred if fit allows.
 
-## On-board memory (chips)
+## On-board memory
 
-| Chip | Use |
-| --- | --- |
-| AS6C62256 #1 | System RAM behind `$0000-$7EFF` |
-| AS6C62256 #2 | Interleaved VRAM (CPU PHI2 high, beam PHI2 low) |
-| AS6C62256 #3 | Sprite field (filled in VBlank) + BG0 **ping-pong line buffers** (filled in HBlank) |
-| AT27C256R | **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads by 6-bit index. No CPU runtime access. Kit RGB: `video-graphics.md` |
+Three **AS6C62256** parts. One is system RAM at `$0000-$7EFF`. One is interleaved VRAM (CPU on PHI2 high, beam on PHI2 low). One is the sprite field, filled in VBlank, plus the BG0 ping-pong line buffers, filled in HBlank.
+
+The **AT27C256R** holds **64** master colors, packed **R3G3B2** `{RRRGGGBB}`. Video reads them by a 6-bit index. The CPU has no runtime path to the PROM. Kit RGB is in `video-graphics.md`.
 
 **Color DAC** (1% metal film). LSB->MSB: R/G **4.00 / 2.00 / 1.00 kohm**. B **2.00 / 1.00 kohm**. **75.0 ohm** to GND each gun -> **~0.7 Vpp**. Unused PROM address pins to GND.
 
@@ -214,11 +181,7 @@ Top view, pin 1 at top-left:
 
 Host command bytes on the Friend serial link stay TBD. Pin numbers and this bridge contract are locked.
 
-| Job | Path |
-| --- | --- |
-| Program cart flash (on board) | Friend on **J10**, CART_ARM high, MCU-M USART plus RAM stub, cart `WE#` |
-| Reflash an AVR | Off the motherboard. Friend on a breadboard to that chip **UPDI** pin 19, then install |
-| PLDs / color PROM / pad MCU | Off the motherboard (see below) |
+J10 programs a seated cart only. An AVR is reflashed off the motherboard, with the Friend on a breadboard to that chip's **UPDI** pin 19, then installed. PLDs, the color PROM, and the pad MCU are programmed off the motherboard.
 
 Keep each AVR's UPDI pin configured as **UPDI** (not reset/GPIO) so Adafruit's UPDI Friend works on the bench. Adafruit's High Voltage UPDI Friend is only a recovery tool if that fuse is bricked. Pin 19 is not brought to J10.
 
@@ -228,11 +191,7 @@ J10 does not program these. AVR128DB28 parts use Adafruit's UPDI Friend on a bre
 
 ## Controllers
 
-`$7F60` P1 / `$7F61` P2. Bit set = pressed. MCU-S2 samples.
-
-| Bit | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Button | Start | Coin | Y | X | Up | Down | Left | Right |
+`$7F60` is player 1 and `$7F61` is player 2. A set bit means pressed. MCU-S2 samples. From bit 7 down to bit 0 the buttons are Start, Coin, Y, X, Up, Down, Left, and Right.
 
 **Arcade:** J5 and J6 **2x5**, one per player. US2 sits between them. Even pins 2-10 are bits 0-4 (pin 2 = bit 0). J5 odd pins 7 and 9 are GND. J5 odd pin 1 = PA7 (US2 1), pin 3 = PA6 (US2 28), pin 5 = PA5 (US2 27). J6 odd pins 1 and 3 are GND. J6 odd pin 5 = PD2 Y (US2 8), pin 7 = PF6 Start (US2 18), pin 9 = PD3 Coin (US2 9). J5 is Player 1 to the right of US2 (180 deg, even column faces PA0-4). J6 is Player 2 to the left (0 deg, even column faces PC0-3 / PD1). J7 **2x2** (`+5V`/`GND` / `RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6. The JAMMA finger edge shares the J5 and J6 button nets, and the +5 V and GND rails. Picture and sound stay on J2. Footprint `Retr01_Lib:JAMMA-56`. Pitch 3.96 mm. Numbered pads are the parts side. Letter pads are the solder side, skipping G, I, O, and Q. Pin 7 is the key.
 
@@ -272,35 +231,15 @@ HSYNC and VSYNC stay on the beam PLDs. They have no pin on this socket. **J11** 
 
 ## Connectors
 
-| Ref | Locked |
-| --- | --- |
-| J1 | GCT **DCJ200-10-A** barrel 5 V |
-| J2 | Kycon **KMDGX-9S-AS** 9-pin mini-DIN (table above) |
-| J3 | Player 1 TRS. Switchcraft **35RAPC2BVN4** and CLIFF **S4** in one footprint |
-| J4 | Player 2 TRS. Switchcraft **35RAPC2BVN4** and CLIFF **S4** in one footprint |
-| J5 | 2x5 arcade P1 (right of US2) |
-| J6 | 2x5 arcade P2 (left of US2) |
-| J7 | 2x2 power/reset |
-| J10 | 2x2 cart program (Friend DATA on pin 3) |
-| J11 | 2x2 NTSC/PAL shunt. Left pins 1 and 3 are +5 V and NPIN. Right pins 2 and 4 are NPIN and GND |
-| J36 | EDAC **395-036-520-201** cart socket, 36 contacts |
-| Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / FSC (74HCU04 + 74HC74 clock stage). Y3 is **3.579545 MHz** or **4.433618 MHz** |
+**J1** is a GCT **DCJ200-10-A** barrel jack for 5 V. **J2** is the mini-DIN above. **J3** and **J4** are the TRS jacks. **J5** and **J6** are the 2x5 arcade headers. **J7** is the 2x2 reset header. **J10** is the cart program header. **J11** is the NTSC/PAL shunt. **J36** is the EDAC **395-036-520-201** cart socket. **Y1**, **Y2**, and **Y3** are the HC-49/US crystals in the clock section.
 
 Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart OE#/WE#/SDA/SCL series **33 ohm**. Cart **D[7:0]** ties straight to J36. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 
 Layer assignment, keepout, and trace widths: [`pcb.md`](pcb.md). Shared-net failure rules: [`ic-comms-risks.md`](ic-comms-risks.md).
 
-## Light gun (roadmap)
+## Light gun
 
-Same TRS bus as pads. ATtiny85 + photodiode + LM393 + 16-bit beam timer (1 us ticks).
-
-| Byte | Role |
-| --- | --- |
-| Host `0xFF` | Identify. Pad `0x01`. Gun `0x02` |
-| `0x55`/`0xAA` | VBlank poll. Stop bit resets timer. Reply bit5 = Trigger |
-| Host `0x5A` | Timer HI, LO. Miss = `0xFFFF` |
-
-Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash frames + one read. Proposed `$7F80`/`$7F81` (GUN_HI/LO). Scan timing and how one capture names a box: `light-gun.md`.
+The gun uses the same TRS bus as the pads, with an ATtiny85, a photodiode, an LM393, and a 16-bit beam timer at 1 us ticks. Host `0xFF` identifies a pad (`0x01`) or a gun (`0x02`). The VBlank poll is `0x55` and `0xAA`. Host `0x5A` reads the timer. Proposed ports are `$7F80` and `$7F81`. The rest of the scan is in `light-gun.md`.
 
 ## Related
 

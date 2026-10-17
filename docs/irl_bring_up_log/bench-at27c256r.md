@@ -34,7 +34,7 @@ A high on A14 selects the upper 16 KB. Those bytes are `0xFF`. CE# or OE# high t
 
 ## Check
 
-The switch code, left to right, is the kit row in [`video-graphics.md`](../docs/video-graphics.md), starting at 0. Switch 5 is the left bit. Switches 5 through 0 land on pins 5, 6, 7, 8, 9, and 10.
+The switch code, left to right, is the kit row in [`video-graphics.md`](../video-graphics.md), starting at 0. Switch 5 is the left bit. Switches 5 through 0 land on pins 5, 6, 7, 8, 9, and 10.
 
 The output byte is read left to right. Bit 7 is the left bit. Pin 14 is ground and is not part of the byte.
 

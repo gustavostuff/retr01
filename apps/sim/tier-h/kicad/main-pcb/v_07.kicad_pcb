@@ -2002,7 +2002,7 @@
 	(footprint "Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "0cc734ce-6f45-4a23-8d71-911730d56842")
-		(at 104.225 55.725)
+		(at 105.725 55.725)
 		(descr "Through hole straight pin header, 2x02, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x02 2.54mm double row")
 		(property "Reference" "J10"
@@ -4393,7 +4393,7 @@
 	(footprint "Retr01_Lib:BarrelJack_GCT_DCJ200-10-A_Horizontal"
 		(layer "F.Cu")
 		(uuid "19b5a38c-181a-4011-b118-920799f78d31")
-		(at 118.625 61.8 180)
+		(at 121 61.8 180)
 		(descr "Barrel jack connector (5.5 mm outer diameter, 2.05 inner diameter ), https://gct.co/files/drawings/dcj200-10.pdf")
 		(tags "connector barrel jack")
 		(property "Reference" "J1"
