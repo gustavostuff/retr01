@@ -156,8 +156,8 @@ Generates pixel timing, compositor layering, color lookup, and analog video sign
 - Color PROM AT27C256R (U24, DIP-28)
 - Discrete R-2R resistor ladder network (R1 through R11)
 - AV mini-DIN J2 (Kycon KMDGX-9S-AS)
-- Optional composite video encoder: CXA2075M (U725), J11 NTSC/PAL shunt, Y3 (3.579545 MHz or 4.433618 MHz). CVOUT lands on J2 pin 4. The current footprint is still a 2x5 header and is not the SOP-24 pinout
-- Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U725), C19 (U04), C20 (U74)
+- Optional composite video encoder: CXA2075M (U2075, SOP-24), J11 NTSC/PAL shunt, Y3 (3.579545 MHz or 4.433618 MHz), R25. CVOUT lands on J2 pin 4
+- Decoupling capacitors: C8 (UPLDX), C9 (UPLDY), C10 (UPLDV), C16 (U24), C18 (U2075), C19 (U04), C20 (U74)
 - Crystal load capacitors: C21, C22 (Y2), C23, C24 (Y3), C25, C26 (Y1)
 
 **Placement and routing rules:**
@@ -306,13 +306,13 @@ The motherboard houses 20 decoupling sites (19 counted ICs plus the MCP130 super
 | C15 | 100 nF | Ceramic | U574 (Scroll X Latch) | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) | Mount within 5 mm of pin 20 |
 | C16 | 100 nF | Ceramic | U24 (Color PROM) | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) | Mount within 5 mm of pin 28 |
 | C17 | 100 nF | Ceramic | U130 (MCP130 Supervisor) | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) | Mount within 5 mm of pin 2 |
-| C18 | 100 nF | Ceramic | U725 (CXA2075M) | 2x5 header (not the SOP-24 pinout) | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) | Mount adjacent to pin 1 |
+| C18 | 100 nF | Ceramic | U2075 (CXA2075M) | SOP-24 | Pin 12 (VCC1) | Pin 1 (GND1) | Zone 2 (Top-Right) | Mount adjacent to pin 12 |
 | C19 | 100 nF | Ceramic | U04 (74HCU04) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C20 | 100 nF | Ceramic | U74 (74HC74) | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island | Mount within 5 mm of pin 14 |
 | C21 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
 | C22 | 22 pF | Ceramic | Y2 (21.47727 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y2 and U04 |
-| C23 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 1 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
-| C24 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 2 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U725 |
+| C23 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 1 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U2075 |
+| C24 | 22 pF | Ceramic | Y3 (3.579545 MHz FSC) | Discrete | Crystal pin 2 | GND | Zone 2 (Top-Right) | Tight loop with Y3 and U2075 |
 | C25 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 1 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
 | C26 | 22 pF | Ceramic | Y1 (8.000 MHz) | Discrete | Crystal pin 2 | GND | Zone 2 clock island | Tight loop with Y1 and U04 |
 | E1 | 220 uF | Electrolytic | Power Entry Rail | Radial Can | +5V Rail | GND | Zone 1 (Top-Left) | Mount adjacent to J1 / SW1 |

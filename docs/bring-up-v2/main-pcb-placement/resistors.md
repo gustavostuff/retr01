@@ -1,6 +1,6 @@
 # Main PCB: resistors
 
-All **R1-R24** on the motherboard. Axial THT, vertical 2.54 mm pitch. Pin 1 is the source side in the tables below.
+All **R1-R25** on the motherboard. Axial THT, vertical 2.54 mm pitch. Pin 1 is the source side in the tables below.
 
 Values match [`docs/passive_bom.md`](../../passive_bom.md) and `retr01_kicad/tier_h_map.py`. Zones: [README.md](README.md). Pin-level wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../misc/kicad-schematic-tier-h-passives.md).
 
@@ -14,13 +14,13 @@ Cabinet microswitch series **47 ohm** lives on the cabinet harness.
 
 | Ref | Value | From | To |
 |-----|-------|------|----|
-| R1 | 4.00k | U24 `O7` | Red gun (J2 pin 7, U725 RIN) |
+| R1 | 4.00k | U24 `O7` | Red gun (J2 pin 7, U2075 RIN) |
 | R2 | 4.00k | U24 `O6` | Red gun |
 | R3 | 2.00k | U24 `O5` | Red gun |
-| R4 | 4.00k | U24 `O4` | Green gun (J2 pin 3, U725 GIN) |
+| R4 | 4.00k | U24 `O4` | Green gun (J2 pin 3, U2075 GIN) |
 | R5 | 2.00k | U24 `O3` | Green gun |
 | R6 | 2.00k | U24 `O2` | Green gun |
-| R7 | 1.00k | U24 `O1` | Blue gun (J2 pin 1, U725 BIN) |
+| R7 | 1.00k | U24 `O1` | Blue gun (J2 pin 1, U2075 BIN) |
 | R8 | 1.00k | U24 `O0` | Blue gun |
 | R9 | 75 ohm | Red gun | `GND` |
 | R10 | 75 ohm | Green gun | `GND` |
@@ -59,7 +59,7 @@ Cart **D0-D7** tie straight from U1 to J36. Clock dampers sit at the buffer outp
 
 ---
 
-## Pierce feedback R23-R24 (1M)
+## Pierce feedback R23-R25 (1M)
 
 Sit in the [crystal](crystals.md) clock island.
 
@@ -67,3 +67,4 @@ Sit in the [crystal](crystals.md) clock island.
 |-----|--------|---------|------|
 | R23 | U04 pin 5 (3A) and pin 6 (3Y) | Y1 8.000 MHz | Z2 clock island |
 | R24 | U04 pin 1 (1A) and pin 2 (1Y) | Y2 21.47727 MHz | Z2 clock island |
+| R25 | U04 pin 11 (5A) and pin 10 (5Y) | Y3 3.579545 or 4.433618 MHz | Z2 encoder corner |

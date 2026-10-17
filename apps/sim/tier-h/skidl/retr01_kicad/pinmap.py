@@ -235,11 +235,10 @@ M328_XTAL1, M328_XTAL2 = "9", "10"
 M328_DQ = ("2", "3", "4", "5", "6", "11", "12", "13")  # PD0-4, PD5-7
 M328_AUD = ("14", "15", "16", "17", "18", "19", "23", "24")  # PB0-5, PC0-1 = AUD0(LSB)..AUD7(MSB)
 
-# AD724 RGB->NTSC/PAL encoder. Silicon is SOIC-16. U725 is a 2x5 male header,
-# the same footprint as J5/J6. Pin 9 is STND to J11. Pin 10 is a second GND.
-AD724_VCC, AD724_GND, AD724_FIN, AD724_RIN = "1", "2", "3", "4"
-AD724_GIN, AD724_BIN, AD724_COMP, AD724_HSYNC = "5", "6", "7", "8"
-AD724_STND, AD724_GND2 = "9", "10"
+# CXA2075M SOP-24. Pin numbers are the Sony package.
+CXA_GND1, CXA_RIN, CXA_GIN, CXA_BIN = "1", "2", "3", "4"
+CXA_SCIN, CXA_NPIN, CXA_SYNCIN = "6", "7", "10"
+CXA_VCC1, CXA_VCC2, CXA_CVOUT, CXA_GND2 = "12", "19", "20", "24"
 
 # ---------------------------------------------------------------------------
 # Passives / connectors / oscillators (KiCad Device R/C = pins 1,2)
@@ -604,6 +603,6 @@ def power_pin_nums(mpn: str) -> Optional[Tuple[str, str]]:
         "SN74HC74": (HC14_VCC, HC14_GND),
         "SN74HC573": ("20", "10"),
         "SN74HC574": ("20", "10"),
-        "AD724": ("1", "2"),
+        "CXA2075M": ("12", "1"),
     }
     return table.get(mpn)

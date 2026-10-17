@@ -52,10 +52,10 @@ A via may pass through layers 2 and 3. Signal copper does not stop on layers 2 o
 
 Layer 4 analog copper sits in Zone 2:
 
-- Y1 / Y2 Pierce loops at U04 (crystal pins, R23, R24, C21, C22, C25, C26)
+- Y1 / Y2 / Y3 Pierce loops at U04 (crystal pins, R23, R24, R25, C21-C26)
 - Y3 subcarrier into the CXA2075M (C23, C24)
 - DAC gun nodes after R1-R8, plus R9-R11, into J2 pins 7 / 3 / 1
-- U725 RIN / GIN / BIN / COMP and J2 pin 4
+- U2075 RIN / GIN / BIN / COMP and J2 pin 4
 - CSYNC into J2 pin 5 (short, in this corner). HSYNC and VSYNC stay on the beam PLDs
 
 Digital copper on layer 4 stays out of that island. No parallel run beside those nets. A short crossing at 90 degrees is the fallback when a crossing cannot move.
@@ -147,10 +147,11 @@ The S1 triangle stays local. Layer 1 keeps the AD burst on this island.
 | Net | Path |
 |-----|------|
 | Y2 Pierce | U04 pins 1-2, **R24**, **C21**, **C22** |
+| Y3 Pierce | U04 pins 10-13, **R25**, **C23**, **C24**, Y3, U2075 pin 6 |
 | Y1 Pierce | U04 pins 5-6, **R23**, **C25**, **C26** |
 | Y3 / subcarrier | CXA2075M SCIN, **C23**, **C24** |
-| Red / Green / Blue guns | After **R1-R8**, through **R9-R11**, to J2 pins 7 / 3 / 1 and U725 RIN/GIN/BIN |
-| U725 COMP | J2 pin 4 |
+| Red / Green / Blue guns | After **R1-R8**, through **R9-R11**, to J2 pins 7 / 3 / 1 and U2075 RIN/GIN/BIN |
+| U2075 COMP | J2 pin 4 |
 | AUDIO_PWM | US2 PF1 to J2 pins 6 / 8 / 9, Zone 5 corridor only |
 
 U24 O0-O7 arrive on layer 1. The analog net begins at the R1-R8 pad on the gun side.
@@ -169,7 +170,7 @@ U24 O0-O7 arrive on layer 1. The analog net begins at the R1-R8 pad on the gun s
 | `VBL` | Beam Y to UM PD3 (and US1 VBL if wired) |
 | `S1_RDY` | US1 PF6 to UM PF6 |
 | IRQB / NMI / HBLANK / VBLANK | Beam PLDs to CPU / MCU |
-| HSYNC / VSYNC / CSYNC | HSYNC and VSYNC stay on the beam PLDs. CSYNC to J2 pin 5 and to U725 pin 8, inside the analog corner, short |
+| HSYNC / VSYNC / CSYNC | HSYNC and VSYNC stay on the beam PLDs. CSYNC to J2 pin 5 and to U2075 pin 8, inside the analog corner, short |
 | `SEL_SOFT0` / `1` / `2` | Compositor to UM |
 | `CPU_A_SAMPLE` | To UM PD4 |
 | `/SS_S1` / `/SS_S2` | UM to US1 / US2 (selects only, not MOSI/MISO/SCK) |
@@ -245,7 +246,7 @@ Hide **Quiet**, then show only **CPU_A**, then only **CPU_D**, when placing U1, 
 - [`docs/general/hardware.md`](../general/hardware.md): stackup summary and connector pinout
 - [main-pcb-placement/README.md](main-pcb-placement/README.md): zones and part list
 - [main-pcb-placement/ics.md](main-pcb-placement/ics.md): IC pin destinations
-- [main-pcb-placement/resistors.md](main-pcb-placement/resistors.md): R1-R24
+- [main-pcb-placement/resistors.md](main-pcb-placement/resistors.md): R1-R25
 - [main-pcb-placement/crystals.md](main-pcb-placement/crystals.md): Pierce and divider
 - [`docs/bringup/pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md): zone rationale
 - [`docs/bringup/staged-pcb-bringup-guide.md`](../bringup/staged-pcb-bringup-guide.md): fab widths

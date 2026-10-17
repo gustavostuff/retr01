@@ -5,7 +5,7 @@
 
 /*
  * Passive ↔ silicon links from docs/passive_bom.md and tier-a DAC pattern.
- * AD724 analog encoding is stubbed. C17 bypasses the MCP130.
+ * CXA2075M encoding is stubbed. C17 bypasses the MCP130.
  */
 
 static R01sEntity *passive_entity(R01sBoard *board, const char *refdes) {
@@ -90,7 +90,7 @@ static R01sEntity *ic_entity(R01sBoard *board, const char *refdes) {
   if (strcmp(refdes, "U74") == 0) {
     return r01a_sn74hc74_entity(&board->u74);
   }
-  if (strcmp(refdes, "U725") == 0) {
+  if (strcmp(refdes, "U2075") == 0) {
     return r01s_ad724_entity(&board->ad724);
   }
   if (strcmp(refdes, "J8") == 0) {
@@ -156,7 +156,7 @@ static void apply_bypass(R01sBoard *board, R01sPinNetlist *nl) {
       {"C7", "US2", "VDD"},    {"C8", "UPLDX", "VCC"}, {"C9", "UPLDY", "VCC"},
       {"C10", "UPLDV", "VCC"}, {"C11", "U7A", "VCC"},  {"C12", "U7B", "VCC"},
       {"C13", "U7C", "VCC"},   {"C14", "U573", "VCC"}, {"C15", "U574", "VCC"},
-      {"C16", "U24", "VCC"},   {"C17", "U130", "VDD"}, {"C18", "U725", "VCC"},
+      {"C16", "U24", "VCC"},   {"C17", "U130", "VDD"}, {"C18", "U2075", "VCC1"},
       {"C19", "U04", "VCC"},   {"C20", "U74", "VCC"},
   };
   R01sEntity *pwr = r01s_pwr5v_entity(&board->pwr);
@@ -242,21 +242,25 @@ static void apply_clocks(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, passive_entity(board, "C25"), "2", pwr, "GND");
   r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "1", y1, "2");
   r01s_pin_netlist_link(nl, passive_entity(board, "C26"), "2", pwr, "GND");
-  if (u04) {
-    r01s_pin_netlist_link(nl, u04, "5A", pwr, "GND");
-    r01s_pin_netlist_link(nl, u04, "6A", pwr, "GND");
-  }
-
-  /* Y3 3.579545 MHz FSC into AD724 FIN. */
-  if (y3) {
+  /* Y3 3.579545 MHz Pierce on U04 gate 5. Gate 6 buffers the pulse into SCIN. */
+  if (y3 && u04) {
+    R01sEntity *r25 = passive_entity(board, "R25");
+    r01s_pin_netlist_link(nl, y3, "1", u04, "5A");
+    r01s_pin_netlist_link(nl, y3, "2", u04, "5Y");
     r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "1", y3, "1");
     r01s_pin_netlist_link(nl, passive_entity(board, "C23"), "2", pwr, "GND");
     r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "1", y3, "2");
     r01s_pin_netlist_link(nl, passive_entity(board, "C24"), "2", pwr, "GND");
-    r01s_pin_netlist_name_net(nl, y3, "1", "FSC_FIN");
-    r01s_pin_netlist_name_net(nl, y3, "2", "FSC_XTAL");
+    if (r25) {
+      r01s_pin_netlist_link(nl, r25, "1", u04, "5A");
+      r01s_pin_netlist_link(nl, r25, "2", u04, "5Y");
+    }
+    r01s_pin_netlist_link(nl, u04, "6A", u04, "5Y");
+    r01s_pin_netlist_name_net(nl, u04, "5A", "FSC_XTAL_IN");
+    r01s_pin_netlist_name_net(nl, u04, "5Y", "FSC_XTAL_OUT");
+    r01s_pin_netlist_name_net(nl, u04, "6Y", "FSC_CLK");
     if (u725) {
-      r01s_pin_netlist_link(nl, y3, "1", u725, "FIN");
+      r01s_pin_netlist_link(nl, u04, "6Y", u725, "SCIN");
     }
   }
 }
@@ -387,8 +391,10 @@ static void apply_gnd_ties(R01sBoard *board, R01sPinNetlist *nl) {
   tie_gnd(nl, pwr, r01s_i2c_eeprom_entity(&board->cart_module.save), "WP#");
   tie_gnd(nl, pwr, r01s_atf22v10_entity(&board->pld_beam_y), "GND");
   tie_gnd(nl, pwr, r01s_compositor_entity(&board->compositor), "GND");
-  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "GND");
+  tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "GND1");
   tie_gnd(nl, pwr, r01s_ad724_entity(&board->ad724), "GND2");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_ad724_entity(&board->ad724), "VCC1");
+  r01s_pin_netlist_link(nl, pwr, "VDD", r01s_ad724_entity(&board->ad724), "VCC2");
   tie_gnd(nl, pwr, r01a_sn74hcu04_entity(&board->u04), "GND");
   tie_gnd(nl, pwr, r01a_sn74hc74_entity(&board->u74), "GND");
   tie_gnd(nl, pwr, r01s_sn74hc157_entity(&board->mux157[0]), "GND");
@@ -417,9 +423,9 @@ static void apply_rca_av(R01sBoard *board, R01sPinNetlist *nl) {
   R01sEntity *j2 = &board->io.j2;
 
   if (enc) {
-    r01s_pin_netlist_name_net(nl, enc, "HSYNC", "CSYNC");
-    r01s_pin_netlist_name_net(nl, enc, "COMP", "COMPOSITE_OUT");
-    r01s_pin_netlist_link(nl, enc, "COMP", j2, "COMP");
+    r01s_pin_netlist_name_net(nl, enc, "SYNCIN", "CSYNC");
+    r01s_pin_netlist_name_net(nl, enc, "CVOUT", "COMPOSITE_OUT");
+    r01s_pin_netlist_link(nl, enc, "CVOUT", j2, "COMP");
   }
   if (apu) {
     r01s_pin_netlist_link(nl, apu, "AUDIO_PWM", j2, "AUDIO");
@@ -522,7 +528,7 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, &io->j2, "RED", sink, "RIN");
   r01s_pin_netlist_link(nl, &io->j2, "GREEN", sink, "GIN");
   r01s_pin_netlist_link(nl, &io->j2, "BLUE", sink, "BIN");
-  r01s_pin_netlist_link(nl, &io->j2, "CSYNC", r01s_ad724_entity(&board->ad724), "HSYNC");
+  r01s_pin_netlist_link(nl, &io->j2, "CSYNC", r01s_ad724_entity(&board->ad724), "SYNCIN");
   r01s_pin_netlist_link(nl, &io->j2, "VCC", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j3, "TIP", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j3, "RING", s2, "PAD_DATA");
@@ -554,8 +560,8 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, &io->j10, "DATA", mcu_m, "SPI_MISO");
   r01s_pin_netlist_link(nl, &io->j11, "NTSC", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j11, "PAL", pwr, "GND");
-  r01s_pin_netlist_link(nl, &io->j11, "STND", r01s_ad724_entity(&board->ad724), "STND");
-  r01s_pin_netlist_name_net(nl, &io->j11, "STND", "STND");
+  r01s_pin_netlist_link(nl, &io->j11, "NPIN", r01s_ad724_entity(&board->ad724), "NPIN");
+  r01s_pin_netlist_name_net(nl, &io->j11, "NPIN", "NPIN");
 }
 
 void r01s_board_schematic_apply(R01sBoard *board, R01sPinNetlist *nl) {

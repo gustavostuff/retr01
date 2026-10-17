@@ -43,7 +43,7 @@ int main(void) {
     expect_true(strstr(json, "\"fabrication_ready\": false") != NULL, "fabrication flag");
     expect_true(strstr(json, "\"U04\"") != NULL, "U04 in export");
     expect_true(strstr(json, "\"Y1\"") != NULL, "Y1 crystal in export");
-    expect_true(strstr(json, "\"U725\"") != NULL, "AD724 in export");
+    expect_true(strstr(json, "\"U2075\"") != NULL, "AD724 in export");
     expect_true(strstr(json, "COMPOSITE_OUT") != NULL, "composite net name");
     expect_true(strstr(json, "AUDIO_OUT") != NULL, "audio net name");
     expect_true(strstr(json, "KMDGX-9S-AS") != NULL, "J2 mini-DIN in export");

@@ -54,7 +54,7 @@ MOBO_COUNTED_IC_REFDES = frozenset(
         "UPLDX",
         "UPLDY",
         "UPLDV",
-        "U725",
+        "U2075",
         "U04",
         "U74",
     }

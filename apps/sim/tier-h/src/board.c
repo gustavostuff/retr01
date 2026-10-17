@@ -2273,7 +2273,7 @@ static void island_video_init(R01sIsland *island) {
     R01sIslandVideoImpl *impl = (R01sIslandVideoImpl *)island->impl;
     r01s_compositor_init(impl->comp, "UPLDV");
     r01s_at27c256r_init(impl->prom, "U24");
-    r01s_ad724_init(impl->ad724, "U725");
+    r01s_ad724_init(impl->ad724, "U2075");
     r01s_rca_jack_init(impl->j9, "J9", "RCJ-014");
     r01s_video_sink_init(impl->sink, "SCR1");
     r01s_video_sink_set_palette(impl->sink, video_sink_kit_palette);

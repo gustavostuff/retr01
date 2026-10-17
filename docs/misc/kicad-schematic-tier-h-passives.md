@@ -42,7 +42,7 @@ Pattern for each row: **C*n* pin 1** to IC **VCC/VDD**, **C*n* pin 2** to **GND*
 | C15 | U574 | 74HC574 Scroll X Latch | DIP-20 | Pin 20 (VCC) | Pin 10 (GND) | Zone 3 (Middle-Left) |
 | C16 | U24 | AT27C256R Color PROM | DIP-28 | Pin 28 (VCC) | Pin 14 (GND) | Zone 2 (Top-Right) |
 | C17 | U130 | MCP130 Reset Supervisor | TO-92 | Pin 2 (VDD) | Pin 3 (VSS) | Zone 1 (Top-Left) |
-| C18 | U725 | CXA2075M composite encoder | 2x5 header | Pin 1 (+5 V) | Pin 2 (GND) | Zone 2 (Top-Right) |
+| C18 | U2075 | CXA2075M composite encoder | SOP-24 | Pin 12 (VCC1) | Pin 1 (GND1) | Zone 2 (Top-Right) |
 | C19 | U04 | 74HCU04 clock inverter | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 | C20 | U74 | 74HC74 DOT divider | DIP-14 | Pin 14 (VCC) | Pin 7 (GND) | Zone 2 clock island |
 
@@ -62,7 +62,7 @@ Wire **GND** to each part ground pin (in addition to bypass return):
 | UPLDY, UPLDV | GND |
 | U40, U50 | VSS / GND |
 
-Tie **U725** analog ground and **SCR1** / DAC return per video section in wiring doc.
+Tie **U2075** analog ground and **SCR1** / DAC return per video section in wiring doc.
 
 ---
 
@@ -99,7 +99,7 @@ U04 pin 14 is VCC. U04 pin 7 is GND. U74 pin 14 is VCC. U74 pin 7 is GND.
 | U04 pin 9 (4A) | U04 pin 6 (3Y) |
 | U04 pin 8 (4Y) | **R12** pin 1 (PHI2 to U1) |
 
-Unused U04 inputs pin 11 (5A) and pin 13 (6A) sit on `U04_SPARE_IN`, strapped to GND in the U04 footprint.
+U04 pins 11 and 10 are the Y3 Pierce. Pin 13 follows pin 10. Pin 12 drives U2075 SCIN. **R25** (1 Mohm) sits across pins 11 and 10.
 
 ### Y3 (3.579545 MHz, CXA2075M subcarrier)
 
@@ -107,7 +107,7 @@ Unused U04 inputs pin 11 (5A) and pin 13 (6A) sit on `U04_SPARE_IN`, strapped to
 | --- | --- |
 | C23 pin 1 / pin 2 | Y3 pin 1 / GND |
 | C24 pin 1 / pin 2 | Y3 pin 2 / GND |
-| Y3 | Subcarrier toward the CXA2075M SCIN pin. The current export still names that net on the 2x5 header, which is not the SOP-24 pinout |
+| Y3 | Pierce crystal on U04 gate 5. Gate 6 drives CXA2075M SCIN (pin 6). R25 is 1 Mohm across the crystal |
 
 ---
 
@@ -134,7 +134,7 @@ Termination to GND (75 ohm, ~0.7 Vpp):
 | R10 | 75 ohm | **G** gun node | GND |
 | R11 | 75 ohm | **B** gun node | GND |
 
-**J2** pins 7 / 3 / 1 tie to **R/G/B** gun nodes (after resistors, per [`hardware.md`](../general/hardware.md) J2 table). **U725** RGB inputs share the same analog nets when populated.
+**J2** pins 7 / 3 / 1 tie to **R/G/B** gun nodes (after resistors, per [`hardware.md`](../general/hardware.md) J2 table). **U2075** RGB inputs share the same analog nets when populated.
 
 Unused **U24** address pins: tie to **GND** on schematic ([`hardware.md`](../general/hardware.md)).
 

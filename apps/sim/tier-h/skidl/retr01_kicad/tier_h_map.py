@@ -25,7 +25,7 @@ REFDES: dict[str, Res] = {
     "UPLDX": ("ATF22V10", fp.DIP24),
     "UPLDY": ("ATF22V10", fp.DIP24),
     "UPLDV": ("ATF22V10", fp.DIP24),
-    "U725": ("AD724", fp.AD724_DIP),
+    "U2075": ("CXA2075M", fp.SOP24),
     "U04": ("74HCU04", fp.DIP14_74HCU04),
     "U74": ("74HC74", fp.DIP14_74HC74),
     "J1": ("BARREL_5V", fp.BARREL),
@@ -69,7 +69,7 @@ PART: dict[str, Res] = {
     "74HC74": ("74HC74", fp.DIP14_74HC74),
     "SN74HC74": ("74HC74", fp.DIP14_74HC74),
     "XTAL": ("XTAL", fp.XTAL),
-    "AD724": ("AD724", fp.AD724_DIP),
+    "CXA2075M": ("CXA2075M", fp.SOP24),
     "HDR-2x5": ("ARCADE_P1", fp.HDR2x5),
     "HDR-2x2": ("CART_PROG_HDR", fp.HDR2x2),
     "HDR-1x3": ("STND_HDR", fp.HDR1x3),
@@ -105,6 +105,7 @@ RESISTOR_REFDES: dict[str, str] = {
     "R22": "R_10K",
     "R23": "R_1M",
     "R24": "R_1M",
+    "R25": "R_1M",
 }
 
 CAP_REFDES: dict[str, str] = {f"C{i}": "C_100N" for i in range(1, 21)}

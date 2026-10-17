@@ -41,7 +41,7 @@ One per IC, within 5 mm of VCC. Pin 1 to the IC power pin, pin 2 to `GND`.
 | C15 | U574 | 20 | Z3 |
 | C16 | U24 | 28 | Z2 |
 | C17 | U130 | 2 | Z1 |
-| C18 | U725 | 1 | Z2 |
+| C18 | U2075 | 1 | Z2 |
 | C19 | U04 | 14 | Z2 clock island |
 | C20 | U74 | 14 | Z2 clock island |
 

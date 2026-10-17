@@ -4,13 +4,9 @@
 #include "retr01_sim/entity.h"
 
 /*
- * Analog Devices AD724 RGB-to-NTSC/PAL encoder (U725).
- * Silicon is SOIC-16. The motherboard footprint is a 2x5 male header.
- * Pins 1-9 are VCC, GND, FIN, R, G, B, COMP, CSYNC, and STND (J11).
- * Pin 10 is a second GND. The small board joins the two supplies and the
- * two grounds, holds ENCD and VSYNC high, holds SELECT low, and leaves
- * CRMA and LUMA off the motherboard.
- * Logic stub: COMP is a video-present flag. No NTSC waveform.
+ * Sony CXA2075M RGB encoder (U2075). SOP-24.
+ * Used pins: GND1, RIN, GIN, BIN, SCIN, NPIN, SYNCIN, VCC1, VCC2, CVOUT, GND2.
+ * Logic stub: CVOUT is a video-present flag. No NTSC waveform.
  */
 typedef struct R01sAd724 {
     R01sEntity base;

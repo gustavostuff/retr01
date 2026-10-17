@@ -481,7 +481,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     part_factory = lambda r: part_for_refdes(r, ref_index.get(r) or {"max_num": 0, "parts": set()})
     ensure_connector_parts(parts, part_factory)
     ensure_clock_parts(parts, part_factory)
-    ensure_part("U725")
+    ensure_part("U2075")
     ensure_part("U130")
     if "+5V" not in nets_map:
         nets_map["+5V"] = Net("+5V")

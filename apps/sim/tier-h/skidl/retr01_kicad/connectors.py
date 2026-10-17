@@ -142,7 +142,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             video = _find_net_for_part_pin(nets_map, r_ref, "1")
             if video is not None:
                 pin_connect(parts["J2"], "", j2_pin, video)
-        comp = _find_net_by_node(nets_map, "U725", "COMP")
+        comp = _find_net_by_node(nets_map, "U2075", "CVOUT")
         pin_connect(
             parts["J2"],
             "",

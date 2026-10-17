@@ -30,8 +30,8 @@ HDR2x2 = f"{_R}:PinHeader_2x02_P2.54mm_Vertical"
 HDR2x3 = f"{_R}:PinHeader_2x03_P2.54mm_Vertical"
 HDR2x4 = f"{_R}:PinHeader_2x04_P2.54mm_Vertical"
 HDR2x5 = f"{_R}:PinHeader_2x05_P2.54mm_Vertical"
-# U725 uses the same 2x5 male header as J5 and J6. Pin 10 is a second GND.
-AD724_DIP = HDR2x5
+# CXA2075M. Sony SOP-24P-L01, 7.5 x 15.4 mm, 1.27 mm pitch.
+SOP24 = f"{_R}:SOP-24_7.5x15.4mm_P1.27mm"
 HDR6 = f"{_R}:PinHeader_1x06_P2.54mm_Vertical"
 HDR1x8 = f"{_R}:PinHeader_1x08_P2.54mm_Vertical"
 # Kycon recommended layout, connector facing up. Signal pads mirrored in X: pin 1 at +1.30 mm.

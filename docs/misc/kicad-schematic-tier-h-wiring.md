@@ -191,9 +191,9 @@ Map schematic nets to EDAC pins ([`hardware.md`](../general/hardware.md) cart ta
 
 ---
 
-## 13. Optional **U725** (CXA2075M)
+## 13. Optional **U2075** (CXA2075M)
 
-When populated: RGB inputs from DAC nodes, **FSC_XTAL** from **Y3**, CSYNC from the beam PLDs, composite out to **J2** pin 4. Follow the CXA2075M datasheet for the remaining caps (beyond **C18** bypass) and for YTRAP. Tier H sim does not model the CXA2075M ([`schematic-netlist-tier-h.md`](../bringup/schematic-netlist-tier-h.md) gaps). The current export header is not the SOP-24 pinout.
+When populated: RGB inputs from DAC nodes, CSYNC from the beam PLDs into **SYNCIN**, composite **CVOUT** to **J2** pin 4. **Y3** is the Pierce crystal on **U04** gates 5 and 6. Gate 6 drives **SCIN**. **R25** is 1 Mohm across that crystal. **YTRAP** is open (internal trap). **C18** bypasses **VCC1**. The sim stub flags **CVOUT** as video-present and does not build an NTSC waveform.
 
 ---
 

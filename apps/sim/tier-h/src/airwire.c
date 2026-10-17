@@ -219,6 +219,7 @@ void r01s_air_style(const char *net_name, const R01sAirEnd *ends, int n, R01sAir
             color = 1;
         }
         if (pin_is(pin, "RIN") || pin_is(pin, "GIN") || pin_is(pin, "BIN") || pin_is(pin, "COMP") ||
+            pin_is(pin, "CVOUT") ||
             (ref_is(ref, "U24") && pin_is_prom_o(pin))) {
             analog = 1;
         }
@@ -291,10 +292,11 @@ static const struct {
     {"R12", R01S_ZONE_Z2},  {"R13", R01S_ZONE_Z2},  {"R14", R01S_ZONE_SPINE}, {"R15", R01S_ZONE_SPINE},
     {"R16", R01S_ZONE_M},   {"R17", R01S_ZONE_M},   {"R18", R01S_ZONE_Z5},  {"R19", R01S_ZONE_M},
     {"R20", R01S_ZONE_M},   {"R21", R01S_ZONE_CPU}, {"R22", R01S_ZONE_Z1},  {"R23", R01S_ZONE_Z2},
+    {"R25", R01S_ZONE_Z2},
     {"R24", R01S_ZONE_Z2},  {"U04", R01S_ZONE_Z2},
     {"U1", R01S_ZONE_CPU},  {"U130", R01S_ZONE_Z1}, {"U24", R01S_ZONE_Z2},  {"U3", R01S_ZONE_Z1},
     {"U41", R01S_ZONE_Z4},  {"U573", R01S_ZONE_Z4}, {"U574", R01S_ZONE_Z3}, {"U6", R01S_ZONE_Z3},
-    {"U725", R01S_ZONE_Z2}, {"U74", R01S_ZONE_Z2},  {"U7A", R01S_ZONE_Z3},  {"U7B", R01S_ZONE_Z3},
+    {"U2075", R01S_ZONE_Z2}, {"U74", R01S_ZONE_Z2},  {"U7A", R01S_ZONE_Z3},  {"U7B", R01S_ZONE_Z3},
     {"U7C", R01S_ZONE_Z3},  {"UM", R01S_ZONE_M},    {"UPLDV", R01S_ZONE_Z2}, {"UPLDX", R01S_ZONE_Z2},
     {"UPLDY", R01S_ZONE_Z2}, {"US1", R01S_ZONE_Z4}, {"US2", R01S_ZONE_Z5},  {"Y1", R01S_ZONE_Z2},
     {"Y2", R01S_ZONE_Z2},   {"Y3", R01S_ZONE_Z2},

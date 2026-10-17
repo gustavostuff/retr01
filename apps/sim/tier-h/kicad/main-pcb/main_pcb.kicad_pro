@@ -538,7 +538,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "STND"
+        "pattern": "NPIN"
       },
       {
         "netclass": "Quiet",
@@ -614,14 +614,6 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "FSC_FIN"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "FSC_XTAL"
-      },
-      {
-        "netclass": "Quiet",
         "pattern": "J10_PWR_NC"
       },
       {
@@ -654,7 +646,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P2_TO_US2_P22"
+        "pattern": "SIG_J5_P1_TO_US2_P1"
       },
       {
         "netclass": "Quiet",
@@ -666,7 +658,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P6_TO_US2_P24"
+        "pattern": "SIG_J5_P5_TO_US2_P27"
       },
       {
         "netclass": "Quiet",
@@ -678,19 +670,15 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P2_TO_US2_P2"
+        "pattern": "SIG_J6_P5_TO_US2_P8"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P4_TO_US2_P3"
+        "pattern": "SIG_J6_P7_TO_US2_P18"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P6_TO_US2_P4"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J6_P8_TO_US2_P5"
+        "pattern": "SIG_J6_P9_TO_US2_P9"
       },
       {
         "netclass": "Quiet",
@@ -718,23 +706,27 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P18_TO_J6_P7"
+        "pattern": "SIG_US2_P22_TO_J5_P2"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P1_TO_J5_P1"
+        "pattern": "SIG_US2_P24_TO_J5_P6"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P27_TO_J5_P5"
+        "pattern": "SIG_US2_P2_TO_J6_P2"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P8_TO_J6_P5"
+        "pattern": "SIG_US2_P3_TO_J6_P4"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P9_TO_J6_P9"
+        "pattern": "SIG_US2_P4_TO_J6_P6"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_US2_P5_TO_J6_P8"
       },
       {
         "netclass": "Quiet",
@@ -747,10 +739,6 @@
       {
         "netclass": "Quiet",
         "pattern": "VIDEO_BLUE"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "VIDEO_CSYNC"
       },
       {
         "netclass": "Quiet",

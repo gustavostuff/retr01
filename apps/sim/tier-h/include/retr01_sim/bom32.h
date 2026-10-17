@@ -4,7 +4,7 @@
 /*
  * Mounted VIS_IC parts, excluding pad ATtiny85s.
  * Mounted VIS_IC parts, excluding pad ATtiny85s.
- * Includes U04/U74 clock logic and U725 AD724.
+ * Includes U04/U74 clock logic and U2075 CXA2075M.
  */
 #define R01S_BOM_HC157_N 3
 #define R01S_BOM_PLD_N   3

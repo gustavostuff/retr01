@@ -12,7 +12,7 @@ Board-edge and cart I/O. Zones and sequence: [README.md](README.md). Series resi
 | J6 | Arcade player 2, 2x5 |
 | J7 | Cabinet power and reset, 2x2 |
 | J10 | Cart program header, 2x2 |
-| J11 | NTSC/PAL shunt, 1x3, beside U725 |
+| J11 | NTSC/PAL shunt, 1x3, beside U2075 |
 | J36 | Cart socket, 36 contacts |
 
 J3 is player 1. J4 is player 2. Each footprint carries both jack outlines. Stuff one size per player. Tip, ring, and sleeve are the same nets on both outlines.
@@ -59,7 +59,7 @@ Pin numbers are the recommended PCB layout with the connector facing up. HSYNC a
 | 1 | Blue (DAC) |
 | 2 | `+5V` |
 | 3 | Green (DAC) |
-| 4 | U725 `COMP` |
+| 4 | U2075 `COMP` |
 | 5 | CSYNC |
 | 6 | US2 `AUDIO_PWM` (PF1) |
 | 7 | Red (DAC) |
@@ -67,7 +67,7 @@ Pin numbers are the recommended PCB layout with the connector facing up. HSYNC a
 | 9 | same audio net as pin 6 |
 | S | `GND` (three shield holes) |
 
-DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md) **U725**.
+DAC guns are [resistors.md](resistors.md) **R1-R11**. Encoder is [ics.md](ics.md) **U2075**.
 
 ---
 
@@ -122,9 +122,9 @@ U130 holds the supervisor path on RESB ([ics.md](ics.md)).
 
 ---
 
-## J11, NTSC/PAL shunt 1x3 (beside U725), Zone 2
+## J11, NTSC/PAL shunt 1x3 (beside U2075), Zone 2
 
-1x3 male, 2.54 mm. Pin 1 at the top. Pin 2 is NPIN on the CXA2075M. The current U725 footprint is still a 2x5 header, and that header is not the SOP-24 pinout.
+1x3 male, 2.54 mm. Pin 1 at the top. Pin 2 is NPIN on the CXA2075M (SOP-24 pin 7).
 
 | Pin | Net | Shunt |
 |----:|-----|-------|

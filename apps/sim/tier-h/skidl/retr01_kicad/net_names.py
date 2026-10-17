@@ -56,8 +56,10 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U74", "4"): "U74_PRE_CLR#",
     ("U74", "10"): "U74_PRE_CLR#",
     ("U74", "13"): "U74_PRE_CLR#",
-    ("U04", "11"): "U04_SPARE_IN",
-    ("U04", "13"): "U04_SPARE_IN",
+    ("U04", "11"): "FSC_XTAL_IN",
+    ("U04", "10"): "FSC_XTAL_OUT",
+    ("U04", "13"): "FSC_XTAL_OUT",
+    ("U04", "12"): "FSC_CLK",
 
     # Cartridge edge connector (J36) — interleaved A/B (mobo_io + EDAC footprint)
     ("J36", "5"): "CART_SDA",
@@ -193,10 +195,10 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U04", "2"): "XTAL_21M_OUT",
     ("U04", "5"): "XTAL_10M_IN",
     ("U04", "6"): "XTAL_10M_OUT",
-    ("U725", "3"): "FSC_FIN",
-    ("U725", "7"): "COMPOSITE_OUT",
-    ("U725", "9"): "STND",
-    ("J11", "2"): "STND",
+    ("U2075", "6"): "FSC_CLK",
+    ("U2075", "20"): "COMPOSITE_OUT",
+    ("U2075", "7"): "NPIN",
+    ("J11", "2"): "NPIN",
 
     # Connectors
     ("J2", "1"): "VIDEO_BLUE",
@@ -239,14 +241,15 @@ _PRESERVED_NETS = frozenset(
         "DOT",
         "DOT_INV",
         "FSC_XTAL",
-        "FSC_FIN",
-        "STND",
+        "FSC_XTAL_IN",
+        "FSC_XTAL_OUT",
+        "FSC_CLK",
+        "NPIN",
         "CSYNC",
         "HSYNC",
         "VSYNC",
         "PHI2",
         "U74_PRE_CLR#",
-        "U04_SPARE_IN",
     }
 )
 
@@ -260,7 +263,7 @@ def _suggest_name_for_pins(pins: list) -> Optional[str]:
         "US1",
         "US2",
         "U04",
-        "U725",
+        "U2075",
         "U24",
         "U3",
         "U6",

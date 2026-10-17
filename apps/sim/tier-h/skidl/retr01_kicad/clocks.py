@@ -6,14 +6,12 @@ documented in docs/general/hardware.md and docs/passive_bom.md:
 - Dot Clock (5.369318 MHz): Y2 crystal (21.47727 MHz) + 74HCU04 inverters (Gates 1 & 2)
   + R24 (1M) + C21/C22 + SN74HC74 dual D flip-flop divider (Stage 1 divide-by-2 to 10.738 MHz,
   Stage 2 divide-by-2 to 5.369 MHz DOT clock)
-- FSC Clock (3.579545 MHz): Y3 crystal + C23/C24 directly to AD724 on-chip oscillator pins
+- FSC Clock (3.579545 MHz): Y3 crystal + 74HCU04 gates 5 and 6 + R25 (1M) + C23/C24, pulse into CXA2075M SCIN
 """
 
 from __future__ import annotations
 
 from typing import Callable, Dict
-
-from .power_rails import ensure_nc_net
 
 CLOCK_REFDES = (
     "U04",
@@ -23,6 +21,7 @@ CLOCK_REFDES = (
     "Y3",
     "R23",
     "R24",
+    "R25",
     "C21",
     "C22",
     "C23",
@@ -129,15 +128,10 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         pin_connect(parts["U04"], "", "6", xtal_cpu_out)
         pin_connect(parts["U04"], "", "9", xtal_cpu_out)
         pin_connect(parts["U04"], "", "8", phi2)
-        # Spare gates 5 and 6: tie inputs inactive (GND), outputs NC
-        u04_spare = _ensure_net(nets_map, "U04_SPARE_IN")
+        # Gates 5 and 6 are the FSC Pierce and buffer. Disconnect any spare strap first.
         for pin in parts["U04"].pins:
-            if str(getattr(pin, "num", "")) in ("11", "13"):
+            if str(getattr(pin, "num", "")) in ("10", "11", "12", "13"):
                 pin.disconnect()
-        pin_connect(parts["U04"], "", "11", u04_spare)   # 5A
-        pin_connect(parts["U04"], "", "10", ensure_nc_net(nets_map, "U04", "10"))  # 5Y
-        pin_connect(parts["U04"], "", "13", u04_spare)   # 6A
-        pin_connect(parts["U04"], "", "12", ensure_nc_net(nets_map, "U04", "12"))  # 6Y
     if "Y1" in parts:
         pin_connect(parts["Y1"], "", "1", xtal_cpu_in)
         pin_connect(parts["Y1"], "", "2", xtal_cpu_out)
@@ -152,18 +146,28 @@ def wire_clocks(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         pin_connect(parts["C26"], "", "2", gnd)
 
     # -----------------------------------------------------------------------
-    # 3. FSC subcarrier crystal Y3 (3.579545 MHz to AD724 FIN and FSC_XTAL)
+    # 3. FSC subcarrier. CXA2075M SCIN takes a pulse. U04 gate 5 is the Pierce.
+    #    Gate 6 buffers it onto SCIN.
     # -----------------------------------------------------------------------
-    fsc_xtal = _ensure_net(nets_map, "FSC_XTAL")
-    fin = _ensure_net(nets_map, "FSC_FIN")
+    fsc_in = _ensure_net(nets_map, "FSC_XTAL_IN")
+    fsc_out = _ensure_net(nets_map, "FSC_XTAL_OUT")
+    fsc_clk = _ensure_net(nets_map, "FSC_CLK")
+    if "U04" in parts:
+        pin_connect(parts["U04"], "", "11", fsc_in)   # 5A
+        pin_connect(parts["U04"], "", "10", fsc_out)  # 5Y
+        pin_connect(parts["U04"], "", "13", fsc_out)  # 6A
+        pin_connect(parts["U04"], "", "12", fsc_clk)  # 6Y
     if "Y3" in parts:
-        pin_connect(parts["Y3"], "", "1", fin)
-        pin_connect(parts["Y3"], "", "2", fsc_xtal)
+        pin_connect(parts["Y3"], "", "1", fsc_in)
+        pin_connect(parts["Y3"], "", "2", fsc_out)
+    if "R25" in parts:
+        pin_connect(parts["R25"], "", "1", fsc_in)
+        pin_connect(parts["R25"], "", "2", fsc_out)
     if "C23" in parts:
-        pin_connect(parts["C23"], "", "1", fin)
+        pin_connect(parts["C23"], "", "1", fsc_in)
         pin_connect(parts["C23"], "", "2", gnd)
     if "C24" in parts:
-        pin_connect(parts["C24"], "", "1", fsc_xtal)
+        pin_connect(parts["C24"], "", "1", fsc_out)
         pin_connect(parts["C24"], "", "2", gnd)
-    if "U725" in parts:
-        pin_connect(parts["U725"], "", "3", fin)
+    if "U2075" in parts:
+        pin_connect(parts["U2075"], "", "6", fsc_clk)

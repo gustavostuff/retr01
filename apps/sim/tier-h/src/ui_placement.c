@@ -2374,7 +2374,7 @@ static void floor_pack_zone2(const R01sUi *ui, const int *ids, int n, int *rx, i
     static const char *const dac_a[] = {"R1", "R2", "R3", "R4"};
     static const char *const dac_b[] = {"R5", "R6", "R7", "R8"};
     static const char *const dac_c[] = {"R9", "R10", "R11", "J2"};
-    static const char *const ntsc[] = {"Y3", "C23", "C24", "U725", "C18"};
+    static const char *const ntsc[] = {"Y3", "C23", "C24", "R25", "U2075", "C18"};
     uint8_t used[R01S_BOARD_MAX_CHIPS];
     int x;
     int y;

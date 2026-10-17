@@ -133,10 +133,10 @@ static void init_j7(R01sEntity *e) {
 }
 
 static void init_j11(R01sEntity *e) {
-    /* 1x3: 1 = +5 V (NTSC), 2 = STND, 3 = GND (PAL). Shunt is off the netlist. */
+    /* 1x3: 1 = +5 V (NTSC), 2 = NPIN, 3 = GND (PAL). Shunt is off the netlist. */
     io_begin(e, "HDR-1x3", "J11");
     io_pin(e, 1, "NTSC");
-    io_pin(e, 2, "STND");
+    io_pin(e, 2, "NPIN");
     io_pin(e, 3, "PAL");
     io_header(e, 3, 1);
 }

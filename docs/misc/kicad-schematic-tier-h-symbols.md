@@ -37,7 +37,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U7A**, **U7B**, **U7C** | SN74HC157 | `74xx_74LS157` (same DIP pinout) | DIP-16 |
 | **U573** | SN74HC573 | `74xx_74LS573` | DIP-20 |
 | **U574** | SN74HC574 | `74xx_74LS574` | DIP-20 |
-| **U725** | CXA2075M | Current export is a 2x5 header. Those pin names are not the SOP-24 pinout | **2x5** `Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical` |
+| **U2075** | CXA2075M | SOP-24 pin names match the Sony package | `Retr01_Lib:SOP-24_7.5x15.4mm_P1.27mm` |
 | **J11** | NTSC/PAL shunt | +5 V, NPIN, GND | `Retr01_Lib:PinHeader_1x03_P2.54mm_Vertical` |
 | **U04** | 74HCU04 | `74xx_74HC04` / unbuffered hex inverter | DIP-14 |
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
@@ -50,7 +50,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **J7** | Cabinet power/reset 2x2 | Pin header | 2x2 |
 | **J10** | Cart program 2x2 | Pin header | 2x2 (`PinHeader_2x02_P2.54mm_Vertical`) |
 | **J36** | Cart socket 2x18 | Custom | `EDAC_395_MoboSocket_2x18_2.54x5.08mm` |
-| **C1-C26**, **R1-R24**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |
+| **C1-C26**, **R1-R25**, **E1** | Passives | `Device:C`, `Device:R`, polarized bulk | THT ceramic / axial |
 
 Cart flash **U40** and EEPROM **U50** belong on the **cart PCB** schematic. The motherboard sheet stops at **J36** (see wiring doc).
 

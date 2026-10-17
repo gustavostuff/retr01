@@ -1,10 +1,10 @@
 # Main PCB: crystals and clock island
 
-Three HC-49/US cans in Zone 2 (top-right). **Y1** and **Y2** form analog Pierce loops on **U04**. **Y3** is the subcarrier into the CXA2075M. The current netlist still names that net on the 2x5 header.
+Three HC-49/US cans in Zone 2 (top-right). **Y1**, **Y2**, and **Y3** are Pierce loops on **U04**. **Y3** uses gates 5 and 6. Gate 6 drives the CXA2075M **SCIN** pin.
 
 Each crystal pin copper run is a few millimeters. The whole loop (can, both load caps, feedback part if present, and the two IC pads) stays inside about **20 mm**. Those nets sit on **layer 4**. Digital clocks leave the island after the buffer.
 
-Load-cap values: [capacitors.md](capacitors.md). Feedback **R23/R24** and series **R12/R13**: [resistors.md](resistors.md). Layer rules: [main-pcb-layers.md](../main-pcb-layers.md). Zones: [README.md](README.md).
+Load-cap values: [capacitors.md](capacitors.md). Feedback **R23/R24/R25** and series **R12/R13**: [resistors.md](resistors.md). Layer rules: [main-pcb-layers.md](../main-pcb-layers.md). Zones: [README.md](README.md).
 
 ---
 
@@ -20,7 +20,7 @@ Y1 and Y2 also need a 1 M ohm across the same two U04 pads as the crystal. That 
 |------|----------------------|----------------------|--------|
 | Y1 | U04 pin 5, **C25** pin 1, **R23** | U04 pin 6, **C26** pin 1, **R23** | Few mm per pin. Loop under 20 mm |
 | Y2 | U04 pin 1, **C21** pin 1, **R24** | U04 pin 2, **C22** pin 1, **R24** | Few mm per pin. Loop under 20 mm |
-| Y3 | Subcarrier toward the CXA2075M, **C23** pin 1 | **C24** pin 1 (`FSC_XTAL`) | Few mm per pin. Can beside U725 |
+| Y3 | Subcarrier toward the CXA2075M, **C23** pin 1 | **C24** pin 1 (`FSC_XTAL`) | Few mm per pin. Can beside U2075 |
 
 No via in a Pierce or FSC tank if the pads can share layer 4. No digital bus under or beside those pads. No long stub off a crystal pin.
 
@@ -68,7 +68,7 @@ U74 divides by 4. **DOT** leaves U74 pin 9 through **R13** to UPLDX. That digita
 
 ## Y3, subcarrier (CXA2075M)
 
-Can stands next to **U725**, not next to U04. Y3 is the subcarrier into the CXA2075M **SCIN** pin. The can is **3.579545 MHz** when **J11** is shunted NTSC, and **4.433618 MHz** when **J11** is shunted PAL. **C23** and **C24** stay 22 pF for either can. The current netlist still names that net on the 2x5 header, which is not the SOP-24 pin.
+The can stays in the encoder corner, next to **U2075**. The loop is **U04** gate 5: crystal across pins 11 and 10, **C23** and **C24** to GND, **R25** (1 Mohm) across the crystal. Gate 6 (pins 13 and 12) buffers the pulse into **U2075** pin 6 (**SCIN**). The can is **3.579545 MHz** when **J11** is shunted NTSC, and **4.433618 MHz** when **J11** is shunted PAL. **C23** and **C24** stay 22 pF for either can.
 
 ---
 
@@ -85,8 +85,10 @@ Clock inverter. Bypass **C19** at pin 14.
 | 5 | 3A, Y1 Pierce | Y1 pin 1, **C25**, **R23** |
 | 6 | 3Y, Y1 Pierce | Y1 pin 2, **C26**, **R23**, U04 pin 9 |
 | 9 to 8 | PHI2 buffer | **R12** to U1 pin 37 |
-| 11, 13 | spare inputs | `U04_SPARE_IN`, strapped to GND in the U04 footprint |
-| 10, 12 | spare outs | NC |
+| 11 | 5A, Y3 Pierce | Y3 pin 1, **C23**, **R25** |
+| 10 | 5Y, Y3 Pierce | Y3 pin 2, **C24**, **R25**, U04 pin 13 |
+| 13 | 6A, FSC buffer | U04 pin 10 |
+| 12 | 6Y, FSC buffer | U2075 pin 6 (**SCIN**) |
 
 ---
 

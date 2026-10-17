@@ -16,7 +16,7 @@ Pin-level R/C wiring: [`docs/misc/kicad-schematic-tier-h-passives.md`](../../mis
 | [main-pcb-layers.md](../main-pcb-layers.md) | Layer 1 vs layer 4 assignment, analog keepout, underpasses |
 | [connectors.md](connectors.md) | J1 through J10, and J36 |
 | [ics.md](ics.md) | CPU, RAM, PLDs, MCUs, clock logic, encoder, glue |
-| [resistors.md](resistors.md) | R1-R24 (DAC, series 33 ohm, pull-ups, Pierce 1M) |
+| [resistors.md](resistors.md) | R1-R25 (DAC, series 33 ohm, pull-ups, Pierce 1M) |
 | [capacitors.md](capacitors.md) | E1 bulk, C1-C20 bypass, C21-C26 crystal loads |
 | [crystals.md](crystals.md) | Y1, Y2, Y3 and the clock-island cluster |
 
@@ -40,7 +40,7 @@ BOTTOM (front)     J3/J4 TRS (3.5 mm and 6.35 mm) | J6/US2/J5 arcade | J7 cab
 |------|------|-------|
 | **Z1** | Top-left | U3, U130, E1, C2, C17, **R22** |
 | **CPU** | Top-center | U1, C1, **R21**, directly above J36 |
-| **Z2** | Top-right | Clock island (Y1-Y3, R12/R13/R23/R24, C19/C20/C21-C26), PLDs, U24, DAC R1-R11, J2, U725 |
+| **Z2** | Top-right | Clock island (Y1-Y3, R12/R13/R23/R24/R25, C19/C20/C21-C26), PLDs, U24, DAC R1-R11, J2, U2075 |
 | **CART** | Center | J36, cart series **R14-R17** |
 | **Z3** | Middle-left | U6, U7A/B/C, U574 and their Cs |
 | **HUB** | Middle-center | UM, C5, I2C series **R16/R17**, pull-ups **R19/R20** |
@@ -62,7 +62,7 @@ BOTTOM (front)     J3/J4 TRS (3.5 mm and 6.35 mm) | J6/US2/J5 arcade | J7 cab
 | DAC | R1-R11 | 11 | [resistors.md](resistors.md) |
 | Series 33 ohm | R12-R17 | 6 | [resistors.md](resistors.md) |
 | Pull-ups | R18-R22 | 5 | [resistors.md](resistors.md) |
-| Pierce feedback 1M | R23, R24 | 2 | [resistors.md](resistors.md), [crystals.md](crystals.md) |
+| Pierce feedback 1M | R23, R24, R25 | 3 | [resistors.md](resistors.md), [crystals.md](crystals.md) |
 
 ---
 
@@ -77,7 +77,7 @@ BOTTOM (front)     J3/J4 TRS (3.5 mm and 6.35 mm) | J6/US2/J5 arcade | J7 cab
 7. UM hub
 8. Zone 4 US1, U573, U41
 9. Zone 5 US2
-10. All passives: 100 nF bypass C1-C20, crystal loads C21-C26, E1, DAC R1-R11, series R12-R17, pull-ups R18-R22, feedback R23-R24
+10. All passives: 100 nF bypass C1-C20, crystal loads C21-C26, E1, DAC R1-R11, series R12-R17, pull-ups R18-R22, feedback R23-R25
 
 Ratsnest refresh from `retr01_prelim.net` follows. Hide **Quiet**. Show only **CPU_A** (magenta) and rotate U1 / U3 / the 157 I0 side / J36 odd row until the address comb is parallel. Show only **CPU_D** (green) and rotate U3 DQ / U6 DQ / U574 D / UM / J36 even row the same way. Route those two layer-1 corridors next, then short nets: bypass, clocks, color index, field AD, cart drop.
 

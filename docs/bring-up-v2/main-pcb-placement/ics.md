@@ -71,7 +71,7 @@ Bypass **C8** at pin 24. Owns H timing, HBlank/VBlank/NMI, and scroll Y load `$7
 | VCC 24 / GND 12 | rails and **C8** |
 | Scroll-Y data | CPU D (load) |
 | LE `$7F03` | Compositor decode |
-| Beam outs | UPLDY, Compositor, sync to J2 / U725 |
+| Beam outs | UPLDY, Compositor, sync to J2 / U2075 |
 
 ### UPLDY, ATF22V10 Beam Y (DIP-24)
 
@@ -113,11 +113,9 @@ Bypass **C16** at pin 28.
 
 DAC **R1-R11** sit between U24 and J2 ([resistors.md](resistors.md)).
 
-### U725, CXA2075M
+### U2075, CXA2075M
 
-SOP-24 encoder. Bypass at each VCC pin. Crystal **Y3** with **C23/C24** is the subcarrier ([crystals.md](crystals.md)). RGB comes from the DAC. CSYNC goes to SYNCIN and also to J2 pin 5. CVOUT goes to J2 pin 4. **J11** pin 2 is NPIN ([connectors.md](connectors.md)).
-
-The current footprint is still the 2x5 header. Those header pin numbers are not the SOP-24 pinout. This corner stays clear of CPU and cart buses.
+SOP-24 encoder (`SOP-24_7.5x15.4mm_P1.27mm`). **C18** bypasses VCC1 (pin 12). Crystal **Y3** is the Pierce on U04 gates 5 and 6; gate 6 drives SCIN ([crystals.md](crystals.md)). RGB comes from the DAC. CSYNC goes to SYNCIN and also to J2 pin 5. CVOUT goes to J2 pin 4. **J11** pin 2 is NPIN ([connectors.md](connectors.md)). This corner stays clear of CPU and cart buses.
 
 ---
 

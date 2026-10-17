@@ -133,9 +133,9 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 
 | Qty | Value | Net |
 |----:|-------|-----|
-| 2 | **1M** | Inverter input to output on Y1 and Y2 Pierce oscillator stages |
+| 3 | **1M** | Inverter input to output on the Y1, Y2, and Y3 Pierce stages |
 
-**Subtotal feedback: 2**
+**Subtotal feedback: 3**
 
 ---
 
@@ -150,14 +150,14 @@ Packing `(R<<5)|(G<<2)|B`. LSB to MSB.
 | DAC resistors | 11 |
 | 33 ohm series | 6 |
 | Pull-ups | 5 |
-| Feedback resistors (1M) | 2 |
-| **Passive line items (sum of qtys)** | **57** |
+| Feedback resistors (1M) | 3 |
+| **Passive line items (sum of qtys)** | **58** |
 
 ---
 
 ## Tier H sim netlist
 
-Pin-level links for bypass, bulk, crystals, DAC, series **33 ohm**, and pull-ups live in `apps/sim/tier-h/src/board_schematic.c`. See [`docs/bringup/schematic-netlist-tier-h.md`](bringup/schematic-netlist-tier-h.md) for refdes mapping and known gaps (the CXA2075M is not seated in sim).
+Pin-level links for bypass, bulk, crystals, DAC, series **33 ohm**, pull-ups, and the Y3 feedback resistor live in `apps/sim/tier-h/src/board_schematic.c`. See [`docs/bringup/schematic-netlist-tier-h.md`](bringup/schematic-netlist-tier-h.md) for refdes mapping and known gaps.
 
 ---
 
