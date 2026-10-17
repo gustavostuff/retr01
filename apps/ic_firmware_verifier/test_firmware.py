@@ -34,7 +34,7 @@ class FirmwareReadBack(unittest.TestCase):
         bench = VirtualBench()
         for chip in (verify_beam_x, verify_beam_y, verify_color_prom):
             bench.program(chip.TARGET, resolve_image(chip.TARGET))
-            self.assertEqual(chip.run(bench), "match")
+            self.assertEqual(chip.run(bench), f"IC {chip.TARGET.name} firmware seems OK")
 
     def test_a_fresh_chip_mismatches(self) -> None:
         bench = VirtualBench()

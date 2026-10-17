@@ -27,4 +27,4 @@ def run(bench, repo: Path = REPO) -> str:
     reason = bench.verify(TARGET, path, None)
     if reason:
         return reason
-    return "match"
+    return f"IC {TARGET.name} firmware seems OK"

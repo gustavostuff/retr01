@@ -30,13 +30,16 @@ def run_virtual() -> str:
         reason = walk(pins, STOPS, lambda edges, bit=bit: level(edges, bit), name)
         if reason:
             return reason
-    return "count ok"
+    return "IC Beam X logic works ok"
 
 
 def run_serial(clock_name: str, watch_name: str, prepare) -> str:
     from pins import check_serial
 
-    return check_serial(clock_name, watch_name, STOPS, BITS, level, prepare)
+    reason = check_serial(clock_name, watch_name, STOPS, BITS, level, prepare)
+    if reason == "count ok":
+        return "IC Beam X logic works ok"
+    return reason
 
 
 NAME = "Beam X"

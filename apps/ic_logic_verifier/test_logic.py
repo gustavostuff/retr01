@@ -31,7 +31,7 @@ class BeamXLevels(unittest.TestCase):
             self.assertEqual(verify_beam_x.level(edges, "hsync"), bool(hsync))
 
     def test_virtual_run_passes(self) -> None:
-        self.assertEqual(verify_beam_x.run_virtual(), "count ok")
+        self.assertEqual(verify_beam_x.run_virtual(), "IC Beam X logic works ok")
 
 
 class BeamYLevels(unittest.TestCase):
@@ -59,7 +59,7 @@ class BeamYLevels(unittest.TestCase):
             self.assertEqual(verify_beam_y.level(edges, "vsync"), bool(vsync))
 
     def test_virtual_run_passes(self) -> None:
-        self.assertEqual(verify_beam_y.run_virtual(), "count ok")
+        self.assertEqual(verify_beam_y.run_virtual(), "IC Beam Y logic works ok")
 
 
 if __name__ == "__main__":
