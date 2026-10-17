@@ -144,13 +144,15 @@ int main(void) {
                 "J6 pin 3 GND");
     expect_true(r01s_pin_netlist_same_net(nl, r01s_ad724_entity(&board.ad724), "CVOUT", &board.io.j2, "COMP"),
                 "J2 pin 4 on CXA2075M CVOUT");
-    expect_true(board.io.j11.pin_count == 3, "J11 is 1x3");
+    expect_true(board.io.j11.pin_count == 4, "J11 is 2x2");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "NTSC", r01s_pwr5v_entity(&board.pwr), "VDD"),
                 "J11 pin 1 on +5V");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "PAL", r01s_pwr5v_entity(&board.pwr), "GND"),
-                "J11 pin 3 on GND");
+                "J11 pin 4 on GND");
     expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "NPIN", r01s_ad724_entity(&board.ad724), "NPIN"),
                 "J11 pin 2 on CXA2075M NPIN");
+    expect_true(r01s_pin_netlist_same_net(nl, &board.io.j11, "NPIN2", r01s_ad724_entity(&board.ad724), "NPIN"),
+                "J11 pin 3 on CXA2075M NPIN");
     expect_true(!r01s_pin_netlist_same_net(nl, &board.io.j11, "NPIN", r01s_pwr5v_entity(&board.pwr), "VDD"),
                 "NPIN stays open until the shunt is fitted");
     expect_true(r01s_ad724_entity(&board.ad724)->pin_count == 11, "U2075 wired pins");

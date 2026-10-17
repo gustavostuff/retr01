@@ -638,7 +638,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "PAD_DATA_BUS"
+        "pattern": "PAD_DATA_BUS_1"
       },
       {
         "netclass": "Quiet",
@@ -646,11 +646,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P1_TO_US2_P1"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J5_P3_TO_US2_P28"
+        "pattern": "SIG_J5_P2_TO_US2_P22"
       },
       {
         "netclass": "Quiet",
@@ -662,6 +658,10 @@
       },
       {
         "netclass": "Quiet",
+        "pattern": "SIG_J5_P6_TO_US2_P24"
+      },
+      {
+        "netclass": "Quiet",
         "pattern": "SIG_J5_P8_TO_US2_P25"
       },
       {
@@ -670,11 +670,23 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J6_P5_TO_US2_P8"
+        "pattern": "SIG_J6_P2_TO_US2_P2"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_J6_P4_TO_US2_P3"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_J6_P6_TO_US2_P4"
       },
       {
         "netclass": "Quiet",
         "pattern": "SIG_J6_P7_TO_US2_P18"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_J6_P8_TO_US2_P5"
       },
       {
         "netclass": "Quiet",
@@ -706,27 +718,15 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P22_TO_J5_P2"
+        "pattern": "SIG_US2_P1_TO_J5_P1"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P24_TO_J5_P6"
+        "pattern": "SIG_US2_P28_TO_J5_P3"
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_US2_P2_TO_J6_P2"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_US2_P3_TO_J6_P4"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_US2_P4_TO_J6_P6"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_US2_P5_TO_J6_P8"
+        "pattern": "SIG_US2_P8_TO_J6_P5"
       },
       {
         "netclass": "Quiet",
@@ -758,7 +758,7 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "XTAL_DOT_IN"
+        "pattern": "XTAL_21M_IN"
       },
       {
         "netclass": "Quiet",

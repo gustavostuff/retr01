@@ -57,8 +57,8 @@ def apply_pinmap_extras() -> None:
         "23": "ROUT",
         "24": "GND2",
     }
-    t["STND_HDR"] = _nums(3)
-    a["STND_HDR"] = {"1": "NTSC", "2": "NPIN", "3": "PAL"}
+    t["STND_HDR"] = _nums(4)
+    a["STND_HDR"] = {"1": "NTSC", "2": "NPIN", "3": "NPIN2", "4": "PAL"}
     t["74HCU04"] = _nums(14)
     t["SN74HCU04"] = _nums(14)
     t["74HC74"] = _nums(14)

@@ -38,7 +38,7 @@ Use these refdes on symbols. Values come from [`hardware.md`](../general/hardwar
 | **U573** | SN74HC573 | `74xx_74LS573` | DIP-20 |
 | **U574** | SN74HC574 | `74xx_74LS574` | DIP-20 |
 | **U2075** | CXA2075M | SOP-24 pin names match the Sony package | `Retr01_Lib:SOP-24_7.5x15.4mm_P1.27mm` |
-| **J11** | NTSC/PAL shunt | +5 V, NPIN, GND | `Retr01_Lib:PinHeader_1x03_P2.54mm_Vertical` |
+| **J11** | NTSC/PAL shunt | Left column +5 V and NPIN. Right column NPIN and GND | `Retr01_Lib:PinHeader_2x02_P2.54mm_Vertical` |
 | **U04** | 74HCU04 | `74xx_74HC04` / unbuffered hex inverter | DIP-14 |
 | **U74** | 74HC74 | `74xx_74HC74` / dual D flip-flop | DIP-14 |
 | **Y1**, **Y2**, **Y3** | Crystals | `Device:Crystal` | HC-49/US vertical |

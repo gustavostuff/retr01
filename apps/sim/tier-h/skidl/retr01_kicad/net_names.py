@@ -199,6 +199,7 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("U2075", "20"): "COMPOSITE_OUT",
     ("U2075", "7"): "NPIN",
     ("J11", "2"): "NPIN",
+    ("J11", "3"): "NPIN",
 
     # Connectors
     ("J2", "1"): "VIDEO_BLUE",

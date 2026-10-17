@@ -12,7 +12,7 @@ Board-edge and cart I/O. Zones and sequence: [README.md](README.md). Series resi
 | J6 | Arcade player 2, 2x5 |
 | J7 | Cabinet power and reset, 2x2 |
 | J10 | Cart program header, 2x2 |
-| J11 | NTSC/PAL shunt, 1x3, beside U2075 |
+| J11 | NTSC/PAL shunt, 2x2, beside U2075 |
 | J36 | Cart socket, 36 contacts |
 
 J3 is player 1. J4 is player 2. Each footprint carries both jack outlines. Stuff one size per player. Tip, ring, and sleeve are the same nets on both outlines.
@@ -122,17 +122,23 @@ U130 holds the supervisor path on RESB ([ics.md](ics.md)).
 
 ---
 
-## J11, NTSC/PAL shunt 1x3 (beside U2075), Zone 2
+## J11, NTSC/PAL shunt 2x2 (beside U2075), Zone 2
 
-1x3 male, 2.54 mm. Pin 1 at the top. Pin 2 is NPIN on the CXA2075M (SOP-24 pin 7).
+2x2 male, 2.54 mm, same footprint as J7 and J10. Pin 1 at the top-left. NPIN is CXA2075M pin 7, and it is on both pin 2 and pin 3.
 
-| Pin | Net | Shunt |
-|----:|-----|-------|
-| 1 | +5 V | NTSC, with pin 2 |
-| 2 | NPIN | CXA2075M pin 7 |
-| 3 | GND | PAL, with pin 2 |
+| Pin | Net | Column |
+|----:|-----|--------|
+| 1 | +5 V | Left, with pin 3 |
+| 3 | NPIN | Left |
+| 2 | NPIN | Right, with pin 4 |
+| 4 | GND | Right |
 
-One shunt. Pins 1-2 select NTSC. Pins 2-3 select PAL. Y3 matches the shunt ([crystals.md](crystals.md)). The copper does not bridge the shunt. An empty header leaves NPIN open, which is not a valid standard.
+```text
+1 (+5 V)   2 (NPIN)
+3 (NPIN)   4 (GND)
+```
+
+One shunt. The left column selects NTSC. Move the shunt to the right column for PAL. Y3 matches the shunt ([crystals.md](crystals.md)). The copper does not bridge the shunt. An empty header leaves NPIN open, which is not a valid standard.
 
 ## J10, cart program header 2x2 (near UM)
 

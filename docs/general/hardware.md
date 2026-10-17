@@ -2,7 +2,7 @@
 
 One shared motherboard for home console shells and arcade cabinets. Same PCB. Populate arcade microswitch headers, TRS pad jacks, or both. The board outline is **170 x 120 mm**. The motherboard is **4-layer**: signal, GND, GND, signal. Cart and pad PCBs are **2-layer**.
 
-**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints, except the composite encoder. That part is a Sony **CXA2075M** in a 24-pin SOP. Generic parts (AliExpress and similar) are the supply. Datasheet: [CXA2075M](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html). **J11** is the 1x3 shunt that selects NTSC or PAL. Cart and pad stay THT. **U2075** uses `SOP-24_7.5x15.4mm_P1.27mm`.
+**Packages (initial DIY board):** Counted motherboard ICs use DIP / SPDIP / PDIP footprints, except the composite encoder. That part is a Sony **CXA2075M** in a 24-pin SOP. Generic parts (AliExpress and similar) are the supply. Datasheet: [CXA2075M](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html). **J11** is the 2x2 shunt that selects NTSC or PAL. Cart and pad stay THT. **U2075** uses `SOP-24_7.5x15.4mm_P1.27mm`.
 
 Cart image layout: `memory.md`. Physical cart notes: `cartridge.md`. Video rules: `video-graphics.md`.
 
@@ -133,7 +133,7 @@ Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video p
 
 The **CXA2075M** is on the motherboard BOM (one of the **19**). Package is SOP-24. Behavior and pin roles: [`docs/ic_behavior/CXA2075M.md`](../ic_behavior/CXA2075M.md).
 
-RGB from the color PROM DAC goes to **RIN**, **GIN**, and **BIN**. CSYNC from the beam PLDs goes to **SYNCIN**. That same CSYNC is **J2** pin 5. **Y3** is a Pierce crystal on **U04** gates 5 and 6, with **R25** (1 Mohm) across the crystal and **C23**/**C24** to GND. Gate 6 drives **SCIN**. **SCIN** is a clock input, so the crystal does not sit on that pin. **J11** drives **NPIN**: shunt pins 1-2 for NTSC (NPIN at +5 V, Y3 at 3.579545 MHz), or pins 2-3 for PAL (NPIN at GND, Y3 at 4.433618 MHz). The raster stays **341 x 262** at about **60 Hz** either way. HSYNC and VSYNC stay on the beam PLDs. Composite is **CVOUT** on **J2** pin 4. **YTRAP** is open, so the encoder uses its internal trap.
+RGB from the color PROM DAC goes to **RIN**, **GIN**, and **BIN**. CSYNC from the beam PLDs goes to **SYNCIN**. That same CSYNC is **J2** pin 5. **Y3** is a Pierce crystal on **U04** gates 5 and 6, with **R25** (1 Mohm) across the crystal and **C23**/**C24** to GND. Gate 6 drives **SCIN**. **SCIN** is a clock input, so the crystal does not sit on that pin. **J11** drives **NPIN**: shunt on the left column (pins 1 and 3) for NTSC (NPIN at +5 V, Y3 at 3.579545 MHz), or on the right column (pins 2 and 4) for PAL (NPIN at GND, Y3 at 4.433618 MHz). The raster stays **341 x 262** at about **60 Hz** either way. HSYNC and VSYNC stay on the beam PLDs. Composite is **CVOUT** on **J2** pin 4. **YTRAP** is open, so the encoder uses its internal trap.
 
 ## MCU roles (3x AVR128DB28)
 
@@ -406,7 +406,7 @@ Cart and pad PCBs are **2-layer**.
 | J6 | 2x5 arcade P2 (left of US2) |
 | J7 | 2x2 power/reset |
 | J10 | 2x2 cart program (Friend DATA on pin 3) |
-| J11 | 1x3 NTSC/PAL shunt. Pin 1 +5 V, pin 2 NPIN, pin 3 GND |
+| J11 | 2x2 NTSC/PAL shunt. Left pins 1 and 3 are +5 V and NPIN. Right pins 2 and 4 are NPIN and GND |
 | J36 | EDAC **395-036-520-201** cart socket, 36 contacts |
 | Y1 / Y2 / Y3 | HC-49/US crystals: **8.000 MHz** / **21.47727 MHz** / FSC (74HCU04 + 74HC74 clock stage). Y3 is **3.579545 MHz** or **4.433618 MHz** |
 

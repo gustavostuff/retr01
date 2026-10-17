@@ -97,7 +97,7 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
             ("J7", "4"),
             ("J10", "2"),
             ("J10", "4"),
-            ("J11", "3"),
+            ("J11", "4"),
             ("J1", "2"),
             ("J1", "3"),
             ("J36", "1"),   # A1 GND

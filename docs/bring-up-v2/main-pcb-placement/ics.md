@@ -115,7 +115,7 @@ DAC **R1-R11** sit between U24 and J2 ([resistors.md](resistors.md)).
 
 ### U2075, CXA2075M
 
-SOP-24 encoder (`SOP-24_7.5x15.4mm_P1.27mm`). **C18** bypasses VCC1 (pin 12). Crystal **Y3** is the Pierce on U04 gates 5 and 6; gate 6 drives SCIN ([crystals.md](crystals.md)). RGB comes from the DAC. CSYNC goes to SYNCIN and also to J2 pin 5. CVOUT goes to J2 pin 4. **J11** pin 2 is NPIN ([connectors.md](connectors.md)). This corner stays clear of CPU and cart buses.
+SOP-24 encoder (`SOP-24_7.5x15.4mm_P1.27mm`). **C18** bypasses VCC1 (pin 12). Crystal **Y3** is the Pierce on U04 gates 5 and 6; gate 6 drives SCIN ([crystals.md](crystals.md)). RGB comes from the DAC. CSYNC goes to SYNCIN and also to J2 pin 5. CVOUT goes to J2 pin 4. **J11** pins 2 and 3 are NPIN ([connectors.md](connectors.md)). This corner stays clear of CPU and cart buses.
 
 ---
 

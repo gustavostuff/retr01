@@ -561,6 +561,7 @@ static void apply_mobo_io_nets(R01sBoard *board, R01sPinNetlist *nl) {
   r01s_pin_netlist_link(nl, &io->j11, "NTSC", pwr, "VDD");
   r01s_pin_netlist_link(nl, &io->j11, "PAL", pwr, "GND");
   r01s_pin_netlist_link(nl, &io->j11, "NPIN", r01s_ad724_entity(&board->ad724), "NPIN");
+  r01s_pin_netlist_link(nl, &io->j11, "NPIN2", r01s_ad724_entity(&board->ad724), "NPIN");
   r01s_pin_netlist_name_net(nl, &io->j11, "NPIN", "NPIN");
 }
 

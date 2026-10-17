@@ -161,7 +161,7 @@ Before inserting CPU or microcontrollers, the video generation path is confirmed
   - Resistor DAC (R1-R11) and RGBS video header J2.
 - **Leave unpopulated:**
   - Sockets: U1 (W65C02S), U3 (System RAM), U6 (VRAM), U7A-C (HC157), UM (MCU-M), US2 (MCU-S2).
-  - Header: U2075 (CXA2075M). J11 shunt on pins 1-2 for NTSC.
+  - Header: U2075 (CXA2075M). J11 shunt on the left column for NTSC.
 - **Verification:**
   - Power up with JP_PWR1 and JP_PWR2 installed.
   - Connect monitor to J2 RGBS header.
