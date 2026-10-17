@@ -11,7 +11,7 @@
 
 | Qty | Part | Role |
 | --- | --- | --- |
-| 1 | **SST39SF040-55-4C-TU** (or lab equivalent) | Cart flash, 32-lead TSOP |
+| 1 | **SST39SF040-55-4C-NHE** (or lab equivalent) | Cart flash, PLCC-32 in a socket |
 | - | Mobo OE# gate | PRG `$8000-$FFFF` and intentional MAP/CHR windows only |
 | - | MAP port | `$7F90-$7F93` (seek + auto-inc data) via M/PLD as designed |
 | 0-1 | **24C64** or FRAM | Optional saves (chunked, short RDY, UI alive) |

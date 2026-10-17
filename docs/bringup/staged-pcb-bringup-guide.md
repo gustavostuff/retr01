@@ -221,7 +221,7 @@ Brings the game CPU and system memory online:
 Validates the physical cartridge edge connector and memory mapping:
 - **Populate:**
   - Solder cartridge edge connector J36.
-  - Insert physical cartridge containing the SST39SF040-55-4C-TU and optional 24C64 EEPROM.
+  - Insert physical cartridge containing the SST39SF040-55-4C-NHE and optional 24C64 EEPROM.
 - **Verification:**
   - Remove temporary Tier F PRG mapping.
   - Power up and boot PRG directly from the physical cartridge.

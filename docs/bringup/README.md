@@ -72,7 +72,7 @@ The ladder is **feasible** against the locked design:
 
 ### G - Cart and MAP
 
-**Add:** SST39SF040-55-4C-TU (or lab equivalent). OE# gated for PRG and intentional MAP/CHR windows. MAP `$7F90-$7F93`. Optional 24C64/FRAM (chunked, short RDY). 
+**Add:** SST39SF040-55-4C-NHE (or lab equivalent) in a PLCC-32 socket. OE# gated for PRG and intentional MAP/CHR windows. MAP `$7F90-$7F93`. Optional 24C64/FRAM (chunked, short RDY). 
 **Exit:** `.retr01`-style image boots and shows authored BG + entities driven by PRG.
 
 ### H - Pads and audio

@@ -99,7 +99,7 @@ PROM_CE = "20"
 PROM_OE = "22"
 PROM_VCC = "28"
 
-# SST39SF040 DIP-32 (KiCad Memory_Flash)
+# SST39SF040 PLCC-32 (KiCad Memory_Flash). Pin numbers match the PLCC-32 assignment.
 FLASH_A = {
     0: "12",
     1: "11",

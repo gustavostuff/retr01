@@ -120,7 +120,7 @@ Open items and close criteria. A landed decision folds into the matching doc.
 | 2026-09-13 | Color path | AT27C256R master colors. |
 | 2026-10-16 | Composite | Encoder is the Sony **CXA2075M** (SOP-24) as **U2075**. J11 selects NTSC or PAL. |
 | 2026-10-16 | Video socket | **J2** is the Kycon **KMDGX-9S-AS** 9-pin mini-DIN (Genesis Model 2, Genesis Model 3, Mega Drive 2). RGB, CSYNC, composite, mono audio, and +5 V. HSYNC and VSYNC stay on the beam PLDs. |
-| 2026-10-16 | Cart memory | Cart flash is **SST39SF040-55-4C-TU** (32-lead TSOP). The purchased PDIP stays on the shelf. The sim pin diagram is still the PDIP numbering. |
+| 2026-10-16 | Cart memory | Cart flash is **SST39SF040-55-4C-NHE** (PLCC-32). A PLCC-32 socket keeps the cartridge PCB through-hole. |
 | 2026-09-14 | Reset supervisor | MCP130 in TO-92 for power-on delay, brown-out, and switch debounce. |
 | 2026-09-14 | Other screens | Max 16 total shared pool (title/interstitial/credits). |
 | 2026-09-17 | Other screens | Cap **8** (ids 0..7). |

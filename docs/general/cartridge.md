@@ -4,7 +4,7 @@ Physical cart and how it ties to the board. **Byte layout of the game image** li
 
 ## Hardware on the cart
 
-- 512 KB NOR flash, **SST39SF040-55-4C-TU** (whole `.retr01` image: PRG, palettes, worlds, other screens, entities, compressed BGM). 32-lead TSOP.
+- 512 KB NOR flash, **SST39SF040-55-4C-NHE** (whole `.retr01` image: PRG, palettes, worlds, other screens, entities, compressed BGM). PLCC-32 in a socket, so the cart PCB stays through-hole.
 - A small EEPROM IC for saves (I2C, **MCU-M** as master).
 - EDAC **395-036-520-201** 2x18 (or RA **395-036-559-212**). Full pinout in `hardware.md`.
 - Cart PCB: **2-layer** (locked). Motherboard is **4-layer** (signal, GND, GND, signal). See `hardware.md`.

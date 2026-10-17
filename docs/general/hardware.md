@@ -64,7 +64,7 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 | 1 | W65C02S | Game CPU @ 8 MHz | PDIP-40 | Yes (PLCC-44, QFP-44) |
 | 3 | AVR128DB28-I/SP | MCU-M / MCU-S1 / MCU-S2 @ 24 MHz | SPDIP-28 | Yes (SOIC-28, SSOP-28, plus larger pin-count QFN/TQFP siblings) |
 | 3 | AS6C62256 | Sys RAM, interleaved VRAM, sprite field + BG0 ping-pong. Prefer **-55** (55 ns) | PDIP-28 | Yes (SOP-28, sTSOP-28) |
-| 1 | SST39SF040-55-4C-TU | 512 KB cart NOR flash. 55 ns, 5 V. 32-lead TSOP | Surface mount | This TSOP is the cart package |
+| 1 | SST39SF040-55-4C-NHE | 512 KB cart NOR flash. 55 ns, 5 V. PLCC-32 | PLCC-32 socket | The PLCC can be soldered down |
 | 1 | 24C64 | Cart save EEPROM (8 KB I2C) | DIP-8 | Yes (SOIC/SOP/TSSOP) |
 | 3 | ATF22V10 | Beam X, Beam Y, Compositor + decode | PDIP-24 | Yes (SOIC-24, PLCC-28) |
 | 3 | 74HC157 | VRAM A[11:0] mux (CPU vs beam) | DIP-16 | Yes (SOIC-16, TSSOP) |
@@ -81,7 +81,7 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 
 Pieces received. DigiKey order `9910000377148189`. Mouser invoice `92826838`, shipped 2 Oct 2026. A part that appears on both orders is one row, with the two quantities added. The CXA2075M was not in either order. `SN74HC14N` is a Schmitt-trigger inverter and is not the Pierce `74HCU04`. An Si5351A breakout (Adafruit 2045) is a bench clock tool and is not in this table.
 
-The purchased `SST39SF040-70-4C-PHE` (PDIP-32, 70 ns) is obsolete. Last orders closed 1 Jul 2026. Last shipments 1 Jan 2027. The cart flash is `SST39SF040-55-4C-TU`: the same device in a 32-lead TSOP (8 mm x 14 mm), 55 ns, commercial. Same 5 V command set. It does not drop into the PDIP-32 socket.
+The purchased `SST39SF040-70-4C-PHE` (PDIP-32, 70 ns) is obsolete. Last orders closed 1 Jul 2026. Last shipments 1 Jan 2027. The cart flash is `SST39SF040-55-4C-NHE`: PLCC-32, 55 ns, commercial, 4.5 V to 5.5 V. A PLCC-32 socket keeps the cartridge PCB through-hole.
 
 | On hand | Manufacturer part | Distributor | Role | Status | Link |
 | --- | --- | --- | --- | --- | --- |
@@ -90,7 +90,7 @@ The purchased `SST39SF040-70-4C-PHE` (PDIP-32, 70 ns) is obsolete. Last orders c
 | 2 | AVR128DB28-E/SP | Mouser `579-AVR128DB28-E/SP` | MCU, SPDIP-28, extended | - | [Mouser](https://www.mouser.mx/en/ProductDetail/Microchip-Technology/AVR128DB28-E-SP?qs=vmHwEFxEFR9lzuat%2Fan%252Bvw%3D%3D) |
 | 3 | AS6C62256-55PCN | DigiKey `1450-1033-ND` (1), Mouser `913-AS6C62256-55PCN` (2) | 32K x 8 SRAM, 55 ns, PDIP-28 | - | [DigiKey](https://www.digikey.com/en/products/detail/alliance-memory-inc/AS6C62256-55PCN/4234592) |
 | 1 | SST39SF040-70-4C-PHE | Mouser `804-39SF0407CPHE` | Purchased 512K x 8 flash, 70 ns, PDIP-32 | Obsolete | [Mouser](https://www.mouser.mx/en/ProductDetail/804-39SF0407CPHE) |
-| 0 | SST39SF040-55-4C-TU | Microchip | 512K x 8 cart flash, 55 ns, 32-lead TSOP | Active | [Microchip](https://www.microchipdirect.com/product/SST39SF040-55-4C-TU) |
+| 0 | SST39SF040-55-4C-NHE | DigiKey | 512K x 8 cart flash, 55 ns, PLCC-32 | Active | [DigiKey](https://www.digikey.com.mx/es/products/detail/microchip-technology/SST39SF040-55-4C-NHE-T/2615114) |
 | 1 | 24LC64-I/P | Mouser `579-24LC64-I/P` | Cart EEPROM, DIP-8 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/Microchip-Technology/24LC64-I-P?qs=EkZBwCRGcSvc%252BCDluHmdqw%3D%3D) |
 | 4 | ATF22V10C-15PU | DigiKey `ATF22V10C-15PU-ND` | PLD, 15 ns, PDIP-24 | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/ATF22V10C-15PU/1008580) |
 | 3 | SN74HC157N | Mouser `595-SN74HC157N` | Quad 2-to-1 mux, PDIP-16 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC157N) |
@@ -258,7 +258,7 @@ Cart palettes are **indices only** into this PROM. See `memory.md`, `video-graph
 
 ## Cartridge
 
-Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040-55-4C-TU** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play (**board pull-up**). The flash is a 32-lead TSOP. Socket: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
+Game Boy-sized (~**55 mm** width). Passive cart: **SST39SF040-55-4C-NHE** + **24C64**. No mapper. `CE#` tied active. Mobo gates `OE#`. `WE#` for program (console flash path) and is idle in normal play (**board pull-up**). The flash is a PLCC-32 in a socket, so the cart PCB stays through-hole. Edge connector: EDAC **395-036-520-201** straight 2x18 (right-angle option **395-036-559-212** for tight shells). Pitch **2.54 mm**. Cart **1.6 mm**, **2-layer** PCB. A0-A13 from CPU. A14-A18 from Compositor MAP.
 
 ### Cart edge pinout (2x18 = 36 contacts)
 

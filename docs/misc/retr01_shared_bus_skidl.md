@@ -140,7 +140,7 @@ power_and_bypass(sram)
 # ----------------------------------------------------------------------
 # Cart flash example (data + lower address)
 # ----------------------------------------------------------------------
-flash = Part('Memory_Flash', 'SST39SF040-55-4C-TU', footprint='Package_SO:TSOP-I-32_8x14mm_P0.5mm')
+flash = Part('Memory_Flash', 'SST39SF040-55-4C-NHE', footprint='PLCC-32 socket')
 
 flash['DQ[0:7]'] += cpu_d
 flash['A[0:13]'] += cpu_a[0:13]

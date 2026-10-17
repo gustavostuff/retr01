@@ -36,7 +36,7 @@ The design uses a compact, mostly THT main system board with 19 ICs (CPU + MCUs 
 
 * Arcade: the same mini-DIN for picture and sound, plus 2x5 headers for sticks and buttons. The JAMMA edge shares those header nets for the controls, and it shares +5 V and GND.
 
-As for the cartridge, it's a small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold fingers per side.
+As for the cartridge, it's a small PCB (close to Game Boy size) with an SST39SF040-55-4C-NHE in a PLCC-32 socket, plus a small 8-pin EEPROM for saves. The socket keeps the cart PCB through-hole. 18 gold fingers per side.
 
 Game pads are planned to use a 3-wire connection through any regular male to male audio aux cable (TRS ports on both the main PCB and the pads PCB). A serial protocol + ATtiny chips (on the pads board) will take care of communications.
 

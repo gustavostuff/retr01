@@ -60,7 +60,7 @@ Sprites: `tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels a
 | J Cart | Console socket. Flash and save live on **N** |
 | K APU + pads | **`AVR128DB28` MCU-S2**: `$7F40`-`$7F5F`, pads `$7F60`/`$7F61`, 8-voice mix + PWM + WAVE monitor |
 | L MCU + field | **`AVR128DB28` MCU-M** (soft `$7Fxx` + SPI mailbox master) + **MCU-S1** (OAM apply / field) + field `AS6C62256` + **`SN74HC573`** ALE |
-| N Cart module | `SST39SF040` + cart `24C64` (detachable module. Argv `.retr01` is copied into flash). Cart orderable is the TSOP `SST39SF040-55-4C-TU` |
+| N Cart module | `SST39SF040` + cart `24C64` (detachable module. Argv `.retr01` is copied into flash). Cart orderable is the PLCC-32 `SST39SF040-55-4C-NHE` |
 
 **Wired on the netlist, not separate canvas frames.** Soft `$7Fxx` settle on board RAM (mirrors MCU-M). OAM/APU CPU/`poke_fe` path flushes via behavioral SPI mailbox to S1/S2. Host Play may still call `r01s_avr128db28_s1_oam_poke` as a preview overlay. **E** pads via MCU-S2, **I** `BG_FETCH`, sprite field fill stats, **P** integration / NMI stats.
 
@@ -70,7 +70,7 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **BOM:** mounted VIS_IC count includes U2075. Picture and sound leave on J2, the KMDGX-9S-AS mini-DIN. Helper tick domain is 24 MHz.
 
-**Cart load:** argv, or `example_01/example_01.retr01` when omitted, is copied into cart `SST39SF040`. The cart orderable is the TSOP `SST39SF040-55-4C-TU`. The app then overlays a short boot program that streams the palette and the start screen through `$7Fxx` on the pin netlist. That catchup is the boot wait. Host Play starts after it and drives the wave monitor from `game_logic.c` beside the cart. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`.
+**Cart load:** argv, or `example_01/example_01.retr01` when omitted, is copied into cart `SST39SF040`. The cart orderable is the PLCC-32 `SST39SF040-55-4C-NHE`. The app then overlays a short boot program that streams the palette and the start screen through `$7Fxx` on the pin netlist. That catchup is the boot wait. Host Play starts after it and drives the wave monitor from `game_logic.c` beside the cart. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`.
 
 **Cart programming:** MCU-M bridge on a seated cart. This tree does not model a USB flasher.
 
