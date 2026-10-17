@@ -2,7 +2,7 @@
 
 This bench passes. The switch code selects a kit row, and the LEDs show that packed byte. Several tests have been performed.
 
-<img src="AT27C256R-bench-passed.jpg" alt="AT27C256R breadboard, row 0">
+<img src="img/AT27C256R-bench-passed.jpg" alt="AT27C256R breadboard, row 0">
 
 One kit chip in the socket at a time. The package is 600 mil, so it sits in a 28-pin socket of that width, one jumper per pin. The notch is pin 1. Power is off while the chip goes in or comes out. Pin 1 (VPP) ties to the same 5 V rail as pin 28 (VCC).
 

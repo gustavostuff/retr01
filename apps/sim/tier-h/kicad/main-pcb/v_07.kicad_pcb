@@ -7613,7 +7613,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "426630e9-117c-4df0-93db-85e6a14e3dc3")
-		(at 111.15 142.21 90)
+		(at 110 143.5 90)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C7"
@@ -14553,7 +14553,7 @@
 	(footprint "Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "754829b0-3432-4d8f-9241-71ef11f4b063")
-		(at 108.73 151.187784)
+		(at 107.54 151.187784)
 		(descr "Through hole straight pin header, 2x05, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x05 2.54mm double row")
 		(property "Reference" "J5"
@@ -22360,11 +22360,11 @@
 	(footprint "Retr01_Lib:DIP-28_W7.62mm"
 		(layer "F.Cu")
 		(uuid "c3b0ea3f-2b99-46a7-adc7-e4dd6b7bf00e")
-		(at 122.81 162.62 180)
+		(at 121.62 162.62 180)
 		(descr "28-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "US2"
-			(at 9.951398 16.093651 90)
+			(at 3.817025 -2.726779 180)
 			(layer "F.SilkS")
 			(uuid "780b956e-ecbd-4e96-88c2-c978b0e42dec")
 			(effects
@@ -22571,7 +22571,7 @@
 			(uuid "47cf8aba-e75b-41e3-a43b-34dac53a17f0")
 		)
 		(point
-			(at 119 146.11)
+			(at 117.81 146.11)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "f7f2bae9-ddd1-4875-ad4a-2314f8b00609")
@@ -23784,7 +23784,7 @@
 	(footprint "Retr01_Lib:PinHeader_2x05_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "cc23bd29-0419-4157-b4a2-83c5b3ad94bc")
-		(at 129.28 161.347042 180)
+		(at 128.09 161.347042 180)
 		(descr "Through hole straight pin header, 2x05, 2.54mm pitch, double rows")
 		(tags "Through hole pin header THT 2x05 2.54mm double row")
 		(property "Reference" "J6"
@@ -28518,7 +28518,7 @@
 		)
 	)
 	(gr_text "Player 1\nArcade"
-		(at 106.5 167 0)
+		(at 105.669481 166.753561 0)
 		(layer "F.SilkS")
 		(uuid "72a38bc9-de2b-44ec-ba9f-e95de44413d4")
 		(effects
@@ -28530,7 +28530,7 @@
 		)
 	)
 	(gr_text "Player 2\nArcade"
-		(at 124.5 167 0)
+		(at 123.664566 166.753561 0)
 		(layer "F.SilkS")
 		(uuid "218e481e-5e6a-4a48-9700-89cbb0e61310")
 		(effects
