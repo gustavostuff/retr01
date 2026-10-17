@@ -34,7 +34,7 @@ The design uses a compact, mostly THT main system board with 19 ICs (CPU + MCUs 
 
 * Home console: TRS ports for the pads. Picture and sound leave on one Kycon KMDGX-9S-AS 9-pin mini-DIN (J2): RGB, CSYNC, composite, mono audio, and +5 V. The shell is the Genesis Model 2, Genesis Model 3, and Mega Drive 2 AV socket.
 
-* Arcade: the same mini-DIN for picture and sound, plus 2x5 headers for sticks and buttons. The JAMMA connector is a WIP. Its control fingers share those header nets, and its supply fingers share +5 V and GND.
+* Arcade: the same mini-DIN for picture and sound, plus 2x5 headers for sticks and buttons. The JAMMA edge shares those header nets for the controls, and it shares +5 V and GND.
 
 As for the cartridge, it's a small PCB (close to Game Boy size) with a 32-pin 512KB flash unit + a small 8-pin EEPROM IC for saves. 18 gold fingers per side.
 

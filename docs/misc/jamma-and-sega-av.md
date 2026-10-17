@@ -6,9 +6,9 @@ Home pads stay on J3 and J4. Those jacks are not part of either connector.
 
 ## JAMMA finger edge
 
-The JAMMA connector is a work in progress. The pin map below is a draft.
+Controls and the +5 V and GND rails are on this edge. Picture and sound stay on J2.
 
-Footprint `Retr01_Lib:JAMMA-56`. Pitch is 3.96 mm (0.156 in). Each finger is 2.30 mm by 8.00 mm. Numbered pads are the parts side on F.Cu. Letter pads are the solder side on B.Cu (A, B, C, and so on, skipping G, I, O, and Q). Pin 7 is the key, so that pad is missing and the footprint carries the notch. In the draft tables below, P is the parts number and S is the solder mate (S16 is pad T).
+Footprint `Retr01_Lib:JAMMA-56`. Pitch is 3.96 mm (0.156 in). Each finger is 2.30 mm by 8.00 mm. Numbered pads are the parts side on F.Cu. Letter pads are the solder side on B.Cu (A, B, C, and so on, skipping G, I, O, and Q). Pin 7 is the key, so that pad is missing and the footprint carries the notch. In the tables below, P is the parts number and S is the solder mate (S16 is pad T).
 
 The finger row is 106.92 mm from P1 to P28. The board edge is 170 mm, so the row fits on the bottom with room at both ends. Pin 1 is at one end of that edge. The mating edge of the footprint is x = 0.
 
@@ -29,15 +29,7 @@ X is JAMMA button 1. Y is JAMMA button 2. Button 3 (P24 and S24) has no Retr01 c
 
 The KiCad netlist ties parts pads 16-23 to the J5 button nets, and solder pads T-a to the J6 button nets, in the order coin, start, up, down, left, right, button 1, button 2. Parts pads 1, 2, and 28 and solder pads A, B, and f are GND. Parts pads 3 and 4 and solder pads C and D are +5V. The other fingers stay off the netlist.
 
-RGBS on this edge is a draft. HSYNC and VSYNC have no JAMMA pin.
-
-| Signal | Finger | Board net |
-| --- | --- | --- |
-| Red | P12 | J2 pin 7 |
-| Green | S12 | J2 pin 3 |
-| Blue | P13 | J2 pin 1 |
-| CSYNC | S13 | J2 pin 5 |
-| Video ground | P14 | GND |
+Picture and sound stay on J2. Video fingers on this edge stay open. HSYNC and VSYNC have no JAMMA pin.
 
 Composite stays off this edge. It belongs on the Sega socket.
 
