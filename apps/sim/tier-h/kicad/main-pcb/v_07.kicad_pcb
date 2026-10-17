@@ -18191,7 +18191,7 @@
 	(footprint "Retr01_Lib:SOP-24_7.5x15.4mm_P1.27mm"
 		(layer "F.Cu")
 		(uuid "9307698d-9365-4b3f-8ebc-ad69cfe9bfb2")
-		(at 146.9 30)
+		(at 146.9 30.285)
 		(descr "SOP, 24 Pin (http://www.issi.com/WW/pdf/31FL3218.pdf#page=14)")
 		(tags "SOP SO")
 		(property "Reference" "U2075"
@@ -18206,7 +18206,7 @@
 			)
 		)
 		(property "Value" "CXA2075M"
-			(at 0 8.65 0)
+			(at 4.1 -14 0)
 			(layer "F.Fab")
 			(uuid "250269ab-82ac-4f86-b3ec-05a602cfdec6")
 			(effects
@@ -21708,7 +21708,7 @@
 			)
 		)
 		(property "Value" "NTSC/PAL"
-			(at -2.725 1.5 90)
+			(at -5.818618 -1.041378 180)
 			(layer "F.SilkS")
 			(uuid "c3cd16cd-5aea-454a-a3d1-6335423f4802")
 			(effects
