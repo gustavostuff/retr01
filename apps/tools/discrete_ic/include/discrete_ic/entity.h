@@ -77,7 +77,7 @@ struct NsEntity {
     int body_h;
     /* Physical DIP pin count (e.g. 40 for W65C02S); used for package layout. */
     int dip_pins;
-    /* Molded body outline in mm (see hw/md/packages_dip.md). */
+    /* Molded body outline in mm (Microchip DS00049 and JEDEC MS-001/MS-011). */
     int pkg_len_mm;
     int pkg_wid_mm;
     /* 1 when set_dip_mm() supplied LxW (no across-body pitch snap). */

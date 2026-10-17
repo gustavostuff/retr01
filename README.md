@@ -2,7 +2,7 @@
 
 Retr01 is an MCU-assisted 8-bit gaming system for arcade and console setups, plus an emulator and a studio for making games and content.
 
-<img src="img/readme/v_07.png" alt="PCB" />
+<img src="img/readme/pcb.png" alt="PCB" />
 
 Hardware remains in active development/design. Software, tooling, and documentation track that ongoing specification. The board layout shown above is an early revision and is intended to approximate the planned main PCB.
 

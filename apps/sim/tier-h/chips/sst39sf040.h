@@ -18,7 +18,7 @@ typedef enum R01sFlashCmd {
 } R01sFlashCmd;
 
 /*
- * 512 KB cart flash with JEDEC byte program / sector+chip erase (hw/md/SST39SF040.md).
+ * 512 KB cart flash with JEDEC byte program and sector or chip erase. Pin numbers follow the datasheet.
  */
 typedef struct R01sSst39sf040 {
     R01sEntity base;

@@ -7,7 +7,7 @@
 
 /*
  * Island C -- W65C02S game CPU (functional Phase-1 subset).
- * Pinout: hw/md/W65C02S.md
+ * DIP pin numbers follow the datasheet.
  *
  * Implemented:
  *   - BE=0 => A/D/RWB Hi-Z

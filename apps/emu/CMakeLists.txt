@@ -119,7 +119,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   endif()
 
   # Optional integration binaries (need a real .retr01 on argv). Registered when the sample cart exists.
-  set(R01E_EXAMPLE_CART "${R01_REPO_ROOT}/example_01/example_01.retr01")
+  set(R01E_EXAMPLE_CART "${R01_REPO_ROOT}/examples/example_01/example_01.retr01")
   foreach(_t test_boot test_play test_frame_time)
     add_executable(${_t} tests/${_t}.c)
     target_link_libraries(${_t} PRIVATE retr01_emu_core)

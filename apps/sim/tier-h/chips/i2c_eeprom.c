@@ -28,7 +28,7 @@ void r01s_i2c_eeprom_init(R01sI2cEeprom *chip, const char *refdes) {
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &I2C_EEPROM_VT, "24C64", refdes ? refdes : "U50");
     chip->base.impl = chip;
-    /* 8-pin PDIP per hw/md/24C64.md */
+    /* 8-pin PDIP. Pin numbers follow the datasheet. */
     r01s_entity_add_pin(&chip->base, 1, "A0", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 2, "A1", R01S_PIN_NC);
     r01s_entity_add_pin(&chip->base, 3, "A2", R01S_PIN_NC);

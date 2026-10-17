@@ -12,7 +12,7 @@
  * Molded PDIP body LxW (mm). Drawn at NS_PX_PER_MM.
  * Across-body px is snapped to the pin/breadboard pitch grid so opposing pin
  * tip origins are N * NS_DIP_PIN_PITCH_PX apart (see ns_dip_snap_across_px).
- * See hw/md/packages_dip.md (Microchip DS00049 + JEDEC MS-001/MS-011).
+ * Molded PDIP outline in mm (Microchip DS00049 and JEDEC MS-001/MS-011).
  */
 typedef struct NsDipPkg {
     int pins;

@@ -1,6 +1,6 @@
 # Retr01 board sim
 
-The Tier H sim is the board. Chips, tests, and PNG chrome that the sim shares live in [`common/`](common/). The discrete IC engine is [`tools/discrete_ic/`](../tools/discrete_ic/).
+The Tier H sim is the board. The discrete IC engine is [`tools/discrete_ic/`](../tools/discrete_ic/).
 
 | Lab | Path | Goal |
 | --- | --- | --- |

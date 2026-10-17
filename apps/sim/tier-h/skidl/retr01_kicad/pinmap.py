@@ -4,7 +4,7 @@ Physical DIP pin numbers for Retr01 parts.
 Authority for stock parts: KiCad 10 symbols under /usr/share/kicad/symbols/
 (see kicad_pin_extract.json). HC157 uses 74LS* symbols (identical DIP pinout;
 KiCad has no discrete 74HC157). Custom silicon (W65C02S, ATF22V10, oscillators,
-connectors) uses datasheet / hw/md pin numbers.
+connectors) uses datasheet pin numbers.
 
 Manifest and connect.py address pins by these number strings ("1".."40").
 """
@@ -136,7 +136,7 @@ EE_WP = "7"
 EE_VCC = "8"
 
 # ---------------------------------------------------------------------------
-# W65C02S DIP-40 (hw/md/W65C02S.md) - no KiCad stock symbol
+# W65C02S DIP-40. No KiCad stock symbol.
 # ---------------------------------------------------------------------------
 
 CPU_VPB, CPU_RDY, CPU_PHI1O, CPU_IRQB = "1", "2", "3", "4"
@@ -149,7 +149,7 @@ CPU_RWB, CPU_NC, CPU_BE, CPU_PHI2 = "34", "35", "36", "37"
 CPU_SOB, CPU_PHI2O, CPU_RESB = "38", "39", "40"
 
 # ---------------------------------------------------------------------------
-# ATF22V10 DIP-24 (hw/md) - Retr01 function -> physical pin (JEDEC later)
+# ATF22V10 DIP-24. Retr01 function to physical pin.
 # ---------------------------------------------------------------------------
 
 PLD_CLK, PLD_GND, PLD_VCC = "1", "12", "24"

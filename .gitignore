@@ -22,8 +22,6 @@ htmlcov/
 
 apps/studio/build/
 apps/emu/build/
-apps/sim/tier-a/build/
-apps/sim/tier-b/build/
 apps/sim/tier-h/build/
 apps/tools/discrete_ic/build/
 bin/
@@ -35,9 +33,6 @@ apps/tools/llvm-mos-linux.tar.xz
 *.a
 **/r01_custom.so
 temp/
-apps/sim/tier-a/ui_layout.json
-apps/sim/tier-b/ui_layout.json
-apps/sim/tier-c/ui_layout.json
 apps/sim/tier-h/ui_layout.json
 apps/sdk/r01_c/build/
 apps/sdk/r01_c/host-build/
@@ -64,6 +59,8 @@ apps/sdk/r01_c/host-build/
 /sdk_overlay.prg.elf
 /test_roundtrip.r01proj
 .cursor/*.log
+# clangd index
+/.cache/
 .venv-wrl/
 
 # Tier H Skidl export outputs (regenerate: apps/sim/tier-h/skidl/export_netlist.sh)

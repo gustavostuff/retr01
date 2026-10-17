@@ -17,7 +17,6 @@ if(NOT TARGET discrete_ic)
 endif()
 
 set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
-set(SIM_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/../common")
 set(R01_FW_COMMON_DIR "${R01_COMMON_DIR}/fw")
 
 add_library(retr01_sim_core
@@ -52,8 +51,8 @@ add_library(retr01_sim_core
   chips/sst39sf040.c
   chips/w65c02s.c
   chips/osc_dot.c
-  ${SIM_COMMON}/chips/sn74hcu04.c
-  ${SIM_COMMON}/chips/sn74hc74.c
+  chips/sn74hcu04.c
+  chips/sn74hc74.c
   chips/beam_xy.c
   chips/bg_fetch.c
   chips/at27c256r.c
@@ -66,7 +65,7 @@ add_library(retr01_sim_core
   src/board_flasher.c
   src/ui_button.c
 )
-set(R01_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../common/assets")
+set(R01_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 set(R01_ASSETS_PNG "${R01_ASSETS_DIR}/png")
 set(R01_ASSETS_OTHER "${R01_ASSETS_DIR}/other")
 add_library(r01_play_common
@@ -85,13 +84,12 @@ target_link_libraries(r01_play_common PUBLIC m)
 target_include_directories(retr01_sim_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/chips
-  ${SIM_COMMON}/chips
   ${R01_COMMON_DIR}
   ${R01_FW_COMMON_DIR}
 )
 target_link_libraries(retr01_sim_core PUBLIC r01_play_common discrete_ic)
 
-set(R01_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../example_01")
+set(R01_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/example_01")
 set(R01_EXAMPLE_CART "${R01_OUTPUT_DIR}/example_01.retr01")
 set(R01_TEST_CART "${R01_EXAMPLE_CART}")
 set(R01_DEFAULT_CART "${R01_EXAMPLE_CART}")
@@ -179,7 +177,7 @@ r01s_unit_test(test_board_netlist)
 r01s_unit_test(test_airwire)
 r01s_unit_test(test_export_netlist)
 
-add_executable(export_tier_h_netlist tools/export_tier_h_netlist.c)
+add_executable(export_tier_h_netlist cmd/export_tier_h_netlist.c)
 target_link_libraries(export_tier_h_netlist PRIVATE retr01_sim_core)
 r01s_unit_test(test_cart)
 r01s_unit_test(test_compositor)

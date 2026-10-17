@@ -84,7 +84,7 @@ r01_studio_add_test(warps)
 r01_studio_add_test(game_runtime)
 r01_studio_add_test(player_anim)
 
-add_executable(r01_pack_cart tools/pack_cart.c)
+add_executable(r01_pack_cart cmd/pack_cart.c)
 target_link_libraries(r01_pack_cart PRIVATE retr01_studio_core)
 
 # Optional golden-file integration binary (not registered with ctest).

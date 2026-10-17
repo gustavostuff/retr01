@@ -936,7 +936,7 @@ static void play_start_bgm_viz(R01sBoard *board) {
     const char *bgm_path = NULL;
     static const char *const logic_fallbacks[] = {
         "game_logic.c",
-        "example_01/game_logic.c",
+        "examples/example_01/game_logic.c",
         "output/C/custom_logic.c",
         "../output/C/custom_logic.c",
         "../../output/C/custom_logic.c",

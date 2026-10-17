@@ -6,7 +6,7 @@
 
 /*
  * Quad 2:1 mux -- VRAM / line-buffer address select (island G / M).
- * Pinout: hw/md/SN74HC157.md
+ * DIP pin numbers follow the datasheet.
  * Select pin named "AB" (datasheet A/B). Strobe "G#" active-low.
  * With R01S_PROP_DELAY, Y[3:0] update after HC157 tpd.
  */

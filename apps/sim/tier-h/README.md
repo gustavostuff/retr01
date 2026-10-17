@@ -1,6 +1,6 @@
 # Retr01 Tier H sim (imported)
 
-Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `apps/tools/discrete_ic`, `apps/common`, and `apps/sim/common/assets`.
+Imported from the discarded `retr01-bkp-01` board sim. It links this repo's `apps/tools/discrete_ic` and `apps/common`. The UI font is `assets/other` in this tree.
 
 Matches [`docs/hardware.md`](../../../docs/hardware.md) idle-safe rules: soft I/O is `$7Fxx`, and the color PROM is the AT27C256R. Cart `WE#` stays high unless a program cycle drives it, `/SS_S1` and `/SS_S2` idle high, field ALE idles low, and `CPU_RDY` is open-drain with a pull-up. **U2075** is a logic stub for the CXA2075M. **CVOUT** is a video-present flag, not an NTSC waveform. The footprint is the SOP-24. **J2** (KMDGX-9S-AS) carries RGB, CSYNC, COMP, and PWM audio.
 
@@ -14,7 +14,7 @@ IC-first board simulator for the Retr01 motherboard (arcade + console share one 
 
 ## Status (current)
 
-**Netlist / bring-up:** 9 canvas islands (O first) + wired-only E/I/P sprite glue. Soft `$7Fxx` via **MCU-M** on L. Cart image from argv (default `example_01/example_01.retr01`). The console has no USB. Cart programming is the MCU-M bridge.
+**Netlist / bring-up:** 9 canvas islands (O first) + wired-only E/I/P sprite glue. Soft `$7Fxx` via **MCU-M** on L. Cart image from argv (default `examples/example_01/example_01.retr01`). The console has no USB. Cart programming is the MCU-M bridge.
 
 **UI chrome:** Compact board view. Bottom-right gamepad overlays remain. IC bodies use health-colored 1px outlines from `discrete_ic` (`ns_outline_rgb`).
 
@@ -70,7 +70,7 @@ Bench-only (wired, not on canvas): `PRG_ROM` fallback when cart does not own `$8
 
 **BOM:** mounted VIS_IC count includes U2075. Picture and sound leave on J2, the KMDGX-9S-AS mini-DIN. Helper tick domain is 24 MHz.
 
-**Cart load:** argv, or `example_01/example_01.retr01` when omitted, is copied into cart `SST39SF040`. The cart orderable is the PLCC-32 `SST39SF040-55-4C-NHE`. The app then overlays a short boot program that streams the palette and the start screen through `$7Fxx` on the pin netlist. That catchup is the boot wait. Host Play starts after it and drives the wave monitor from `game_logic.c` beside the cart. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`.
+**Cart load:** argv, or `examples/example_01/example_01.retr01` when omitted, is copied into cart `SST39SF040`. The cart orderable is the PLCC-32 `SST39SF040-55-4C-NHE`. The app then overlays a short boot program that streams the palette and the start screen through `$7Fxx` on the pin netlist. That catchup is the boot wait. Host Play starts after it and drives the wave monitor from `game_logic.c` beside the cart. `board_build` still installs a synthetic image for unit tests that do not call `r01s_board_load_cart`.
 
 **Cart programming:** MCU-M bridge on a seated cart. This tree does not model a USB flasher.
 
@@ -182,7 +182,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 ```bash
 ./scripts/sim-tier.sh
-./scripts/sim-tier.sh example_01/example_01.retr01
+./scripts/sim-tier.sh examples/example_01/example_01.retr01
 ./scripts/sim-tier.sh DELAY=typical   # print typ path budget vs PHI2 half
 ./scripts/sim-tier.sh DELAY=max       # print max (worst-case) path budget
 ```

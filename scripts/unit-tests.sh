@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configure, build, and run unit tests for studio, emu, sdk C, and the Tier H sim.
-# Emu registers test_boot/test_play against example_01/example_01.retr01 when that
+# Emu registers test_boot/test_play against examples/example_01/example_01.retr01 when that
 # cart is present, and test_sdk_prg when llvm-mos is in apps/tools/llvm-mos or $LLVM_MOS.
 # Does not require (or seed) extra ROM / Studio project fixtures.
 set -euo pipefail

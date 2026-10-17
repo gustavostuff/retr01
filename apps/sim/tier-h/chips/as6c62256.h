@@ -10,7 +10,7 @@
 
 /*
  * AS6C62256 -- 32 KB SRAM (system RAM on C, VRAM on G, sprite line buffer on M).
- * Pinout / truth table: hw/md/AS6C62256.md
+ * DIP pin numbers follow the datasheet.
  * With R01S_PROP_DELAY, read DQ appears after tAA; writes still commit on WE#.
  */
 typedef struct R01sAs6c62256 {
