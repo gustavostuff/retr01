@@ -4,14 +4,11 @@
 | --- | --- | --- |
 | Studio | `apps/studio` | `cmake -S apps/studio -B apps/studio/build && cmake --build apps/studio/build -j` |
 | Emu | `apps/emu` | `cmake -S apps/emu -B apps/emu/build && cmake --build apps/emu/build -j` |
-| Sim (Tier A) | `apps/sim/tier-a` | `cmake -S apps/sim/tier-a -B apps/sim/tier-a/build && cmake --build apps/sim/tier-a/build -j` |
-| Sim (Tier B) | `apps/sim/tier-b` | `cmake -S apps/sim/tier-b -B apps/sim/tier-b/build && cmake --build apps/sim/tier-b/build -j` |
-| Sim (Tier C) | `apps/sim/tier-c` | `cmake -S apps/sim/tier-c -B apps/sim/tier-c/build && cmake --build apps/sim/tier-c/build -j` |
-| Sim (Tier H) | `apps/sim/tier-h` | `cmake -S apps/sim/tier-h -B apps/sim/tier-h/build && cmake --build apps/sim/tier-h/build -j` |
+| Sim | `apps/sim/tier-h` | `cmake -S apps/sim/tier-h -B apps/sim/tier-h/build && cmake --build apps/sim/tier-h/build -j` |
 | Shared | `apps/common` | Linked by Studio / Emu / Sim |
 | Discrete IC engine | `tools/discrete_ic` | Linked by Sim |
 
-Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier.sh` with tier `a`, `b`, `c`, or `h`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
+Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier.sh`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
 
 ## Studio projects
 

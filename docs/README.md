@@ -2,9 +2,8 @@
 
 Design and hardware notes. The root [README.md](../README.md) has the full map.
 
-| Folder | Contents |
+| Folder or file | Contents |
 | --- | --- |
 | [general/](general/) | Hardware, memory, video, API, sound, palette |
-| [ic_behavior/](ic_behavior/) | Per-chip Inputs / Process / Outputs |
-| [bringup/](bringup/) | Hardware bring-up tiers A-H |
-| [misc/](misc/) | Working notes (sim trust, KiCad schematic how-to) |
+| [pcb.md](pcb.md) | Motherboard copper layers |
+| [irl_bring_up_log/](irl_bring_up_log/bench-at27c256r.md) | Bench notes |

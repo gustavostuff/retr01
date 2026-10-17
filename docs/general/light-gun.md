@@ -4,7 +4,7 @@ Roadmap. Same TRS jacks as the pads. The gun reports a trigger every frame, and 
 
 This works on a display that lights one spot at a time while the 341 by 262 raster scans. A panel that lights the whole frame at once turns every box on together, and one timer cannot tell the boxes apart.
 
-Summary table and the `$7F80` / `$7F81` proposal: `hardware.md`. Pad poll rules: `../ic_behavior/ATtiny85.md`.
+Summary table and the `$7F80` / `$7F81` proposal: `hardware.md`. Pad poll rules: `hardware.md`.
 
 ## Hardware
 

@@ -77,61 +77,15 @@ Full failure modes and bring-up order: `ic-comms-risks.md`.
 
 **Still outside the count:** crystals (common THT HC-49/US), reset supervisor (MCP130 in TO-92). Pad **ATtiny85**: DIP-8 and SOIC-8 both exist. **Adafruit's UPDI Friend** is an accessory, not a BOM IC.
 
-### Parts on hand
-
-Pieces received. DigiKey order `9910000377148189`. Mouser invoice `92826838`, shipped 2 Oct 2026. A part that appears on both orders is one row, with the two quantities added. The CXA2075M was not in either order. `SN74HC14N` is a Schmitt-trigger inverter and is not the Pierce `74HCU04`. An Si5351A breakout (Adafruit 2045) is a bench clock tool and is not in this table.
-
-The purchased `SST39SF040-70-4C-PHE` (PDIP-32, 70 ns) is obsolete. Last orders closed 1 Jul 2026. Last shipments 1 Jan 2027. The cart flash is `SST39SF040-55-4C-NHE`: PLCC-32, 55 ns, commercial, 4.5 V to 5.5 V. A PLCC-32 socket keeps the cartridge PCB through-hole.
-
-| On hand | Manufacturer part | Distributor | Role | Status | Link |
-| --- | --- | --- | --- | --- | --- |
-| 1 | W65C02S6TPG-14 | Mouser `955-W65C02S6TPG-14` | CPU, PDIP-40 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/955-W65C02S6TPG-14) |
-| 2 | AVR128DB28-I/SP | DigiKey `150-AVR128DB28-I/SP-ND` | MCU, SPDIP-28, industrial | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/AVR128DB28-I-SP/12807495) |
-| 2 | AVR128DB28-E/SP | Mouser `579-AVR128DB28-E/SP` | MCU, SPDIP-28, extended | - | [Mouser](https://www.mouser.mx/en/ProductDetail/Microchip-Technology/AVR128DB28-E-SP?qs=vmHwEFxEFR9lzuat%2Fan%252Bvw%3D%3D) |
-| 3 | AS6C62256-55PCN | DigiKey `1450-1033-ND` (1), Mouser `913-AS6C62256-55PCN` (2) | 32K x 8 SRAM, 55 ns, PDIP-28 | - | [DigiKey](https://www.digikey.com/en/products/detail/alliance-memory-inc/AS6C62256-55PCN/4234592) |
-| 1 | SST39SF040-70-4C-PHE | Mouser `804-39SF0407CPHE` | Purchased 512K x 8 flash, 70 ns, PDIP-32 | Obsolete | [Mouser](https://www.mouser.mx/en/ProductDetail/804-39SF0407CPHE) |
-| 0 | SST39SF040-55-4C-NHE | DigiKey | 512K x 8 cart flash, 55 ns, PLCC-32 | Active | [DigiKey](https://www.digikey.com.mx/es/products/detail/microchip-technology/SST39SF040-55-4C-NHE-T/2615114) |
-| 1 | 24LC64-I/P | Mouser `579-24LC64-I/P` | Cart EEPROM, DIP-8 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/Microchip-Technology/24LC64-I-P?qs=EkZBwCRGcSvc%252BCDluHmdqw%3D%3D) |
-| 4 | ATF22V10C-15PU | DigiKey `ATF22V10C-15PU-ND` | PLD, 15 ns, PDIP-24 | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/ATF22V10C-15PU/1008580) |
-| 3 | SN74HC157N | Mouser `595-SN74HC157N` | Quad 2-to-1 mux, PDIP-16 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC157N) |
-| 2 | SN74HC573AN | DigiKey `296-1596-5-ND` | Octal latch, PDIP-20 | - | [DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/SN74HC573AN/277242) |
-| 1 | SN74HC574N | Mouser `595-SN74HC574N` | Octal flip-flop, PDIP-20 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC574N) |
-| 2 | AT27C256R-45PU | DigiKey `AT27C256R-45PU-ND` | Color PROM, 45 ns, PDIP-28 | - | [DigiKey](https://www.digikey.com/en/products/detail/microchip-technology/AT27C256R-45PU/1118860) |
-| 0 | CXA2075M | Generic (AliExpress and similar) | Composite encoder, SOP-24 | Not a current Sony catalog part | [datasheet](https://www.alldatasheet.com/datasheet-pdf/pdf/146350/SONY/CXA2075M.html) |
-| 1 | SN74HCU04N | Mouser `595-SN74HCU04N` | Unbuffered hex inverter, PDIP-14 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HCU04N) |
-| 3 | SN74HC74N | DigiKey `296-1602-5-ND` (2), Mouser `595-SN74HC74N` (1) | Dual flip-flop, PDIP-14 | - | [DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/SN74HC74N/277248) |
-| 2 | ATTINY85-20PU | Mouser `556-ATTINY85-20PU` | Pad MCU, PDIP-8 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/556-ATTINY85-20PU) |
-| 1 | SN74HC14N | Mouser `595-SN74HC14N` | Hex Schmitt-trigger inverter, PDIP-14 | - | [Mouser](https://www.mouser.mx/en/ProductDetail/595-SN74HC14N) |
-| 3 | HC-49/U-S21477270ABJB | Mouser `695-HC49US-214-U` | 21.477270 MHz crystal, 18 pF, HC-49/US | - | [Mouser](https://www.mouser.mx/en/ProductDetail/695-HC49US-214-U) |
-| 3 | FOXSLF/036S | Mouser `559-FOXS036S-LF` | 3.579545 MHz crystal, 18 pF | - | [Mouser](https://www.mouser.mx/en/ProductDetail/559-FOXS036S-LF) |
-| 3 | XT9S20ANA8M | Mouser `73-XT49S800-20` | 8.000 MHz crystal, 20 pF | - | [Mouser](https://www.mouser.mx/en/ProductDetail/73-XT49S800-20) |
+Cart flash listing: [DigiKey](https://www.digikey.com.mx/es/products/detail/microchip-technology/SST39SF040-55-4C-NHE-T/2615114).
 
 ### Reset generation: MCP130 supervisor
 
 A dedicated 3-pin supervisor IC (**Microchip MCP130** in TO-92) controls system reset. It monitors the 5 V rail, provides brown-out detection, enforces a 350 ms power-on delay, and debounces manual reset switches directly on the **RESB** net with a sharp rising edge.
 
-### What kind of system is this?
-
-Retr01 is a **multi-chip 8-bit gaming system** (separate CPU, RAM, glue, video path), not an FPGA soft system and also **not** a fully discrete-logic machine in the TTL-only sense. Game behavior and helper work live in programmable parts. Fixed 74xx-class chips only do mux/latch glue and clock generation.
-
-| Class | Parts | Programmable? | Flashed through the console? |
-| --- | --- | --- | --- |
-| **CPU** | W65C02S | Yes (runs cart **PRG**) | No (executes cart code, is not flashed) |
-| **MCU helpers** | 3x AVR128DB28 | Yes (firmware) | **No** (breadboard SerialUPDI, then install) |
-| **PLDs** | 3x ATF22V10 | Yes (beam / decode equations) | **No** (pre-programmed or DIY PLD tool) |
-| **OTP color table** | AT27C256R | Program once (factory/DIY blow) | **No** (pre-programmed or DIY PROM tool) |
-| **Cart memories** | SST39SF040, 24C64 | Yes (game image / saves) | **Yes** (cart flash via MCU-M bridge) |
-| **Motherboard memories** | 3x AS6C62256 | No logic. Volatile storage only | No |
-| **Fixed glue logic** | 3x 74HC157, 74HC573, 74HC574 | **No.** Hardwired mux / latch | No |
-| **Clock generation** | 74HCU04, 74HC74 | **No.** Discrete crystal oscillator and divider | No |
-| **Composite encoder** | CXA2075M | Fixed analog (RGB to NTSC/PAL) | No |
-| **Reset supervisor** | MCP130 | Fixed supervisory timing | No |
-| **Outside the 21** | crystals | Fixed timing | No |
-| **Pad MCU** | ATtiny85 (in controller) | Yes (pad firmware) | **No** (pre-programmed or DIY ISP) |
-
 ### Composite encoder: CXA2075M
 
-The **CXA2075M** is on the motherboard BOM (one of the **19**). Package is SOP-24. Behavior and pin roles: [`docs/ic_behavior/CXA2075M.md`](../ic_behavior/CXA2075M.md).
+The **CXA2075M** is on the motherboard BOM (one of the **19**). Package is SOP-24.
 
 RGB from the color PROM DAC goes to **RIN**, **GIN**, and **BIN**. CSYNC from the beam PLDs goes to **SYNCIN**. That same CSYNC is **J2** pin 5. **Y3** is a Pierce crystal on **U04** gates 5 and 6, with **R25** (1 Mohm) across the crystal and **C23**/**C24** to GND. Gate 6 drives **SCIN**. **SCIN** is a clock input, so the crystal does not sit on that pin. **J11** drives **NPIN**: shunt on the left column (pins 1 and 3) for NTSC (NPIN at +5 V, Y3 at 3.579545 MHz), or on the right column (pins 2 and 4) for PAL (NPIN at GND, Y3 at 4.433618 MHz). The raster stays **341 x 262** at about **60 Hz** either way. HSYNC and VSYNC stay on the beam PLDs. Composite is **CVOUT** on **J2** pin 4. **YTRAP** is open, so the encoder uses its internal trap.
 
@@ -163,71 +117,13 @@ RGB from the color PROM DAC goes to **RIN**, **GIN**, and **BIN**. CSYNC from th
 
 OAM `$7F20`/`$7F21` latches on M then SPI to S1. APU forwards M to S2. Cart I2C `$7F22`-`$7F24` on M. Machine EE `$7F70`-`$7F72` on M.
 
-**SPI mailbox rules (locked):** exactly one of `/SS_S1` or `/SS_S2` low at a time. Idle both high. OAM blocks go to S1 in **early VBlank** only, or when **`S1_RDY`** says ready. Do **not** blast OAM SPI during HBlank (that window is for BG0 line fill). Separate message IDs / lengths for S1 vs S2 so a mis-select fails closed.
+**SPI mailbox rules (locked):** exactly one of `/SS_S1` or `/SS_S2` low at a time. Idle both high. OAM blocks go to S1 in **early VBlank** only, or when **`S1_RDY`** says ready. OAM SPI stays out of HBlank (that window is for BG0 line fill). Separate message IDs / lengths for S1 vs S2 so a mis-select fails closed.
 
 HBlank is short, so S1 only prepares the **next BG0 line** there. Sprites are composited in one VBlank pass into the field buffer (no sprite line ping-pong). See `video-graphics.md`.
 
 **Field AD rules (locked):** S1 uses a state machine with dead cycles between ALE address latch and data `/WE`. AD[7:0] stay **hi-Z** outside an owned write window. PLD field `/OE` (beam read) and S1 `/WE` are mutually exclusive by equation.
 
 Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field fill.
-
-## Pin freeze essentials
-
-**GPIO (SPDIP-28):** `PA[7:0]`, `PC[3:0]`, `PD[7:1]`, `PF[6,1,0]` = **22**. **UPDI** = dedicated **pin 19** (not PF6). **VDDIO2** = VDD (5 V). Cart program header is **J10** (2x2). AVR UPDI stays off J10.
-
-| Lock | Value |
-| --- | --- |
-| Cart I2C | M TWI0 DEFAULT **PA2/PA3** |
-| Master SPI | SPI1 DEFAULT PC0 MOSI, PC1 MISO, PC2 SCK, PC3 `/SS_S1`. `/SS_S2` = PD5. Cart program: USART1 one-wire on **PC1** (J10 DATA) |
-| Slave SPI | SPI1 ALT1 PD4 MOSI, PD5 MISO, PD6 SCK, PD7 `/SS` |
-| DAC / audio | On-chip DAC on PD6 unused. S2 audio = TCA0 WO1 **PF1** |
-| Pad UART | USART2 OD on **PF0** |
-| Field | AD[7:0] + ALE -> HC573. A[14:8] direct. S1 drives ALE + `/WE` only. `/OE`/`/CE` from PLD |
-| Async into AVRs | Synchronize `VBL`, `SEL_SOFT*`, and other beam/CPU edges with two flops (or the event system) before acting |
-
-**Soft SEL** (I/O page `$7F00-$7FFF`):
-
-| SEL | Covers (examples) |
-| --- | --- |
-| `SEL_SOFT0` | `$7F00` PPUCTRL, `$7F06`/`$7F07` BG0 scroll |
-| `SEL_SOFT1` | `$7F05` raster ctrl, `$7F08` PAL_ROW, `$7F09` PAL_DATA |
-| `SEL_SOFT2` | OAM `$7F20`/`$7F21`, cart EE `$7F22`-`$7F24`, APU `$7F40`-`$7F5F`, machine EE `$7F70`-`$7F72`, MAP `$7F90`-`$7F93` |
-
-Hard (not soft SEL): scroll/raster latches `$7F02`-`$7F04`, VRAM `$7F10`-`$7F12` (`SEL_VRAM`). Pads `$7F60`/`$7F61` are served by MCU-S2 via the soft path after SPI/GPIO sample.
-
-Rising edge + latched `A[7:0]` via `CPU_A_SAMPLE` (PD4).
-
-**HC573:** D=AD[7:0], Q=field A[7:0], LE=`ALE`, `/OE` low. **HC574:** D=CPU D, CLK=`LE_7F02`, `/OE` low, Q=SX[7:0] (not PHI2 free-run). Field write: A[14:8] + A[7:0] on AD, pulse ALE, data on AD, `/WE`.
-
-### MCU-M
-
-| Net | PORT | Net | PORT |
-| --- | --- | --- | --- |
-| `CPU_D0`/`D1` | PA0-1 Z/in | `I2C_SDA`/`SCL` | PA2-3 OD |
-| `CPU_D2`..`D5` | PA4-7 Z/in | `SPI_MOSI/MISO/SCK` | PC0-2. PC1 also cart DATA |
-| `/SS_S1` | PC3 out | `SEL_SOFT0` | PD1 in |
-| `CPU_RDY` | PD2 OD | `VBL` | PD3 in |
-| `CPU_A_SAMPLE` | PD4 in | `/SS_S2` | PD5 out |
-| `CPU_D6`/`D7` | PD6-7 Z/in | `SEL_SOFT1`/`2` | PF0-1 in |
-| `S1_RDY` | PF6 in | `UPDI` | pin 19 |
-
-### MCU-S1
-
-| Net | PORT | Net | PORT |
-| --- | --- | --- | --- |
-| `AD0`..`AD7` | PA0-7 Z | `A8`..`A11` | PC0-3 Z |
-| `A12`..`A14` | PD1-3 Z | `SPI_*` `/SS_S1` | PD4-7 |
-| `ALE` | PF0 out | `/WE` | PF1 out |
-| `S1_RDY` | PF6 out | `UPDI` | pin 19 |
-
-### MCU-S2
-
-| Net | PORT | Net | PORT |
-| --- | --- | --- | --- |
-| `P1_RIGHT`..`START` | PA0-7 in | `P2_RIGHT`..`UP` | PC0-3 in |
-| `P2_X`/`Y`/`COIN` | PD1-3 in | `SPI_*` `/SS_S2` | PD4-7 |
-| `PAD_DATA` | PF0 OD | `AUDIO_PWM` | PF1 out |
-| `P2_START` | PF6 in | `UPDI` | pin 19 |
 
 ## PLD roles (3x ATF22V10)
 
@@ -287,7 +183,7 @@ EDAC **395-036-*** style. Looking into the console socket (or at the cart edge f
 
 **Groups:** A0-A13 from the CPU. A14-A18 from the Compositor MAP port. D0-D7 data. OE# / WE# for flash. SDA/SCL for the 24C64.
 
-**CHR fetch:** CHR is **16** banks on the same flash (**64 KB**). During a CHR window the cell or sprite attr bank field (4 bits) is part of the flash address: bits **0-1** on **A12-A13** (inside a 16 KB page), bits **2-3** on **A14-A15**, CHR region base on MAP **A16-A18**. MCU-S1 can form that address in firmware. If BG1 CHR is built in the Compositor, folding bits 2-3 onto A14/A15 is a 22V10 product-term question. See `video-graphics.md` and `open-questions.md`.
+**CHR fetch:** CHR is **16** banks on the same flash (**64 KB**). During a CHR window the cell or sprite attr bank field (4 bits) is part of the flash address: bits **0-1** on **A12-A13** (inside a 16 KB page), bits **2-3** on **A14-A15**, CHR region base on MAP **A16-A18**. MCU-S1 can form that address in firmware. If BG1 CHR is built in the Compositor, folding bits 2-3 onto A14/A15 is a 22V10 product-term question. See `video-graphics.md`.
 
 ### Console as programmer (locked): cart flash via J10
 
@@ -316,7 +212,7 @@ Top view, pin 1 at top-left:
 
 **Address path (locked):** MCU-M has CPU D[7:0] and no cart address pins. A0-A13 stay on the 6502. A14-A18 stay on the compositor MAP latch (`$7F90`). While CART_ARM is high, `$8000-$FFFF` reads are MCU-M cycles (same shape as soft `$7Fxx`, with `CPU_RDY` if the window is tight). MCU-M serves a small 6502 stub. That stub copies itself into system RAM and jumps there. The RAM stub talks to MCU-M through `$7Fxx`, sets MAP via `$7F90`-`$7F92` (D7 = CART_ARM on the `LE_MAP` byte), and writes `$8000-$FFFF`. The compositor pulses `WE#` only when CART_ARM is high and the CPU is writing cart space.
 
-Host command bytes on the Friend serial link stay TBD. Pin numbers and this bridge contract are locked. See `open-questions.md`.
+Host command bytes on the Friend serial link stay TBD. Pin numbers and this bridge contract are locked.
 
 | Job | Path |
 | --- | --- |
@@ -328,21 +224,7 @@ Keep each AVR's UPDI pin configured as **UPDI** (not reset/GPIO) so Adafruit's U
 
 ### PLDs, color PROM, AVRs, and pad MCU (not J10)
 
-J10 does not program these. AVR128DB28 parts use Adafruit's UPDI Friend on a breadboard (SerialUPDI to pin 19), then get installed. **Locked:** there is **no** high-voltage programming path on the motherboard (no ~12 V PLD EDIT / no ~13 V PROM VPP injected on-board). PLDs, the color PROM, and the pad MCU are programmed **off the console PCB**, then installed (sockets recommended so they can be swapped).
-
-Two practical paths:
-
-1. **Buy them pre-programmed.** Blank stock is the default from distributors. Programming services (distributor / MicrochipDirect-style / kit vendor selling Retr01-ready parts) can ship AVR128DB28s with MCU firmware, ATF22V10s with the beam/compositor JEDEC images, an AT27C256R blown with the 64-color table, and pad ATtiny85s with pad firmware. That is the easiest path when a bench programmer is not on hand. Note: the color PROM is **OTP** (one-time). A wrong blow means a new chip.
-2. **Program them with a separate tool** (off the console PCB):
-
-| Part | DIY options (examples) |
-| --- | --- |
-| **AVR128DB28** | Adafruit's UPDI Friend, or USB-serial with 1K TX/RX loopback, SerialUPDI to pin 19, on a breadboard |
-| **ATF22V10** | Arduino **Uno/Nano**-based GAL programmers (e.g. Afterburner), or a TL866-class universal programmer that lists ATF22V10 |
-| **AT27C256R** | Parallel EPROM/OTP programmer (TL866-class or similar) that supports 27C256 and the required VPP/VCC programming voltages |
-| **ATtiny85** (pad) | **ISP**: Arduino as ISP (Nano/Uno), USBasp, USBtinyISP, and so on. Optional ISP header on the pad PCB is fine (5 V only, no HV) |
-
-Prefer programming PLDs, the color PROM, and the three AVRs **before** they go into the motherboard (or drop pre-programmed parts into sockets). Same for the pad MCU before closing the controller shell.
+J10 does not program these. AVR128DB28 parts use Adafruit's UPDI Friend on a breadboard (SerialUPDI to pin 19), then get installed. There is no high-voltage programming path on the motherboard. PLDs, the color PROM, and the pad MCU are programmed off the console PCB, then installed. The color PROM is one-time. A wrong blow means a new chip.
 
 ## Controllers
 
@@ -352,7 +234,20 @@ Prefer programming PLDs, the color PROM, and the three AVRs **before** they go i
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Button | Start | Coin | Y | X | Up | Down | Left | Right |
 
-**Arcade:** J5 and J6 **2x5**, one per player. US2 sits between them. Even pins 2-10 are bits 0-4 (pin 2 = bit 0). J5 odd pins 7 and 9 are GND. J5 odd pin 1 = PA7 (US2 1), pin 3 = PA6 (US2 28), pin 5 = PA5 (US2 27). J6 odd pins 1 and 3 are GND. J6 odd pin 5 = PD2 Y (US2 8), pin 7 = PF6 Start (US2 18), pin 9 = PD3 Coin (US2 9). J5 is Player 1 to the right of US2 (180 deg, even column faces PA0-4). J6 is Player 2 to the left (0 deg, even column faces PC0-3 / PD1). J7 **2x2** (`+5V`/`GND` / `RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6. The JAMMA finger edge shares the J5 and J6 button nets, and the +5 V and GND rails ([`jamma-and-sega-av.md`](../misc/jamma-and-sega-av.md)).
+**Arcade:** J5 and J6 **2x5**, one per player. US2 sits between them. Even pins 2-10 are bits 0-4 (pin 2 = bit 0). J5 odd pins 7 and 9 are GND. J5 odd pin 1 = PA7 (US2 1), pin 3 = PA6 (US2 28), pin 5 = PA5 (US2 27). J6 odd pins 1 and 3 are GND. J6 odd pin 5 = PD2 Y (US2 8), pin 7 = PF6 Start (US2 18), pin 9 = PD3 Coin (US2 9). J5 is Player 1 to the right of US2 (180 deg, even column faces PA0-4). J6 is Player 2 to the left (0 deg, even column faces PC0-3 / PD1). J7 **2x2** (`+5V`/`GND` / `RESET_N`/`GND`). Microswitch to GND. Series **47 ohm**. P1 -> PA0-7. P2 bits 0-3 -> PC0-3, 4-6 -> PD1-3, Start -> PF6. The JAMMA finger edge shares the J5 and J6 button nets, and the +5 V and GND rails. Picture and sound stay on J2. Footprint `Retr01_Lib:JAMMA-56`. Pitch 3.96 mm. Numbered pads are the parts side. Letter pads are the solder side, skipping G, I, O, and Q. Pin 7 is the key.
+
+| Control | P1 pad | P2 pad |
+| --- | --- | --- |
+| Coin | 16 | T |
+| Start | 17 | U |
+| Up | 18 | V |
+| Down | 19 | W |
+| Left | 20 | X |
+| Right | 21 | Y |
+| Button 1 (X) | 22 | Z |
+| Button 2 (Y) | 23 | a |
+
+GND pads are 1, 2, 28, A, B, and f. +5 V pads are 3, 4, C, and D. The other fingers stay off the netlist. There is no -5 V rail and no +12 V rail, so those fingers stay open.
 
 **TRS (home shell):** 3.5 mm or 6.35 mm (1/4") jacks. Same nets on both sizes. Tip=5 V, Ring=DATA, Sleeve=GND. Populate one size per player. **J3** is player 1 and **J4** is player 2. Each footprint carries the Switchcraft **35RAPC2BVN4** 3.5 mm outline and the **CLIFF S4** 6.35 mm outline (typical **S4/BMB/PC-C**). **4.7 kohm** pull-up on DATA (PF0). OD half-duplex UART (pad and host both **open-drain**, never push-pull). Pad MCU = **ATtiny85** (in the controller, not on the 21). Pad PCB is **2-layer**. **115200** 8N1. **< 200 us**/exchange with a hard timeout. Poll `0x55`=P1, `0xAA`=P2 in **VBlank**. Reply = 1 byte bitfield. On timeout, keep last good or clear. Arcade headers and TRS pads are alternate input paths. Pads are optional when the cabinet uses microswitches.
 
@@ -375,26 +270,7 @@ Analog RGB from the PROM DAC. One Kycon **KMDGX-9S-AS** female 9-pin mini-DIN (*
 
 HSYNC and VSYNC stay on the beam PLDs. They have no pin on this socket. **J11** chooses NTSC or PAL for composite on pin 4.
 
-## PCB layout practices
-
-**Stackup:** The motherboard is **4-layer**. Layers 2 and 3 are solid GND planes, so noisy copper and quiet copper each have a ground return directly beside them. Layers 1 and 4 also get a GND zone fill in the copper that is not a trace. Every layer carries GND.
-
-| Layer | Copper |
-| --- | --- |
-| 1 | Clock-rate digital, +5V, and a GND fill |
-| 2 | Solid GND plane |
-| 3 | Solid GND plane |
-| 4 | Analog, slow digital, I/O, and a GND fill |
-
-The GND copper is one net. Planes and fills are not cut into a digital region and an analog region. Noise stays down by placement, by which outer layer a signal uses, and by the analog keepout on layer 4. **+5V** is a routed net on layer 1 (0.8 mm to 1.2 mm). It is not an inner plane. Stitching vias tie GND on all four layers every 10 mm to 15 mm, and next to each IC ground pin. KiCad zone fill drops orphan copper.
-
-Net-by-net assignment, the half/half outer-layer target, the analog keepout, and the KiCad **Quiet** / **CPU_A** / **CPU_D** air-wire classes: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
-
-**Layer 1:** buffered PHI2 and DOT, CPU and cart address and data, VRAM address and the 74HC157 ports, beam-counter lines, the color index into the Color PROM, U24 digital outputs to the DAC resistors, S1 `AD[7:0]` / ALE / field `/WE`, SPI MOSI/MISO/SCK, scroll X data, and +5V.
-
-**Layer 4:** Pierce loops (Y1, Y2, U04 analog pins, feedback resistors, load caps), Y3 and the subcarrier into the CXA2075M, the R-2R gun nodes to J2 pins 7 / 3 / 1, composite to J2 pin 4, audio to J2 pins 6 / 8 / 9, pad UART, I2C, `RESB`, `CPU_RDY`, UPDI, arcade and pad GPIO, LED anodes, line/frame strobes, soft SELs, SPI chip-selects, and MAP A14-A18.
-
-Cart and pad PCBs are **2-layer**.
+## Connectors
 
 | Ref | Locked |
 | --- | --- |
@@ -412,57 +288,7 @@ Cart and pad PCBs are **2-layer**.
 
 Series **33 ohm** on PHI2 and DOT. Entry bulk **220 uF**. Cart OE#/WE#/SDA/SCL series **33 ohm**. Cart **D[7:0]** ties straight to J36. Hold **RESB** until PHI2/DOT are up (RC or supervisor). Prefer sockets for the three ATF22V10s so a bad JEDEC can be swapped.
 
-### Test points
-
-Exposed copper pads (circles or plated holes) for multimeter / scope probes. Prefer one accessible side. Label in silkscreen. Keep clear of tall THT bodies and board-edge keepouts.
-
-Minimum set (expand as layout needs):
-
-| TP | Net / use |
-| --- | --- |
-| Several **GND** | Probe return (spread around the board) |
-| **+5V** | After barrel / regulator entry |
-| **PHI2**, **DOT** | Clock sanity |
-| **RESET_N** | Bring-up |
-| **CART_PROG_DATA** (J10 DATA) | Cart program path alive |
-| Cart **WE#**, **OE#** | Flash / bus checks |
-| Soft I/O sample (ex. one `$7Fxx` SEL) | Decode smoke test |
-
-Aim for about **1.0 mm** pad diameter and comfortable probe spacing (about **1.27 mm**+ center-to-center).
-
-### Status LEDs (THT only for now)
-
-Full-size **through-hole** LEDs only in v1 (no SMD indicators yet). Series resistors as usual. Clear cathode mark on silkscreen. Place where a shell window or open chassis can see them.
-
-Starter set (roles can grow):
-
-| LED | Meaning |
-| --- | --- |
-| Power | +5 V present |
-| Heartbeat M | MCU-M alive (firmware toggles on a timer even while `CPU_RDY` pulses) |
-| Heartbeat S1 | MCU-S1 alive |
-| Heartbeat S2 | MCU-S2 alive |
-| Prog / activity | Optional. Blinks while the J10 / MCU-M cart-bridge path is busy (if firmware can drive it) |
-
-### Layout rules (bring-up friendly)
-
-These track common practice for this **4-layer** digital and video board:
-
-- **Decoupling:** **100 nF** (or similar) at every IC VCC pin, within 5 mm of the pin, with a short via into the GND plane. Bulk **220 uF** at the 5 V entry. Smallest HF caps closest to the pin.
-- **Return paths:** High-frequency return flows in the GND copper under the trace. Layer 2 returns layer 1. Layer 3 returns layer 4. Stitching vias tie GND on all four layers every 10 mm to 15 mm and next to each IC ground pin.
-- **Keep clocks short:** PHI2, DOT, AVR clocks, and FSC stays. Crystals and their load caps next to the part. Series **33 ohm** already noted on PHI2/DOT.
-- **Board edges:** High-speed and clock traces stay off the PCB perimeter. Edge copper couples into chassis and EMI. Clocks sit toward the middle of the board. Connectors and video out may sit on the edge by nature. Their stub lengths stay short.
-- **Spacing / corners:** Prefer 45-degree bends over sharp 90s on faster nets. Give PHI2 / DOT / RGB analog some clearance from noisy switching and from each other where layout allows.
-- **Analog video:** CXA2075M / DAC area quieter. Local decoupling. Short RGB, composite, and sync runs to J2. Digital buses and layer 4 control traces stay out of that island. Full keepout: [`docs/bring-up-v2/main-pcb-layers.md`](../bring-up-v2/main-pcb-layers.md).
-- **Power:** +5V stays on layer 1 at 0.8 mm to 1.2 mm. Feed from the barrel. Do not daisy a thin trace through the whole board.
-- **Mounting / ESD:** Leave keepout around mounting holes. Tie chassis/mounting strategy deliberately (not accidental floating metal next to edge traces).
-- **Silkscreen:** Refdes, polarity, J10 `CART`, TP names, LED names.
-
-**Cart and pad PCBs (2-layer).** Same spirit: local caps next to the ICs, short stubs to the edge connector or TRS jack, one side mostly ground pour with stitching vias, labeled TPs for `+5V` / `GND` (and cart `WE#` if space allows).
-
-### IC communication risks
-
-Different clocks, shared buses, and Hi-Z hand-offs make IC-to-IC traffic the fragile part of this design. Full risk catalog and mitigations: **`ic-comms-risks.md`**.
+Layer assignment, keepout, and trace widths: [`../pcb.md`](../pcb.md). Shared-net failure rules: [`ic-comms-risks.md`](ic-comms-risks.md).
 
 ## Light gun (roadmap)
 
@@ -478,4 +304,4 @@ Black anti-spoof then white hitboxes on all targets, then `0x5A`. Two flash fram
 
 ## Related
 
-`memory.md` | `cartridge.md` | `video-graphics.md` | `palette/` | `world-scrolling.md` | `software-api.md` | `sound.md` | `light-gun.md` | `open-questions.md` | `../ic_behavior/` | `ic-comms-risks.md`
+`memory.md` | `cartridge.md` | `video-graphics.md` | `palette/` | `world-scrolling.md` | `software-api.md` | `sound.md` | `light-gun.md` | `ic-comms-risks.md` | [`../pcb.md`](../pcb.md)

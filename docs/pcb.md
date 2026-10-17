@@ -1,9 +1,8 @@
-# Main PCB: layer assignment
+# Main PCB layers
 
 Which nets live on which copper layer of the motherboard under `apps/sim/tier-h/kicad/main-pcb/`.
-Placement zones: [main-pcb-placement/README.md](main-pcb-placement/README.md). Stackup summary: [`docs/general/hardware.md`](../general/hardware.md).
 
-Cart and pad PCBs are 2-layer and are outside this doc.
+Cart and pad PCBs are 2-layer and are outside this page.
 
 ---
 
@@ -216,7 +215,11 @@ A whole bus that cannot finish on layer 1 is a placement problem first. The part
 | +5V width | 0.8 mm to 1.2 mm |
 | Analog video / Pierce | Short, local to Zone 2. 45-degree bends. Extra clearance from layer 1 clocks. |
 | GND stitch | Via every 10 mm to 15 mm, and at each IC GND pin |
-| Bypass | 100 nF within 5 mm of each VCC pin, short via into the GND plane |
+| Bypass | 100 nF within 5 mm of each VCC pin, short via into the GND plane. Bulk 220 uF at the 5 V entry |
+
+Clocks stay off the board perimeter. Connectors and video may sit on the edge. Their stubs stay short. Mounting holes keep a clearance from edge traces.
+
+Cart and pad boards are 2-layer. Local caps sit next to the ICs. One side carries a ground pour with stitching vias.
 
 ---
 
@@ -227,27 +230,14 @@ A whole bus that cannot finish on layer 1 is a placement problem first. The part
 | Class | Color | Nets | Layer |
 |-------|-------|------|-------|
 | **Quiet** | orange `rgb(220, 143, 50)` | Analog, reset/ready, handshake, I2C, pads, arcade, MAP A14-A18 | 4 |
-| **CPU_A** | magenta `rgb(210, 35, 136)` | `CPU_A0`-`CPU_A15` (and `CART_A0`-`CART_A13` if those names remain) | 1 |
+| **CPU_A** | magenta `rgb(210, 35, 136)` | `CPU_A0`-`CPU_A15` and `CART_A0`-`CART_A13` | 1 |
 | **CPU_D** | green `rgb(60, 180, 90)` | `CPU_D0`-`CPU_D7` | 1 |
 | Default | (KiCad default) | Remaining layer 1 nets | 1 |
 
 `CPU_A_SAMPLE` is not a bus bit. It stays on **Quiet**. `CART_A14`-`CART_A18` stay on **Quiet**.
 
-Pcbnew colors air wires from each class `pcb_color`. Board Setup, Net Classes changes a color. Track width is 0.25 mm on Quiet, CPU_A, and CPU_D. Via sizes still match Default.
+Pcbnew colors air wires from each class `pcb_color`. Board Setup, Net Classes changes a color. Track width is 0.25 mm on Quiet, CPU_A, and CPU_D. Via sizes match Default.
 
 Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py` and `bus_nets.py`.
 
-Hide **Quiet**, then show only **CPU_A**, then only **CPU_D**, when placing U1, U3, U6, the 157s, U574, UM, and J36. Route each corridor as a parallel group on layer 1 before other Default nets. A whole bus that cannot finish on layer 1 is a placement problem first.
-
----
-
-## Related
-
-- [`docs/general/hardware.md`](../general/hardware.md): stackup summary and connector pinout
-- [main-pcb-placement/README.md](main-pcb-placement/README.md): zones and part list
-- [main-pcb-placement/ics.md](main-pcb-placement/ics.md): IC pin destinations
-- [main-pcb-placement/resistors.md](main-pcb-placement/resistors.md): R1-R25
-- [main-pcb-placement/crystals.md](main-pcb-placement/crystals.md): Pierce and divider
-- [`docs/bringup/pcb-component-placement-guide.md`](../bringup/pcb-component-placement-guide.md): zone rationale
-- [`docs/bringup/staged-pcb-bringup-guide.md`](../bringup/staged-pcb-bringup-guide.md): fab widths
-- [`docs/misc/retr01_shared_bus_skidl.md`](../misc/retr01_shared_bus_skidl.md): shared CPU bus as two Pcbnew corridors
+Placing U1, U3, U6, the 157s, U574, UM, and J36 shows **Quiet** hidden, then only **CPU_A**, then only **CPU_D**. Each corridor is a parallel group on layer 1 before other Default nets. A whole bus that cannot finish on layer 1 is a placement problem first.

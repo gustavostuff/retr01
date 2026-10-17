@@ -1,6 +1,6 @@
 """Quiet KiCad net class (analog plus slow digital / I/O, usually on layer 4).
 
-Assignment follows docs/bring-up-v2/main-pcb-layers.md. Layer 1 keeps clock-rate
+Assignment follows docs/pcb.md. Layer 1 keeps clock-rate
 buses, digital squares, and +5V. Quiet nets are analog, reset/ready, handshake,
 I2C, pads, arcade, sync, MAP A14-A18, and SPI chip-selects.
 

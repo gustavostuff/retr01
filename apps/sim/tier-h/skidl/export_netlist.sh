@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Preliminary Tier H JSON + KiCad netlist (not fab-ready). See docs/bringup/tier-h-skidl-export.md.
+# Preliminary Tier H JSON + KiCad netlist (not fab-ready).
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"

@@ -1,7 +1,7 @@
 """Motherboard discrete clock generation networks (Y1/Y2/Y3, 74HCU04, 74HC74).
 
 Implements the discrete Pierce crystal oscillators and flip-flop divider
-documented in docs/general/hardware.md and docs/passive_bom.md:
+documented in docs/general/hardware.md:
 - CPU Clock (8.000 MHz): Y1 crystal + 74HCU04 inverters (Gates 3 & 4) + R23 (1M) + C25/C26
 - Dot Clock (5.369318 MHz): Y2 crystal (21.47727 MHz) + 74HCU04 inverters (Gates 1 & 2)
   + R24 (1M) + C21/C22 + SN74HC74 dual D flip-flop divider (Stage 1 divide-by-2 to 10.738 MHz,

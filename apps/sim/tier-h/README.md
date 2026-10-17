@@ -6,7 +6,7 @@ Matches [`docs/general/hardware.md`](../../../docs/general/hardware.md) idle-saf
 
 # Retr01 Board Simulator
 
-IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). Pin/behavior: [`hw/md/`](../../hw/md/). BOM and islands: [`docs/general/hardware.md`](../../../docs/general/hardware.md).
+IC-first board simulator for the Retr01 motherboard (arcade + console share one netlist). Separate from Retr01 Studio (authoring). BOM and islands: [`docs/general/hardware.md`](../../../docs/general/hardware.md).
 
 **Engine:** discrete IC / island / bus core lives in drop-in [`discrete_ic/`](../../../tools/discrete_ic/) (`Ns` / `ns_` API). This tree is the Retr01 board recipe, chips, Host Play, and SDL host. Temporary `R01s*` shims: [`include/retr01_sim/ns_compat.h`](include/retr01_sim/ns_compat.h).
 
@@ -33,7 +33,7 @@ Default path uses soft air-wire settle (LIVE). MANUAL breadboard electrical mode
 
 ### Passives tray
 
-Motherboard passives from [`docs/passive_bom.md`](../../docs/passive_bom.md): **64** parts below the ICs, ordered XTAL -> CCAP -> ECAP -> 5V/GND -> R. Cart and pad bypass caps are not in this tray.
+Motherboard passives: **64** parts below the ICs, ordered XTAL, CCAP, ECAP, 5V/GND, then R. Cart and pad bypass caps are not in this tray.
 
 | Kind | Role in tray | Notes |
 |------|--------------|-------|
@@ -44,9 +44,9 @@ Motherboard passives from [`docs/passive_bom.md`](../../docs/passive_bom.md): **
 | **R** | DAC + 33 ohm series + pull-ups + crystal feedback | 32 total. Only 11 are video DAC |
 | **D** | Art present | Not spawned (not on this BOM) |
 
-Sprites: `tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c` per [`docs/bringup/schematic-netlist-tier-h.md`](../../docs/bringup/schematic-netlist-tier-h.md)). Breadboard strip merge and bus settle through passives are still TODO.
+Sprites: `tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c`). Breadboard strip merge and bus settle through passives are still TODO.
 
-**Preliminary Skidl export (not fab-ready):** [`skidl/export_netlist.sh`](skidl/export_netlist.sh) or `export_tier_h_netlist` + [`scripts/skidl_from_tier_h.py`](../../../scripts/skidl_from_tier_h.py). Outputs under [`skidl/`](skidl/). See [`docs/bringup/tier-h-skidl-export.md`](../../../docs/bringup/tier-h-skidl-export.md). Illustrative only; motherboard PCB is not ready for production.
+**Preliminary Skidl export (not fab-ready):** [`skidl/export_netlist.sh`](skidl/export_netlist.sh) or `export_tier_h_netlist` + [`scripts/skidl_from_tier_h.py`](../../../scripts/skidl_from_tier_h.py). Outputs under [`skidl/`](skidl/). Illustrative only. The motherboard PCB is not ready for production.
 
 ### Canvas islands
 
@@ -110,8 +110,8 @@ When something looks wrong on screen, do not assume the `.retr01` is bad and do 
 |-------|----------|----------------------|--------|
 | **Studio editor** | `output/test.r01proj` (+ UI) | **No** | Authoring only. Does not execute PRG |
 | **Studio Play** | export then shared emu | **Yes** (via cart) | Same path as **Ctrl+E** + emu render. No Studio-only soft preview |
-| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/graphics.md`](../../docs/graphics.md) |
-| **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit -> R3G3B2. Target part **AT27C256R** ([`hw/md/AT27C256R.md`](../../hw/md/AT27C256R.md)) |
+| **Cart image** | `output/test.retr01` (+ `test_flash.bin`) | **Yes** (flash) | Packed bytes SoT for PRG/CHR/MAP/pals. Layout in [`docs/general/memory.md`](../../../docs/general/memory.md) |
+| **Color PROM burn** | `test_prom.bin` | **Yes** (motherboard) | Not inside the cart. Kit to R3G3B2. Target part **AT27C256R** |
 | **Boot asm listing** | `test_boot.s` | Human-readable only | Binary inside `.retr01` is what runners execute |
 | **Emulator** | `retr01_emu` | Software-visible CPU/`$7Fxx` | Loads `.retr01`. Default: PRG catchup streams pals + start MAP. Softboot opt-in (`R01E_SOFTBOOT=1`). Host Play for camera/player. Used by Studio Play and standalone `./emu` |
 | **Board sim** | `retr01_sim` | IC / island netlist | Copies argv/default `.retr01` into cart `SST39SF040`. Catchup is pin-level. Softboot opt-in (`R01S_SOFTBOOT=1`). Host Play after catchup |
@@ -163,7 +163,7 @@ From the repo root:
 
 ```bash
 ./scripts/build-all.sh
-./scripts/sim-tier.sh h
+./scripts/sim-tier.sh
 ./scripts/unit-tests.sh
 ```
 
@@ -173,7 +173,7 @@ Developer rebuild of this tree only:
 cmake -S apps/sim/tier-h -B apps/sim/tier-h/build -DCMAKE_BUILD_TYPE=Release
 cmake --build apps/sim/tier-h/build -j
 ctest --test-dir apps/sim/tier-h/build --output-on-failure
-./scripts/sim-tier.sh h
+./scripts/sim-tier.sh
 ```
 
 Needs: CMake, a C compiler, SDL2 (`sdl2` package).
@@ -181,10 +181,10 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 ## Run
 
 ```bash
-./scripts/sim-tier.sh h
-./scripts/sim-tier.sh h example_01/example_01.retr01
-./scripts/sim-tier.sh h DELAY=typical   # print typ path budget vs PHI2 half
-./scripts/sim-tier.sh h DELAY=max       # print max (worst-case) path budget
+./scripts/sim-tier.sh
+./scripts/sim-tier.sh example_01/example_01.retr01
+./scripts/sim-tier.sh DELAY=typical   # print typ path budget vs PHI2 half
+./scripts/sim-tier.sh DELAY=max       # print max (worst-case) path budget
 ```
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $7Fxx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
@@ -202,7 +202,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 Same keyboard map is used by standalone **emu** and Studio Play.
 
-**Wave monitor (island K):** bottom-left overlay (drag, position in `ui_layout.json`). Lanes **B1-B5** / **S6-S8** draw stable math waveforms from the active voice (period = pitch). **A** is the mixed analog scope ring. After Host Play, silent BGM matches emu: scans `custom_logic.c` for `r01_bgm_play(ctx, N)` and drives B1-B5 from `output/data/bgm_trackN.bin` (Studio **Export**). No host speaker. See [`docs/sound.md`](../../docs/sound.md).
+**Wave monitor (island K):** bottom-left overlay (drag, position in `ui_layout.json`). Lanes **B1-B5** / **S6-S8** draw stable math waveforms from the active voice (period = pitch). **A** is the mixed analog scope ring. After Host Play, silent BGM matches emu: scans `custom_logic.c` for `r01_bgm_play(ctx, N)` and drives B1-B5 from `output/data/bgm_trackN.bin` (Studio **Export**). No host speaker. See [`docs/general/sound.md`](../../../docs/general/sound.md).
 
 Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / `AB` / phase / cycle count.
 

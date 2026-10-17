@@ -2,7 +2,7 @@
 
 No fixed-function audio ASIC. The **W65C02S** sequences. **MCU-S2** mixes eight voices in software and drives **PWM**. **MCU-M** only forwards the mailbox. **MCU-S1** does not touch audio.
 
-Silicon and pins: `hardware.md`. Soft map: `memory.md`. SPI / VBlank: `ic-comms-risks.md`. S2 chip notes: `../ic_behavior/AVR128DB28.md`.
+Silicon and pins: `hardware.md`. Soft map: `memory.md`. SPI / VBlank: `ic-comms-risks.md`. S2 PWM is PF1.
 
 ## Roles
 
@@ -212,8 +212,6 @@ Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker 
 - Soft `$7Fxx` / APU range: `memory.md`
 - MCU-S2 pins, **J2** audio pins, SPI `/SS_S2`: `hardware.md`
 - Mailbox SPI vs OAM VBlank: `ic-comms-risks.md`
-- S2 process / PWM pin: `../ic_behavior/AVR128DB28.md`
-- Bring-up: `../bringup/tier-h-pads-audio.md`
 - Window packing: `../../apps/common/fw/r01_apu_window.h`
 - Cart BGM blob: `../../apps/common/r01_apu_cart.h`
 - FD expand / NMI tracker (host): `../../apps/common/r01_apu_fd.h`, `../../apps/common/r01_apu_tracker.h`

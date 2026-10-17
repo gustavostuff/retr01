@@ -2,7 +2,7 @@
 #define RETR01_AVR128DB28_PINS_H
 
 /*
- * AVR128DB28-I/SP physical SPDIP-28 numbers (docs/ic_behavior/AVR128DB28.md).
+ * AVR128DB28-I/SP physical SPDIP-28 numbers.
  * Sim entities use these indices so DIP graphics, netlists, and KiCad pads match.
  */
 

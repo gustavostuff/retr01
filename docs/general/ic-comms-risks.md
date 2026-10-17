@@ -1,8 +1,8 @@
 # IC communication risks
 
-Retr01 is a multi-clock, multi-driver board. The 6502, three AVRs, three PLDs, SRAM, cart flash, glue, and the video path all share nets and must take turns talking. This note catalogs the main failure modes for that symphony, and how to mitigate them.
+Retr01 is a multi-clock, multi-driver board. The 6502, three AVRs, three PLDs, SRAM, cart flash, glue, and the video path all share nets and must take turns talking. This note catalogs the main failure modes when those parts share a net, and how to avoid them.
 
-**Related:** `hardware.md` (wiring, BOM, layout), `../ic_behavior/` (per-chip Inputs / Process / Outputs), `video-graphics.md` (VBlank / HBlank jobs), `memory.md` (CPU map).
+**Related:** `hardware.md` (wiring, BOM), [`../pcb.md`](../pcb.md) (layers), `video-graphics.md` (VBlank / HBlank jobs), `memory.md` (CPU map).
 
 ## Clock domains at a glance
 
@@ -216,68 +216,3 @@ Severity: **High** = silent bus fight or guaranteed visual/CPU fail if wrong. **
 - Friend stays off J10 during play. RESB and play MAP writes keep CART_ARM low.
 - Firmware: refuse cart-bridge commands unless CART_ARM is high. Keep `/SS_S1` and `/SS_S2` high in cart mode.
 - Bring-up checklist: Friend unplugged before a play-power cycle.
-
-## Priority matrix (what to prove first)
-
-| Order | Prove | Why |
-| --- | --- | --- |
-| 1 | CPU D ownership (RAM vs PRG vs soft hi-Z) | Without this, nothing else is trustworthy |
-| 2 | Reset safe enables | Avoid power-up fights |
-| 3 | VRAM PHI2 interleave alone | Video foundation |
-| 4 | Soft `$7Fxx` + RDY | MCU-M contract |
-| 5 | S1 field ALE/`/WE` in VBlank | Sprites |
-| 6 | S1 BG0 HBlank fill | Parallax show-through |
-| 7 | SPI M->S1 / M->S2 | Mailboxes |
-| 8 | Cart OE# / WE# play vs program | Cart integrity |
-| 9 | Pads / I2C / CXA2075M | Peripherals and analog |
-
-## Design rules of thumb
-
-1. **One talker per net.** Everyone else sleeps in hi-Z or is deselected.
-2. **Hard video stays in PLDs + glue.** AVRs help only in VBlank/HBlank windows they own.
-3. **If firmware might miss a PHI2 window, use `RDY`.** Hope is not a timing budget.
-4. **Cross clock domains with sync flops or qualified enables.**
-5. **Idle-safe pull resistors on enables.** Power-up and crashed firmware should not drive buses.
-6. **Measure the budget.** 55 ns SRAM and 45 ns PROM only work if decode + mux + firmware leave margin.
-
-## Performance: what not to do
-
-The rules above are mostly **correctness** fences. Followed carefully, they should **not** slow real gameplay. The beam path stays in PLDs + glue. PRG keeps the NES-style win of not burning the whole VBlank painting the picture.
-
-They **do** hurt frame time or feel hitchy if `RDY` and VBlank become a dumping ground. Avoid the patterns below.
-
-### Free on the play path (do these)
-
-| Practice | Why it is free |
-| --- | --- |
-| One talker / hi-Z discipline | Stops fights. No extra 6502 cycles |
-| Hard video in PLDs + HBlank/VBlank AVR windows | That **is** the performance design |
-| Sync flops on `VBL` / `SEL_SOFT*` into AVRs | A few AVR clocks of latency, not game FPS |
-| Idle-safe pulls on enables | Power-up / crash safety only |
-| 55 ns SRAM / 45 ns PROM with decode margin | Required for clean video, not a software tax |
-
-### Costly if abused (do not)
-
-| Anti-pattern | What goes wrong | Do instead |
-| --- | --- | --- |
-| Soft `$7Fxx` that **always** needs `CPU_RDY` | Stalls the 6502 on routine I/O every frame | Fix MCU-M so common reads/writes close in one PHI2. RDY is the escape hatch, not the default |
-| Holding `CPU_RDY` across long SPI / I2C / flash work during play | Whole game freezes. S1 can miss VBlank work relative to PRG | Bound every RDY hold. Keep play-path SPI short. Saves are explicit only |
-| Cart save mid-action with no UI, or one long RDY for the whole save write | Multi-ms hitch (EEPROM program waits, or a long I2C dump), or a **frozen** picture with no spinner | Save on pause / fade / dedicated saving screen. Prefer FRAM to drop program stalls. **Chunk across many VBlanks.** Short RDY only. Keep UI (spinner) updating. Never in the physics hot path |
-| Full OAM table SPI every frame, or OAM during HBlank | Steals VBlank from sprite field fill. HBlank BG0 line fails | Dirty / delta OAM in **early VBlank** (or wait for `S1_RDY`). Never in HBlank |
-| Late VBlank OAM then expecting a full field rebuild | Sprite glitches or dropped frames of overlay | Publish OAM early enough that S1 still finishes the field before active display |
-| Mid-frame scroll / palette writes "because it works on the bench" | Tear, wrong MAP bank slice, palette flash | `$7F02`/`$7F03`/`$7F08`/`$7F09` in NMI/VBlank. Split-screen only via deliberate `$7F04` + IRQ rules |
-| Polling pads or I2C in a tight 6502 loop without RDY / VBlank discipline | Wasted PRG time and possible bus stalls | Pads: S2 polls in VBlank. Saves: mailbox + RDY as documented |
-| Using **STP** or blind **WAI** in ship PRG | Dead CPU until reset / wrong wake | No STP in play. WAI only with a known NMI/IRQ wake |
-
-### Budget mindset
-
-1. **PHI2 soft I/O:** aim for zero RDY on the hot path. Measure. If RDY is common, that is a firmware bug.
-2. **VBlank:** OAM SPI + S1 sprite field must both fit. Leave margin. VBlank is not infinite DMA time.
-3. **HBlank:** BG0 next-line fill only. Nothing else from M or S1.
-4. **Saves:** rare, multi-frame OK. Prefer FRAM when practical. Chunk I2C, keep the saving UI alive. Not a substitute for streaming game state every frame.
-
-Author-facing timing locks also live in `software-api.md`. Hardware mailbox locks in `hardware.md` and `video-graphics.md`.
-
-## Related
-
-`hardware.md` | `../ic_behavior/` | `video-graphics.md` | `memory.md` | `cartridge.md` | `software-api.md` | `open-questions.md`

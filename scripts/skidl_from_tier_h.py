@@ -4,7 +4,7 @@ Preliminary KiCad netlist from Tier H JSON (Skidl).
 
 Output is for illustration and early PCB exploration only.
 The Retr01 motherboard PCB is not ready for fabrication from this flow.
-See docs/bringup/tier-h-skidl-export.md.
+Tier H JSON export into a SKiDL netlist.
 
 Typical invocation:
   apps/sim/tier-h/skidl/export_netlist.sh -q

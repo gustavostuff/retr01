@@ -4,7 +4,7 @@
 #include <string.h>
 
 /*
- * Passive ↔ silicon links from docs/passive_bom.md and tier-a DAC pattern.
+ * Passive to silicon links follow docs/general/hardware.md.
  * CXA2075M encoding is stubbed. C17 bypasses the MCP130.
  */
 

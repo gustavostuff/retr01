@@ -60,9 +60,9 @@ BGM tracker:
 
 ## Doc map
 
-- [selling-points.md](docs/general/selling-points.md): Product vision, shared PCB design, dual-sync output, entity model, flash support, and other system ideas.
-- [hardware.md](docs/general/hardware.md): Main hardware reference for the board, support chips, PLD logic, BOM choices, I/O, and compact PCB layout.
-- [ic-comms-risks.md](docs/general/ic-comms-risks.md): Shared-bus and multi-clock communication risks, likely failure points, and anti-patterns to avoid.
+- [hardware.md](docs/general/hardware.md): Board, BOM, clocks, connectors, cart edge, and JAMMA fingers.
+- [pcb.md](docs/pcb.md): Motherboard copper layers, analog keepout, and trace widths.
+- [ic-comms-risks.md](docs/general/ic-comms-risks.md): Shared-bus and multi-clock failure rules.
 - [video-graphics.md](docs/general/video-graphics.md): Resolution, tile layout, sprites, palettes, background layers, and the hardware work behind the graphics pipeline.
 - [palette/](docs/general/palette/README.md): The fixed 64-color palette kit and export guidance for GIMP and Aseprite.
 - [world-scrolling.md](docs/general/world-scrolling.md): World and screen structure, VRAM buffering, sparse map organization, and scrolling over large areas.
@@ -70,7 +70,5 @@ BGM tracker:
 - [memory.md](docs/general/memory.md): CPU address map, soft $7Fxx windows, MAP port behavior, .retr01 image format, and flash capacity limits.
 - [software-api.md](docs/general/software-api.md): Runtime model for entities, data structure sizing, C and ASM API, and expected game modes.
 - [sound.md](docs/general/sound.md): Audio architecture, 8-channel software mix, $7F40 register window, 6502 NMI tracker bytecode, and PWM output.
-- [open-questions.md](docs/general/open-questions.md): Remaining unknowns and design decisions that still need validation.
-- [ic_behavior/](docs/ic_behavior/README.md): Per-chip behavior, role, optional variants, and key caveats.
-- [bringup/](docs/bringup/README.md): Hardware bring-up roadmap from early lab validation to a console-style demo with controls and audio.
+- [irl_bring_up_log/](docs/irl_bring_up_log/bench-at27c256r.md): Bench notes. The color PROM check is the one on file.
 - [apps/README.md](apps/README.md): Studio authoring app, Emu runtime, and the discrete-IC board simulation app.

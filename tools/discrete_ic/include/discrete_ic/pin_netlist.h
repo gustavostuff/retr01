@@ -51,7 +51,7 @@ int ns_pin_netlist_same_net(NsPinNetlist *nl, NsEntity *ea, const char *an, NsEn
 
 /*
  * Write Tier-H / sim pin graph as JSON for Skidl or other ECAD tools.
- * Output is illustrative only (see docs/bringup/tier-h-skidl-export.md).
+ * Output is illustrative only. Not fab-ready.
  */
 int ns_pin_netlist_write_json(const NsPinNetlist *nl, FILE *out);
 

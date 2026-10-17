@@ -12,7 +12,7 @@ Example:
   .venv-wrl/bin/python scripts/step_colored_to_wrl.py .../CUI_RCJ-014.step \\
     -o .../CUI_RCJ-014.wrl --mat mat_1:gray --mat mat_2:yellow
 
-Requires: pip install cascadio numpy (see docs/bringup/tier-h-skidl-export.md).
+Requires: pip install cascadio numpy.
 """
 
 from __future__ import annotations

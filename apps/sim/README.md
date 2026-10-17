@@ -1,9 +1,7 @@
 # Retr01 board sim
 
-Bring-up labs as isolated trees. Each tier has its own board recipe and does not share netlist wiring with the others. Chips, tests, font, and PNG chrome that match live in [`common/`](common/). The discrete IC engine is [`tools/discrete_ic/`](../../tools/discrete_ic/).
+The Tier H sim is the board. Chips, tests, and PNG chrome that the sim shares live in [`common/`](common/). The discrete IC engine is [`tools/discrete_ic/`](../../tools/discrete_ic/).
 
 | Lab | Path | Goal |
 | --- | --- | --- |
-| Tier A | [tier-a/](tier-a/) | Beam + color PROM + virtual screen (color bars) |
-| Tier B | [tier-b/](tier-b/) | Compositor priority over the Tier A color path |
-| Tier H | [tier-h/](tier-h/) | Imported full-board sim. Soft `$7Fxx` and AT27C256R. The CXA2075M pinout is not in this tree yet |
+| Tier H | [tier-h/](tier-h/) | Full motherboard. Soft `$7Fxx`, AT27C256R, CXA2075M stub on J2 |

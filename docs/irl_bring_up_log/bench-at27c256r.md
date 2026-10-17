@@ -2,7 +2,7 @@
 
 This bench passes. The switch code selects a kit row, and the LEDs show that packed byte. Several tests have been performed.
 
-<img src="../../img/AT27C256R-bench-passed.jpg" alt="AT27C256R breadboard, row 0">
+<img src="AT27C256R-bench-passed.jpg" alt="AT27C256R breadboard, row 0">
 
 One kit chip in the socket at a time. The package is 600 mil, so it sits in a 28-pin socket of that width, one jumper per pin. The notch is pin 1. Power is off while the chip goes in or comes out. Pin 1 (VPP) ties to the same 5 V rail as pin 28 (VCC).
 
@@ -34,7 +34,7 @@ A high on A14 selects the upper 16 KB. Those bytes are `0xFF`. CE# or OE# high t
 
 ## Check
 
-The switch code, left to right, is the row in [`apps/common/r01_kit_palette.c`](../../../../apps/common/r01_kit_palette.c), starting at 0. Switch 5 is the left bit. Switches 5 through 0 land on pins 5, 6, 7, 8, 9, and 10.
+The switch code, left to right, is the row in [`apps/common/r01_kit_palette.c`](../../apps/common/r01_kit_palette.c), starting at 0. Switch 5 is the left bit. Switches 5 through 0 land on pins 5, 6, 7, 8, 9, and 10.
 
 The output byte is read left to right. Bit 7 is the left bit. Pin 14 is ground and is not part of the byte.
 

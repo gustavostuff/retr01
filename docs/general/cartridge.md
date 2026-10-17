@@ -13,7 +13,7 @@ Physical cart and how it ties to the board. **Byte layout of the game image** li
 
 See `memory.md` for the full map. Short version:
 
-- Flat **32 KB PRG** (no banking). See `selling-points.md`.
+- Flat **32 KB PRG** (no banking). See `memory.md`.
 - Global palette index planes (256 B total).
 - Global CHR: **16** banks (**64 KB**). Playfields, other screens, sprites, and the marked player share this pool. Nametable attrs and OAM attrs use the same 4-bit bank field. See `memory.md`.
 - Up to **8** world blobs (maps only: up to **64** BG1 + **16** BG0 screens each).

@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Configure, build, and run unit tests for studio, emu, sdk C, and tier-a/b/c/h sim.
-# Tier-a ctest also runs nested discrete_ic tests. Emu registers test_boot/test_play
-# against example_01/example_01.retr01 when that cart is present, and test_sdk_prg
-# when llvm-mos is in tools/llvm-mos or $LLVM_MOS.
+# Configure, build, and run unit tests for studio, emu, sdk C, and the Tier H sim.
+# Emu registers test_boot/test_play against example_01/example_01.retr01 when that
+# cart is present, and test_sdk_prg when llvm-mos is in tools/llvm-mos or $LLVM_MOS.
 # Does not require (or seed) extra ROM / Studio project fixtures.
 set -euo pipefail
 
@@ -10,9 +9,6 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 trap '"$ROOT/scripts/clean_repo_root_strays.sh" || true' EXIT
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
-SIM_A="$ROOT/apps/sim/tier-a"
-SIM_B="$ROOT/apps/sim/tier-b"
-SIM_C="$ROOT/apps/sim/tier-c"
 SIM_H="$ROOT/apps/sim/tier-h"
 
 build_and_test() {
@@ -33,15 +29,6 @@ ctest --test-dir "$ROOT/apps/sdk/r01_c/host-build" --output-on-failure
 
 echo "== emu =="
 build_and_test "$EMU"
-
-echo "== sim tier-a =="
-build_and_test "$SIM_A"
-
-echo "== sim tier-b =="
-build_and_test "$SIM_B"
-
-echo "== sim tier-c =="
-build_and_test "$SIM_C"
 
 echo "== sim tier-h =="
 build_and_test "$SIM_H"

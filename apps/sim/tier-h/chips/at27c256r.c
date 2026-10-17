@@ -92,7 +92,7 @@ void r01s_at27c256r_init(R01sAt27c256r *chip, const char *refdes) {
     r01s_entity_init(&chip->base, &PROM_VT, "AT27C256R", refdes ? refdes : "U24");
     chip->base.impl = chip;
 
-    /* 28-pin PDIP, docs/ic_behavior/AT27C256R.md. Video uses A[5:0] only. */
+    /* 28-pin PDIP. Video uses A[5:0] only. */
     r01s_entity_add_pin(&chip->base, 1, "VPP", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 2, "A12", R01S_PIN_IN);
     r01s_entity_add_pin(&chip->base, 3, "A7", R01S_PIN_IN);
