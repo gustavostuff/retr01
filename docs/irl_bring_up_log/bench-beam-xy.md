@@ -23,30 +23,33 @@ One HiLetgo CH340 module clocks the counters and feeds 5 V. It is a 6-pin USB se
 
 Beam X can be checked with Beam Y out of the socket. Beam Y pin 1 connects only after HSYNC is already moving.
 
-| Mark | What | Where |
+| Mark | Pins | Where |
 | --- | --- | --- |
-| V+ | Both pin 24 | +5 V from the clock module 5V pin. That module's jumper bridges 5V and VCC. Its GND joins the ground rail. Its RXD stays open |
-| C | 100 nF, one per chip | From that chip's pin 24 (VCC) to that chip's pin 12 (GND), across the package |
-| GD | Both pin 12. Both pins 3 through 11. Both pin 13 | Ground, common with the CH340 GND and the analyzer GND |
-| RS | Both pin 2 | One net. 10 kohm to +5 V, the switch to ground, and analyzer CH2 (D1) |
-| CK | Beam X pin 1 | 10 kohm to +5 V, the clock module TXD, and analyzer CH1 (D0) |
-| HS | Beam X pin 14 and Beam Y pin 1 | One wire. HSYNC out of Beam X, and the Beam Y clock. Analyzer CH5 (D4) lands on the Beam X pin |
-| Q0 | Beam X pin 21. Beam Y pin 23 | Analyzer CH3 (D2) on the Beam X pin. Analyzer CH6 (D5) on the Beam Y pin |
-| Q1 | Beam X pin 23. Beam Y pin 21 | Analyzer CH4 (D3) on the Beam X pin. Analyzer CH7 (D6) on the Beam Y pin |
+| V+ | 24 on each chip | +5 V from the CH340 5V pin. The jumper on that module bridges 5V and VCC |
+| C | one cap on each chip | 100 nF from pin 24 (VCC) to pin 12 (GND) |
+| GD | 3 through 13 on each chip | Breadboard ground rail. CH340 GND and analyzer GND land on that rail |
+| RS | 2 on each chip | One net. Three wires meet on it: a 10 kohm to +5 V, the switch to ground, and analyzer CH2 (D1) |
+| CK | Beam X pin 1 | Three wires meet on this pin: a 10 kohm to +5 V, the CH340 TXD pin, and analyzer CH1 (D0) |
+| HS | Beam X pin 14 and Beam Y pin 1 | One wire between these two pins. Analyzer CH5 (D4) lands on that wire |
+| Q0 | Beam X pin 21 | Analyzer CH3 (D2) |
+| Q0 | Beam Y pin 23 | Analyzer CH6 (D5) |
+| Q1 | Beam X pin 23 | Analyzer CH4 (D3) |
+| Q1 | Beam Y pin 21 | Analyzer CH7 (D6) |
 | VS | Beam Y pin 14 | VSYNC. Analyzer CH8 (D7) |
-| .. | The other Q pins | Open |
+| .. | 15 through 20, and 22, on each chip | Open |
 
 ```text
  Clock
   5V ---- VCC jumper
-  5V ---- +5V rail, and V+ on both pin 24
+  5V ---- +5V rail, and pin 24 on each chip
   TXD ---- CK, Beam X pin 1
+  10 kohm on that same pin ---- +5 V
   GND ---- GND rail
   RXD open
   3V3 open
 
  Logic analyzer
-  CH1 (D0) ---- CK, Beam X pin 1      CH2 (D1) ---- RS, both pin 2
+  CH1 (D0) ---- CK, Beam X pin 1      CH2 (D1) ---- RS, pin 2 on each chip
   CH3 (D2) ---- Q0, Beam X pin 21     CH4 (D3) ---- Q1, Beam X pin 23
   CH5 (D4) ---- HS, Beam X pin 14     CH6 (D5) ---- Q0, Beam Y pin 23
   CH7 (D6) ---- Q1, Beam Y pin 21     CH8 (D7) ---- VS, Beam Y pin 14
@@ -69,33 +72,13 @@ Beam X can be checked with Beam Y out of the socket. Beam Y pin 1 connects only 
          GD | 11    14 | HS                  GD | 11    14 | VS
          GD | 12    13 | GD                  GD | 12    13 | GD
             +----------+                        +----------+
-         C beside each V+, from pin 24 (VCC) to pin 12 (GND) on that chip
+         C is one 100 nF on each chip, from pin 24 (VCC) to pin 12 (GND)
  GND ---- Clock GND, analyzer GND
 ```
 
-Only the clock module feeds 5 V. Analyzer GND joins that ground. CLK on the analyzer is an output and stays open. On the CH340, RXD and 3V3 stay open.
+Only the clock module feeds 5 V. CH340 GND and analyzer GND land on the breadboard ground rail. CLK on the analyzer is an output and stays open. On the CH340, RXD and 3V3 stay open.
 
-Beam X pins that the bench uses:
-
-| Pin | Name |
-| --- | --- |
-| 1 | CLK |
-| 2 | RES |
-| 12 | GND |
-| 14 | HSYNC |
-| 21 | Q0 |
-| 23 | Q1 |
-| 24 | VCC |
-
-Beam Y uses the same CLK, RES, VCC, and GND pins. Q0 and Q1 swap:
-
-| Pin | Name |
-| --- | --- |
-| 14 | VSYNC |
-| 21 | Q1 |
-| 23 | Q0 |
-
-Q0 is the least significant bit on both chips. The other Q pins can stay open.
+Q0 is the least significant bit. On Beam Y that pin is 23, and Q1 is pin 21.
 
 ## Check
 
