@@ -1,5 +1,9 @@
 # Beam X and Beam Y
 
+This bench passes. The red LEDs show the Beam X count and the green LEDs show the Beam Y count. Several tests have been performed.
+
+<img src="img/ATF22V10C-bench-passed-both-x-and-y-beam-counters.jpg" alt="ATF22V10C breadboard, Beam X and Beam Y">
+
 Two ATF22V10C parts, already burned, on a breadboard. Beam X counts dots 0 through 340. Beam Y counts lines 0 through 261. One frame is 262 of those lines. The images are [`beam_x.jed`](../../../apps/flasher_tool/firmware/a/beam_x.jed) and [`beam_y.jed`](../../../apps/flasher_tool/firmware/a/beam_y.jed).
 
 The package is 300 mil. Each chip sits in a 24-pin socket of that width. The notch is pin 1. Power is off while a chip goes in or comes out. Both chips are in the sockets for a frame.
