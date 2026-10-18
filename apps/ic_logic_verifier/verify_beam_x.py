@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 MOD = 341
+LOG = Path(__file__).resolve().with_name("verify_beam_x.log")
 STOPS = (0, 1, 2, 3, 4, 264, 288, 289, 341)
 BITS = (
     ("Q0", 21, "q0"),
@@ -22,24 +25,45 @@ def level(edges: int, bit: str) -> bool:
     raise KeyError(bit)
 
 
-def run_virtual() -> str:
-    from pins import ModelPins, walk
+def place(edges: int, name: str) -> str:
+    return f"edges {edges} count {edges % MOD} {name}"
 
-    for name, _pin, bit in BITS:
-        pins = ModelPins(lambda edges, bit=bit: level(edges, bit))
-        reason = walk(pins, STOPS, lambda edges, bit=bit: level(edges, bit), name)
-        if reason:
-            return reason
-    return "IC Beam X logic works ok"
+
+def _finish(log, reason: str | None) -> str:
+    text = reason or "IC Beam X logic works ok"
+    log.note(text)
+    return text
+
+
+def run_virtual() -> str:
+    from pins import BitLog, ModelPins, record_bits
+
+    log = BitLog(LOG, NAME)
+    try:
+        reason = record_bits(
+            log,
+            STOPS,
+            BITS,
+            level,
+            place,
+            lambda bit: ModelPins(lambda edges, bit=bit: level(edges, bit)),
+        )
+        return _finish(log, reason)
+    finally:
+        log.close()
 
 
 def run_serial(clock_name: str, watch_name: str, prepare) -> str:
-    from pins import check_serial
+    from pins import BitLog, check_serial
 
-    reason = check_serial(clock_name, watch_name, STOPS, BITS, level, prepare)
-    if reason == "count ok":
-        return "IC Beam X logic works ok"
-    return reason
+    log = BitLog(LOG, NAME)
+    try:
+        reason = check_serial(clock_name, watch_name, STOPS, BITS, level, prepare, log, place)
+        if reason == "count ok":
+            reason = None
+        return _finish(log, reason)
+    finally:
+        log.close()
 
 
 NAME = "Beam X"

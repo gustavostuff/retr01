@@ -92,3 +92,4 @@ apps/sim/tier-h/skidl/library/3dmodels/
 /emu
 /unit-tests
 /ic_verifier
+apps/ic_logic_verifier/*.log

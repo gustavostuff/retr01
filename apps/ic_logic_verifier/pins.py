@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 
 class ModelPins:
@@ -41,7 +42,34 @@ class SerialPins:
         return self.watch_port.read(1) == b""
 
 
-def walk(pins, stops: tuple[int, ...], level_at, label: str) -> str | None:
+class BitLog:
+    """One text log, replaced from the first byte on every open."""
+
+    def __init__(self, path: Path, title: str) -> None:
+        self._file = path.open("w", encoding="utf-8")
+        self._file.write(f"{title}\n")
+        self._file.flush()
+
+    def reset(self, name: str, pin: int) -> None:
+        self._file.write(f"reset\n{name} pin {pin}\n")
+        self._file.flush()
+
+    def sample(self, where: str, got: bool, want: bool) -> None:
+        line = f"{where} {int(got)}"
+        if got != want:
+            line += f" want {int(want)}"
+        self._file.write(line + "\n")
+        self._file.flush()
+
+    def note(self, text: str) -> None:
+        self._file.write(text.rstrip("\n") + "\n")
+        self._file.flush()
+
+    def close(self) -> None:
+        self._file.close()
+
+
+def walk(pins, stops: tuple[int, ...], level_at, label: str, on_sample=None) -> str | None:
     """Clock from zero through each stop. None when every sample matches."""
     edges = 0
     for stop in stops:
@@ -49,6 +77,8 @@ def walk(pins, stops: tuple[int, ...], level_at, label: str) -> str | None:
         edges = stop
         got = pins.is_high()
         want = level_at(edges)
+        if on_sample is not None:
+            on_sample(edges, got, want)
         if got != want:
             state = "high" if got else "low"
             need = "high" if want else "low"
@@ -56,7 +86,26 @@ def walk(pins, stops: tuple[int, ...], level_at, label: str) -> str | None:
     return None
 
 
-def check_serial(clock_name: str, watch_name: str, stops, bits, level_at, prepare) -> str:
+def record_bits(log: BitLog, stops, bits, level_at, place, make_pins, before_bit=None) -> str | None:
+    """Walk each pin from a cleared counter. None when every sample matches."""
+    for name, pin, bit in bits:
+        if before_bit is not None:
+            before_bit(name, pin)
+        log.reset(name, pin)
+        pins = make_pins(bit)
+        reason = walk(
+            pins,
+            stops,
+            lambda edges, bit=bit: level_at(edges, bit),
+            name,
+            on_sample=lambda edges, got, want, name=name: log.sample(place(edges, name), got, want),
+        )
+        if reason:
+            return reason
+    return None
+
+
+def check_serial(clock_name: str, watch_name: str, stops, bits, level_at, prepare, log: BitLog, place) -> str:
     """Open two CH340 ports, reset between bits, and walk the stops."""
     try:
         import serial
@@ -69,11 +118,17 @@ def check_serial(clock_name: str, watch_name: str, stops, bits, level_at, prepar
         return f"count failed\n{exc}"
     try:
         pins = SerialPins(clock, watch)
-        for name, pin, bit in bits:
-            prepare(name, pin)
-            reason = walk(pins, stops, lambda edges, bit=bit: level_at(edges, bit), name)
-            if reason:
-                return reason
+        reason = record_bits(
+            log,
+            stops,
+            bits,
+            level_at,
+            place,
+            lambda _bit: pins,
+            before_bit=lambda name, pin: prepare(name, pin),
+        )
+        if reason:
+            return reason
         return "count ok"
     finally:
         clock.break_condition = True

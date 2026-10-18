@@ -33,6 +33,20 @@ class BeamXLevels(unittest.TestCase):
     def test_virtual_run_passes(self) -> None:
         self.assertEqual(verify_beam_x.run_virtual(), "IC Beam X logic works ok")
 
+    def test_log_rewrites_from_the_start(self) -> None:
+        path = verify_beam_x.LOG
+        verify_beam_x.run_virtual()
+        path.write_text(path.read_text(encoding="utf-8") + "OLD\n", encoding="utf-8")
+        verify_beam_x.run_virtual()
+        text = path.read_text(encoding="utf-8")
+        self.assertNotIn("OLD", text)
+        self.assertTrue(text.startswith("Beam X\nreset\nQ0 pin 21\n"))
+        self.assertIn("edges 0 count 0 Q0 0\n", text)
+        self.assertIn("edges 341 count 0 Q0 0\n", text)
+        self.assertIn("reset\nHSYNC pin 14\n", text)
+        self.assertIn("edges 264 count 264 HSYNC 1\n", text)
+        self.assertTrue(text.endswith("IC Beam X logic works ok\n"))
+
 
 class BeamYLevels(unittest.TestCase):
     def test_hsync_rise_advances_the_line(self) -> None:
@@ -60,6 +74,20 @@ class BeamYLevels(unittest.TestCase):
 
     def test_virtual_run_passes(self) -> None:
         self.assertEqual(verify_beam_y.run_virtual(), "IC Beam Y logic works ok")
+
+    def test_log_rewrites_from_the_start(self) -> None:
+        path = verify_beam_y.LOG
+        verify_beam_y.run_virtual()
+        path.write_text(path.read_text(encoding="utf-8") + "OLD\n", encoding="utf-8")
+        verify_beam_y.run_virtual()
+        text = path.read_text(encoding="utf-8")
+        self.assertNotIn("OLD", text)
+        self.assertTrue(text.startswith("Beam Y\nreset\nQ0 pin 23\n"))
+        self.assertIn("rises 0 count 0 Q0 0\n", text)
+        self.assertIn("rises 262 count 0 Q0 0\n", text)
+        self.assertIn("reset\nVSYNC pin 14\n", text)
+        self.assertIn("rises 243 count 243 VSYNC 1\n", text)
+        self.assertTrue(text.endswith("IC Beam Y logic works ok\n"))
 
 
 if __name__ == "__main__":
