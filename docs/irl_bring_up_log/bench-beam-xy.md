@@ -13,11 +13,11 @@ One HiLetgo CH340 module clocks the counters and feeds 5 V. It is a 6-pin USB se
 | ATF22V10C, PDIP-24, Beam X image | 1 | Dot counter. HSYNC high on counts 264 through 288 |
 | ATF22V10C, PDIP-24, Beam Y image | 1 | Line counter. VSYNC high on counts 243 through 245 |
 | 24-pin socket, 300 mil | 2 | One per PLD |
-| 100 nF | 2 | Bypass from VCC to ground, one beside each pin 24 |
+| 100 nF | 2 | One per chip, from V+ to the ground rail |
 | 10 kohm | 2 | Pull-up on RES, pull-up on Beam X CLK |
 | Switch | 1 | RES to ground. Closed holds both counters at 0 |
 | HiLetgo CH340 module | 1 | Clock and 5 V. TXD drives CK. RXD stays open |
-| 8-channel USB logic analyzer, 24 MHz | 1 | Reads CK, RES, Q0, Q1, HSYNC, and VSYNC. GND joins the ground rail |
+| 8-channel USB logic analyzer, 24 MHz | 1 | Reads CK, RES, Q0, Q1, HSYNC, and VSYNC |
 
 ## Place
 
@@ -25,12 +25,12 @@ Beam X can be checked with Beam Y out of the socket. Beam Y pin 1 connects only 
 
 | Mark | Pins | Where |
 | --- | --- | --- |
-| V+ | 24 on each chip | +5 V from the CH340 5V pin. The jumper on that module bridges 5V and VCC |
-| C | one cap on each chip | 100 nF from pin 24 (VCC) to pin 12 (GND) |
-| GD | 3 through 13 on each chip | Breadboard ground rail. CH340 GND and analyzer GND land on that rail |
-| RS | 2 on each chip | One net. Three wires meet on it: a 10 kohm to +5 V, the switch to ground, and analyzer CH2 (D1) |
-| CK | Beam X pin 1 | Three wires meet on this pin: a 10 kohm to +5 V, the CH340 TXD pin, and analyzer CH1 (D0) |
-| HS | Beam X pin 14 and Beam Y pin 1 | One wire between these two pins. Analyzer CH5 (D4) lands on that wire |
+| V+ | 24 on each chip | +5 V rail, fed by the CH340 5V pin |
+| C | one cap on each chip | From V+ to the ground rail |
+| GD | 3 through 13 on each chip | Ground rail |
+| RS | 2 on each chip | Three wires meet here: a 10 kohm to +5 V, the switch to ground, and analyzer CH2 (D1) |
+| CK | Beam X pin 1 | Three wires meet here: a 10 kohm to +5 V, the CH340 TXD pin, and analyzer CH1 (D0) |
+| HS | Beam X pin 14 and Beam Y pin 1 | Analyzer CH5 (D4) |
 | Q0 | Beam X pin 21 | Analyzer CH3 (D2) |
 | Q0 | Beam Y pin 23 | Analyzer CH6 (D5) |
 | Q1 | Beam X pin 23 | Analyzer CH4 (D3) |
@@ -41,7 +41,7 @@ Beam X can be checked with Beam Y out of the socket. Beam Y pin 1 connects only 
 ```text
  Clock
   5V ---- VCC jumper
-  5V ---- +5V rail, and pin 24 on each chip
+  5V ---- +5V rail
   TXD ---- CK, Beam X pin 1
   10 kohm on that same pin ---- +5 V
   GND ---- GND rail
@@ -72,13 +72,13 @@ Beam X can be checked with Beam Y out of the socket. Beam Y pin 1 connects only 
          GD | 11    14 | HS                  GD | 11    14 | VS
          GD | 12    13 | GD                  GD | 12    13 | GD
             +----------+                        +----------+
-         C is one 100 nF on each chip, from pin 24 (VCC) to pin 12 (GND)
+         C is one 100 nF on each chip, from V+ to the ground rail
  GND ---- Clock GND, analyzer GND
 ```
 
-Only the clock module feeds 5 V. CH340 GND and analyzer GND land on the breadboard ground rail. CLK on the analyzer is an output and stays open. On the CH340, RXD and 3V3 stay open.
+Only the clock module feeds 5 V. CLK on the analyzer is an output and stays open. On the CH340, RXD and 3V3 stay open.
 
-Q0 is the least significant bit. On Beam Y that pin is 23, and Q1 is pin 21.
+Q0 is the least significant bit on both chips.
 
 ## Check
 
@@ -102,7 +102,7 @@ Beam X uses D2, D3, and D4. Those are Q0, Q1, and HSYNC.
 
 Count 341 is count 0 again. HSYNC rises on the edge that enters 264, and that rise is the Beam Y clock. The next rise is 341 Beam X edges later.
 
-Beam Y, counted in HSYNC rises. D5, D6, and D7 are Q0, Q1, and VSYNC. Q0 and Q1 swap pins between the two chips.
+Beam Y, counted in HSYNC rises. D5, D6, and D7 are Q0, Q1, and VSYNC.
 
 | HSYNC rises | Count | Q1 | Q0 | VSYNC |
 | --- | --- | --- | --- | --- |
