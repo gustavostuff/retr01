@@ -53,12 +53,12 @@ def run_virtual() -> str:
         log.close()
 
 
-def run_serial(clock_name: str, watch_name: str, prepare) -> str:
+def run_serial(clock_name: str, watch_name: str, prepare, hz: float = 10) -> str:
     from pins import BitLog, check_serial
 
     log = BitLog(LOG, NAME)
     try:
-        reason = check_serial(clock_name, watch_name, STOPS, BITS, level, prepare, log, place)
+        reason = check_serial(clock_name, watch_name, STOPS, BITS, level, prepare, log, place, hz)
         if reason == "count ok":
             reason = None
         return _finish(log, reason)

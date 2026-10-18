@@ -27,7 +27,7 @@ The color PROM row stops unless the chip reads blank, then waits for `y`, becaus
 
 `verify.py` is the read-back for the same five rows and the same two programmers. Up and Down move the highlight. Enter compares the chip in the socket with the image file and prints `match` or `mismatch`. The script does not write a chip. `--virtual` compares the in-memory chips.
 
-The extra row `Beam X count` is on the verify menu only. It stays at `no programmer` until a CH340 port is present. Enter clocks the breadboard from DTR, holds reset on RTS, and reads HSYNC on CTS. That lead has to bring those three pins out. The 6-pin HiLetgo header does not. The breadboard note uses TXD on that header as the clock. An 8-channel logic analyzer reads the counter pins. The row prints `count ok`, or `count failed` with the HSYNC count that disagreed. The row does not read the programmer socket.
+The extra row `Beam X count` is on the verify menu only. It stays at `no programmer` until a CH340 port is present. Enter clocks the breadboard from DTR, holds reset on RTS, and reads HSYNC on CTS. That lead has to bring those three pins out. The 6-pin HiLetgo header does not. The breadboard note uses TXD on that header as the clock. LEDs on the counter pins show the count. The row prints `count ok`, or `count failed` with the HSYNC count that disagreed. The row does not read the programmer socket.
 
 ```bash
 python3 apps/flasher_tool/verify.py

@@ -43,12 +43,12 @@ def _wait(stdin, out, prompt: str) -> None:
         pass
 
 
-def _check(chip, stdin, out) -> str:
+def _check(chip, stdin, out, hz: float) -> str:
     ports = ch340_ports()
     if len(ports) < 2:
         return "need a clock module and a watch module"
     clock_name, watch_name = ports[0], ports[1]
-    out.write(f"clock {clock_name}\nwatch {watch_name}\n")
+    out.write(f"clock {clock_name} at {hz:g} Hz\nwatch {watch_name}\n")
     out.flush()
 
     def prepare(name: str, pin: int) -> None:
@@ -58,10 +58,63 @@ def _check(chip, stdin, out) -> str:
             f"RXD on pin {pin} ({name}). TXD is low. Close RES, then open it. Enter to clock.",
         )
 
-    return chip.run_serial(clock_name, watch_name, prepare)
+    return chip.run_serial(clock_name, watch_name, prepare, hz)
 
 
-def run_menu(stdin=None, out=None) -> int:
+def parse_args(argv: list[str]) -> tuple[bool, bool, float]:
+    """Return virtual mode, LED clock mode, and the TXD clock in counts per second."""
+    virtual = False
+    clock = False
+    hz = 10.0
+    index = 0
+    while index < len(argv):
+        arg = argv[index]
+        if arg == "--virtual":
+            virtual = True
+            index += 1
+            continue
+        if arg == "--clock":
+            clock = True
+            index += 1
+            continue
+        if arg == "--hz" or arg.startswith("--hz="):
+            raw = arg.split("=", 1)[1] if arg.startswith("--hz=") else ""
+            if arg == "--hz":
+                index += 1
+                raw = argv[index] if index < len(argv) else ""
+            try:
+                hz = float(raw)
+            except ValueError:
+                raise ValueError("clock hz needs a number above 0") from None
+            if hz <= 0:
+                raise ValueError("clock hz needs a number above 0")
+            index += 1
+            continue
+        raise ValueError(f"unknown argument {arg}")
+    return virtual, clock, hz
+
+
+def run_clock(hz: float) -> int:
+    """Toggle the one CH340 TXD pin so the LED counters can be watched."""
+    ports = ch340_ports()
+    if not ports:
+        print("need a clock module")
+        return 1
+    print(f"clock {ports[0]} at {hz:g} Hz")
+
+    def wait() -> None:
+        input("TXD is low. Close RES, then open it. Enter to clock. ")
+
+    from pins import run_clock as toggle
+
+    try:
+        toggle(ports[0], hz, wait)
+    except KeyboardInterrupt:
+        print()
+    return 0
+
+
+def run_menu(stdin=None, out=None, hz: float = 10) -> int:
     stdin = sys.stdin if stdin is None else stdin
     out = sys.stdout if out is None else out
     note = ""
@@ -75,7 +128,7 @@ def run_menu(stdin=None, out=None) -> int:
     try:
         while True:
             clear_console(out)
-            lines = [BANNER.rstrip("\n"), ""]
+            lines = [BANNER.rstrip("\n"), f"TXD clock is {hz:g} Hz.", ""]
             for index, chip in enumerate(CHIPS):
                 row = f"  {index + 1} = {chip.NAME}"
                 lines.append(f"{CYAN}{row}{RESET}" if color else row)
@@ -95,7 +148,7 @@ def run_menu(stdin=None, out=None) -> int:
             if index < 0 or index >= len(CHIPS):
                 continue
             clear_console(out)
-            note = _check(CHIPS[index], stdin, out)
+            note = _check(CHIPS[index], stdin, out, hz)
             if not note.endswith("logic works ok"):
                 code = 1
             out.write(_paint(note, color) + "\n")
@@ -107,7 +160,14 @@ def run_menu(stdin=None, out=None) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
-    if "--virtual" in args:
+    try:
+        virtual, clock, hz = parse_args(args)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    if clock:
+        return run_clock(hz)
+    if virtual:
         failed = False
         color = sys.stdout.isatty()
         for chip in CHIPS:
@@ -115,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
             print(_paint(note, color))
             failed = failed or not note.endswith("logic works ok")
         return 1 if failed else 0
-    return run_menu()
+    return run_menu(hz=hz)
 
 
 if __name__ == "__main__":

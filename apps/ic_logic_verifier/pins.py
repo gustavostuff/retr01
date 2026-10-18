@@ -20,13 +20,23 @@ class ModelPins:
         return self.level_at(self.edges)
 
 
+DEFAULT_HZ = 10
+
+
+def half_period(hz: float) -> float:
+    """Seconds TXD stays high, and seconds it stays low, for this many counts per second."""
+    if hz <= 0:
+        raise ValueError("clock hz needs a number above 0")
+    return 1.0 / (2.0 * hz)
+
+
 class SerialPins:
     """TXD break is the clock. An empty read on the watch port is a high pin."""
 
-    def __init__(self, clock_port, watch_port, delay: float = 0.001) -> None:
+    def __init__(self, clock_port, watch_port, delay: float | None = None) -> None:
         self.clock_port = clock_port
         self.watch_port = watch_port
-        self.delay = delay
+        self.delay = half_period(DEFAULT_HZ) if delay is None else delay
         self.clock_port.break_condition = True
 
     def advance(self, count: int) -> None:
@@ -105,7 +115,26 @@ def record_bits(log: BitLog, stops, bits, level_at, place, make_pins, before_bit
     return None
 
 
-def check_serial(clock_name: str, watch_name: str, stops, bits, level_at, prepare, log: BitLog, place) -> str:
+def run_clock(clock_name: str, hz: float, wait) -> None:
+    """Hold TXD low until wait() returns, then clock at hz until interrupted."""
+    import serial
+
+    delay = half_period(hz)
+    port = serial.Serial(clock_name, 9600, timeout=0.05)
+    try:
+        port.break_condition = True
+        wait()
+        while True:
+            port.break_condition = False
+            time.sleep(delay)
+            port.break_condition = True
+            time.sleep(delay)
+    finally:
+        port.break_condition = True
+        port.close()
+
+
+def check_serial(clock_name: str, watch_name: str, stops, bits, level_at, prepare, log: BitLog, place, hz: float = DEFAULT_HZ) -> str:
     """Open two CH340 ports, reset between bits, and walk the stops."""
     try:
         import serial
@@ -117,7 +146,7 @@ def check_serial(clock_name: str, watch_name: str, stops, bits, level_at, prepar
     except serial.SerialException as exc:
         return f"count failed\n{exc}"
     try:
-        pins = SerialPins(clock, watch)
+        pins = SerialPins(clock, watch, half_period(hz))
         reason = record_bits(
             log,
             stops,

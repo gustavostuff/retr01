@@ -8,6 +8,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import pins
+import verify
 import verify_beam_x
 import verify_beam_y
 
@@ -88,6 +90,29 @@ class BeamYLevels(unittest.TestCase):
         self.assertIn("reset\nVSYNC pin 14\n", text)
         self.assertIn("rises 243 count 243 VSYNC 1\n", text)
         self.assertTrue(text.endswith("IC Beam Y logic works ok\n"))
+
+
+class ClockHz(unittest.TestCase):
+    def test_ten_hertz_holds_each_level_for_50_ms(self) -> None:
+        self.assertAlmostEqual(pins.half_period(10), 0.05)
+
+    def test_hz_flag_sets_the_clock(self) -> None:
+        virtual, clock, hz = verify.parse_args(["--hz", "25"])
+        self.assertFalse(virtual)
+        self.assertFalse(clock)
+        self.assertEqual(hz, 25)
+        virtual, clock, hz = verify.parse_args(["--virtual", "--hz=4"])
+        self.assertTrue(virtual)
+        self.assertFalse(clock)
+        self.assertEqual(hz, 4)
+        virtual, clock, hz = verify.parse_args(["--clock", "--hz", "10"])
+        self.assertFalse(virtual)
+        self.assertTrue(clock)
+        self.assertEqual(hz, 10)
+
+    def test_hz_flag_rejects_zero(self) -> None:
+        with self.assertRaises(ValueError):
+            verify.parse_args(["--hz", "0"])
 
 
 if __name__ == "__main__":

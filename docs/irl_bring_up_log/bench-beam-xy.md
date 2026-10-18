@@ -1,10 +1,12 @@
 # Beam X and Beam Y
 
-Two ATF22V10C parts, already burned, on a breadboard. Beam X counts dots 0 through 340. Beam Y counts lines 0 through 261. The images are [`beam_x.jed`](../../../apps/flasher_tool/firmware/a/beam_x.jed) and [`beam_y.jed`](../../../apps/flasher_tool/firmware/a/beam_y.jed).
+Two ATF22V10C parts, already burned, on a breadboard. Beam X counts dots 0 through 340. Beam Y counts lines 0 through 261. One frame is 262 of those lines. The images are [`beam_x.jed`](../../../apps/flasher_tool/firmware/a/beam_x.jed) and [`beam_y.jed`](../../../apps/flasher_tool/firmware/a/beam_y.jed).
 
-The package is 300 mil. Each chip sits in a 24-pin socket of that width. The notch is pin 1. Power is off while a chip goes in or comes out.
+The package is 300 mil. Each chip sits in a 24-pin socket of that width. The notch is pin 1. Power is off while a chip goes in or comes out. Both chips are in the sockets for a frame.
 
-One HiLetgo CH340 module clocks the counters and feeds 5 V. It is a 6-pin USB serial header: 5V, VCC, 3V3, TXD, RXD, GND. The yellow jumper bridges 5V and VCC, so TXD swings at 5V. An 8-channel USB logic analyzer reads the pins. The case label shows CH1, CH3, CH5, CH7, and CLK down the left of the header, and CH2, CH4, CH6, CH8, and GND down the right. PWR on that label is the power lamp beside the USB plug. A channel reading of 0 is a low pin. A reading of 1 is a high pin.
+One HiLetgo CH340 module clocks the counters and feeds 5 V. It is a 6-pin USB serial header: 5V, VCC, 3V3, TXD, RXD, GND. The 5V pin is USB power. The VCC pin powers the CH340, and TXD swings at whatever voltage reaches VCC. The yellow jumper stays off. The 5V pin and the VCC pin each get a wire to the +5 V rail. The 3V3 pin and RXD stay open.
+
+Twenty LEDs sit in one row, left to right: yellow HSYNC, blue VSYNC, nine red Beam X bits from Q8 through Q0, nine green Beam Y bits from Q8 through Q0. The pin drives the LED anode through 2 kohm or 2.2 kohm. The cathode goes to ground. A lit LED is 1. A dark LED is 0. Q0 is the least significant bit.
 
 ## Parts
 
@@ -14,79 +16,98 @@ One HiLetgo CH340 module clocks the counters and feeds 5 V. It is a 6-pin USB se
 | ATF22V10C, PDIP-24, Beam Y image | 1 | Line counter. VSYNC high on counts 243 through 245 |
 | 24-pin socket, 300 mil | 2 | One per PLD |
 | 100 nF | 2 | One per chip, from V+ to the ground rail |
-| 10 kohm | 2 | Pull-up on RES, pull-up on Beam X CLK |
-| Switch | 1 | RES to ground. Closed holds both counters at 0 |
-| HiLetgo CH340 module | 1 | Clock and 5 V. TXD drives CK. RXD stays open |
-| 8-channel USB logic analyzer, 24 MHz | 1 | Reads CK, RES, Q0, Q1, HSYNC, and VSYNC |
+| 10 kohm | 2 | One on the shared RES wire. One on Beam X pin 1 |
+| Switch | 1 | One switch on the shared RES wire. Closed holds both counters at 0 |
+| HiLetgo CH340 module | 1 | Clock and 5 V. TXD drives Beam X pin 1. RXD stays open |
+| LED | 20 | One yellow, one blue, nine red, nine green, in that left-to-right order |
+| 2 kohm or 2.2 kohm | 20 | One from each pin to the LED anode. Cathode to ground. Both values suit yellow, blue, red, and green |
 
 ## Place
 
-Beam X can be checked with Beam Y out of the socket. Beam Y pin 1 connects only after HSYNC is already moving.
-
 | Mark | Pins | Where |
 | --- | --- | --- |
-| V+ | 24 on each chip | +5 V rail, fed by the CH340 5V pin |
-| C | one cap on each chip | From V+ to the ground rail |
-| GD | 3 through 13 on each chip | Ground rail |
-| RS | 2 on each chip | Three wires meet here: a 10 kohm to +5 V, the switch to ground, and analyzer CH2 (D1) |
-| CK | Beam X pin 1 | Three wires meet here: a 10 kohm to +5 V, the CH340 TXD pin, and analyzer CH1 (D0) |
-| HS | Beam X pin 14 and Beam Y pin 1 | Analyzer CH5 (D4) |
-| Q0 | Beam X pin 21 | Analyzer CH3 (D2) |
-| Q0 | Beam Y pin 23 | Analyzer CH6 (D5) |
-| Q1 | Beam X pin 23 | Analyzer CH4 (D3) |
-| Q1 | Beam Y pin 21 | Analyzer CH7 (D6) |
-| VS | Beam Y pin 14 | VSYNC. Analyzer CH8 (D7) |
-| .. | 15 through 20, and 22, on each chip | Open |
+| V+ | pin 24, one on each chip | The two pin 24s share the +5 V rail. The CH340 5V pin and the CH340 VCC pin both land on that rail |
+| C | one cap on each chip | From that chip's V+ to the ground rail |
+| GD | pins 3 through 13 on each chip | These pins share the ground rail |
+| RS | pin 2, one on each chip | The two pin 2s share one wire. One 10 kohm from that wire to +5 V. One switch from that wire to ground |
+| CK | Beam X pin 1 only | One 10 kohm from this pin to +5 V. CH340 TXD on this pin |
+| HS | Beam X pin 14 and Beam Y pin 1 | LED 1, yellow. These two pins share one wire. Resistor from that wire to the anode. Cathode to ground |
+| VS | Beam Y pin 14 only | LED 2, blue. Resistor from this pin to the anode. Cathode to ground |
+| Q8 | Beam X pin 22 only | LED 3, red, bit 8 |
+| Q7 | Beam X pin 18 only | LED 4, red, bit 7 |
+| Q6 | Beam X pin 19 only | LED 5, red, bit 6 |
+| Q5 | Beam X pin 20 only | LED 6, red, bit 5 |
+| Q4 | Beam X pin 17 only | LED 7, red, bit 4 |
+| Q3 | Beam X pin 15 only | LED 8, red, bit 3 |
+| Q2 | Beam X pin 16 only | LED 9, red, bit 2 |
+| Q1 | Beam X pin 23 only | LED 10, red, bit 1 |
+| Q0 | Beam X pin 21 only | LED 11, red, bit 0 |
+| Q8 | Beam Y pin 22 only | LED 12, green, bit 8 |
+| Q7 | Beam Y pin 18 only | LED 13, green, bit 7 |
+| Q6 | Beam Y pin 19 only | LED 14, green, bit 6 |
+| Q5 | Beam Y pin 17 only | LED 15, green, bit 5 |
+| Q4 | Beam Y pin 20 only | LED 16, green, bit 4 |
+| Q3 | Beam Y pin 16 only | LED 17, green, bit 3 |
+| Q2 | Beam Y pin 15 only | LED 18, green, bit 2 |
+| Q1 | Beam Y pin 21 only | LED 19, green, bit 1 |
+| Q0 | Beam Y pin 23 only | LED 20, green, bit 0 |
 
 ```text
  Clock
-  5V ---- VCC jumper
+  yellow jumper off
   5V ---- +5V rail
-  TXD ---- CK, Beam X pin 1
-  10 kohm on that same pin ---- +5 V
+  VCC ---- +5V rail
   GND ---- GND rail
   RXD open
   3V3 open
 
- Logic analyzer
-  CH1 (D0) ---- CK, Beam X pin 1      CH2 (D1) ---- RS, pin 2 on each chip
-  CH3 (D2) ---- Q0, Beam X pin 21     CH4 (D3) ---- Q1, Beam X pin 23
-  CH5 (D4) ---- HS, Beam X pin 14     CH6 (D5) ---- Q0, Beam Y pin 23
-  CH7 (D6) ---- Q1, Beam Y pin 21     CH8 (D7) ---- VS, Beam Y pin 14
-  CLK open                            GND ---- GND rail
+ CK is Beam X pin 1 only
+  10 kohm ---- +5 V
+  TXD ---- this pin
 
- +5V ---- Clock 5V
+ RS is one shared wire
+  Beam X pin 2 ---- Beam Y pin 2
+  10 kohm ---- +5 V
+  switch ---- ground
+
+ HS is one shared wire
+  Beam X pin 14 ---- Beam Y pin 1
+  HSYNC LED: resistor from this wire to the anode, cathode to ground
+
+ VSYNC LED: resistor from Beam Y pin 14 to the anode, cathode to ground
+
+ +5V ---- CH340 5V, CH340 VCC
               Beam X                              Beam Y
                notch                               notch
             +----U-----+                        +----U-----+
          CK |  1    24 | V+                  HS |  1    24 | V+
          RS |  2    23 | Q1                  RS |  2    23 | Q0
-         GD |  3    22 | ..                  GD |  3    22 | ..
+         GD |  3    22 | Q8                  GD |  3    22 | Q8
          GD |  4    21 | Q0                  GD |  4    21 | Q1
-         GD |  5    20 | ..                  GD |  5    20 | ..
-         GD |  6    19 | ..                  GD |  6    19 | ..
-         GD |  7    18 | ..                  GD |  7    18 | ..
-         GD |  8    17 | ..                  GD |  8    17 | ..
-         GD |  9    16 | ..                  GD |  9    16 | ..
-         GD | 10    15 | ..                  GD | 10    15 | ..
+         GD |  5    20 | Q5                  GD |  5    20 | Q4
+         GD |  6    19 | Q6                  GD |  6    19 | Q6
+         GD |  7    18 | Q7                  GD |  7    18 | Q7
+         GD |  8    17 | Q4                  GD |  8    17 | Q5
+         GD |  9    16 | Q2                  GD |  9    16 | Q3
+         GD | 10    15 | Q3                  GD | 10    15 | Q2
          GD | 11    14 | HS                  GD | 11    14 | VS
          GD | 12    13 | GD                  GD | 12    13 | GD
             +----------+                        +----------+
          C is one 100 nF on each chip, from V+ to the ground rail
- GND ---- Clock GND, analyzer GND
+ GND ---- CH340 GND
 ```
 
-Only the clock module feeds 5 V. CLK on the analyzer is an output and stays open. On the CH340, RXD and 3V3 stay open.
-
-Q0 is the least significant bit on both chips.
+Only the CH340 feeds 5 V. On that module, RXD and 3V3 stay open.
 
 ## Check
 
-The host opens the analyzer with the fx2lafw driver. The capture runs at 20 kHz. Sticker CH1 through CH8 are D0 through D7, in that order.
+`./ic_verifier 2 --clock` holds TXD low while the reset switch is closed. After the switch opens, TXD rises 10 times a second. `./ic_verifier 2 --clock --hz 2` is the same clock at another rate.
 
-RES closed (low) clears both counters. The clock module holds TXD low while the switch is closed, then the switch opens. Each later rising edge on TXD adds one Beam X count. D0 shows that edge.
+Each rising edge adds one Beam X count. Count 341 is count 0 again. One line is 341 edges. At 10 Hz that line takes 34.1 seconds. HSYNC rises on the edge that enters 264, and that rise adds one Beam Y count. Beam Y is already 1 while Beam X finishes the line and wraps to 0. The next HSYNC rise is 341 Beam X edges later.
 
-Beam X uses D2, D3, and D4. Those are Q0, Q1, and HSYNC.
+A frame is 262 lines. At 10 Hz that is about 2.5 hours. Line 262 wraps Beam Y to 0.
+
+A lit LED is 1. Beam X, in count order:
 
 | Edges | Count | Q1 | Q0 | HSYNC |
 | --- | --- | --- | --- | --- |
@@ -100,9 +121,9 @@ Beam X uses D2, D3, and D4. Those are Q0, Q1, and HSYNC.
 | 289 | 289 | 0 | 1 | 0 |
 | 341 | 0 | 0 | 0 | 0 |
 
-Count 341 is count 0 again. HSYNC rises on the edge that enters 264, and that rise is the Beam Y clock. The next rise is 341 Beam X edges later.
+HSYNC is high on counts 264 through 288. Q8 through Q2 follow the same count. Count 256 is Q8 alone. Count 340 is Q8, Q6, Q4, and Q2.
 
-Beam Y, counted in HSYNC rises. D5, D6, and D7 are Q0, Q1, and VSYNC.
+Beam Y, counted in HSYNC rises:
 
 | HSYNC rises | Count | Q1 | Q0 | VSYNC |
 | --- | --- | --- | --- | --- |
@@ -114,3 +135,5 @@ Beam Y, counted in HSYNC rises. D5, D6, and D7 are Q0, Q1, and VSYNC.
 | 245 | 245 | 0 | 1 | 1 |
 | 246 | 246 | 1 | 0 | 0 |
 | 262 | 0 | 0 | 0 | 0 |
+
+VSYNC is high on counts 243 through 245. Count 256 is Q8 alone. Count 261 is Q8, Q2, and Q0.
