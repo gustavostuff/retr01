@@ -185,17 +185,35 @@ UPLDB_DIR_CART, UPLDB_OE_CART = "18", "19"
 UPLDB_CART_OE, UPLDB_CART_WE = "20", "21"
 UPLDB_SEL10, UPLDB_SEL11 = "22", "22"  # FE10/FE11 share pin 22 after FE02 took 23
 
-# UPLDX beam X + scroll Y register.
-UPLDX_DOT, UPLDX_RES, UPLDX_NMI = "1", "13", "14"
-UPLDX_Y = {i: str(15 + i) for i in range(8)}
-UPLDX_LD = {i: str(2 + i) for i in range(8)}  # CPU D -> scroll Y (pins 2-9)
-UPLDX_LE_FE03 = "11"  # scroll Y load enable
+# UPLDX / UPLDY: burned GAL pin lists. Authority is docs/irl_bring_up_log/.
+# Pins 3-11 and 13 are unused inputs (NC in the fuse map). Tie them low.
+UPLD_TIED_LOW = tuple(str(n) for n in range(3, 12)) + ("13",)
+UPLDX_CLK, UPLDX_RES, UPLDX_HSYNC = "1", "2", "14"
+UPLDX_Q = {
+    0: "21",
+    1: "23",
+    2: "16",
+    3: "15",
+    4: "17",
+    5: "20",
+    6: "19",
+    7: "18",
+    8: "22",
+}
 
-# UPLDY beam Y: raster compare is internal (registered $FE04). No external Q hop.
-UPLDY_P = {i: str(2 + i) for i in range(8)}
-UPLDY_LD = {i: str(14 + i) for i in range(8)}  # CPU D -> raster Y regs (pins 14-21)
-UPLDY_LE_FE04 = "23"  # raster Y load enable
-UPLDY_EQ = "22"
+# UPLDY CLK is UPLDX HSYNC. No count bus between the two packages.
+UPLDY_CLK, UPLDY_RES, UPLDY_VSYNC = "1", "2", "14"
+UPLDY_Q = {
+    0: "23",
+    1: "21",
+    2: "15",
+    3: "16",
+    4: "20",
+    5: "17",
+    6: "19",
+    7: "18",
+    8: "22",
+}
 
 # UPLDV compositor + CART_A14-A18 MAP high export (1284 GPIO budget exhausted).
 UPLDV_IDX = {i: str(2 + i) for i in range(6)}

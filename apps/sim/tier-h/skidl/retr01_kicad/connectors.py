@@ -165,16 +165,8 @@ def wire_connectors(parts: dict, nets_map: dict, pin_connect: Callable) -> None:
         pin_connect(parts["J2"], "", 5, csync)
         if "UPLDV" in parts:
             pin_connect(parts["UPLDV"], "", int(P.UPLDV_EQ), csync)
-        if "UPLDX" in parts:
-            pin_connect(parts["UPLDX"], "CSYNC", "CSYNC", csync)
-        hsync = _find_net_by_name(nets_map, ("HSYNC", "VIDEO_HSYNC")) or _ensure_net(nets_map, "HSYNC")
-        hsync.name = "HSYNC"
-        if "UPLDX" in parts:
-            pin_connect(parts["UPLDX"], "HSYNC", "HSYNC", hsync)
-        vsync = _find_net_by_name(nets_map, ("VSYNC", "VIDEO_VSYNC")) or _ensure_net(nets_map, "VSYNC")
-        vsync.name = "VSYNC"
-        if "UPLDY" in parts:
-            pin_connect(parts["UPLDY"], "VSYNC", "VSYNC", vsync)
+        # HSYNC is UPLDX pin 14 into UPLDY pin 1. VSYNC is UPLDY pin 14.
+        # wire_beam_plds owns those pins. This socket has CSYNC only.
         audio = _find_net_by_node(nets_map, "US2", "AUDIO_PWM")
         if audio is None:
             audio = _find_net_for_part_pin(nets_map, "US2", "17")

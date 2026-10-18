@@ -1,0 +1,6 @@
+Retr01 todos:
+
+1. Remove default netlist ratsnest in Tier H.
+2. Name that app simply "Sim", we won't have Sim tiers.
+3. Check why the CXA2075M footprint doesn't look like copper in KiCad 3D view.
+4. Start defining the video lab bench.

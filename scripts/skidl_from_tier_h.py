@@ -440,6 +440,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
         sys.path.insert(0, str(TIER_H_SKIDL_DIR))
     from retr01_kicad.clocks import ensure_clock_parts, wire_clocks
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
+    from retr01_kicad.beam_plds import wire_beam_plds
     from retr01_kicad.bus_nets import apply_bus_netclasses
     from retr01_kicad.layer4_nets import (
         annotate_netlist_layer4_class,
@@ -490,6 +491,7 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     wire_connectors(parts, nets_map, pin_connect)
     wire_clocks(parts, nets_map, pin_connect)
     wire_power_rails(parts, nets_map, pin_connect)
+    wire_beam_plds(parts, nets_map, pin_connect, ensure_part)
 
     if "U130" in parts:
         res_net = nets_map.get("CPU_RES#")

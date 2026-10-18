@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Set
 
+from . import pinmap as P
 from .power_rails import _rail_markers, is_nc_name
 
 
@@ -228,6 +229,17 @@ _PIN_NAME_TABLE: Dict[tuple[str, str], str] = {
     ("J10", "1"): "J10_PWR_NC",
 }
 
+_PIN_NAME_TABLE[("UPLDX", P.UPLDX_CLK)] = "BEAM_X_CLK"
+_PIN_NAME_TABLE[("UPLDX", P.UPLDX_RES)] = "CPU_RES#"
+_PIN_NAME_TABLE[("UPLDX", P.UPLDX_HSYNC)] = "HSYNC"
+_PIN_NAME_TABLE[("UPLDY", P.UPLDY_CLK)] = "HSYNC"
+_PIN_NAME_TABLE[("UPLDY", P.UPLDY_RES)] = "CPU_RES#"
+_PIN_NAME_TABLE[("UPLDY", P.UPLDY_VSYNC)] = "VSYNC"
+for _bit, _num in P.UPLDX_Q.items():
+    _PIN_NAME_TABLE[("UPLDX", _num)] = f"BEAM_X_Q{_bit}"
+for _bit, _num in P.UPLDY_Q.items():
+    _PIN_NAME_TABLE[("UPLDY", _num)] = f"BEAM_Y_Q{_bit}"
+
 # Protected nets that must never be altered or renamed
 _PRESERVED_NETS = frozenset(
     {
@@ -249,10 +261,12 @@ _PRESERVED_NETS = frozenset(
         "CSYNC",
         "HSYNC",
         "VSYNC",
+        "BEAM_X_CLK",
+        "CPU_RES#",
         "PHI2",
         "U74_PRE_CLR#",
     }
-)
+) | {f"BEAM_X_Q{b}" for b in range(9)} | {f"BEAM_Y_Q{b}" for b in range(9)}
 
 
 def _suggest_name_for_pins(pins: list) -> Optional[str]:
