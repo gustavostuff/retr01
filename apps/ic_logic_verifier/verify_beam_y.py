@@ -9,9 +9,9 @@ LOG = Path(__file__).resolve().with_name("verify_beam_y.log")
 X_HSYNC = 264
 Y_MOD = 262
 BITS = (
-    ("Q0", 23, "q0"),
-    ("Q1", 21, "q1"),
-    ("VSYNC", 14, "vsync"),
+    ("Q0", 14, "q0"),
+    ("Q1", 15, "q1"),
+    ("VSYNC", 23, "vsync"),
 )
 
 

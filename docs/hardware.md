@@ -97,9 +97,9 @@ Game **entities** live in system RAM / PRG. Drawing goes through OAM + S1 field 
 
 ## PLD roles (3x ATF22V10)
 
-**Beam X** counts dots 0 through 340. CLK is DOT on pin 1. HSYNC on pin 14 is high on counts 264 through 288. That pin clocks Beam Y. Q8 through Q0 are the count. The passing bench and the pin list are in [irl_bring_up_log/](irl_bring_up_log/). The image is `apps/flasher_tool/firmware/a/beam_x.pld`.
+**Beam X** counts dots 0 through 340. CLK is DOT on pin 1. Q0 is pin 14 through Q8 on pin 22. HSYNC on pin 23 is high on counts 264 through 288. That pin clocks Beam Y. The pin list is in [irl_bring_up_log/](irl_bring_up_log/). The image is `apps/flasher_tool/firmware/a/beam_x.pld`.
 
-**Beam Y** counts lines 0 through 261. CLK is Beam X HSYNC on pin 1. VSYNC on pin 14 is high on counts 243 through 245. Q8 through Q0 are the count. The image is `apps/flasher_tool/firmware/a/beam_y.pld`. The two chips share RES on pin 2. HSYNC is the only signal between them.
+**Beam Y** counts lines 0 through 261. CLK is Beam X HSYNC on pin 1. Q0 is pin 14 through Q8 on pin 22. VSYNC on pin 23 is high on counts 243 through 245. The image is `apps/flasher_tool/firmware/a/beam_y.pld`. The two chips share RES on pin 2. HSYNC is the only signal between them.
 
 **Compositor** owns priority, the color PROM index, and MAP bits A14-A18. It produces `LE_7F02`, `LE_7F03`, `LE_7F04`, `SEL_VRAM`, `LE_MAP`, the three `SEL_SOFT*` lines, and the residual `/OE`. Cart `WE#` is gated by **CART_ARM**.
 

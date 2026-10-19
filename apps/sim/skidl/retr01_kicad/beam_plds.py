@@ -1,6 +1,6 @@
 """Beam X / Beam Y nets from the burned ATF22V10 images.
 
-The sim JSON already joins UPLDX pin 14 (HSYNC) to UPLDY pin 1 (CLK).
+The sim JSON already joins UPLDX pin 23 (HSYNC) to UPLDY pin 1 (CLK).
 mobo_scope drops those signal nodes. This pass puts the same pins back,
 ties the unused inputs to GND, and gives each Q bit its own net.
 """

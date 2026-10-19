@@ -75,7 +75,7 @@ static void add_outs(R01sEntity *e, const int *pins, const char *const *names, i
 }
 
 void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
-    static const int q_pins[9] = {21, 23, 16, 15, 17, 20, 19, 18, 22};
+    static const int q_pins[9] = {14, 15, 16, 17, 18, 19, 20, 21, 22};
     static const char *const q_names[9] = {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"};
     int n;
     if (!chip) {
@@ -94,7 +94,7 @@ void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
     }
     r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
     r01s_entity_add_pin(&chip->base, 13, "IN13", R01S_PIN_IN);
-    r01s_entity_add_pin(&chip->base, 14, "HSYNC", R01S_PIN_OUT);
+    r01s_entity_add_pin(&chip->base, 23, "HSYNC", R01S_PIN_OUT);
     add_outs(&chip->base, q_pins, q_names, 9);
     r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
     r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);

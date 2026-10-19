@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[4]
+REPO = HERE.parents[3]
 PALETTE_C = REPO / "apps" / "common" / "r01_kit_palette.c"
 BEGIN = "R01_KIT_RGB_BEGIN"
 END = "R01_KIT_RGB_END"
@@ -185,17 +185,24 @@ def check_counter(mod: int, bits: list[list[tuple[int, int]]], pulse: list[tuple
             raise SystemExit(f"pulse at {cur} (next {expect}) is {got}, expected {want}")
 
 
+# Q0 on pin 14 through Q8 on pin 22. The sync pulse takes the last macrocell.
+STRAIGHT_Q = {f"Q{bit}": 14 + bit for bit in range(9)}
+
+
 def assign_pins(functions: list[tuple[str, list[tuple[int, int]]]]) -> dict[str, int]:
-    """Widest equations land on the pins with the most product terms."""
-    order = sorted(functions, key=lambda item: len(item[1]), reverse=True)
-    pins = sorted(PT_LIMIT, key=lambda pin: PT_LIMIT[pin], reverse=True)
-    if len(order) != 10:
-        raise SystemExit(f"expected 10 macrocells, got {len(order)}")
-    placed: dict[str, int] = {}
-    for (name, imps), pin in zip(order, pins):
-        if len(imps) > PT_LIMIT[pin]:
-            raise SystemExit(f"{name} needs {len(imps)} terms, pin {pin} holds {PT_LIMIT[pin]}")
-        placed[name] = pin
+    """Count bits in pin order. Pin 23 is the sync pulse."""
+    by_name = {name: imps for name, imps in functions}
+    if len(by_name) != 10:
+        raise SystemExit(f"expected 10 macrocells, got {len(by_name)}")
+    placed = dict(STRAIGHT_Q)
+    pulses = [name for name in by_name if name not in placed]
+    if len(pulses) != 1:
+        raise SystemExit(f"expected one sync output, got {pulses}")
+    placed[pulses[0]] = 23
+    for name, pin in placed.items():
+        nterms = len(by_name[name])
+        if nterms > PT_LIMIT[pin]:
+            raise SystemExit(f"{name} needs {nterms} terms, pin {pin} holds {PT_LIMIT[pin]}")
     return placed
 
 

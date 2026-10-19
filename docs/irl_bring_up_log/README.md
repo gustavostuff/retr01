@@ -12,29 +12,45 @@ The sim `at27c256r.c` uses those pin numbers. The kit load packs the same RGB ta
 
 [bench-beam-xy.md](bench-beam-xy.md). The images are [`beam_x.pld`](../../apps/flasher_tool/firmware/a/beam_x.pld) and [`beam_y.pld`](../../apps/flasher_tool/firmware/a/beam_y.pld).
 
-The two chips share RES (pin 2 to pin 2) and power. One signal runs between them: Beam X pin 14 (HSYNC) into Beam Y pin 1 (CLK). Pins 3 through 11 and pin 13 on each chip are unused inputs. On the bench they sit on the ground rail. The Q pins are that chip's own count. They leave toward the LEDs on the bench, and toward the compositor and the VRAM mux on the motherboard. They do not run to the other PLD.
+The two chips share RES (pin 2 to pin 2) and power. One signal runs between them: Beam X pin 23 (HSYNC) into Beam Y pin 1 (CLK). Pins 3 through 11 and pin 13 on each chip are unused inputs. On the bench they sit on the ground rail. The Q pins are that chip's own count. They leave toward the LEDs on the bench, and toward the compositor and the VRAM mux on the motherboard. They do not run to the other PLD.
 
 | Chip | CLK | Count | Sync |
 | --- | --- | --- | --- |
-| Beam X | DOT, pin 1, rising edge | 0 through 340, then 0 | HSYNC high on 264 through 288, pin 14 |
-| Beam Y | Beam X HSYNC, pin 1, rising edge | 0 through 261, then 0 | VSYNC high on 243 through 245, pin 14 |
+| Beam X | DOT, pin 1, rising edge | 0 through 340, then 0 | HSYNC high on 264 through 288, pin 23 |
+| Beam Y | Beam X HSYNC, pin 1, rising edge | 0 through 261, then 0 | VSYNC high on 243 through 245, pin 23 |
 
-Q pin numbers, from the fuse-map header and the bench:
+Both counters are 9 bits. The same pin on each chip is the same bit. Q0 is pin 14. Each next bit is the next pin. Q8 is pin 22. Pin 23 is that chip's sync pulse.
 
-| Bit | Beam X pin | Beam Y pin |
-| --- | --- | --- |
-| Q0 | 21 | 23 |
-| Q1 | 23 | 21 |
-| Q2 | 16 | 15 |
-| Q3 | 15 | 16 |
-| Q4 | 17 | 20 |
-| Q5 | 20 | 17 |
-| Q6 | 19 | 19 |
-| Q7 | 18 | 18 |
-| Q8 | 22 | 22 |
+| Bit | Pin |
+| --- | --- |
+| Q0 | 14 |
+| Q1 | 15 |
+| Q2 | 16 |
+| Q3 | 17 |
+| Q4 | 18 |
+| Q5 | 19 |
+| Q6 | 20 |
+| Q7 | 21 |
+| Q8 | 22 |
 
 ### Sim
 
 The sim follows this pin list. UPLDX counts dots and drives HSYNC. UPLDY counts on that HSYNC and drives VSYNC. The canvas joins them on HSYNC, and both RES pins share the CPU reset net. The video path reads the two counters. HBlank is X at least 256. VBlank is Y at least 240. NMIB is held low for a few dots when Y enters 240. Those three are not pins on the burned images.
 
-The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 14 and UPLDY pin 1 share HSYNC. UPLDY pin 14 is VSYNC. Each Q pin is its own net (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/skidl/retr01_prelim.net` to replace the eight `SIG_UPLDX_P*` nets still stored in the older `.kicad_pcb` files.
+The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 23 and UPLDY pin 1 share HSYNC. UPLDY pin 23 is VSYNC. Q0 through Q8 are pins 14 through 22 on each chip (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/skidl/retr01_prelim.net` after the next export. The saved `v_07` board still has the earlier pin-14 sync until that import.
+
+## Color bars
+
+[bench-color-bars.md](bench-color-bars.md). Not passed yet. Dot clock, three Beam X bits into the PROM, the resistor DAC, and one sync wire into an RGBS CRT. The compositor stays off that board.
+
+## After a bench passes
+
+A passing note here is what the board is updated from. The sim, the SKiDL netlist, and `v_07` follow the note. The note does not follow a drawing that has not been on the bench.
+
+When a note says it passes:
+
+1. Change the sim pin netlist so the canvas matches the bench.
+2. Run `apps/sim/skidl/export_netlist.sh`. That writes `apps/sim/skidl/retr01_prelim.net` from the sim.
+3. Re-import that file into `apps/sim/kicad/main-pcb/v_07.kicad_pcb`. Link footprints by reference designator. Leave **Replace footprints** and **Delete footprints** off.
+
+The ordered board is that netlist after the benches that feed it have passed. A jumper the note calls breadboard-only stays off `v_07`.

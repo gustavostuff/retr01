@@ -276,7 +276,7 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
                 atf_add_sig(&chip->base, &next, SEL_NAMES[i], R01S_PIN_OUT);
             }
         } else if (role == R01S_PLD_BEAM_Y) {
-            static const int q_pins[9] = {23, 21, 15, 16, 20, 17, 19, 18, 22};
+            static const int q_pins[9] = {14, 15, 16, 17, 18, 19, 20, 21, 22};
             static const char *const q_names[9] = {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"};
             int n;
             r01s_entity_add_pin(&chip->base, 1, "CLK", R01S_PIN_IN);
@@ -289,7 +289,7 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
                 }
             }
             r01s_entity_add_pin(&chip->base, 13, "IN13", R01S_PIN_IN);
-            r01s_entity_add_pin(&chip->base, 14, "VSYNC", R01S_PIN_OUT);
+            r01s_entity_add_pin(&chip->base, 23, "VSYNC", R01S_PIN_OUT);
             for (i = 0; i < 9; i++) {
                 r01s_entity_add_pin(&chip->base, q_pins[i], q_names[i], R01S_PIN_OUT);
             }

@@ -16,7 +16,8 @@
 
 /*
  * Beam X (UPLDX). Burned ATF22V10 image in docs/irl_bring_up_log/.
- * CLK is DOT, pin 1. Count 0..340. HSYNC on pin 14 is high on 264..288.
+ * CLK is DOT, pin 1. Count 0..340. Q0 is pin 14 through Q8 on pin 22.
+ * HSYNC on pin 23 is high on 264..288.
  * That pin clocks Beam Y. HBlank is X>=256, derived for the video path.
  */
 typedef struct R01sBeamXy {

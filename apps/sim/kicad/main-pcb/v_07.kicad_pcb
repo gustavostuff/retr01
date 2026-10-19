@@ -904,7 +904,7 @@
 	(footprint "Retr01_Lib:DIP-20_W7.62mm"
 		(layer "F.Cu")
 		(uuid "02694a72-bd96-45e5-a6ed-fa3c40d61240")
-		(at 172.07 126.805 90)
+		(at 171.392305 127.537343 90)
 		(descr "20-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U574"
@@ -1116,7 +1116,7 @@
 			(uuid "719565f4-54fa-4f2e-99b6-4758d8239307")
 		)
 		(point
-			(at 183.5 122.995)
+			(at 182.822305 123.727343)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "bae98d99-256c-469e-be99-603dc5ade8a5")
@@ -4837,7 +4837,7 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "1b616ac2-08f4-4cd9-8457-8705a0796ccf")
-		(at 204.64 139.6)
+		(at 205.665511 139.911813)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C14"
@@ -6140,7 +6140,7 @@
 	(footprint "Retr01_Lib:DIP-20_W7.62mm"
 		(layer "F.Cu")
 		(uuid "34acc81d-089e-48d6-8455-27608e56f42f")
-		(at 200.62 131.48 -90)
+		(at 200.660706 132.728712 -90)
 		(descr "20-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U573"
@@ -6352,7 +6352,7 @@
 			(uuid "944ff94a-d805-4f39-8e8e-db432389887b")
 		)
 		(point
-			(at 189.19 135.29)
+			(at 189.230706 136.538712)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "be17eed1-08d5-4b09-b5c0-17a8a7add306")
@@ -8495,7 +8495,7 @@
 	(footprint "Retr01_Lib:DIP-24_W7.62mm"
 		(layer "F.Cu")
 		(uuid "4b899216-448e-4a3a-921b-56b34dfd26df")
-		(at 177.76949 151.798311 90)
+		(at 177.815587 153.141098 90)
 		(descr "24-lead though-hole mounted DIP package, row spacing 7.62mm (300 mils)")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "UPLDY"
@@ -8707,7 +8707,7 @@
 			(uuid "334fe9cd-5e9c-4159-abd9-6aee12bf353f")
 		)
 		(point
-			(at 191.73949 147.988311)
+			(at 191.785587 149.331098)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "4d7b1593-b199-4d2d-ad15-6e76bab09723")
@@ -12018,7 +12018,7 @@
 	(footprint "Retr01_Lib:DIP-14_W7.62mm_74HC74"
 		(layer "F.Cu")
 		(uuid "6640584b-c445-4933-b3ca-2704ce20e64c")
-		(at 200.3 126.81 90)
+		(at 199.324346 127.556732 90)
 		(descr "14-lead DIP 7.62mm. PRE#/CLR# (1,4,10,13) strapped to VCC (14).")
 		(tags "THT DIP DIL PDIP 2.54mm 7.62mm 300mil")
 		(property "Reference" "U74"
@@ -12291,7 +12291,7 @@
 			(uuid "b1ba78af-d6a9-48aa-a7ed-9518279c9771")
 		)
 		(point
-			(at 207.92 123)
+			(at 206.944346 123.746732)
 			(size 1.27)
 			(layer "F.Fab")
 			(uuid "ea73946b-542b-44b4-9277-fb4a2c7b9046")
@@ -18244,7 +18244,7 @@
 		(descr "SOP, 24 Pin (http://www.issi.com/WW/pdf/31FL3218.pdf#page=14)")
 		(tags "SOP SO")
 		(property "Reference" "U2075"
-			(at 0 -8.65 0)
+			(at -6.965479 -5.80469 90)
 			(layer "F.SilkS")
 			(uuid "c9b87603-4704-4d91-b7ad-207d59b1f7ea")
 			(effects
@@ -25163,7 +25163,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C9"
-			(at -2 0 180)
+			(at 7.052239 0.771336 180)
 			(layer "F.SilkS")
 			(uuid "0a15cf5e-f97c-4ae4-990e-9f795eafe357")
 			(effects
@@ -25174,7 +25174,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 8.5 0 90)
+			(at 8.639753 0.527103 180)
 			(layer "F.SilkS")
 			(uuid "494e3b60-d61b-4c47-a02b-c22e8cbd3132")
 			(effects

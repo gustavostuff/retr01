@@ -176,7 +176,7 @@ def check_beam_x_count(pins) -> str | None:
     """Clock a Beam X and read HSYNC. None when the pulse lands on 264..288.
 
     `pins` supplies res_low, res_high, clock_low, rising_edge, and hsync.
-    hsync() is true when pin 14 is high.
+    hsync() is true when pin 23 is high.
     """
     pins.clock_low()
     pins.res_low()

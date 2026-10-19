@@ -8,9 +8,9 @@ MOD = 341
 LOG = Path(__file__).resolve().with_name("verify_beam_x.log")
 STOPS = (0, 1, 2, 3, 4, 264, 288, 289, 341)
 BITS = (
-    ("Q0", 21, "q0"),
-    ("Q1", 23, "q1"),
-    ("HSYNC", 14, "hsync"),
+    ("Q0", 14, "q0"),
+    ("Q1", 15, "q1"),
+    ("HSYNC", 23, "hsync"),
 )
 
 

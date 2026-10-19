@@ -1,18 +1,17 @@
 GAL22V10
 BeamX
 CLK RES NC NC NC NC NC NC NC NC NC GND
-NC HSYNC Q3 Q2 Q4 Q7 Q6 Q5 Q0 Q8 Q1 VCC
+NC Q0 Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 HSYNC VCC
 
 AR = /RES
 
-HSYNC.R = Q3 * /Q5 * /Q6 * Q8
-     + Q4 * /Q5 * /Q6 * Q8
-     + Q0 * Q1 * Q2 * /Q5 * /Q6 * Q8
+Q0.R = /Q0 * /Q8
+     + /Q0 * /Q6
+     + /Q0 * /Q4
+     + /Q0 * /Q2
 
-Q3.R = /Q2 * Q3
-     + /Q1 * Q3
-     + Q0 * Q1 * Q2 * /Q3
-     + /Q0 * Q3
+Q1.R = Q0 * /Q1
+     + /Q0 * Q1
 
 Q2.R = /Q1 * Q2 * /Q8
      + Q0 * Q1 * /Q2
@@ -20,12 +19,32 @@ Q2.R = /Q1 * Q2 * /Q8
      + /Q1 * Q2 * /Q6
      + /Q1 * Q2 * /Q4
 
+Q3.R = /Q2 * Q3
+     + /Q1 * Q3
+     + Q0 * Q1 * Q2 * /Q3
+     + /Q0 * Q3
+
 Q4.R = /Q2 * Q4
      + /Q3 * Q4 * /Q8
      + /Q1 * Q3 * Q4
      + /Q0 * Q1 * Q4
      + Q0 * Q1 * Q2 * Q3 * /Q4
      + /Q3 * Q4 * /Q6
+
+Q5.R = /Q4 * Q5
+     + /Q3 * Q5
+     + /Q2 * Q5
+     + /Q1 * Q5
+     + Q0 * Q1 * Q2 * Q3 * Q4 * /Q5
+     + /Q0 * Q5
+
+Q6.R = /Q4 * Q6
+     + /Q2 * Q6
+     + /Q5 * Q6 * /Q8
+     + /Q3 * Q6 * /Q8
+     + /Q1 * Q6 * /Q8
+     + Q0 * Q1 * Q2 * Q3 * Q4 * Q5 * /Q6
+     + /Q0 * Q6 * /Q8
 
 Q7.R = /Q6 * Q7
      + /Q5 * Q7
@@ -36,33 +55,14 @@ Q7.R = /Q6 * Q7
      + Q0 * Q1 * Q2 * Q3 * Q4 * Q5 * Q6 * /Q7
      + /Q0 * Q7
 
-Q6.R = /Q4 * Q6
-     + /Q2 * Q6
-     + /Q5 * Q6 * /Q8
-     + /Q3 * Q6 * /Q8
-     + /Q1 * Q6 * /Q8
-     + Q0 * Q1 * Q2 * Q3 * Q4 * Q5 * /Q6
-     + /Q0 * Q6 * /Q8
-
-Q5.R = /Q4 * Q5
-     + /Q3 * Q5
-     + /Q2 * Q5
-     + /Q1 * Q5
-     + Q0 * Q1 * Q2 * Q3 * Q4 * /Q5
-     + /Q0 * Q5
-
-Q0.R = /Q0 * /Q8
-     + /Q0 * /Q6
-     + /Q0 * /Q4
-     + /Q0 * /Q2
-
 Q8.R = /Q6 * Q8
      + /Q4 * Q8
      + /Q2 * Q8
      + Q0 * Q1 * Q2 * Q3 * Q4 * Q5 * Q6 * Q7
 
-Q1.R = Q0 * /Q1
-     + /Q0 * Q1
+HSYNC.R = Q3 * /Q5 * /Q6 * Q8
+     + Q4 * /Q5 * /Q6 * Q8
+     + Q0 * Q1 * Q2 * /Q5 * /Q6 * Q8
 
 DESCRIPTION
 Beam X. DOT on CLK, rising edge. Count 0..340 then 0. HSYNC high on counts 264..288. RES low clears. HSYNC also clocks Beam Y.
