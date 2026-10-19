@@ -1,7 +1,8 @@
 """Beam X / Beam Y nets from the burned ATF22V10 images.
 
-The Tier H JSON still exports the sim stand-in (UPLDY P0-P7 tied to UPLDX Y0-Y7).
-mobo_scope drops those nodes. This pass wires the bench pin list.
+The sim JSON already joins UPLDX pin 14 (HSYNC) to UPLDY pin 1 (CLK).
+mobo_scope drops those signal nodes. This pass puts the same pins back,
+ties the unused inputs to GND, and gives each Q bit its own net.
 """
 
 from __future__ import annotations

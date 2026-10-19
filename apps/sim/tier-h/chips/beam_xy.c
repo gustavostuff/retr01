@@ -1,85 +1,64 @@
 #include "beam_xy.h"
 
-#include "atf22v10.h"
 #include "retr01_sim/bus.h"
 
 #include <stdio.h>
 #include <string.h>
 
-static void beam_drive_bus(R01sEntity *e, const char *prefix, int width, int value) {
-    int i;
-    char name[8];
-    for (i = 0; i < width; i++) {
-        snprintf(name, sizeof(name), "%s%d", prefix, i);
-        r01s_entity_drive(e, name, (value & (1 << i)) ? R01S_LVL_H : R01S_LVL_L);
+static void drive_q(R01sEntity *e, int count) {
+    int bit;
+    char name[4];
+    for (bit = 0; bit < 9; bit++) {
+        snprintf(name, sizeof(name), "Q%d", bit);
+        r01s_entity_drive(e, name, (count & (1 << bit)) ? R01S_LVL_H : R01S_LVL_L);
     }
 }
 
-static void beam_drive_flags(R01sBeamXy *c) {
+static void beam_drive(R01sBeamXy *c) {
     R01sEntity *e = &c->base;
-    int hb = (c->x >= R01S_BEAM_VISIBLE_W);
-    int vb = (c->y >= R01S_BEAM_VISIBLE_H);
-    beam_drive_bus(e, "X", 9, c->x);
-    beam_drive_bus(e, "Y", 9, c->y);
-    r01s_entity_drive(e, "HBLANK", hb ? R01S_LVL_H : R01S_LVL_L);
-    r01s_entity_drive(e, "VBLANK", vb ? R01S_LVL_H : R01S_LVL_L);
-    r01s_entity_drive(e, "NMI#", (c->nmi_hold > 0) ? R01S_LVL_L : R01S_LVL_H);
+    int hs = c->x >= R01S_HSYNC_FIRST && c->x <= R01S_HSYNC_LAST;
+    drive_q(e, c->x);
+    r01s_entity_drive(e, "HSYNC", hs ? R01S_LVL_H : R01S_LVL_L);
+}
+
+static int res_low(R01sEntity *e) {
+    return r01s_level_is_low(r01s_entity_sense(e, "RES"));
 }
 
 static void beam_reset(R01sEntity *e) {
     R01sBeamXy *c = (R01sBeamXy *)e;
     c->x = 0;
-    c->y = 0;
-    c->dot_prev = R01S_LVL_L;
-    c->nmi_hold = 0;
-    beam_drive_flags(c);
+    c->clk_prev = R01S_LVL_L;
+    beam_drive(c);
 }
 
 static void beam_eval(R01sEntity *e) {
     R01sBeamXy *c = (R01sBeamXy *)e;
-    if (r01s_level_is_low(r01s_entity_sense(e, "RES#"))) {
+    if (res_low(e)) {
         c->x = 0;
-        c->y = 0;
-        c->nmi_hold = 0;
     }
-    beam_drive_flags(c);
+    beam_drive(c);
 }
 
 static void beam_tick(R01sEntity *e) {
     R01sBeamXy *c = (R01sBeamXy *)e;
-    R01sLevel dot = r01s_entity_sense(e, "DOT");
-    int rise = (dot == R01S_LVL_H && c->dot_prev != R01S_LVL_H);
-    int entered_vblank = 0;
+    R01sLevel clk = r01s_entity_sense(e, "CLK");
+    int rise = (clk == R01S_LVL_H && c->clk_prev != R01S_LVL_H);
 
-    if (r01s_level_is_low(r01s_entity_sense(e, "RES#"))) {
+    if (res_low(e)) {
         c->x = 0;
-        c->y = 0;
-        c->nmi_hold = 0;
-        c->dot_prev = dot;
-        beam_drive_flags(c);
+        c->clk_prev = clk;
+        beam_drive(c);
         return;
     }
-
     if (rise) {
         c->x++;
         if (c->x >= R01S_BEAM_DOTS_X) {
             c->x = 0;
-            c->y++;
-            if (c->y >= R01S_BEAM_DOTS_Y) {
-                c->y = 0;
-            }
-            if (c->y == R01S_BEAM_VISIBLE_H) {
-                entered_vblank = 1;
-            }
-        }
-        if (entered_vblank) {
-            c->nmi_hold = 8; /* short stub pulse */
-        } else if (c->nmi_hold > 0) {
-            c->nmi_hold--;
         }
     }
-    c->dot_prev = dot;
-    beam_drive_flags(c);
+    c->clk_prev = clk;
+    beam_drive(c);
 }
 
 static void beam_destroy(R01sEntity *e) {
@@ -88,44 +67,36 @@ static void beam_destroy(R01sEntity *e) {
 
 static const R01sEntityVTable BEAM_VT = {beam_reset, beam_eval, beam_tick, beam_destroy};
 
-void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
-    static const char *const X_NAMES[9] = {"X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8"};
-    static const char *const Y_NAMES[9] = {"Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8"};
+static void add_outs(R01sEntity *e, const int *pins, const char *const *names, int n) {
     int i;
+    for (i = 0; i < n; i++) {
+        r01s_entity_add_pin(e, pins[i], names[i], R01S_PIN_OUT);
+    }
+}
+
+void r01s_beam_xy_init(R01sBeamXy *chip, const char *refdes) {
+    static const int q_pins[9] = {21, 23, 16, 15, 17, 20, 19, 18, 22};
+    static const char *const q_names[9] = {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"};
+    int n;
     if (!chip) {
         return;
     }
     memset(chip, 0, sizeof(*chip));
     r01s_entity_init(&chip->base, &BEAM_VT, "ATF22V10", refdes ? refdes : "UPLDX");
     chip->base.impl = chip;
-    /* Each wired signal gets its own leg. Y8 stays off the package so NMI# still has a pin. */
-    r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
-    r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 1, "CLK", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 2, "RES", R01S_PIN_IN);
     {
-        int next = 1;
-        int n;
-        n = r01s_atf22v10_alloc_pin(&next);
-        r01s_entity_add_pin(&chip->base, n > 0 ? n : 101, "DOT", R01S_PIN_IN);
-        n = r01s_atf22v10_alloc_pin(&next);
-        r01s_entity_add_pin(&chip->base, n > 0 ? n : 102, "RES#", R01S_PIN_IN);
-        for (i = 0; i < 9; i++) {
-            n = r01s_atf22v10_alloc_pin(&next);
-            r01s_entity_add_pin(&chip->base, n > 0 ? n : 103 + i, X_NAMES[i], R01S_PIN_OUT);
+        static const char *const in_names[9] = {"IN3", "IN4", "IN5", "IN6", "IN7", "IN8", "IN9", "IN10", "IN11"};
+        for (n = 0; n < 9; n++) {
+            r01s_entity_add_pin(&chip->base, 3 + n, in_names[n], R01S_PIN_IN);
         }
-        for (i = 0; i < 8; i++) {
-            n = r01s_atf22v10_alloc_pin(&next);
-            r01s_entity_add_pin(&chip->base, n > 0 ? n : 112 + i, Y_NAMES[i], R01S_PIN_OUT);
-        }
-        n = r01s_atf22v10_alloc_pin(&next);
-        r01s_entity_add_pin(&chip->base, n > 0 ? n : 121, "HBLANK", R01S_PIN_OUT);
-        n = r01s_atf22v10_alloc_pin(&next);
-        r01s_entity_add_pin(&chip->base, n > 0 ? n : 122, "VBLANK", R01S_PIN_OUT);
-        n = r01s_atf22v10_alloc_pin(&next);
-        r01s_entity_add_pin(&chip->base, n > 0 ? n : 123, "NMI#", R01S_PIN_OUT);
-        r01s_entity_add_pin(&chip->base, 130, "Y8", R01S_PIN_OUT);
     }
-    r01s_atf22v10_add_shell_pins(&chip->base);
-    /* Behavioral Beam-X shell. Footprint matches ATF22V10 300 mil. */
+    r01s_entity_add_pin(&chip->base, 12, "GND", R01S_PIN_PWR);
+    r01s_entity_add_pin(&chip->base, 13, "IN13", R01S_PIN_IN);
+    r01s_entity_add_pin(&chip->base, 14, "HSYNC", R01S_PIN_OUT);
+    add_outs(&chip->base, q_pins, q_names, 9);
+    r01s_entity_add_pin(&chip->base, 24, "VCC", R01S_PIN_PWR);
     r01s_entity_set_dip_mm(&chip->base, 24, 32, 8);
     r01s_entity_reset(&chip->base);
 }
@@ -138,16 +109,12 @@ int r01s_beam_xy_x(const R01sBeamXy *chip) {
     return chip ? chip->x : 0;
 }
 
-int r01s_beam_xy_y(const R01sBeamXy *chip) {
-    return chip ? chip->y : 0;
-}
-
 int r01s_beam_xy_hblank(const R01sBeamXy *chip) {
     return chip ? (chip->x >= R01S_BEAM_VISIBLE_W) : 0;
 }
 
-int r01s_beam_xy_vblank(const R01sBeamXy *chip) {
-    return chip ? (chip->y >= R01S_BEAM_VISIBLE_H) : 0;
+int r01s_beam_xy_hsync(const R01sBeamXy *chip) {
+    return chip && chip->x >= R01S_HSYNC_FIRST && chip->x <= R01S_HSYNC_LAST;
 }
 
 void r01s_beam_xy_rewind(R01sBeamXy *chip) {
@@ -155,8 +122,6 @@ void r01s_beam_xy_rewind(R01sBeamXy *chip) {
         return;
     }
     chip->x = 0;
-    chip->y = 0;
-    chip->dot_prev = R01S_LVL_L;
-    chip->nmi_hold = 0;
-    beam_drive_flags(chip);
+    chip->clk_prev = R01S_LVL_L;
+    beam_drive(chip);
 }

@@ -56,7 +56,7 @@ Sprites: `apps/tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pix
 | A Power+clk | `PWR5V` + `U04`/`U74` (OSC8M ticks PHI2 off-netlist) |
 | C CPU + decode | `W65C02S`, `AS6C62256`, decode helper PLD (non-BOM wire entity) |
 | G VRAM | 2nd `AS6C62256` + **3x** `SN74HC157` + VRAM glue PLD helper |
-| H Beam | `BEAM_XY` stand-in (counts X and Y, drives HBLANK / VBLANK / NMI) + Beam Y compare vs soft `$7F04` + **`SN74HC574`** (`$7F02` SX). The canvas still draws the stand-in cables between UPLDX and UPLDY. The SKiDL netlist follows the bench: those chips join on HSYNC only. |
+| H Beam | Beam X counts dots and drives HSYNC. Beam Y counts lines from that HSYNC and drives VSYNC. The two chips share RES. **`SN74HC574`** holds `$7F02` SX. Pin list matches [irl_bring_up_log/](../../../docs/irl_bring_up_log/). |
 | J Cart | Console socket. Flash and save live on **N** |
 | K APU + pads | **`AVR128DB28` MCU-S2**: `$7F40`-`$7F5F`, pads `$7F60`/`$7F61`, 8-voice mix + PWM + WAVE monitor |
 | L MCU + field | **`AVR128DB28` MCU-M** (soft `$7Fxx` + SPI mailbox master) + **MCU-S1** (OAM apply / field) + field `AS6C62256` + **`SN74HC573`** ALE |

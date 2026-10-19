@@ -297,7 +297,8 @@ typedef struct R01sBoard {
     uint8_t health_saw_sprites;
     uint32_t oam_fill_cycles_est; /* last VBlank sprite-field fill (MCU-S1 @ 24 MHz model) */
     uint8_t health_saw_nmi;
-    R01sLevel nmi_prev; /* beam NMI# edge detect */
+    R01sLevel nmi_prev; /* derived VBlank NMI edge */
+    int beam_nmi_hold; /* dots to hold NMIB low after Beam Y enters line 240 */
     uint32_t nmi_pulses;
     /* Island M: sprite field (VBlank) + BG0 line ping-pong (HBlank). */
     uint8_t l0_show_half; /* 0/1 within BG0 line region at R01S_L0_LINE_BASE */

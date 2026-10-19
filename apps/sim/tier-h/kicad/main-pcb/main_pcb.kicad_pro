@@ -313,44 +313,6 @@
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
-        "name": "CPU_A",
-        "pcb_color": "rgb(210, 35, 136)",
-        "priority": 0,
-        "schematic_color": "rgb(210, 35, 136)",
-        "track_width": 0.25,
-        "tuning_profile": "",
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "CPU_D",
-        "pcb_color": "rgb(60, 180, 90)",
-        "priority": 0,
-        "schematic_color": "rgb(60, 180, 90)",
-        "track_width": 0.25,
-        "tuning_profile": "",
-        "via_diameter": 0.6,
-        "via_drill": 0.3,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
         "name": "Quiet",
         "pcb_color": "rgb(220, 143, 50)",
         "priority": 0,
@@ -360,6 +322,44 @@
         "via_diameter": 0.6,
         "via_drill": 0.3,
         "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "priority": 0,
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6,
+        "name": "CPU_A",
+        "pcb_color": "rgb(210, 35, 136)",
+        "schematic_color": "rgb(210, 35, 136)"
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "priority": 0,
+        "track_width": 0.25,
+        "tuning_profile": "",
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "wire_width": 6,
+        "name": "CPU_D",
+        "pcb_color": "rgb(60, 180, 90)",
+        "schematic_color": "rgb(60, 180, 90)"
       }
     ],
     "meta": {
@@ -646,22 +646,6 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "SIG_J5_P2_BUS"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J5_P4_BUS"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J5_P5_BUS"
-      },
-      {
-        "netclass": "Quiet",
-        "pattern": "SIG_J5_P6_BUS"
-      },
-      {
-        "netclass": "Quiet",
         "pattern": "SIG_J5_P8_BUS"
       },
       {
@@ -718,6 +702,22 @@
       },
       {
         "netclass": "Quiet",
+        "pattern": "SIG_US2_P22_BUS"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_US2_P23_BUS"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_US2_P24_BUS"
+      },
+      {
+        "netclass": "Quiet",
+        "pattern": "SIG_US2_P27_BUS"
+      },
+      {
+        "netclass": "Quiet",
         "pattern": "SIG_US2_P28_BUS"
       },
       {
@@ -758,11 +758,11 @@
       },
       {
         "netclass": "Quiet",
-        "pattern": "XTAL_DOT_IN"
+        "pattern": "XTAL_21M_IN"
       },
       {
         "netclass": "Quiet",
-        "pattern": "XTAL_DOT_OUT"
+        "pattern": "XTAL_21M_OUT"
       }
     ]
   },

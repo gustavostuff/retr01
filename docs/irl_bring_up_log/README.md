@@ -35,10 +35,6 @@ Q pin numbers, from the fuse-map header and the bench:
 
 ### Tier H
 
-The cables drawn between UPLDX and UPLDY are a sim mistake. They are not a breadboard-to-PCB change.
+Tier H follows this pin list. UPLDX counts dots and drives HSYNC. UPLDY counts on that HSYNC and drives VSYNC. The canvas joins them on HSYNC, and both RES pins share the CPU reset net. The video path reads the two counters. HBlank is X at least 256. VBlank is Y at least 240. NMIB is held low for a few dots when Y enters 240. Those three are not pins on the burned images.
 
-`pin_signals_match` in `apps/sim/tier-h/src/ui_pin_net.c` draws a wire for every `P0`..`P7` pin against the same-numbered `Y` pin, and another wire when both chips use the same pin name. `netlist_link_beam_y_beam` in `apps/sim/tier-h/src/board_netlist.c` ties those eight `P` pins to UPLDX `Y0`..`Y7`. `wire_beam` in `apps/sim/tier-h/src/board.c` then drives that bus so UPLDY can compare it with soft `$7F04` and pulse `EQ#`.
-
-The burned Beam Y does none of that. It counts HSYNC edges and drives VSYNC plus its own Q pins. The burned Beam X counts dots and drives HSYNC plus its own Q pins. HBLANK, VBLANK, NMI, and the raster compare are sim stand-ins. The C models still use that stand-in, so the canvas still draws the eight cables.
-
-The SKiDL export drops those JSON nodes and wires the pin list above. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 14 and UPLDY pin 1 share HSYNC. UPLDY pin 14 is VSYNC. Each Q pin is its own net (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/tier-h/skidl/retr01_prelim.net` to replace the eight `SIG_UPLDX_P*` nets still stored in the older `.kicad_pcb` files.
+The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 14 and UPLDY pin 1 share HSYNC. UPLDY pin 14 is VSYNC. Each Q pin is its own net (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/tier-h/skidl/retr01_prelim.net` to replace the eight `SIG_UPLDX_P*` nets still stored in the older `.kicad_pcb` files.

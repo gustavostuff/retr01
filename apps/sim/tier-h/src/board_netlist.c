@@ -11,17 +11,6 @@ static void netlist_register(R01sPinNetlist *nl, R01sEntity *e) {
     r01s_pin_netlist_register_entity(nl, e);
 }
 
-static void netlist_link_beam_y_beam(R01sPinNetlist *nl, R01sEntity *beam_y, R01sEntity *beam) {
-    int i;
-    for (i = 0; i < 8; i++) {
-        char pn[8];
-        char yn[8];
-        snprintf(pn, sizeof(pn), "P%d", i);
-        snprintf(yn, sizeof(yn), "Y%d", i);
-        r01s_pin_netlist_link(nl, beam_y, pn, beam, yn);
-    }
-}
-
 static void netlist_register_silicon(R01sBoard *board, R01sPinNetlist *nl) {
     int i;
     netlist_register(nl, r01s_pwr5v_entity(&board->pwr));
@@ -109,8 +98,10 @@ static void netlist_link_motherboard(R01sBoard *board, R01sPinNetlist *nl) {
     r01s_pin_netlist_link(nl, cpu, "BE", pld, "BE");
     r01s_pin_netlist_link(nl, cpu, "RWB", pld, "RWB");
 
-    netlist_link_beam_y_beam(nl, beam_y, beam);
-    r01s_pin_netlist_link(nl, cpu, "IRQB", beam_y, "EQ#");
+    /* Bench: HSYNC is the only signal between the two PLDs. RES is shared. */
+    r01s_pin_netlist_link(nl, beam, "HSYNC", beam_y, "CLK");
+    r01s_pin_netlist_link(nl, cpu, "RESB", beam, "RES");
+    r01s_pin_netlist_link(nl, cpu, "RESB", beam_y, "RES");
 
     r01s_pin_netlist_link(nl, vram, "A0", mux_vram, "1Y");
     r01s_pin_netlist_link(nl, vram, "A1", mux_vram, "2Y");

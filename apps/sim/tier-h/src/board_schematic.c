@@ -312,7 +312,7 @@ static void apply_series_33(R01sBoard *board, R01sPinNetlist *nl) {
   int i;
 
   link_series(nl, u04, "4Y", passive_entity(board, "R12"), cpu, "PHI2");
-  link_series(nl, u74, "2Q", passive_entity(board, "R13"), beam, "DOT");
+  link_series(nl, u74, "2Q", passive_entity(board, "R13"), beam, "CLK");
 
   for (i = 0; i < 8; i++) {
     char dn[8];

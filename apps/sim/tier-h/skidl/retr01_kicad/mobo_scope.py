@@ -123,8 +123,8 @@ def normalize_export_node(ref: str, pin_name: str, pin_num: int) -> Optional[Nod
     # are dropped via SKIP_REFDES and per-part remap tables below.
     if pin_name in _SKIP_PIN_NAMES or pin_num < 1:
         return None
-    # Sim JSON still ties UPLDY P0-P7 to UPLDX Y0-Y7 on the wrong pins.
-    # Keep package power. wire_beam_plds applies the burned pin list.
+    # Keep package power. wire_beam_plds applies the burned pin list,
+    # including HSYNC from UPLDX pin 14 into UPLDY pin 1.
     if ref in ("UPLDX", "UPLDY") and str(pin_num) not in (P.PLD_GND, P.PLD_VCC):
         return None
     sn = str(pin_num)

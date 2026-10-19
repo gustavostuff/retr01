@@ -1,5 +1,6 @@
 #include "atf22v10.h"
 
+#include "beam_xy.h"
 #include "retr01_sim/bus.h"
 #include "retr01_sim/timing.h"
 
@@ -13,6 +14,21 @@ static void pld_drive_byte(R01sEntity *e, const char *prefix, uint8_t v) {
         snprintf(name, sizeof(name), "%s%d", prefix, i);
         r01s_entity_drive(e, name, (v & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
     }
+}
+
+static void pld_drive_q9(R01sEntity *e, int count) {
+    int bit;
+    char name[4];
+    for (bit = 0; bit < 9; bit++) {
+        snprintf(name, sizeof(name), "Q%d", bit);
+        r01s_entity_drive(e, name, (count & (1 << bit)) ? R01S_LVL_H : R01S_LVL_L);
+    }
+}
+
+static void pld_drive_beam_y(R01sAtf22v10 *c) {
+    int vs = c->beam_count >= R01S_VSYNC_FIRST && c->beam_count <= R01S_VSYNC_LAST;
+    pld_drive_q9(&c->base, c->beam_count);
+    r01s_entity_drive(&c->base, "VSYNC", vs ? R01S_LVL_H : R01S_LVL_L);
 }
 
 static void pld_drive_named(R01sEntity *e, const char *name, int on) {
@@ -40,9 +56,10 @@ static void pld_reset(R01sEntity *e) {
     c->eq = 0;
     r01s_delay_u8_reset(&c->out_delay, 0xFFu); /* 0xFF = no SEL */
     if (c->role == R01S_PLD_BEAM_Y) {
+        c->beam_count = 0;
+        c->beam_clk_prev = R01S_LVL_L;
         r01s_delay_u8_reset(&c->out_delay, 0);
-        pld_drive_byte(e, "Y", 0);
-        r01s_entity_drive(e, "EQ#", R01S_LVL_H);
+        pld_drive_beam_y(c);
         return;
     }
     if (c->role == R01S_PLD_DECODE) {
@@ -94,8 +111,6 @@ static void pld_eval(R01sEntity *e) {
     R01sAtf22v10 *c = (R01sAtf22v10 *)e;
     int i;
     uint8_t p = 0;
-    uint8_t q = 0;
-    char pn[8], qn[8];
     uint8_t delayed;
 
     if (c->role == R01S_PLD_DECODE) {
@@ -104,22 +119,10 @@ static void pld_eval(R01sEntity *e) {
     }
 
     if (c->role == R01S_PLD_BEAM_Y) {
-        for (i = 0; i < 8; i++) {
-            snprintf(pn, sizeof(pn), "P%d", i);
-            snprintf(qn, sizeof(qn), "Q%d", i);
-            if (r01s_level_is_high(r01s_entity_sense(e, pn))) {
-                p |= (uint8_t)(1u << i);
-            }
-            if (r01s_level_is_high(r01s_entity_sense(e, qn))) {
-                q |= (uint8_t)(1u << i);
-            }
+        if (r01s_level_is_low(r01s_entity_sense(e, "RES"))) {
+            c->beam_count = 0;
         }
-        c->p_bus = p;
-        c->q_bus = q;
-        c->eq = (p == q);
-        delayed = r01s_delay_u8_update(&c->out_delay, (uint8_t)(c->eq ? 1u : 0u),
-                                      r01s_timing_pin_tpd_ns(R01S_TPD_PART_ATF22));
-        r01s_entity_drive(e, "EQ#", (delayed & 1u) ? R01S_LVL_L : R01S_LVL_H);
+        pld_drive_beam_y(c);
         return;
     }
 
@@ -138,7 +141,28 @@ static void pld_eval(R01sEntity *e) {
 }
 
 static void pld_tick(R01sEntity *e) {
-    (void)e;
+    R01sAtf22v10 *c = (R01sAtf22v10 *)e;
+    R01sLevel clk;
+    int rise;
+    if (!c || c->role != R01S_PLD_BEAM_Y) {
+        return;
+    }
+    clk = r01s_entity_sense(e, "CLK");
+    rise = (clk == R01S_LVL_H && c->beam_clk_prev != R01S_LVL_H);
+    if (r01s_level_is_low(r01s_entity_sense(e, "RES"))) {
+        c->beam_count = 0;
+        c->beam_clk_prev = clk;
+        pld_drive_beam_y(c);
+        return;
+    }
+    if (rise) {
+        c->beam_count++;
+        if (c->beam_count >= R01S_BEAM_DOTS_Y) {
+            c->beam_count = 0;
+        }
+    }
+    c->beam_clk_prev = clk;
+    pld_drive_beam_y(c);
 }
 
 static void pld_destroy(R01sEntity *e) {
@@ -221,8 +245,6 @@ static void atf_add_sig(R01sEntity *e, int *next, const char *name, R01sPinDir d
 
 static const char *const PLD_I_NAMES[8] = {"I0", "I1", "I2", "I3", "I4", "I5", "I6", "I7"};
 static const char *const PLD_Y_NAMES[8] = {"Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7"};
-static const char *const PLD_P_NAMES[8] = {"P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7"};
-static const char *const PLD_Q_NAMES[8] = {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"};
 
 void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
     int i;
@@ -254,21 +276,24 @@ void r01s_atf22v10_init(R01sAtf22v10 *chip, const char *refdes, int role) {
                 atf_add_sig(&chip->base, &next, SEL_NAMES[i], R01S_PIN_OUT);
             }
         } else if (role == R01S_PLD_BEAM_Y) {
-            /* EQ# and P0-P7 are the nets on the canvas. They take legs before the spare names. */
-            atf_add_sig(&chip->base, &next, "EQ#", R01S_PIN_OUT);
-            for (i = 0; i < 8; i++) {
-                atf_add_sig(&chip->base, &next, PLD_P_NAMES[i], R01S_PIN_IN);
+            static const int q_pins[9] = {23, 21, 15, 16, 20, 17, 19, 18, 22};
+            static const char *const q_names[9] = {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8"};
+            int n;
+            r01s_entity_add_pin(&chip->base, 1, "CLK", R01S_PIN_IN);
+            r01s_entity_add_pin(&chip->base, 2, "RES", R01S_PIN_IN);
+            {
+                static const char *const in_names[9] = {"IN3", "IN4", "IN5", "IN6", "IN7",
+                                                        "IN8", "IN9", "IN10", "IN11"};
+                for (n = 0; n < 9; n++) {
+                    r01s_entity_add_pin(&chip->base, 3 + n, in_names[n], R01S_PIN_IN);
+                }
             }
-            atf_add_sig(&chip->base, &next, "OE#", R01S_PIN_IN);
-            for (i = 0; i < 8; i++) {
-                atf_add_sig(&chip->base, &next, PLD_I_NAMES[i], R01S_PIN_IN);
+            r01s_entity_add_pin(&chip->base, 13, "IN13", R01S_PIN_IN);
+            r01s_entity_add_pin(&chip->base, 14, "VSYNC", R01S_PIN_OUT);
+            for (i = 0; i < 9; i++) {
+                r01s_entity_add_pin(&chip->base, q_pins[i], q_names[i], R01S_PIN_OUT);
             }
-            for (i = 0; i < 8; i++) {
-                atf_add_sig(&chip->base, &next, PLD_Y_NAMES[i], R01S_PIN_OUT);
-            }
-            for (i = 0; i < 8; i++) {
-                atf_add_sig(&chip->base, &next, PLD_Q_NAMES[i], R01S_PIN_IN);
-            }
+            (void)next;
         } else {
             for (i = 0; i < 8; i++) {
                 atf_add_sig(&chip->base, &next, PLD_I_NAMES[i], R01S_PIN_IN);
@@ -289,4 +314,17 @@ R01sEntity *r01s_atf22v10_entity(R01sAtf22v10 *chip) {
 
 int r01s_atf22v10_eq(const R01sAtf22v10 *chip) {
     return chip && chip->eq;
+}
+
+int r01s_atf22v10_beam_y(const R01sAtf22v10 *chip) {
+    return (chip && chip->role == R01S_PLD_BEAM_Y) ? chip->beam_count : 0;
+}
+
+void r01s_atf22v10_beam_rewind(R01sAtf22v10 *chip) {
+    if (!chip || chip->role != R01S_PLD_BEAM_Y) {
+        return;
+    }
+    chip->beam_count = 0;
+    chip->beam_clk_prev = R01S_LVL_L;
+    pld_drive_beam_y(chip);
 }

@@ -1,6 +1,6 @@
 # Beam X and Beam Y
 
-This bench passes. The red LEDs show the Beam X count and the green LEDs show the Beam Y count. Several tests have been performed.
+This bench passes. The red LEDs show the Beam X count and the green LEDs show the Beam Y count. Several tests have been performed (Note: the GND and 5V cables swapped at the top-right are a small hack, don't mind that).
 
 <img src="img/ATF22V10C-bench-passed-both-x-and-y-beam-counters.jpg" alt="ATF22V10C breadboard, Beam X and Beam Y">
 

@@ -92,7 +92,6 @@ int main(void) {
     expect_true(r01s_sst39sf040_peek(&b->cart_module.flash, 1) == 'e', "flash magic e (retr01)");
 
     r01s_pads_set(&b->pads, 0, 0xA5);
-    r01s_board_poke_fe(b, 0x04u, 0); /* force raster compare Y=0 for EQ# smoke */
 
     for (i = 0; i < 250000; i++) {
         r01s_island_group_step(group);
@@ -111,10 +110,10 @@ int main(void) {
         if (r01s_beam_xy_hblank(&b->pld_beam_x)) {
             saw_beam_hblank = 1;
         }
-        if (r01s_beam_xy_y(&b->pld_beam_x) >= 1) {
+        if (r01s_atf22v10_beam_y(&b->pld_beam_y) >= 1) {
             saw_beam_line = 1;
         }
-        if (r01s_entity_sense(r01s_atf22v10_entity(&b->pld_beam_y), "EQ#") == R01S_LVL_L) {
+        if (r01s_entity_sense(r01s_atf22v10_entity(&b->pld_beam_y), "VSYNC") == R01S_LVL_H) {
             saw_raster_hit = 1;
         }
         if (r01s_bg_fetch_last_tile(&b->bg_fetch) == 0x42) {
@@ -160,7 +159,7 @@ int main(void) {
     expect_true(saw_pad, "LDA $7F60 read pads (MCU-S2 island K)");
     expect_true(saw_beam_hblank, "island H HBlank");
     expect_true(saw_beam_line, "island H advanced past line 0");
-    expect_true(saw_raster_hit, "beam-Y PLD EQ# on Y vs $7F04");
+    expect_true(saw_raster_hit, "beam Y VSYNC high on 243..245");
     expect_true(saw_bg_tile, "VRAM PLD latched nametable tile $42");
     expect_true(saw_bg_attr, "VRAM PLD latched nametable attr $07");
     expect_true(saw_video, "island O lit logical pixels from PROM");

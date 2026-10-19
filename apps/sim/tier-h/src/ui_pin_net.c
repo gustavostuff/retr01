@@ -217,10 +217,6 @@ static int pin_signals_match(const R01sPin *pa, const R01sPin *pb) {
     if (pin_name_eq_beam_q_latch_q(na, nb) || pin_name_eq_beam_q_latch_q(nb, na)) {
         return 1;
     }
-    if ((na[0] == 'P' && nb[0] == 'Y' && strcmp(na + 1, nb + 1) == 0) ||
-        (na[0] == 'Y' && nb[0] == 'P' && strcmp(na + 1, nb + 1) == 0)) {
-        return 1;
-    }
     if (pin_name_eq_mux_y_a(na, nb) || pin_name_eq_mux_y_a(nb, na)) {
         return 1;
     }
@@ -228,10 +224,6 @@ static int pin_signals_match(const R01sPin *pa, const R01sPin *pb) {
         return 1;
     }
     if (pin_name_eq_245_ab(na, nb)) {
-        return 1;
-    }
-    if ((strcmp(na, "IRQB") == 0 && strcmp(nb, "EQ#") == 0) ||
-        (strcmp(na, "EQ#") == 0 && strcmp(nb, "IRQB") == 0)) {
         return 1;
     }
     return 0;
@@ -526,8 +518,10 @@ int ui_pin_net_peer(const R01sUi *ui, int chip_i, int pin_i, int *peer_chip_out,
     }
 
     src_slot = r01s_pin_netlist_find_slot(nl, src, pin_i);
-    if (src_slot >= 0 &&
-        ui_pin_net_peer_union(nl, ui, src, pin_i, src_slot, sx, sy, peer_chip_out, peer_pin_out)) {
+    if (src_slot >= 0) {
+        if (!ui_pin_net_peer_union(nl, ui, src, pin_i, src_slot, sx, sy, peer_chip_out, peer_pin_out)) {
+            return 0;
+        }
         if (ui->wire_mode == R01S_WIRE_MANUAL && peer_chip_out && peer_pin_out &&
             !ui_bb_pins_connected(ui, chip_i, pin_i, *peer_chip_out, *peer_pin_out)) {
             if (peer_chip_out) {

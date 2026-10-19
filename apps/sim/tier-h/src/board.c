@@ -287,7 +287,7 @@ static void board_update_milestones(R01sBoard *ctx) {
     }
     /* Pad milestone is set in wire_io when CPU actually reads $7F60/$7F61
      * (not A==$A5: that value is only used by the unit-test preload). */
-    if (r01s_beam_xy_hblank(ctx->beam_impl.beam_x) || r01s_beam_xy_y(ctx->beam_impl.beam_x) > 0) {
+    if (r01s_beam_xy_hblank(ctx->beam_impl.beam_x) || r01s_atf22v10_beam_y(ctx->beam_impl.beam_y) > 0) {
         ctx->health_saw_beam = 1;
     }
     /* Smoke latches tile $42; after MAP stream VRAM is world data: either is OK. */
@@ -470,9 +470,9 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         R01sIslandHealth *ih = &out->islands[R01S_ISLAND_BEAM];
         R01sIntegration *ig = ctx->integration_impl.integ;
         int bx = r01s_beam_xy_x(ctx->beam_impl.beam_x);
-        int by = r01s_beam_xy_y(ctx->beam_impl.beam_x);
+        int by = r01s_atf22v10_beam_y(ctx->beam_impl.beam_y);
         int hb = r01s_beam_xy_hblank(ctx->beam_impl.beam_x);
-        int vb = r01s_beam_xy_vblank(ctx->beam_impl.beam_x);
+        int vb = r01s_beam_vblank_y(by);
         unsigned pulses = (unsigned)r01s_integration_nmi_pulses(ig);
         ih->letter = 'H';
         if (booting) {
@@ -494,11 +494,11 @@ static void board_fill_health(R01sIslandGroup *group, R01sSystemHealth *out) {
         }
         snprintf(ih->debug, sizeof(ih->debug),
                  "island=H BEAM health=%s saw_beam=%d saw_nmi=%d pulses=%u X=%d Y=%d HBlank=%d VBlank=%d "
-                 "EQ#=%s FE04=$%02X",
+                 "HSYNC=%s VSYNC=%s",
                  r01s_health_tag(ih->health), ctx->health_saw_beam, ctx->health_saw_nmi, pulses, bx, by,
                  hb, vb,
-                 r01s_level_name(r01s_entity_sense(r01s_atf22v10_entity(ctx->beam_impl.beam_y), "EQ#")),
-                 r01s_board_peek_fe(ctx, 0x04u));
+                 r01s_level_name(r01s_entity_sense(r01s_beam_xy_entity(ctx->beam_impl.beam_x), "HSYNC")),
+                 r01s_level_name(r01s_entity_sense(r01s_atf22v10_entity(ctx->beam_impl.beam_y), "VSYNC")));
     }
 
     /* Island O: Color PROM + compositor + LCD sink */
@@ -1272,38 +1272,24 @@ static void wire_io(R01sBoard *ctx) {
     }
 }
 
-/* Island H: DOT osc + beam PLD + Y-compare vs soft $7F04; EQ# drives CPU IRQB. */
+/* Island H: DOT into Beam X. Beam X HSYNC clocks Beam Y. */
 static void wire_beam(R01sBoard *ctx, R01sIslandGroup *group) {
     R01sEntity *pwr = r01s_pwr5v_entity(ctx->power_clk_impl.pwr);
     R01sEntity *osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
     R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam_x);
     R01sEntity *beam_y = r01s_atf22v10_entity(ctx->beam_impl.beam_y);
-    R01sEntity *cpu = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
     R01sLevel vdd = r01s_entity_sense(pwr, "VDD");
     R01sLevel resb = (ctx->reset_hold > 0) ? R01S_LVL_L : R01S_LVL_H;
-    uint8_t raster_y = ctx->fe04_raster_y;
-    int i;
-    char pn[8], qn[8], yn[8];
 
     (void)group;
     r01s_entity_drive(osc, "VDD", vdd);
     r01s_entity_drive(osc, "OE#", R01S_LVL_H);
-    r01s_entity_drive(beam, "RES#", resb);
-    r01s_entity_drive(beam, "DOT", r01s_entity_sense(osc, "DOT"));
-
-    /* P = beam Y[7:0], Q = soft $7F04 */
-    for (i = 0; i < 8; i++) {
-        snprintf(pn, sizeof(pn), "P%d", i);
-        snprintf(yn, sizeof(yn), "Y%d", i);
-        snprintf(qn, sizeof(qn), "Q%d", i);
-        r01s_entity_drive(beam_y, pn, r01s_entity_sense(beam, yn));
-        r01s_entity_drive(beam_y, qn, (raster_y & (1u << i)) ? R01S_LVL_H : R01S_LVL_L);
-    }
-    r01s_entity_drive(beam_y, "OE#", R01S_LVL_L);
+    r01s_entity_drive(beam, "RES", resb);
+    r01s_entity_drive(beam_y, "RES", resb);
+    r01s_entity_drive(beam, "CLK", r01s_entity_sense(osc, "DOT"));
     r01s_entity_eval(beam);
+    r01s_entity_drive(beam_y, "CLK", r01s_entity_sense(beam, "HSYNC"));
     r01s_entity_eval(beam_y);
-    /* Active-low raster match -> IRQB (CPU IRQ service still Phase-1 stub). */
-    r01s_entity_drive(cpu, "IRQB", r01s_entity_sense(beam_y, "EQ#"));
 }
 
 /*
@@ -1877,7 +1863,7 @@ static void wire_linebuf(R01sBoard *ctx) {
     R01sEntity *sram = r01s_as6c62256_entity(ctx->mcu_lb_impl.sram);
     int hblank = r01s_beam_xy_hblank(ctx->beam_impl.beam_x);
     int bx = r01s_beam_xy_x(ctx->beam_impl.beam_x);
-    int by = r01s_beam_xy_y(ctx->beam_impl.beam_x);
+    int by = r01s_atf22v10_beam_y(ctx->beam_impl.beam_y);
     int lx;
     int ly;
     int scale_2x = r01s_video_sink_scale_2x(ctx->video_impl.sink);
@@ -1930,9 +1916,10 @@ static void wire_bg_fetch(R01sBoard *ctx) {
     int cpu_phase = r01s_level_is_high(r01s_entity_sense(osc, "PHI2"));
 
     r01s_bg_fetch_set_scale_2x(bg, r01s_video_sink_scale_2x(ctx->video_impl.sink));
-    r01s_bg_fetch_set_beam(bg, r01s_beam_xy_x(ctx->beam_impl.beam_x), r01s_beam_xy_y(ctx->beam_impl.beam_x),
+    r01s_bg_fetch_set_beam(bg, r01s_beam_xy_x(ctx->beam_impl.beam_x),
+                           r01s_atf22v10_beam_y(ctx->beam_impl.beam_y),
                            r01s_beam_xy_hblank(ctx->beam_impl.beam_x),
-                           r01s_beam_xy_vblank(ctx->beam_impl.beam_x));
+                           r01s_beam_vblank_y(r01s_atf22v10_beam_y(ctx->beam_impl.beam_y)));
     r01s_bg_fetch_set_scroll(bg, r01s_board_peek_fe(ctx, 0x02u),
                              r01s_board_peek_fe(ctx, 0x03u));
     r01s_bg_fetch_set_cpu_phase(bg, cpu_phase);
@@ -1988,14 +1975,14 @@ static void wire_video_dot(R01sBoard *ctx) {
     R01sEntity *comp_e = r01s_compositor_entity(comp);
     R01sEntity *prom_e = r01s_at27c256r_entity(prom);
     int bx = r01s_beam_xy_x(beam);
-    int by = r01s_beam_xy_y(beam);
+    int by = r01s_atf22v10_beam_y(ctx->beam_impl.beam_y);
     int lx;
     int ly;
     int scale_2x = r01s_video_sink_scale_2x(sink);
     uint8_t bg;
     uint8_t idx;
 
-    if (r01s_beam_xy_hblank(beam) || r01s_beam_xy_vblank(beam) || bx >= R01S_BEAM_VISIBLE_W ||
+    if (r01s_beam_xy_hblank(beam) || r01s_beam_vblank_y(by) || bx >= R01S_BEAM_VISIBLE_W ||
         by >= R01S_BEAM_VISIBLE_H) {
         return;
     }
@@ -2140,7 +2127,7 @@ static void wire_power_clock_reset(R01sBoard *ctx, R01sIslandGroup *group) {
         }
     }
     r01s_entity_drive(cpu, "RDY", rdy);
-    /* IRQB from beam-Y EQ# in wire_beam; NMIB from beam NMI# in board_step */
+    /* NMIB is derived when Beam Y enters line 240. The burned PLDs have no NMI pin. */
 
     phi2 = r01s_entity_sense(osc, "PHI2");
     /* Canned PHI2 timebase. Netlist PHI2 comes from U04 pin 8. */
@@ -3222,6 +3209,7 @@ static void board_reset(R01sIslandGroup *group) {
     ctx->health_saw_nmi = 0;
     ctx->nmi_prev = R01S_LVL_H;
     ctx->nmi_pulses = 0;
+    ctx->beam_nmi_hold = 0;
     ctx->l0_show_half = 0;
 
     ctx->linebuf_prev_hblank = 0;
@@ -3318,16 +3306,28 @@ static void board_step(R01sIslandGroup *group) {
     {
         R01sEntity *dot_osc = r01s_osc_dot_entity(ctx->beam_impl.osc_dot);
         R01sEntity *beam = r01s_beam_xy_entity(ctx->beam_impl.beam_x);
+        R01sEntity *beam_y = r01s_atf22v10_entity(ctx->beam_impl.beam_y);
         R01sEntity *cpu_e = r01s_w65c02s_entity(ctx->cpu_mem_impl.cpu);
         int di;
         /* DOT window: yield flash so CHR can own /CE (CPU not advancing). */
         flash_yield_for_chr(ctx);
         for (di = 0; di < beam_dots; di++) {
             r01s_entity_tick(dot_osc);
-            r01s_entity_drive(beam, "DOT", r01s_entity_sense(dot_osc, "DOT"));
+            r01s_entity_drive(beam, "CLK", r01s_entity_sense(dot_osc, "DOT"));
             r01s_entity_tick(beam);
             {
-                R01sLevel nmi = r01s_entity_sense(beam, "NMI#");
+                int y0 = r01s_atf22v10_beam_y(ctx->beam_impl.beam_y);
+                int y1;
+                R01sLevel nmi;
+                r01s_entity_drive(beam_y, "CLK", r01s_entity_sense(beam, "HSYNC"));
+                r01s_entity_tick(beam_y);
+                y1 = r01s_atf22v10_beam_y(ctx->beam_impl.beam_y);
+                if (y1 == R01S_BEAM_VISIBLE_H && y0 != R01S_BEAM_VISIBLE_H) {
+                    ctx->beam_nmi_hold = 8;
+                } else if (ctx->beam_nmi_hold > 0) {
+                    ctx->beam_nmi_hold--;
+                }
+                nmi = (ctx->beam_nmi_hold > 0) ? R01S_LVL_L : R01S_LVL_H;
                 if (ctx->reset_nmi_pulse > 0) {
                     nmi = R01S_LVL_L;
                     ctx->reset_nmi_pulse--;
@@ -3343,14 +3343,14 @@ static void board_step(R01sIslandGroup *group) {
             wire_linebuf(ctx);
             wire_video_dot(ctx);
             {
-                int vb = r01s_beam_xy_vblank(ctx->beam_impl.beam_x);
+                int vb = r01s_beam_vblank_y(r01s_atf22v10_beam_y(ctx->beam_impl.beam_y));
                 if (vb && !ctx->vblank_prev) {
                     if (ctx->video_impl.sink) {
                         r01s_video_sink_on_vblank(ctx->video_impl.sink);
                     }
                     if (ctx->play.enabled) {
                         r01s_frame_log_note(R01S_FLOG_BEAM, "VBlank enter beam_y=%d",
-                                           r01s_beam_xy_y(ctx->beam_impl.beam_x));
+                                           r01s_atf22v10_beam_y(ctx->beam_impl.beam_y));
                     }
                     r01s_play_on_vblank(ctx);
                     /* Soft OAM/APU mailbox flush, then field fill. */
@@ -3425,8 +3425,9 @@ static void board_status(R01sIslandGroup *group, char *buf, size_t buf_len) {
              r01s_board_peek_fe(ctx, 0x02u), (unsigned)(ctx->vram_addr & 0x7FFFu),
              r01s_as6c62256_peek(ctx->vram_impl.vram, 0), r01s_pads_get(ctx->pads_impl.pads, 0),
              r01s_pads_get(ctx->pads_impl.pads, 1), r01s_beam_xy_x(ctx->beam_impl.beam_x),
-             r01s_beam_xy_y(ctx->beam_impl.beam_x), r01s_beam_xy_hblank(ctx->beam_impl.beam_x) ? " HB" : "",
-             r01s_beam_xy_vblank(ctx->beam_impl.beam_x) ? " VB" : "",
+             r01s_atf22v10_beam_y(ctx->beam_impl.beam_y),
+             r01s_beam_xy_hblank(ctx->beam_impl.beam_x) ? " HB" : "",
+             r01s_beam_vblank_y(r01s_atf22v10_beam_y(ctx->beam_impl.beam_y)) ? " VB" : "",
              r01s_bg_fetch_last_tile(ctx->bg_fetch_impl.fetch),
              r01s_bg_fetch_last_attr(ctx->bg_fetch_impl.fetch), (unsigned)ctx->cycles);
 }

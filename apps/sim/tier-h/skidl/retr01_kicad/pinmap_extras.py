@@ -59,13 +59,13 @@ def apply_pinmap_extras() -> None:
     }
     t["STND_HDR"] = _nums(4)
     a["STND_HDR"] = {"1": "NTSC", "2": "NPIN", "3": "NPIN2", "4": "PAL"}
-    # JAMMA fingers on the netlist. Parts 16-23 are P1. Letters T-a are P2.
-    # Supply: parts 1, 2, 28 and solder A, B, f are GND. Parts 3, 4 and solder C, D are +5V.
-    t["JAMMA"] = [
-        "1", "2", "3", "4", "28", "A", "B", "C", "D", "f",
-        "16", "17", "18", "19", "20", "21", "22", "23",
-        "T", "U", "V", "W", "X", "Y", "Z", "a",
-    ]
+    # JAMMA-56 fingers. Pin 7 is the key and is not a pad. Solder side skips G, I, O, Q.
+    # Wired fingers are the aliases below. The rest stay on their own NC nets so
+    # Pcbnew does not warn that the footprint pad is missing from the symbol.
+    # Picture and sound stay on J2.
+    jamma_parts = [str(n) for n in range(1, 29) if n != 7]
+    jamma_solder = [c for c in "ABCDEFJKLMNPRSTUVWXYZabcdef" if c not in "GIOQ"]
+    t["JAMMA"] = jamma_parts + jamma_solder
     a["JAMMA"] = {
         "1": "GND", "2": "GND", "28": "GND", "A": "GND", "B": "GND", "f": "GND",
         "3": "+5V", "4": "+5V", "C": "+5V", "D": "+5V",

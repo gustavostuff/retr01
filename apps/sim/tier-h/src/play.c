@@ -6,6 +6,7 @@
 #include "avr128db28_s1.h"
 #include "as6c62256.h"
 #include "avr128db28_s2.h"
+#include "atf22v10.h"
 #include "beam_xy.h"
 #include "video_sink.h"
 #include "r01_play_anim_cart.h"
@@ -1094,6 +1095,8 @@ play_latched:
     }
     /* After clear, start raster at (0,0) so the first field paints the top (no black corner). */
     r01s_beam_xy_rewind(board->beam_impl.beam_x);
+    r01s_atf22v10_beam_rewind(board->beam_impl.beam_y);
+    board->beam_nmi_hold = 0;
     board->linebuf_prev_hblank = 0;
     board->vblank_prev = 0;
     board->l0_show_half = 0;

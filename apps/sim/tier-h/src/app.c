@@ -541,7 +541,7 @@ void r01s_app_frame(R01sApp *app) {
                 app->ui.sim_steps = n;
                 if (board && r01s_video_sink_render_mode(&board->video_sink) == R01S_VIDEO_RENDER_PHOSPHOR) {
                     int bx = r01s_beam_xy_x(board->beam_impl.beam_x);
-                    int by = r01s_beam_xy_y(board->beam_impl.beam_x);
+                    int by = r01s_atf22v10_beam_y(board->beam_impl.beam_y);
                     r01s_video_sink_display_tick(&board->video_sink, bx, by);
                 }
             } else {

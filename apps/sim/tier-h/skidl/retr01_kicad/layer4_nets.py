@@ -335,17 +335,24 @@ def netclass_for_name(name: str) -> str:
 
 
 def annotate_netlist_layer4_class(text: str, names: Iterable[str]) -> str:
-    """Force (class ...) on Quiet, CPU_A, and CPU_D nets in a KiCad sexp netlist."""
+    """Force (class ...) on net names in a KiCad sexp netlist.
+
+    Only the (name ...) that follows a net (code ...) is a net name. The same
+    token also names component fields and the sheet. Putting (class ...) there
+    makes KiCad reject the file, and Update PCB then changes nothing.
+    """
     want_l4 = set(names)
-    class_re = re.compile(r'\(name "([^"]+)"\)(\s*)(\(class "[^"]+"\))?')
+    class_re = re.compile(
+        r'(\(code\s+\d+\)\s*)\(name "([^"]+)"\)(?:\s*\(class "[^"]+"\))?'
+    )
 
     def repl(m: re.Match) -> str:
-        name = m.group(1)
+        name = m.group(2)
         if name in want_l4 or is_layer4_name(name):
             cls = CLASS_NAME
         else:
             cls = netclass_for_name(name)
-        return f'(name "{name}") (class "{cls}")'
+        return f'{m.group(1)}(name "{name}") (class "{cls}")'
 
     return class_re.sub(repl, text)
 
