@@ -23929,7 +23929,7 @@
 		(at 138.25 55.45 180)
 		(descr "Kycon KMDGX-9S-AS right-angle 9-pin mini-DIN receptacle, sides-and-back shield. Signal drill 1.10 mm, shield drill 2.30 mm. Shield pads share number S. Mating face is the -Y edge. Signal pads are mirrored in X from the first top-view pass: pin 1 is 1.30 mm to +X, pin 2 is 0.70 mm to -X, matching the bottom view with the socket at the top of that drawing. https://www.kycon.com/Pub_Eng_Draw/KMDGX-9S-AS.pdf")
 		(property "Reference" "J2"
-			(at 8.25 -13.55 0)
+			(at 8.02718 -9.961089 0)
 			(layer "F.SilkS")
 			(uuid "be0c5af4-31d3-4d50-851c-c3e8c39a3d2b")
 			(effects
@@ -23939,8 +23939,8 @@
 			)
 		)
 		(property "Value" "KMDGX-9S-AS"
-			(at -1.75 -13.55 0)
-			(layer "F.Fab")
+			(at -1.97282 -9.961089 0)
+			(layer "F.SilkS")
 			(uuid "cb1fa8aa-5401-4e3b-be08-9ae9024d4028")
 			(effects
 				(font
