@@ -1,9 +1,9 @@
 # Retr01_Lib footprints
 
-Custom THT footprints for the Tier H motherboard KiCad project.
+Custom THT footprints for the motherboard KiCad project.
 
 - **Source of truth:** this directory and `../Retr01_Lib.3dshapes/`.
-- **KiCad project copy:** `export_netlist.sh` copies both into `apps/sim/tier-h/kicad/main-pcb/library/` (`fp-lib-table` uses `${KIPRJMOD}/library/Retr01_Lib.pretty`).
+- **KiCad project copy:** `export_netlist.sh` copies both into `apps/sim/kicad/main-pcb/library/` (`fp-lib-table` uses `${KIPRJMOD}/library/Retr01_Lib.pretty`).
 - **Stock-derived footprints:** regenerated with `scripts/retr01_trim_silk_footprints.py` (also run from `export_netlist.sh`).
 - **Custom footprints** (not re-trimmed from stock): `Jack_TRS_3.5mm_and_6.35mm`, `Jack_3.5mm_Switchcraft_35RAPC2BVN4_Vertical_more_copper`, `CUI_RCJ-014*`, `EDAC_395_*`, `Kycon_KMDGX-9S-AS`, `TO-92_Inline`, etc.
 - **3D poses:** `scripts/retr01_patch_3d_poses.py` writes offset/scale/rotate into the listed `.kicad_mod` files and into matching `(model ...)` blocks on `v_0*.kicad_pcb`. `export_netlist.sh` runs that script so board-embedded footprints keep the pose (U130 TO-92, TRS jacks).

@@ -1,4 +1,4 @@
-"""Tier-H / locked-19 parts not in the base pinmap snapshot."""
+"""Locked-19 parts not in the base pinmap snapshot."""
 
 from __future__ import annotations
 

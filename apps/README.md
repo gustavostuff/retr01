@@ -4,11 +4,11 @@
 | --- | --- | --- |
 | Studio | `apps/studio` | `cmake -S apps/studio -B apps/studio/build && cmake --build apps/studio/build -j` |
 | Emu | `apps/emu` | `cmake -S apps/emu -B apps/emu/build && cmake --build apps/emu/build -j` |
-| Sim | `apps/sim/tier-h` | `cmake -S apps/sim/tier-h -B apps/sim/tier-h/build && cmake --build apps/sim/tier-h/build -j` |
+| Sim | `apps/sim` | `cmake -S apps/sim -B apps/sim/build && cmake --build apps/sim/build -j` |
 | Shared | `apps/common` | Linked by Studio / Emu / Sim |
 | Discrete IC engine | `apps/tools/discrete_ic` | Linked by Sim |
 
-Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim-tier.sh`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
+Repo wrappers (after copying binaries to `bin/`): `./scripts/studio.sh`, `./scripts/emu.sh`, and `./scripts/sim.sh`. Build with `./scripts/build-all.sh`. Tests: `./scripts/unit-tests.sh`.
 
 ## Studio projects
 

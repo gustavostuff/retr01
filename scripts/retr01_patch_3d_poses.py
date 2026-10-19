@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-LIB = REPO / "apps/sim/tier-h/skidl/library/Retr01_Lib.pretty"
-PCB_DIR = REPO / "apps/sim/tier-h/kicad/main-pcb"
+LIB = REPO / "apps/sim/skidl/library/Retr01_Lib.pretty"
+PCB_DIR = REPO / "apps/sim/kicad/main-pcb"
 
 
 @dataclass(frozen=True)

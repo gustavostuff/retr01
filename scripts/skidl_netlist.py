@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-Preliminary KiCad netlist from Tier H JSON (Skidl).
+Preliminary KiCad netlist from the sim pin JSON (Skidl).
 
 Output is for illustration and early PCB exploration only.
 The Retr01 motherboard PCB is not ready for fabrication from this flow.
-Tier H JSON export into a SKiDL netlist.
 
 Typical invocation:
-  apps/sim/tier-h/skidl/export_netlist.sh -q
+  apps/sim/skidl/export_netlist.sh -q
 
 Or manually:
-  ./apps/sim/tier-h/build/export_tier_h_netlist > apps/sim/tier-h/skidl/retr01_tier_h.json
-  ./scripts/skidl_from_tier_h.py -q
+  ./apps/sim/build/export_netlist > apps/sim/skidl/retr01_sim.json
+  ./scripts/skidl_netlist.py -q
 
 Requires: pip install skidl, KiCad symbol libraries (see ensure_kicad_symbol_dir).
 """
@@ -26,9 +25,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TIER_H_SKIDL_DIR = REPO_ROOT / "apps/sim/tier-h/skidl"
-DEFAULT_JSON = TIER_H_SKIDL_DIR / "retr01_tier_h.json"
-DEFAULT_NET = TIER_H_SKIDL_DIR / "retr01_prelim.net"
+SIM_SKIDL_DIR = REPO_ROOT / "apps/sim/skidl"
+DEFAULT_JSON = SIM_SKIDL_DIR / "retr01_sim.json"
+DEFAULT_NET = SIM_SKIDL_DIR / "retr01_prelim.net"
 
 
 def _die(msg: str) -> None:
@@ -81,8 +80,8 @@ def index_refs(data: dict) -> dict[str, dict]:
 
 
 def _retr01_kicad():
-    if str(TIER_H_SKIDL_DIR) not in sys.path:
-        sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+    if str(SIM_SKIDL_DIR) not in sys.path:
+        sys.path.insert(0, str(SIM_SKIDL_DIR))
     from retr01_kicad import add_library_paths, make_skidl_part, resolve
 
     return add_library_paths, make_skidl_part, resolve
@@ -385,13 +384,13 @@ def annotate_pcb_pinfunctions(pcb_text: str, netlist_text: str) -> str:
 
 
 _ROOT_STRAY_NAMES = (
-    "retr01_tier_h.json",
+    "retr01_sim.json",
     "retr01_prelim.net",
     "skidl.erc",
     "skidl.log",
     "__init__.erc",
     "__init__.log",
-    "skidl_from_tier_h_sklib.py",
+    "skidl_netlist_sklib.py",
     "ui_layout.json",
     "test_layout.json",
     "test_cart.retr01",
@@ -411,7 +410,7 @@ def remove_repo_root_strays() -> None:
         path = REPO_ROOT / name
         if path.is_file():
             path.unlink()
-    for path in REPO_ROOT.glob("skidl_from_tier_h.*"):
+    for path in REPO_ROOT.glob("skidl_netlist.*"):
         if path.is_file():
             path.unlink()
     for path in REPO_ROOT.glob("skidl_REPL.*"):
@@ -436,8 +435,8 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
     import skidl
     from skidl import Net, generate_netlist
 
-    if str(TIER_H_SKIDL_DIR) not in sys.path:
-        sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+    if str(SIM_SKIDL_DIR) not in sys.path:
+        sys.path.insert(0, str(SIM_SKIDL_DIR))
     from retr01_kicad.clocks import ensure_clock_parts, wire_clocks
     from retr01_kicad.connectors import ensure_connector_parts, wire_connectors
     from retr01_kicad.beam_plds import wire_beam_plds
@@ -549,13 +548,13 @@ def build_skidl(data: dict, *, quiet: bool) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Skidl netlist from Tier H JSON (preliminary, not fab-ready)")
+    ap = argparse.ArgumentParser(description="Skidl netlist from the sim pin JSON (preliminary, not fab-ready)")
     ap.add_argument(
         "json_file",
         nargs="?",
         type=Path,
         default=DEFAULT_JSON,
-        help=f"export_tier_h_netlist JSON (default: {DEFAULT_JSON.relative_to(REPO_ROOT)})",
+        help=f"export_netlist JSON (default: {DEFAULT_JSON.relative_to(REPO_ROOT)})",
     )
     ap.add_argument(
         "-o",
@@ -581,7 +580,7 @@ def main() -> None:
     if importlib.util.find_spec("skidl") is None:
         _die("skidl not installed; run: pip install skidl")
 
-    TIER_H_SKIDL_DIR.mkdir(parents=True, exist_ok=True)
+    SIM_SKIDL_DIR.mkdir(parents=True, exist_ok=True)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     ensure_kicad_symbol_dir()
@@ -589,14 +588,14 @@ def main() -> None:
 
     orig_cwd = Path.cwd()
     try:
-        os.chdir(TIER_H_SKIDL_DIR)
+        os.chdir(SIM_SKIDL_DIR)
         netlist_text = build_skidl(data, quiet=args.quiet)
         out_path.write_text(netlist_text, encoding="utf-8")
         print(f"wrote {out_path} ({len(netlist_text)} bytes) - PRELIMINARY / NOT FAB-READY", file=sys.stderr)
 
-        pcb_dir = REPO_ROOT / "apps/sim/tier-h/kicad/main-pcb"
-        if str(TIER_H_SKIDL_DIR) not in sys.path:
-            sys.path.insert(0, str(TIER_H_SKIDL_DIR))
+        pcb_dir = REPO_ROOT / "apps/sim/kicad/main-pcb"
+        if str(SIM_SKIDL_DIR) not in sys.path:
+            sys.path.insert(0, str(SIM_SKIDL_DIR))
         from retr01_kicad.layer4_nets import layer4_net_names_from_netlist, patch_kicad_pro
 
         layer4_from_net = layer4_net_names_from_netlist(netlist_text)

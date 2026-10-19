@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Configure, build, and run unit tests for studio, emu, sdk C, and the Tier H sim.
+# Configure, build, and run unit tests for studio, emu, sdk C, and the sim.
 # Emu registers test_boot/test_play against examples/example_01/example_01.retr01 when that
 # cart is present, and test_sdk_prg when llvm-mos is in apps/tools/llvm-mos or $LLVM_MOS.
 # Does not require (or seed) extra ROM / Studio project fixtures.
@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 trap '"$ROOT/scripts/clean_repo_root_strays.sh" || true' EXIT
 STUDIO="$ROOT/apps/studio"
 EMU="$ROOT/apps/emu"
-SIM_H="$ROOT/apps/sim/tier-h"
+SIM="$ROOT/apps/sim"
 
 build_and_test() {
   local proj="$1"
@@ -30,7 +30,7 @@ ctest --test-dir "$ROOT/apps/sdk/r01_c/host-build" --output-on-failure
 echo "== emu =="
 build_and_test "$EMU"
 
-echo "== sim tier-h =="
-build_and_test "$SIM_H"
+echo "== sim =="
+build_and_test "$SIM"
 
 echo "all unit tests passed"

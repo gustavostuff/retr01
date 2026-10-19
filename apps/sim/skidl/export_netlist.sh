@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Preliminary Tier H JSON + KiCad netlist (not fab-ready).
+# Preliminary JSON + KiCad netlist (not fab-ready).
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$DIR/../../../.." && pwd)"
-BUILD="$DIR/../build/export_tier_h_netlist"
-JSON="$DIR/retr01_tier_h.json"
+REPO="$(cd "$DIR/../../.." && pwd)"
+BUILD="$DIR/../build/export_netlist"
+JSON="$DIR/retr01_sim.json"
 QUIET=()
 
 while [[ $# -gt 0 ]]; do
@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ ! -x "$BUILD" ]]; then
-    echo "missing $BUILD - run: cmake --build apps/sim/tier-h/build --target export_tier_h_netlist" >&2
+    echo "missing $BUILD - run: cmake --build apps/sim/build --target export_netlist" >&2
     exit 1
 fi
 
@@ -33,11 +33,11 @@ trap cleanup_root EXIT
 mkdir -p "$DIR"
 "$BUILD" >"$JSON"
 python3 "$REPO/scripts/retr01_trim_silk_footprints.py"
-python3 "$REPO/scripts/skidl_from_tier_h.py" "${QUIET[@]}"
+python3 "$REPO/scripts/skidl_netlist.py" "${QUIET[@]}"
 python3 "$REPO/scripts/retr01_patch_3d_poses.py"
 
 # KiCad resolves Retr01_Lib from the board project fp-lib-table (real copy, not a symlink).
-KICAD_MAIN_PCB="$REPO/apps/sim/tier-h/kicad/main-pcb"
+KICAD_MAIN_PCB="$REPO/apps/sim/kicad/main-pcb"
 SRC_LIB="$DIR/library/Retr01_Lib.pretty"
 DST_LIB="$KICAD_MAIN_PCB/library/Retr01_Lib.pretty"
 if [[ ! -d "$SRC_LIB" ]]; then

@@ -132,13 +132,13 @@ def main() -> None:
         "step",
         type=Path,
         nargs="?",
-        default=Path("apps/sim/tier-h/skidl/library/3dmodels/EDAC_395-036-520-201.step"),
+        default=Path("apps/sim/skidl/library/3dmodels/EDAC_395-036-520-201.step"),
     )
     ap.add_argument(
         "-o",
         "--output",
         type=Path,
-        default=Path("apps/sim/tier-h/skidl/library/3dmodels/EDAC_395-036-520-201.wrl"),
+        default=Path("apps/sim/skidl/library/3dmodels/EDAC_395-036-520-201.wrl"),
     )
     args = ap.parse_args()
     step = args.step.resolve()

@@ -1,6 +1,6 @@
 # Main PCB layers
 
-Which nets live on which copper layer of the motherboard under `apps/sim/tier-h/kicad/main-pcb/`.
+Which nets live on which copper layer of the motherboard under `apps/sim/kicad/main-pcb/`.
 
 Cart and pad PCBs are 2-layer and are outside this page.
 
@@ -238,6 +238,6 @@ Cart and pad boards are 2-layer. Local caps sit next to the ICs. One side carrie
 
 Pcbnew colors air wires from each class `pcb_color`. Board Setup, Net Classes changes a color. Track width is 0.25 mm on Quiet, CPU_A, and CPU_D. Via sizes match Default.
 
-Pattern source: `apps/sim/tier-h/skidl/retr01_kicad/layer4_nets.py` and `bus_nets.py`.
+Pattern source: `apps/sim/skidl/retr01_kicad/layer4_nets.py` and `bus_nets.py`.
 
 Placing U1, U3, U6, the 157s, U574, UM, and J36 shows **Quiet** hidden, then only **CPU_A**, then only **CPU_D**. Each corridor is a parallel group on layer 1 before other Default nets. A whole bus that cannot finish on layer 1 is a placement problem first.

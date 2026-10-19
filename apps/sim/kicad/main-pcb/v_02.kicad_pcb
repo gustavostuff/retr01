@@ -225,7 +225,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -434,7 +434,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -614,7 +614,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -794,7 +794,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1003,7 +1003,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1545,7 +1545,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1725,7 +1725,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1934,7 +1934,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -2344,7 +2344,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -2552,7 +2552,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -2805,7 +2805,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3014,7 +3014,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3328,7 +3328,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3537,7 +3537,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -3746,7 +3746,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4243,7 +4243,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4496,7 +4496,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -5170,7 +5170,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -6921,7 +6921,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7101,7 +7101,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7542,7 +7542,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -7997,7 +7997,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8177,7 +8177,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8719,7 +8719,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8928,7 +8928,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9470,7 +9470,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9787,7 +9787,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10057,7 +10057,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10555,7 +10555,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -10724,7 +10724,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11217,7 +11217,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11397,7 +11397,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11606,7 +11606,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11786,7 +11786,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -12220,7 +12220,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -12429,7 +12429,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -12609,7 +12609,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -13107,7 +13107,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -13316,7 +13316,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -13715,7 +13715,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14316,7 +14316,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14525,7 +14525,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14705,7 +14705,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -14914,7 +14914,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -15380,7 +15380,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -15560,7 +15560,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -15852,7 +15852,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -16061,7 +16061,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -16530,7 +16530,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -16739,7 +16739,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -17188,7 +17188,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -17368,7 +17368,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -17910,7 +17910,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18119,7 +18119,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18328,7 +18328,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18508,7 +18508,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -18717,7 +18717,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -19399,7 +19399,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -19608,7 +19608,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20140,7 +20140,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20338,7 +20338,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20547,7 +20547,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -20727,7 +20727,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21181,7 +21181,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -21716,7 +21716,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22016,7 +22016,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22269,7 +22269,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22449,7 +22449,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -22991,7 +22991,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23171,7 +23171,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23487,7 +23487,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23696,7 +23696,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -23876,7 +23876,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24192,7 +24192,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24372,7 +24372,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24552,7 +24552,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24732,7 +24732,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -24912,7 +24912,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25092,7 +25092,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25502,7 +25502,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25682,7 +25682,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -25884,7 +25884,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -26185,7 +26185,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -26394,7 +26394,7 @@
 				)
 			)
 		)
-		(property "SKiDL Line" "../apps/sim/tier-h/skidl/retr01_kicad/parts.py:85"
+		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:85"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")

@@ -205,7 +205,7 @@ Packed PRG NMI ticks this tracker (`apps/sdk/r01_c/src/tracker.c`) and applies F
 | Studio Audio tab | BGM grid editor in `.r01proj`. Export packs bytecode and per-channel wavetable ids into the cart BGM region. Timeline Play/Stop encodes FD/FE/FA and mixes the window |
 | Play / emu | Boot track from author `r01_bgm_play`. Bytecode and wavetable ids in the cart BGM region. Tracker fills `$7F40`. `r01_sfx_play` queues voices 6-8 |
 
-Bring-up Tier **H** only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
+Bring-up only needs a real `$7F40` beep through S2 PWM. Full tracker depth can wait on hardware.
 
 ## Related
 

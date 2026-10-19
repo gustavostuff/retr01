@@ -22,7 +22,7 @@ htmlcov/
 
 apps/studio/build/
 apps/emu/build/
-apps/sim/tier-h/build/
+apps/sim/build/
 apps/tools/discrete_ic/build/
 bin/
 output/
@@ -33,14 +33,14 @@ apps/tools/llvm-mos-linux.tar.xz
 *.a
 **/r01_custom.so
 temp/
-apps/sim/tier-h/ui_layout.json
+apps/sim/ui_layout.json
 apps/sdk/r01_c/build/
 apps/sdk/r01_c/host-build/
-# Stray Tier H Skidl exports (canonical dir: apps/sim/tier-h/skidl/)
-/retr01_tier_h.json
+# Stray Skidl exports (canonical dir: apps/sim/skidl/)
+/retr01_sim.json
 /retr01_prelim.net
-/skidl_from_tier_h.*
-/skidl_from_tier_h_sklib.py
+/skidl_netlist.*
+/skidl_netlist_sklib.py
 /skidl.erc
 /skidl.log
 /__init__.erc
@@ -63,20 +63,20 @@ apps/sdk/r01_c/host-build/
 /.cache/
 .venv-wrl/
 
-# Tier H Skidl export outputs (regenerate: apps/sim/tier-h/skidl/export_netlist.sh)
-apps/sim/tier-h/skidl/retr01_prelim.net
-apps/sim/tier-h/skidl/retr01_tier_h.json
-apps/sim/tier-h/skidl/skidl_from_tier_h_sklib.py
-apps/sim/tier-h/skidl/skidl.erc
-apps/sim/tier-h/skidl/skidl.log
-apps/sim/tier-h/skidl/skidl_REPL.*
+# Skidl export outputs (regenerate: apps/sim/skidl/export_netlist.sh)
+apps/sim/skidl/retr01_prelim.net
+apps/sim/skidl/retr01_sim.json
+apps/sim/skidl/skidl_netlist_sklib.py
+apps/sim/skidl/skidl.erc
+apps/sim/skidl/skidl.log
+apps/sim/skidl/skidl_REPL.*
 
-# Tier H KiCad project copies (from skidl/library via export_netlist.sh)
-apps/sim/tier-h/kicad/main-pcb/library/
-apps/sim/tier-h/kicad/main-pcb/3dmodels/
+# KiCad project copies (from skidl/library via export_netlist.sh)
+apps/sim/kicad/main-pcb/library/
+apps/sim/kicad/main-pcb/3dmodels/
 
 # Legacy duplicate of Retr01_Lib.3dshapes (export_netlist.sh optional copy)
-apps/sim/tier-h/skidl/library/3dmodels/
+apps/sim/skidl/library/3dmodels/
 
 # KiCad (local editor / cache; not project source)
 # Local History plugin nests its own .git — never track as a submodule (git rm --cached if it appears).

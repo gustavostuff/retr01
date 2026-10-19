@@ -9,14 +9,14 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
 
-# apps/sim/tier-h. Engine and shared sources are this repo's.
-set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/discrete_ic")
+# apps/sim. Engine and shared sources are this repo's.
+set(DISCRETE_IC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../tools/discrete_ic")
 
 if(NOT TARGET discrete_ic)
   add_subdirectory("${DISCRETE_IC_DIR}" "${CMAKE_BINARY_DIR}/discrete_ic")
 endif()
 
-set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../common")
+set(R01_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../common")
 set(R01_FW_COMMON_DIR "${R01_COMMON_DIR}/fw")
 
 add_library(retr01_sim_core
@@ -89,7 +89,7 @@ target_include_directories(retr01_sim_core PUBLIC
 )
 target_link_libraries(retr01_sim_core PUBLIC r01_play_common discrete_ic)
 
-set(R01_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../examples/example_01")
+set(R01_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../examples/example_01")
 set(R01_EXAMPLE_CART "${R01_OUTPUT_DIR}/example_01.retr01")
 set(R01_TEST_CART "${R01_EXAMPLE_CART}")
 set(R01_DEFAULT_CART "${R01_EXAMPLE_CART}")
@@ -177,8 +177,8 @@ r01s_unit_test(test_board_netlist)
 r01s_unit_test(test_airwire)
 r01s_unit_test(test_export_netlist)
 
-add_executable(export_tier_h_netlist cmd/export_tier_h_netlist.c)
-target_link_libraries(export_tier_h_netlist PRIVATE retr01_sim_core)
+add_executable(export_netlist cmd/export_netlist.c)
+target_link_libraries(export_netlist PRIVATE retr01_sim_core)
 r01s_unit_test(test_cart)
 r01s_unit_test(test_compositor)
 r01s_unit_test(test_sprite_fetch)

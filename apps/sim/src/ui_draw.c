@@ -530,7 +530,7 @@ int ui_chip_hidden(const R01sUi *ui, const R01sEntity *e) {
     if (!e) {
         return 1;
     }
-    /* Battery PS1 stays in the netlist. OSC cans stay hidden on Tier H. */
+    /* Battery PS1 stays in the netlist. OSC cans stay hidden. */
     if (e->visual == R01S_ENTITY_VIS_PWR) {
         return 1;
     }

@@ -18,7 +18,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 KICAD_FP = Path("/usr/share/kicad/footprints")
-OUT = REPO / "apps/sim/tier-h/skidl/library/Retr01_Lib.pretty"
+OUT = REPO / "apps/sim/skidl/library/Retr01_Lib.pretty"
 
 # (source library dir, footprint filename)
 STOCK: list[tuple[str, str]] = [

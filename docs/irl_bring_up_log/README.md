@@ -6,7 +6,7 @@ These notes are the pin netlist and the function of the chips they cover. A late
 
 [bench-at27c256r.md](bench-at27c256r.md). One AT27C256R. The video index is A5 through A0, pins 5 through 10. The packed byte is O7 through O0 on pins 19, 18, 17, 16, 15, 13, 12, and 11. The check table is the byte in the chip for that row.
 
-Tier H `at27c256r.c` uses those pin numbers. The kit load packs the same RGB table. Rows 0, 1, 4, 12, 16, 32, 48, and 63 match the bench bytes (`00`, `20`, `24`, `01`, `25`, `92`, `FF`, `F3`).
+The sim `at27c256r.c` uses those pin numbers. The kit load packs the same RGB table. Rows 0, 1, 4, 12, 16, 32, 48, and 63 match the bench bytes (`00`, `20`, `24`, `01`, `25`, `92`, `FF`, `F3`).
 
 ## Beam X and Beam Y
 
@@ -33,8 +33,8 @@ Q pin numbers, from the fuse-map header and the bench:
 | Q7 | 18 | 18 |
 | Q8 | 22 | 22 |
 
-### Tier H
+### Sim
 
-Tier H follows this pin list. UPLDX counts dots and drives HSYNC. UPLDY counts on that HSYNC and drives VSYNC. The canvas joins them on HSYNC, and both RES pins share the CPU reset net. The video path reads the two counters. HBlank is X at least 256. VBlank is Y at least 240. NMIB is held low for a few dots when Y enters 240. Those three are not pins on the burned images.
+The sim follows this pin list. UPLDX counts dots and drives HSYNC. UPLDY counts on that HSYNC and drives VSYNC. The canvas joins them on HSYNC, and both RES pins share the CPU reset net. The video path reads the two counters. HBlank is X at least 256. VBlank is Y at least 240. NMIB is held low for a few dots when Y enters 240. Those three are not pins on the burned images.
 
-The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 14 and UPLDY pin 1 share HSYNC. UPLDY pin 14 is VSYNC. Each Q pin is its own net (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/tier-h/skidl/retr01_prelim.net` to replace the eight `SIG_UPLDX_P*` nets still stored in the older `.kicad_pcb` files.
+The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 14 and UPLDY pin 1 share HSYNC. UPLDY pin 14 is VSYNC. Each Q pin is its own net (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/skidl/retr01_prelim.net` to replace the eight `SIG_UPLDX_P*` nets still stored in the older `.kicad_pcb` files.

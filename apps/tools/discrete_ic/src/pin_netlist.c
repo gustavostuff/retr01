@@ -261,7 +261,7 @@ int ns_pin_netlist_write_json(const NsPinNetlist *nl, FILE *out) {
 
     fputs("{\n", out);
     fputs("  \"meta\": {\n", out);
-    fputs("    \"source\": \"retr01-tier-h-pin-netlist\",\n", out);
+    fputs("    \"source\": \"retr01-sim-pin-netlist\",\n", out);
     fputs("    \"purpose\": \"preliminary_pcb_illustrative_only\",\n", out);
     fputs("    \"fabrication_ready\": false,\n", out);
     fputs("    \"note\": \"Not for production PCB. Sim connectivity and BOM passives. MCP130 and cart edge gaps remain.\"\n", out);

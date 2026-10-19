@@ -7,7 +7,7 @@ from typing import Callable, Dict, Iterable, Optional
 from . import pinmap as P
 from .power_rails import ensure_nc_net
 
-# (refdes, mpn, footprint key in tier_h_map via resolve)
+# (refdes, mpn, footprint key in part_map via resolve)
 CONNECTOR_REFDES = (
     "J1",
     "J2",
@@ -22,7 +22,7 @@ CONNECTOR_REFDES = (
     "JAMMA",
 )
 
-# Nets that exist in Tier H JSON today (pad bus on US2).
+# Nets that exist in the sim JSON today (pad bus on US2).
 PAD_DATA_NET_HINTS = ("NET_752", "PAD_DATA", "PAD_DATA_BUS", "PAD1_DATA")
 
 

@@ -1,4 +1,4 @@
-"""Motherboard-only Tier H Skidl export (19 counted ICs per docs/hardware.md).
+"""Motherboard-only Skidl export (19 counted ICs per docs/hardware.md).
 
 Drops cart silicon, pad MCUs, sim-only PLD helpers, and the sim PMIC (PS1).
 Remaps cart flash/EEPROM nodes onto J36. Maps PS1 power pins onto J1.
@@ -94,7 +94,7 @@ _PS1_J1 = {
     "4": "2",  # GND -> sleeve
 }
 
-# Tier H sim TRS is logical TIP/RING/SLEEVE on pins 1/2/3. Switchcraft
+# The sim TRS is logical TIP/RING/SLEEVE on pins 1/2/3. Switchcraft
 # 35RAPC2BVN4 copper is Tip=4 Ring=2 Sleeve=1. Connecting sim pin numbers
 # onto the footprint shorts +5V (tip) onto sleeve pad 1 and merges rails.
 _TRS_SIM_TO_SWITCHCRAFT = {

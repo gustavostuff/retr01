@@ -1,4 +1,4 @@
-"""Resolve Tier H JSON (refdes, sim part) -> SKiDL MPN + KiCad footprint."""
+"""Resolve sim JSON (refdes, sim part) -> SKiDL MPN + KiCad footprint."""
 
 from __future__ import annotations
 
