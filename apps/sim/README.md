@@ -189,9 +189,9 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 `DELAY=typical|max` selects the datasheet corner and prints **path budget** (decode+245+573 vs PHI2 half). The pin netlist stays combinatorial. Deferred HC/PLD outputs miss `STA $7Fxx` in this settle model. Wall-clock UI FPS != sim ns. See [`PERFORMANCE.md`](PERFORMANCE.md).
 
-**Controls:** `Space` cycles air wires: all except +5V/GND, layer 1 (noisy), layer 4 (quiet), hidden (hover a part to see its wires; hover 5V/GND or a cap/connector to see rail stars) * `P` pause/resume * `Ctrl+R` reset * `Ctrl+wheel` zoom (1x-8x) * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (`G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **left-drag chip** move * **Shift+click** add to selection * **Shift+drag** marquee, then drag the group * **right-click chip** rotate * **Shift+arrows / wheel / middle-drag** pan * `S` save now * `Esc` quit. Placement, pan, zoom, window scale, zone boxes, and the Space wire view also save on their own about half a second after the last change.
+**Controls:** Air wires draw only for the part under the pointer (one pin, when the pointer is on a pin) or, on empty board, for the selection * `P` pause/resume * `Ctrl+R` reset * `Ctrl+wheel` zoom (1x-8x) * `Ctrl+1` / `Ctrl+2` present scale * `R` rotate selected IC * **SCALE 1X/2X** (`G`. **2X** grows the video island to fit SCR1) * `.` single-step (while paused) * **left-drag chip** move * **Shift+click** add to selection * **Shift+drag** marquee, then drag the group * **right-click chip** rotate * **Shift+arrows / wheel / middle-drag** pan * `S` save now * `Esc` quit. Placement, pan, zoom, window scale, and zone boxes also save on their own about half a second after the last change.
 
-**Layout persistence:** island frames, chip positions, pan, zoom, and the wire view save to `apps/sim/ui_layout.json` (cwd does not matter). `R01S_LAYOUT` overrides that path. `S` writes immediately. Edits also save about half a second after the last change, and again on quit.
+**Layout persistence:** island frames, chip positions, pan, and zoom save to `apps/sim/ui_layout.json` (cwd does not matter). `R01S_LAYOUT` overrides that path. `S` writes immediately. Edits also save about half a second after the last change, and again on quit.
 
 **Gamepads (island E -> `$7F60`/`$7F61`):** bottom-right panels or keyboard. Arcade input injects the bitfield directly. After boot catchup, **Host Play** uses P1 for move + warps (Studio/emu rules: dead-zone camera, player anim blob, collision from cart MAP attrs):
 
@@ -202,7 +202,7 @@ Needs: CMake, a C compiler, SDL2 (`sdl2` package).
 
 Same keyboard map is used by standalone **emu** and Studio Play.
 
-**Wave monitor (island K):** bottom-left overlay (drag, position in `ui_layout.json`). Lanes **B1-B5** / **S6-S8** draw stable math waveforms from the active voice (period = pitch). **A** is the mixed analog scope ring. After Host Play, silent BGM matches emu: scans `custom_logic.c` for `r01_bgm_play(ctx, N)` and drives B1-B5 from `output/data/bgm_trackN.bin` (Studio **Export**). No host speaker. See [`docs/sound.md`](../../docs/sound.md).
+**Wave monitor:** a board part named WAVE. Drag it like any other component. Lanes **B1-B5** / **S6-S8** draw stable math waveforms from the active voice (period = pitch). **A** is the mixed analog scope ring. After Host Play, silent BGM matches emu: scans `custom_logic.c` for `r01_bgm_play(ctx, N)` and drives B1-B5 from `output/data/bgm_trackN.bin` (Studio **Export**). No host speaker. See [`docs/sound.md`](../../docs/sound.md).
 
 Live probe (top-right) shows **VDD / PHI2 / RESB**. Status bar shows CPU `PC` / `AB` / phase / cycle count.
 

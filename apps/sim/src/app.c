@@ -307,6 +307,7 @@ void r01s_app_mount_builder(R01sApp *app) {
             }
         }
     }
+    r01s_ui_mount_wave_monitor(&app->ui);
     if (r01s_ui_layout_load(&app->ui) != 0) {
         /* No saved layout -- pack builder defaults into compact UI. */
         app->ui.layout_compact = 1;
@@ -678,19 +679,6 @@ void r01s_app_handle_event(R01sApp *app, const SDL_Event *e) {
                 return;
             }
             break;
-        case SDLK_SPACE: {
-            static const char *air_name[] = {"all", "layer 1", "layer 4", "hidden"};
-            int mode = app->ui.air_wires;
-            if (mode < R01S_AIR_VIEW_ALL || mode > R01S_AIR_VIEW_NONE) {
-                mode = R01S_AIR_VIEW_ALL;
-            } else {
-                mode = (mode + 1) % 4;
-            }
-            app->ui.air_wires = mode;
-            app->ui.layout_dirty = 1;
-            snprintf(app->ui.status, sizeof(app->ui.status), "air wires: %s", air_name[mode]);
-            return;
-        }
         case SDLK_p:
             if (e->key.keysym.mod & KMOD_CTRL) {
                 break;

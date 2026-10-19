@@ -958,7 +958,11 @@ void draw_board_item(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selec
         draw_button_glyph(r, ui, e, selected);
         break;
     case R01S_ENTITY_VIS_PANEL:
-        draw_panel_glyph(r, ui, e, selected);
+        if (e->part && strcmp(e->part, "WAVE_MON") == 0) {
+            ui_draw_wave_monitor(r, ui, e, selected);
+        } else {
+            draw_panel_glyph(r, ui, e, selected);
+        }
         break;
     case R01S_ENTITY_VIS_PIN_HDR:
         ns_pin_header_draw(r, e, ui_board_sx(ui, e->board_x), ui_board_sy(ui, e->board_y), selected);

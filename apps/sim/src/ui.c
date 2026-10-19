@@ -43,7 +43,7 @@ int r01s_ui_init(R01sUi *ui) {
     ui->wave_monitor_x = R01S_UI_WAVE_MONITOR_DEFAULT_X;
     ui->wave_monitor_y = ui_wave_monitor_default_y();
     snprintf(ui->status, sizeof(ui->status),
-             "SPACE cycles wires: all, layer 1, layer 4, hidden. Ctrl+wheel zoom. P pause. S save. R rotate.");
+             "Air wires follow the part under the pointer, or the selection. Ctrl+wheel zoom. P pause. S save. R rotate.");
     return 0;
 }
 
@@ -84,7 +84,7 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
             if (!te) {
                 continue;
             }
-            if (te->visual == R01S_ENTITY_VIS_IC) {
+            if (te->visual == R01S_ENTITY_VIS_IC || te->visual == R01S_ENTITY_VIS_PIN_HDR) {
                 have_pivot = ui_chip_pin_tip_board(te, 1, &tip_x, &tip_y);
                 r01s_entity_set_orient(te, r01s_orient_next_cw(te->orient));
                 if (have_pivot) {
@@ -145,7 +145,7 @@ int r01s_ui_rotate_selected(R01sUi *ui) {
         if (!te) {
             return 0;
         }
-        if (te->visual == R01S_ENTITY_VIS_IC) {
+        if (te->visual == R01S_ENTITY_VIS_IC || te->visual == R01S_ENTITY_VIS_PIN_HDR) {
             have_pivot = ui_chip_pin_tip_board(te, 1, &tip_x, &tip_y);
             r01s_entity_set_orient(te, r01s_orient_next_cw(te->orient));
             if (have_pivot) {
@@ -412,6 +412,27 @@ void r01s_ui_chip_z_raise(R01sUi *ui, int chip_index) {
         ui->chip_z_order[i] = ui->chip_z_order[i - 1];
     }
     ui->chip_z_order[insert_at] = (uint8_t)chip_index;
+}
+
+static void wave_nop(R01sEntity *e) {
+    (void)e;
+}
+
+static const R01sEntityVTable WAVE_VT = {wave_nop, wave_nop, wave_nop, wave_nop};
+
+void r01s_ui_mount_wave_monitor(R01sUi *ui) {
+    R01sEntity *e;
+    if (!ui || !ui->group || r01s_island_group_count(ui->group) < 1) {
+        return;
+    }
+    e = &ui->wave_mon;
+    r01s_entity_init(e, &WAVE_VT, "WAVE_MON", "WAVE");
+    e->impl = e;
+    r01s_entity_set_glyph(e, R01S_ENTITY_VIS_PANEL, ui_wave_body_w(), ui_wave_body_h());
+    r01s_entity_place(e, 8, 8);
+    if (r01s_ui_add_chip(ui, e, 0) != 0) {
+        snprintf(ui->status, sizeof(ui->status), "wave monitor did not fit on the board");
+    }
 }
 
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index) {

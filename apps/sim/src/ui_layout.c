@@ -436,6 +436,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
     int legend_strip_y = R01S_UI_LEGEND_STRIP_DEFAULT_Y;
     int wave_monitor_x = R01S_UI_WAVE_MONITOR_DEFAULT_X;
     int wave_monitor_y = ui_wave_monitor_default_y();
+    int wave_in_compact = 0;
     char mode[16];
     const char *section;
     const char *obj;
@@ -659,6 +660,9 @@ int r01s_ui_layout_load(R01sUi *ui) {
                 json_int_after(slice, "\"y\"", &y);
                 json_string_after(slice, "\"orient\"", orient, sizeof(orient));
                 ci = chip_index_by_refdes(ui, id);
+                if (strcmp(id, "WAVE") == 0) {
+                    wave_in_compact = 1;
+                }
                 if (ci >= 0) {
                     if (json_int_after(slice, "\"z\"", &z)) {
                         chip_z_by_index[ci] = z;
@@ -749,7 +753,7 @@ int r01s_ui_layout_load(R01sUi *ui) {
             if (!e) {
                 continue;
             }
-            if (e->visual == R01S_ENTITY_VIS_IC) {
+            if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
                 r01s_entity_set_orient(e, (R01sPkgOrient)ui->compact_chip_orient[i]);
             } else if (e->visual == R01S_ENTITY_VIS_BREADBOARD) {
                 e->orient = (R01sPkgOrient)ui->compact_chip_orient[i];
@@ -764,6 +768,21 @@ int r01s_ui_layout_load(R01sUi *ui) {
                 continue;
             }
             r01s_entity_place(e, ui->compact_chip_x[i], ui->compact_chip_y[i]);
+        }
+        /* First time the monitor is a board part: keep the old screen corner. */
+        if (!wave_in_compact) {
+            int z = ui->zoom < 1 ? 1 : ui->zoom;
+            int wy = wave_monitor_y;
+            if (wy < 0) {
+                wy = ui_wave_monitor_default_y();
+            }
+            for (i = 0; i < ui->chip_count; i++) {
+                R01sEntity *we = ui->chips[i];
+                if (!we || !we->refdes || strcmp(we->refdes, "WAVE") != 0) {
+                    continue;
+                }
+                r01s_entity_place(we, ui->pan_x + wave_monitor_x / z, ui->pan_y + wy / z);
+            }
         }
     } else if (ui->layout_saved && !ui->prefer_islands) {
         /* Was islands layout: pack to compact for the UI. */

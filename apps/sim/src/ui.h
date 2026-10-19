@@ -34,7 +34,7 @@
 /* Ctrl+wheel canvas zoom. 1 = native logic pixels. */
 #define R01S_ZOOM_MAX 8
 
-/* Space cycles these. Layer 1 is noisy (red). Layer 4 is quiet (blue). */
+/* Old Space cycle. The canvas no longer draws from this; layout files still store it. */
 #define R01S_AIR_VIEW_ALL 0
 #define R01S_AIR_VIEW_L1 1
 #define R01S_AIR_VIEW_L4 2
@@ -116,7 +116,7 @@ typedef struct R01sUi {
     R01sGamepadInput gamepad[R01S_UI_GAMEPAD_COUNT];
     int input_mode; /* R01S_INPUT_ARCADE or R01S_INPUT_PADS */
     int wire_mode;  /* R01S_WIRE_LIVE or R01S_WIRE_MANUAL */
-    int air_wires;  /* R01S_AIR_VIEW_*. Space cycles. */
+    int air_wires;  /* R01S_AIR_VIEW_*. Unused by the canvas. Kept so old layouts load. */
     int floor_on;   /* 1 = zone rects are live and out-of-zone parts blink */
     int floor_x[R01S_ZONE_COUNT];
     int floor_y[R01S_ZONE_COUNT];
@@ -147,6 +147,7 @@ typedef struct R01sUi {
     int drag_wave_ox;
     int drag_wave_oy;
     int wave_monitor_moved;
+    R01sEntity wave_mon; /* Board part. Drags with the other components. */
     int modal;        /* R01S_UI_MODAL_* */
     int modal_result; /* R01S_UI_MODAL_RES_* when user picks an action */
     int fps;            /* rolling 1s frame rate for HUD */
@@ -200,6 +201,7 @@ int r01s_ui_chip_z_rank(const R01sUi *ui, int chip_index);
 void r01s_ui_chip_z_raise(R01sUi *ui, int chip_index);
 
 int r01s_ui_add_chip(R01sUi *ui, R01sEntity *chip, int island_index);
+void r01s_ui_mount_wave_monitor(R01sUi *ui);
 
 void r01s_ui_clamp_pan(R01sUi *ui);
 void r01s_ui_sync_gamepads(R01sUi *ui);

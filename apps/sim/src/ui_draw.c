@@ -848,23 +848,11 @@ static void gp_overlay_origin(int player, int *ox, int *oy) {
     int panel_w = R01S_UI_GP_OVERLAY_W * R01S_UI_GP_OVERLAY_SCALE;
     int panel_h = R01S_UI_GP_OVERLAY_H * R01S_UI_GP_OVERLAY_SCALE;
     int total_h = 2 * panel_h + R01S_UI_GP_OVERLAY_GAP;
-    int tag_h = font_line_h() + 2;
-    int tag_w = font_text_width("ARCADE");
-    int pads_w = font_text_width("PADS");
-    int need_w = panel_w;
     int base_x;
     int base_y;
 
-    if (pads_w > tag_w) {
-        tag_w = pads_w;
-    }
-    tag_w += R01S_UI_GP_OVERLAY_INK_PAD;
-    if (tag_w > need_w) {
-        need_w = tag_w;
-    }
-    /* Right-align the block, not the glyphs, so ARCADE never kisses the edge. */
-    base_x = R01S_UI_VIEW_X + R01S_UI_VIEW_W - need_w - R01S_UI_GP_OVERLAY_MARGIN;
-    base_y = R01S_UI_VIEW_Y + R01S_UI_VIEW_H - total_h - R01S_UI_GP_OVERLAY_MARGIN - tag_h;
+    base_x = R01S_UI_VIEW_X + R01S_UI_VIEW_W - panel_w - R01S_UI_GP_OVERLAY_MARGIN;
+    base_y = R01S_UI_VIEW_Y + R01S_UI_VIEW_H - total_h - R01S_UI_GP_OVERLAY_MARGIN;
 
     if (ox) {
         *ox = base_x;
@@ -884,7 +872,7 @@ static void gp_overlay_pixel(SDL_Renderer *r, int ox, int oy, int px, int py, in
     }
 }
 
-static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamepadInput *gp, int input_mode) {
+static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamepadInput *gp) {
     int ox, oy;
     int x, y;
     uint8_t stick;
@@ -894,10 +882,6 @@ static void draw_controller_overlay(SDL_Renderer *r, int player, const R01sGamep
         return;
     }
     gp_overlay_origin(player, &ox, &oy);
-    if (player == 0) {
-        const char *tag = (input_mode == R01S_INPUT_PADS) ? "PADS" : "ARCADE";
-        font_draw(r, ox, oy - font_line_h() - 2, tag, 140, 160, 190);
-    }
     for (y = 0; y < R01S_UI_GP_OVERLAY_H; y++) {
         for (x = 0; x < R01S_UI_GP_OVERLAY_W; x++) {
             fill_rect(r, ox + x * R01S_UI_GP_OVERLAY_SCALE, oy + y * R01S_UI_GP_OVERLAY_SCALE,
@@ -925,6 +909,14 @@ static int wave_monitor_w(void) {
 
 static int wave_monitor_h(void) {
     return font_line_h() + 2 + R01S_UI_WAVE_LANES * (R01S_UI_WAVE_LANE_H + R01S_UI_WAVE_GAP);
+}
+
+int ui_wave_body_w(void) {
+    return wave_monitor_w() + 4;
+}
+
+int ui_wave_body_h(void) {
+    return wave_monitor_h() + 4;
 }
 
 int ui_wave_monitor_default_y(void) {
@@ -1109,7 +1101,7 @@ static void draw_wave_lane_scope(SDL_Renderer *r, int lx, int ly, int lw, int lh
     }
 }
 
-static void draw_wave_monitor(SDL_Renderer *r, R01sUi *ui) {
+void ui_draw_wave_monitor(SDL_Renderer *r, R01sUi *ui, const R01sEntity *e, int selected) {
     R01sBoard *board;
     const R01sAtmega328p *apu;
     int ox, oy;
@@ -1119,7 +1111,7 @@ static void draw_wave_monitor(SDL_Renderer *r, R01sUi *ui) {
     int panel_w;
     int panel_h;
 
-    if (!r || !ui) {
+    if (!r || !ui || !e) {
         return;
     }
     board = r01s_board_from_group(ui->group);
@@ -1127,12 +1119,16 @@ static void draw_wave_monitor(SDL_Renderer *r, R01sUi *ui) {
         return;
     }
     apu = &board->mcu_s2;
-    wave_monitor_clamp(ui);
-    wave_monitor_screen_origin(ui, &ox, &oy);
+    ox = ui_board_sx(ui, e->board_x) + 2;
+    oy = ui_board_sy(ui, e->board_y) + 2;
     panel_w = wave_monitor_w();
     panel_h = wave_monitor_h();
     fill_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 10, 12, 14);
-    draw_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 50, 55, 60);
+    if (selected) {
+        draw_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 255, 220, 80);
+    } else {
+        draw_rect(r, ox - 2, oy - 2, panel_w + 4, panel_h + 4, 50, 55, 60);
+    }
     font_draw(r, ox, oy, "WAVE", 160, 170, 180);
 
     scope_n = r01s_atmega328p_scope_copy(apu, scope, R01S_APU_SCOPE_N);
@@ -1584,11 +1580,9 @@ void r01s_ui_draw(R01sUi *ui, SDL_Renderer *r) {
     SDL_RenderSetScale(r, 1.0f, 1.0f);
     SDL_RenderSetClipRect(r, NULL);
 
-    draw_wave_monitor(r, ui);
-
     if (r01s_board_from_group(ui->group)) {
-        draw_controller_overlay(r, 0, &ui->gamepad[0], ui->input_mode);
-        draw_controller_overlay(r, 1, &ui->gamepad[1], ui->input_mode);
+        draw_controller_overlay(r, 0, &ui->gamepad[0]);
+        draw_controller_overlay(r, 1, &ui->gamepad[1]);
     }
 
     if (ui->ctx_chip >= 0 && ui->ctx_chip < ui->chip_count) {

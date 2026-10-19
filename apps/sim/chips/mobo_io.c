@@ -78,7 +78,8 @@ static void init_j2(R01sEntity *e) {
     io_pin(e, 7, "RED");
     io_pin(e, 8, "AUDIO_L");
     io_pin(e, 9, "AUDIO_R");
-    io_panel(e, 56, 40);
+    /* Mini-DIN shell, about 16 x 15 mm. */
+    io_panel(e, 16 * NS_PX_PER_MM, 15 * NS_PX_PER_MM);
 }
 
 /* 2x5 IDC, 8 GPIO + 2 GND. Even 2-10 = bits 0-4.
@@ -170,7 +171,8 @@ static void init_trs(R01sEntity *e, const char *refdes) {
     io_pin(e, 1, "TIP");
     io_pin(e, 2, "RING");
     io_pin(e, 3, "SLEEVE");
-    io_panel(e, 48, 32);
+    /* 6.35 mm jack footprint, about 18 mm square. The 3.5 mm jack shares it. */
+    io_panel(e, 18 * NS_PX_PER_MM, 18 * NS_PX_PER_MM);
 }
 
 static void init_named_panel(R01sEntity *e, const char *part, const char *refdes, int w, int h) {
@@ -185,7 +187,8 @@ void r01s_mobo_io_init(R01sMoboIo *io) {
         return;
     }
     memset(io, 0, sizeof(*io));
-    init_named_panel(&io->j1, "DCJ200", "J1", 48, 32);
+    /* Barrel jack body, about 14 x 9 mm. */
+    init_named_panel(&io->j1, "DCJ200", "J1", 14 * NS_PX_PER_MM, 9 * NS_PX_PER_MM);
     init_j2(&io->j2);
     init_trs(&io->j3, "J3");
     init_trs(&io->j4, "J4");

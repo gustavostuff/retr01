@@ -924,7 +924,7 @@ static int air_entity_drawn(const R01sUi *ui, const R01sEntity *e) {
 }
 
 static int air_collect_net(const R01sUi *ui, const R01sPinNetlist *nl, int root, R01sAirPt *pts,
-                           R01sAirEnd *ends, const R01sEntity **own, int *sx, int *sy) {
+                           R01sAirEnd *ends, const R01sEntity **own, int *pin_at, int *sx, int *sy) {
     int n = 0;
     int i;
     for (i = 0; i < nl->slot_count && n < R01S_AIR_PT_MAX; i++) {
@@ -961,6 +961,9 @@ static int air_collect_net(const R01sUi *ui, const R01sPinNetlist *nl, int root,
             }
             tbx = e->board_x + e->body_w / 2;
             tby = e->board_y + e->body_h / 2;
+            pin_at[n] = -1;
+        } else {
+            pin_at[n] = nl->slots[i].pin_index;
         }
         pts[n].x = tbx;
         pts[n].y = tby;
@@ -988,18 +991,38 @@ static int air_end_package_rail(const char *pin) {
     return 0;
 }
 
-static int air_end_is_bypass_passive(const R01sEntity *e) {
-    NsPassiveKind kind;
-    if (!e || e->visual != R01S_ENTITY_VIS_PASSIVE) {
+static int air_part_selected(const R01sUi *ui, const R01sEntity *e) {
+    int i;
+    if (!ui || !e) {
         return 0;
     }
-    kind = air_passive_kind(e);
-    return kind != NS_PASSIVE_5V && kind != NS_PASSIVE_GND;
+    for (i = 0; i < ui->chip_count && i < R01S_BOARD_MAX_CHIPS; i++) {
+        if (ui->chips[i] == e && (ui->chip_sel[i] || i == ui->selected)) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
-static void air_paint_hop(SDL_Renderer *r, const R01sEntity *only, const R01sAirStyle *style,
-                          const R01sAirPt *pts, const R01sAirEnd *ends, const R01sEntity *const *own,
-                          const int *sx, const int *sy, int a, int b) {
+/* Pointer on a pin: that pin. Pointer on a body: that part. Otherwise the selection. */
+static int air_end_focused(const R01sUi *ui, const R01sEntity *hover, int hover_pin, const R01sEntity *e,
+                           int pin) {
+    if (hover) {
+        if (e != hover) {
+            return 0;
+        }
+        if (hover_pin < 0 || pin < 0) {
+            return 1;
+        }
+        return pin == hover_pin;
+    }
+    return air_part_selected(ui, e);
+}
+
+static void air_paint_hop(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *hover, int hover_pin,
+                          const R01sAirStyle *style, const R01sAirPt *pts, const R01sAirEnd *ends,
+                          const R01sEntity *const *own, const int *pin_at, const int *sx, const int *sy, int a,
+                          int b) {
     int limit;
     int dist;
     int warn;
@@ -1007,7 +1030,8 @@ static void air_paint_hop(SDL_Renderer *r, const R01sEntity *only, const R01sAir
     Uint8 cg;
     Uint8 cb;
     Uint8 alpha;
-    if (only && own[a] != only && own[b] != only) {
+    if (!air_end_focused(ui, hover, hover_pin, own[a], pin_at[a]) &&
+        !air_end_focused(ui, hover, hover_pin, own[b], pin_at[b])) {
         return;
     }
     limit = r01s_air_hop_limit_mm(style, &ends[a], &ends[b]);
@@ -1018,8 +1042,7 @@ static void air_paint_hop(SDL_Renderer *r, const R01sEntity *only, const R01sAir
     ui_draw_air_segment(r, sx[a], sy[a], sx[b], sy[b], cr, cg, cb, alpha);
 }
 
-static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *only,
-                             const R01sEntity *rail_hover) {
+static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntity *hover, int hover_pin) {
     R01sPinNetlist *nl = ui_board_pin_net(ui);
     unsigned char seen[NS_PIN_NETLIST_MAX];
     int i;
@@ -1033,6 +1056,7 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
         R01sAirEnd ends[R01S_AIR_PT_MAX];
         const R01sEntity *own[R01S_AIR_PT_MAX];
         R01sAirSeg seg[R01S_AIR_PT_MAX];
+        int pin_at[R01S_AIR_PT_MAX];
         int sx[R01S_AIR_PT_MAX];
         int sy[R01S_AIR_PT_MAX];
         R01sAirStyle style;
@@ -1046,7 +1070,7 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
             continue;
         }
         seen[root] = 1;
-        n = air_collect_net(ui, nl, root, pts, ends, own, sx, sy);
+        n = air_collect_net(ui, nl, root, pts, ends, own, pin_at, sx, sy);
         if (n < 2) {
             continue;
         }
@@ -1058,6 +1082,16 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
         {
             int mi;
             int rail = 0;
+            int focused = 0;
+            for (mi = 0; mi < n; mi++) {
+                if (air_end_focused(ui, hover, hover_pin, own[mi], pin_at[mi])) {
+                    focused = 1;
+                    break;
+                }
+            }
+            if (!focused) {
+                continue;
+            }
             if (style.pwr) {
                 rail = 1;
             } else if (style.layer == R01S_AIR_LAYER_GND) {
@@ -1071,9 +1105,8 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
                     }
                 }
             }
-            /* Package VCC/GND pads use pin color, no air. Signal pins tied to a rail
-             * (PRE#, spare inverter inputs) star to the 5V / GND symbol. +5V pull-ups
-             * draw in the always-on view. GND ties and bypass caps stay hover-only. */
+            /* Package VCC/GND pads use pin color, no air. A signal pin tied to a rail
+             * stars to the 5V / GND symbol when that pin's part is the focus. */
             if (rail) {
                 NsPassiveKind want = (rail == 1) ? NS_PASSIVE_5V : NS_PASSIVE_GND;
                 int hub = -1;
@@ -1087,53 +1120,53 @@ static void ui_draw_air_trees(SDL_Renderer *r, const R01sUi *ui, const R01sEntit
                     continue;
                 }
                 for (mi = 0; mi < n; mi++) {
-                    int need_hover;
                     if (mi == hub || air_is_rail_symbol(own[mi], want)) {
                         continue;
                     }
                     if (air_end_package_rail(ends[mi].pin)) {
                         continue;
                     }
-                    need_hover = (rail == 2) || air_end_is_bypass_passive(own[mi]);
-                    if (need_hover && !rail_hover) {
-                        continue;
-                    }
-                    air_paint_hop(r, need_hover ? rail_hover : only, &style, pts, ends, own, sx, sy,
-                                  hub, mi);
+                    air_paint_hop(r, ui, hover, hover_pin, &style, pts, ends, own, pin_at, sx, sy, hub,
+                                  mi);
                 }
                 continue;
             }
         }
-        if (ui->air_wires == R01S_AIR_VIEW_L1 && style.layer != R01S_AIR_LAYER_NOISY) {
-            continue;
-        }
-        if (ui->air_wires == R01S_AIR_VIEW_L4 && style.layer != R01S_AIR_LAYER_QUIET) {
-            continue;
-        }
         ns = (n >= 2) ? r01s_air_mst(pts, n, seg, n - 1) : 0;
         for (k = 0; k < ns; k++) {
-            air_paint_hop(r, only, &style, pts, ends, own, sx, sy, seg[k].a, seg[k].b);
+            air_paint_hop(r, ui, hover, hover_pin, &style, pts, ends, own, pin_at, sx, sy, seg[k].a,
+                          seg[k].b);
         }
     }
 }
 
 void ui_draw_pin_wire_overlay(SDL_Renderer *r, R01sUi *ui) {
-    const R01sEntity *only = NULL;
-    const R01sEntity *rail_hover = NULL;
+    const R01sEntity *hover = NULL;
+    int hover_pin = -1;
     int chip_i = -1;
+    int i;
+    int any_sel = 0;
 
     if (!ui || !r) {
         return;
     }
     if (hit_board_top(ui, ui->mouse_lx, ui->mouse_ly, &chip_i, NULL, NULL) == 1 && chip_i >= 0 &&
         chip_i < ui->chip_count) {
-        rail_hover = ui->chips[chip_i];
+        hover = ui->chips[chip_i];
+        if (ui->hover_chip == chip_i) {
+            hover_pin = ui->hover_pin;
+        }
     }
-    if (ui->air_wires == R01S_AIR_VIEW_NONE) {
-        if (!rail_hover) {
+    if (!hover) {
+        for (i = 0; i < ui->chip_count && i < R01S_BOARD_MAX_CHIPS; i++) {
+            if (ui->chip_sel[i] || i == ui->selected) {
+                any_sel = 1;
+                break;
+            }
+        }
+        if (!any_sel) {
             return;
         }
-        only = rail_hover;
     }
-    ui_draw_air_trees(r, ui, only, rail_hover);
+    ui_draw_air_trees(r, ui, hover, hover_pin);
 }

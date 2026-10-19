@@ -707,7 +707,7 @@ static void ui_chip_place_rel_exact(R01sUi *ui, int chip_i, int rx, int ry) {
     if (!e || !island) {
         return;
     }
-    if (e->visual == R01S_ENTITY_VIS_IC) {
+    if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
         r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[chip_i]);
     } else if (e->visual == R01S_ENTITY_VIS_PASSIVE) {
         r01s_passive_set_orient((R01sPassive *)(void *)e, (R01sPkgOrient)ui->save_chip_orient[chip_i]);
@@ -896,7 +896,7 @@ static void ui_rebuild_islands_from_saved_chips(R01sUi *ui) {
             if (!e || ui->chip_island[j] != (uint8_t)i) {
                 continue;
             }
-            if (e->visual == R01S_ENTITY_VIS_IC) {
+            if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
                 r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[j]);
             }
         }
@@ -1207,7 +1207,7 @@ void r01s_ui_apply_saved_island_layout(R01sUi *ui) {
         if (!e) {
             continue;
         }
-        if (e->visual == R01S_ENTITY_VIS_IC) {
+        if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
         }
         ui_chip_place_rel_exact(ui, i, ui->save_chip_x[i], ui->save_chip_y[i]);
@@ -1293,7 +1293,7 @@ void r01s_ui_load_island_layout(R01sUi *ui, int file_version) {
             if (!e) {
                 continue;
             }
-            if (e->visual == R01S_ENTITY_VIS_IC) {
+            if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
                 r01s_entity_set_orient(e, (R01sPkgOrient)ui->save_chip_orient[i]);
             }
             r01s_entity_place(e, ui->save_chip_x[i], ui->save_chip_y[i]);
@@ -1384,7 +1384,7 @@ void ui_restore_compact_layout(R01sUi *ui) {
         if (!e || e->visual == R01S_ENTITY_VIS_PASSIVE) {
             continue;
         }
-        if (e->visual == R01S_ENTITY_VIS_IC) {
+        if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->compact_chip_orient[i]);
         } else if (e->visual == R01S_ENTITY_VIS_BREADBOARD) {
             e->orient = (R01sPkgOrient)ui->compact_chip_orient[i];
@@ -1635,7 +1635,7 @@ int ui_undo_compact_pose(R01sUi *ui) {
         if (!e) {
             continue;
         }
-        if (e->visual == R01S_ENTITY_VIS_IC) {
+        if (e->visual == R01S_ENTITY_VIS_IC || e->visual == R01S_ENTITY_VIS_PIN_HDR) {
             r01s_entity_set_orient(e, (R01sPkgOrient)ui->undo_chip_orient[i]);
         }
         r01s_entity_place(e, ui->undo_chip_x[i], ui->undo_chip_y[i]);
