@@ -37,7 +37,7 @@ Both counters are 9 bits. The same pin on each chip is the same bit. Q0 is pin 1
 
 The sim follows this pin list. UPLDX counts dots and drives HSYNC. UPLDY counts on that HSYNC and drives VSYNC. The canvas joins them on HSYNC, and both RES pins share the CPU reset net. The video path reads the two counters. HBlank is X at least 256. VBlank is Y at least 240. NMIB is held low for a few dots when Y enters 240. Those three are not pins on the burned images.
 
-The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 23 and UPLDY pin 1 share HSYNC. UPLDY pin 23 is VSYNC. Q0 through Q8 are pins 14 through 22 on each chip (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground. Re-import `apps/sim/skidl/retr01_prelim.net` after the next export. The saved `v_07` board still has the earlier pin-14 sync until that import.
+The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Both pin 2s share CPU reset. UPLDX pin 23 and UPLDY pin 1 share HSYNC. UPLDY pin 23 is VSYNC. Q0 through Q8 are pins 14 through 22 on each chip (`BEAM_X_Q0` through `BEAM_X_Q8`, and the same for Beam Y). Pins 3 through 11 and pin 13 are tied to ground.
 
 ## Color bars
 
@@ -47,10 +47,6 @@ The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Bo
 
 A passing note here is what the board is updated from. The sim, the SKiDL netlist, and `v_07` follow the note. The note does not follow a drawing that has not been on the bench.
 
-When a note says it passes:
-
-1. Change the sim pin netlist so the canvas matches the bench.
-2. Run `apps/sim/skidl/export_netlist.sh`. That writes `apps/sim/skidl/retr01_prelim.net` from the sim.
-3. Re-import that file into `apps/sim/kicad/main-pcb/v_07.kicad_pcb`. Link footprints by reference designator. Leave **Replace footprints** and **Delete footprints** off.
+When a note says it passes, the sim pin netlist matches that bench. `apps/sim/skidl/export_netlist.sh` writes `apps/sim/skidl/retr01_prelim.net` from the sim. That file is the netlist for `apps/sim/kicad/main-pcb/v_07.kicad_pcb`. Footprints link by reference designator. **Replace footprints** and **Delete footprints** stay off.
 
 The ordered board is that netlist after the benches that feed it have passed. A jumper the note calls breadboard-only stays off `v_07`.

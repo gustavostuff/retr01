@@ -1,6 +1,6 @@
 # Beam X and Beam Y
 
-Both counters are 9 bits, Q0 through Q8. Q0 is pin 14. Each next bit is the next pin, through Q8 on pin 22. HSYNC and VSYNC are pin 23. The count checks below passed on an earlier image whose outputs were scattered across those pins. Burn `beam_x.jed` and `beam_y.jed` again and move the LED wires onto the pins in this note. The red LEDs show the Beam X count and the green LEDs show the Beam Y count. Several tests have been performed (Note: the GND and 5V cables swapped at the top-right are a small hack, don't mind that).
+This bench passes. Red LEDs show the Beam X count and green LEDs show the Beam Y count. Q0 is pin 14 through Q8 on pin 22. Pin 23 is HSYNC on Beam X and VSYNC on Beam Y. The GND and 5 V cables at the top-right of the photo are swapped (convenience hack related to LED states).
 
 <img src="img/ATF22V10C-bench-passed-both-x-and-y-beam-counters.jpg" alt="ATF22V10C breadboard, Beam X and Beam Y">
 

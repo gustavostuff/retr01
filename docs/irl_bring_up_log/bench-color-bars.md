@@ -1,21 +1,21 @@
 # Color bars on a CRT
 
-This bench is next. It is not passed yet.
+This bench is not passed yet.
 
-It puts eight vertical bars on an RGBS CRT. The Beam X / Beam Y note and the color PROM note stay the pin list for those chips. The sim pin netlist is the pin list for the dot clock, the DAC resistors, and **J2**. Where those two disagree, the disagreement is named below.
+It puts eight vertical bars on an RGBS CRT. The [Beam X / Beam Y](bench-beam-xy.md) note and the [color PROM](bench-at27c256r.md) note are the pin list for those chips. The sim pin netlist is the pin list for the dot clock, the DAC resistors, and **J2**. A pass updates the sim, the SKiDL netlist, and `v_07`. See [After a bench passes](README.md#after-a-bench-passes).
 
-The compositor, the VRAM, the CPU, and the CXA2075M stay off this board. When this note says it passes, the sim, the SKiDL netlist, and `v_07` are updated from it. See [After a bench passes](README.md#after-a-bench-passes).
+The compositor, the VRAM, the CPU, and the CXA2075M stay off this board.
 
 ## Already on the board
 
-Leave the [Beam X / Beam Y](bench-beam-xy.md) setup in place after those two images are burned again: both ATF22V10C chips, the 20 count LEDs, shared **RES** on pin 2, unused inputs tied to ground, and Beam X pin 23 wired to Beam Y pin 1.
+The Beam X / Beam Y setup stays: both ATF22V10C chips, the 20 count LEDs, shared **RES** on pin 2, unused inputs tied to ground, and Beam X pin 23 wired to Beam Y pin 1.
 
-Leave the passing [color PROM](bench-at27c256r.md) socket, the burned AT27C256R, +5 V on pins 1 and 28, and ground on pins 2, 3, 4, 14, 20, 21, 23, 24, 25, 26, and 27. Those grounded pins are A12, A7, A6, GND, CE#, A10, A11, A9, A8, A13, and A14.
+The color PROM socket stays, with the burned AT27C256R, +5 V on pins 1 and 28, and ground on pins 2, 3, 4, 14, 20, 21, 23, 24, 25, 26, and 27. Those grounded pins are A12, A7, A6, GND, CE#, A10, A11, A9, A8, A13, and A14.
 
-Take these off before the new wires go on:
+These wires are absent on this bench:
 
-- The CH340 TXD wire on Beam X pin 1. The CRT needs the dot clock, not the 10 Hz blink clock.
-- The six address switches. A5, A4, and A3 come from Beam X. A2, A1, and A0 go to ground.
+- The CH340 TXD wire on Beam X pin 1. The CRT uses the dot clock.
+- The six address switches. A5, A4, and A3 come from Beam X. A2, A1, and A0 sit at ground.
 - The PROM data LEDs, and the ground wire on OE# (pin 22). The data pins drive the DAC. OE# blanks the guns during sync.
 
 ## What the bars are
@@ -28,7 +28,7 @@ Visible dots are Beam X counts 0 through 255. Q7, Q6, and Q5 split that into eig
 | Q6 | 20 | A4 | 6 | 16 |
 | Q5 | 19 | A3 | 7 | 8 |
 
-A2 (pin 8), A1 (pin 9), and A0 (pin 10) stay at ground. The address is `32·Q7 + 16·Q6 + 8·Q5`, so the eight bars are kit rows 0, 8, 16, 24, 32, 40, 48, and 56. Those rows are the ones that run from black to white. Rows 0 through 7 are all dark, so Q7/Q6/Q5 do not land on A2/A1/A0 for this test.
+A2 (pin 8), A1 (pin 9), and A0 (pin 10) stay at ground. The address is `32*Q7 + 16*Q6 + 8*Q5`, so the eight bars are kit rows 0, 8, 16, 24, 32, 40, 48, and 56. Those rows run from black to white. Rows 0 through 7 are all dark, so Q7, Q6, and Q5 land on A5, A4, and A3 for this test.
 
 These three jumpers are this bench. They are not compositor pins, and they do not go onto `v_07` as the color-index wiring.
 
@@ -55,11 +55,11 @@ These three jumpers are this bench. They are not compositor pins, and they do no
 | R9, R10, R11 | 75.0 ohm | One from each gun node to ground |
 | Rs | 470 ohm | Series into the cable sync wire. Breadboard only |
 
-The ohm values are the DAC in `docs/hardware.md`. The sim already ties PROM O7..O0 to R1..R8 and R9/R10/R11 from the gun nodes to ground. `apps/sim/skidl/retr01_kicad/part_map.py` currently gives R1–R8 a different set (R1, R2, and R4 as 4 k ohm, R3 and R6 as 2 k ohm, R8 as 1 k ohm). This bench uses the hardware.md set. After it passes, `part_map.py` changes to match.
+R1 through R8 and R9 through R11 are the DAC in `docs/hardware.md`. The sim ties PROM O7 through O0 to R1 through R8. R9, R10, and R11 sit from the gun nodes to ground.
 
 ## Dot clock
 
-This is the motherboard DOT path. U04 gates 3–6 are unused. Tie their inputs to ground so they do not sit open: pins 5, 9, 11, and 13.
+This is the motherboard DOT path. U04 gates 3 through 6 are unused. Their inputs sit on ground so they do not float: pins 5, 9, 11, and 13.
 
 ```
  74HCU04                          SN74HC74
@@ -82,15 +82,13 @@ C22, 22 pF, from U04 pin 2 to GND.
                                 14  VCC    -- +5 V
 ```
 
-U74 pin 9 is DOT, 5.369318 MHz. R13 is the 33 ohm series resistor the sim puts between that pin and Beam X CLK. Beam Y still clocks from Beam X pin 23.
+U74 pin 9 is DOT, 5.369318 MHz. R13 is the 33 ohm series resistor between that pin and Beam X CLK. Beam Y clocks from Beam X pin 23.
 
 ## Sync and blanking
 
 Beam X pin 23 is high on counts 264 through 288. Beam Y pin 23 is high on counts 243 through 245. Both pulses are active high.
 
-**J2** pin 5 is the CSYNC pin on the sim netlist, shared with the CXA2075M SYNCIN pin. The netlist names that net and does not build it. This bench builds it.
-
-A 74HC02 NOR makes the pulse low while either sync pin is high. A second NOR turns that over and drives PROM OE#, so the outputs turn off for the same interval. R9, R10, and R11 then hold the gun nodes at ground.
+**J2** pin 5 is CSYNC, the same net as the CXA2075M SYNCIN pin. On this bench that net is Beam X pin 23 NOR Beam Y pin 23, so the pulse is low while either sync pin is high. A second NOR turns that over and drives PROM OE#. The outputs are off for the same interval. R9, R10, and R11 then hold the gun nodes at ground.
 
 ```
  74HC02
@@ -119,13 +117,13 @@ Each PROM data pin feeds one resistor. The three resistors of a gun meet at one 
 | PROM | Pin | Resistor | Gun node | Cable |
 | --- | --- | --- | --- | --- |
 | O7 | 19 | R1, 1.00 k | Red | J2 pin 7 |
-| O6 | 18 | R2, 2.00 k | Red | |
-| O5 | 17 | R3, 4.00 k | Red | |
+| O6 | 18 | R2, 2.00 k | Red | J2 pin 7 |
+| O5 | 17 | R3, 4.00 k | Red | J2 pin 7 |
 | O4 | 16 | R4, 1.00 k | Green | J2 pin 3 |
-| O3 | 15 | R5, 2.00 k | Green | |
-| O2 | 13 | R6, 4.00 k | Green | |
+| O3 | 15 | R5, 2.00 k | Green | J2 pin 3 |
+| O2 | 13 | R6, 4.00 k | Green | J2 pin 3 |
 | O1 | 12 | R7, 1.00 k | Blue | J2 pin 1 |
-| O0 | 11 | R8, 2.00 k | Blue | |
+| O0 | 11 | R8, 2.00 k | Blue | J2 pin 1 |
 
 | Gun node | To ground | Cable |
 | --- | --- | --- |
@@ -133,44 +131,43 @@ Each PROM data pin feeds one resistor. The three resistors of a gun meet at one 
 | Green | R10, 75 ohm | J2 pin 3 |
 | Blue | R11, 75 ohm | J2 pin 1 |
 
-**J2** is the Kycon KMDGX-9S-AS pinout: pin 1 blue, pin 3 green, pin 5 CSYNC, pin 7 red, shell ground. Leave pin 2 (+5 V) and the audio pins open. A Mega Drive 2 cable uses those same pins. The shell, or pin S, is the only ground back to the bench ground.
+**J2** is the Kycon KMDGX-9S-AS pinout: pin 1 blue, pin 3 green, pin 5 CSYNC, pin 7 red, shell ground. Pin 2 (+5 V) and the audio pins stay open. A Mega Drive 2 cable uses those same pins. The shell, or pin S, is the only ground back to the bench ground.
 
 A 75 ohm TV input sits in parallel with R9, R10, and R11, so the bars come out about half as tall as the 0.7 Vpp the motherboard note quotes. That is still this bench.
 
 ## Place
 
-Power off while the chips go in. Notch is pin 1 on every DIP.
+Power is off while a chip goes in. The notch is pin 1 on every DIP.
 
-1. Pull the CH340 TXD wire off Beam X pin 1.
-2. Pull the PROM address switches. Ground pins 8, 9, and 10.
-3. Pull the PROM data LEDs and the ground wire on pin 22.
-4. Seat U04, U74, and the 74HC02. Each gets +5 V on pin 14, ground on pin 7, and a 100 nF from pin 14 to pin 7.
-5. Wire the crystal, R24, C21, and C22 as in the dot-clock drawing. Tie U04 pins 5, 9, 11, and 13 to ground.
-6. Wire the 74HC74 as in that same drawing. R13 from pin 9 to Beam X pin 1. The 10 kohm from that pin to +5 V can stay.
-7. Beam X pin 21 to PROM pin 5. Pin 20 to pin 6. Pin 19 to pin 7. Land each wire on the PLD pin, the same node as that LED's resistor, not on the LED cathode.
-8. Wire the 74HC02 as in the sync drawing. Rs from pin 1 to the cable sync wire.
-9. Wire R1–R8 from the PROM data pins to the three gun nodes, then R9–R11 to ground.
-10. Cable: pin 7 red, pin 3 green, pin 1 blue, pin 5 sync, shell ground.
+1. The CH340 TXD wire is off Beam X pin 1.
+2. The PROM address switches are off. Pins 8, 9, and 10 are at ground.
+3. The PROM data LEDs are off. Pin 22 is not tied to ground.
+4. U04, U74, and the 74HC02 each have +5 V on pin 14, ground on pin 7, and a 100 nF from pin 14 to pin 7.
+5. The crystal, R24, C21, and C22 follow the dot-clock drawing. U04 pins 5, 9, 11, and 13 are at ground.
+6. The 74HC74 follows that same drawing. R13 runs from pin 9 to Beam X pin 1. The 10 kohm from that pin to +5 V stays.
+7. Beam X pin 21 meets PROM pin 5. Pin 20 meets pin 6. Pin 19 meets pin 7. Each wire lands on the PLD pin, the same node as that LED's resistor.
+8. The 74HC02 follows the sync drawing. Rs runs from pin 1 to the cable sync wire.
+9. R1 through R8 run from the PROM data pins to the three gun nodes. R9 through R11 run from those nodes to ground.
+10. The cable is pin 7 red, pin 3 green, pin 1 blue, pin 5 sync, shell ground.
 
 ## Check
 
-Power on. Release RES (pin 2 of both PLDs high).
+Power is on. RES, pin 2 of both PLDs, is high.
 
 | Check | Passes when |
 | --- | --- |
 | U74 pin 9 | About 5.37 MHz. A scope shows a period near 186 ns. |
-| Beam X pin 23 | High for about 4.7 µs, once per 63.5 µs. |
+| Beam X pin 23 | High for about 4.7 us, once per 63.5 us. |
 | Beam Y pin 23 | High for three of those lines, once per frame. |
 | CRT | Eight vertical bars, stable, near 60 Hz. Left to right: black, dark, gray, blue, gray, cyan, white, light. |
 | Sync interval | Guns dark while pin 23 of either PLD is high. |
 
 The white bar is the seventh, kit row 48. The black bar is the first, kit row 0.
 
-If the set does not lock, confirm Rs is 470 ohm and that shell ground meets bench ground. The CH340 wire has to be off pin 1 before this check means anything.
+A locked picture has Rs at 470 ohm and shell ground on bench ground. The CH340 wire is off pin 1 for that check.
 
-## Still open after a pass
+## Scope
 
-- The three address jumpers are not the motherboard color-index wiring.
-- CSYNC is a breadboard NOR until the sim grows the gate that the netlist only names today.
-- R1–R8 in `part_map.py` change to the ohm values in this note.
-- Rs does not get a motherboard refdes unless a later bench keeps it.
+- The three address jumpers are this bench. They are not the motherboard color-index wiring.
+- CSYNC on this bench is the 74HC02 NOR.
+- Rs is this bench. It has no motherboard refdes.

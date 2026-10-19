@@ -44,7 +44,7 @@ Motherboard passives: **64** parts below the ICs, ordered XTAL, CCAP, ECAP, 5V/G
 | **R** | DAC + 33 ohm series + pull-ups + crystal feedback | 32 total. Only 11 are video DAC |
 | **D** | Art present | Not spawned (not on this BOM) |
 
-Sprites: `apps/tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag / snap / rotate about that pivot. **Passives are in `R01sBoard.pin_netlist`** (every BOM pin registered; bypass/DAC/series/pull-ups wired in `src/board_schematic.c`). Breadboard strip merge and bus settle through passives are still TODO.
+Sprites: `apps/tools/discrete_ic/assets/passives/` (nano `scaled_down`). Pin pixels and the rotation pivot are in `pin_map.json` (first pin is the pivot). Drag, snap, and rotate use that pivot. **Passives are in `R01sBoard.pin_netlist`**. Every BOM pin is registered. Bypass, DAC, series, and pull-ups are wired in `src/board_schematic.c`. Breadboard strip merge and bus settle through passives are still TODO.
 
 **Preliminary Skidl export (not fab-ready):** [`skidl/export_netlist.sh`](skidl/export_netlist.sh) or `export_netlist` + [`scripts/skidl_netlist.py`](../../scripts/skidl_netlist.py). Outputs under [`skidl/`](skidl/). Illustrative only. The motherboard PCB is not ready for production.
 
