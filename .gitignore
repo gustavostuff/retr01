@@ -93,3 +93,5 @@ apps/sim/skidl/library/3dmodels/
 /unit-tests
 /ic_verifier
 apps/ic_logic_verifier/*.log
+todos.txt
+
