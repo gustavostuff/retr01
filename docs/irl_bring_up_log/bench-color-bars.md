@@ -2,46 +2,12 @@
 
 This bench is not passed yet. Eight vertical bars on an RGBS CRT. Beam X, Beam Y, and the PROM are the burned chips from the passing notes. This bench has no LEDs. The compositor, the VRAM, the CPU, and the CXA2075M stay off this board. Power is off while a chip goes in.
 
+The order is the PROM, then Beam X, then Beam Y, then the clock, the NOR, and the CRT. The +5 V rail is CH340 5V and CH340 VCC. The GND rail is CH340 GND. Yellow jumper off. RXD, 3V3, and TXD stay open.
+
 Notch up. Pin 1 is the top pin on the left. A pin with no wire and no passive is open.
 
 ```text
-ICs
-
-Beam X, ATF22V10C
-
-      +---\_/---+
-  CLK | 1    24 | VCC
-  RES | 2    23 | HSYNC
-  low | 3    22 | Q8
-  low | 4    21 | Q7
-  low | 5    20 | Q6
-  low | 6    19 | Q5
-  low | 7    18 | Q4
-  low | 8    17 | Q3
-  low | 9    16 | Q2
-  low | 10   15 | Q1
-  low | 11   14 | Q0
-  GND | 12   13 | low
-      +----+----+
-
-Beam Y, ATF22V10C
-
-      +---\_/---+
-  CLK | 1    24 | VCC
-  RES | 2    23 | VSYNC
-  low | 3    22 | Q8
-  low | 4    21 | Q7
-  low | 5    20 | Q6
-  low | 6    19 | Q5
-  low | 7    18 | Q4
-  low | 8    17 | Q3
-  low | 9    16 | Q2
-  low | 10   15 | Q1
-  low | 11   14 | Q0
-  GND | 12   13 | low
-      +----+----+
-
-PROM, AT27C256R
+1. PROM, AT27C256R
 
       +---\_/---+
   VPP | 1    28 | VCC
@@ -59,6 +25,94 @@ PROM, AT27C256R
    O2 | 13   16 | O4
   GND | 14   15 | O3
       +----+----+
+
+wires
+
+none. The address wires arrive with Beam X.
+
+passives, rails
+
++5 V
+  1 (PROM), 28 (PROM)
+GND
+  2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM)
+  8 (PROM), 9 (PROM), 10 (PROM)
+  20 (PROM), 21 (PROM), 23 (PROM), 24 (PROM), 25 (PROM), 26 (PROM), 27 (PROM)
+
+100 nF from VCC to GND.
+
+2. Beam X, ATF22V10C
+
+      +---\_/---+
+  CLK | 1    24 | VCC
+  RES | 2    23 | HSYNC
+  low | 3    22 | Q8
+  low | 4    21 | Q7
+  low | 5    20 | Q6
+  low | 6    19 | Q5
+  low | 7    18 | Q4
+  low | 8    17 | Q3
+  low | 9    16 | Q2
+  low | 10   15 | Q1
+  low | 11   14 | Q0
+  GND | 12   13 | low
+      +----+----+
+
+wires
+
+21 (Beam X) <--> 5 (PROM)
+20 (Beam X) <--> 6 (PROM)
+19 (Beam X) <--> 7 (PROM)
+
+passives, rails
+
++5 V
+  24 (Beam X)
+GND
+  12 (Beam X)
+  3 (Beam X) through 11 (Beam X), 13 (Beam X)
+
+100 nF from 24 to 12.
+
+10 kohm   2 (Beam X) <--> +5 V
+switch    that RES wire <--> GND. Closed holds the counter at 0.
+10 kohm   1 (Beam X) <--> +5 V
+
+3. Beam Y, ATF22V10C
+
+      +---\_/---+
+  CLK | 1    24 | VCC
+  RES | 2    23 | VSYNC
+  low | 3    22 | Q8
+  low | 4    21 | Q7
+  low | 5    20 | Q6
+  low | 6    19 | Q5
+  low | 7    18 | Q4
+  low | 8    17 | Q3
+  low | 9    16 | Q2
+  low | 10   15 | Q1
+  low | 11   14 | Q0
+  GND | 12   13 | low
+      +----+----+
+
+wires
+
+23 (Beam X) <--> 1 (Beam Y)
+ 2 (Beam X) <--> 2 (Beam Y)
+
+passives, rails
+
++5 V
+  24 (Beam Y)
+GND
+  12 (Beam Y)
+  3 (Beam Y) through 11 (Beam Y), 13 (Beam Y)
+
+100 nF from 24 to 12.
+
+The switch on the Beam X RES wire holds both counters at 0.
+
+4. Clock, NOR, and CRT
 
 U04, 74HCU04
 
@@ -98,47 +152,28 @@ NOR, 74HC02
 
 wires
 
-23 (Beam X) <--> 1 (Beam Y)
-23 (Beam X) <--> 2 (NOR)
-23 (Beam Y) <--> 3 (NOR)
-21 (Beam X) <--> 5 (PROM)
-20 (Beam X) <--> 6 (PROM)
-19 (Beam X) <--> 7 (PROM)
- 4 (NOR) <--> 22 (PROM)
- 1 (NOR) <--> 5 (NOR)
  2 (U04) <--> 3 (U04)
  4 (U04) <--> 3 (U74)
  2 (U74) <--> 6 (U74)
  5 (U74) <--> 11 (U74)
  8 (U74) <--> 12 (U74)
- 2 (Beam X) <--> 2 (Beam Y)
+23 (Beam X) <--> 2 (NOR)
+23 (Beam Y) <--> 3 (NOR)
+ 1 (NOR) <--> 5 (NOR)
+ 4 (NOR) <--> 22 (PROM)
 
 passives, rails, connectors
 
 +5 V
-  24 (Beam X), 24 (Beam Y), 1 (PROM), 28 (PROM)
   14 (U04), 14 (U74), 14 (NOR)
   1 (U74), 4 (U74), 10 (U74), 13 (U74)
-  CH340 5V, CH340 VCC
-
 GND
-  12 (Beam X), 12 (Beam Y)
-  3 (Beam X) through 11 (Beam X), 13 (Beam X)
-  3 (Beam Y) through 11 (Beam Y), 13 (Beam Y)
-  2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM)
-  8 (PROM), 9 (PROM), 10 (PROM)
-  20 (PROM), 21 (PROM), 23 (PROM), 24 (PROM), 25 (PROM), 26 (PROM), 27 (PROM)
   7 (U04), 5 (U04), 9 (U04), 11 (U04), 13 (U04)
   7 (U74)
   7 (NOR), 6 (NOR), 8 (NOR), 9 (NOR), 11 (NOR), 12 (NOR)
-  CH340 GND
   J2 shell
 
-100 nF from VCC to GND on Beam X, Beam Y, PROM, U04, U74, and NOR.
-
-10 kohm   2 (Beam X) <--> +5 V
-switch    that RES wire <--> GND. Closed holds both counters at 0.
-10 kohm   1 (Beam X) <--> +5 V
+100 nF from VCC to GND on U04, U74, and NOR.
 
 Y2    21.47727 MHz   1 (U04) <--> 2 (U04)
 R24   1 Mohm         1 (U04) <--> 2 (U04)
@@ -167,8 +202,6 @@ J2, Kycon KMDGX-9S-AS. A Mega Drive 2 cable uses these numbers.
   5   Rs
   S   GND
   2, 4, 6, 8, 9 open
-
-CH340. Yellow jumper off. RXD, 3V3, and TXD open.
 ```
 
 Visible counts are Beam X 0 through 255. Q7, Q6, and Q5 make eight bars of 32 dots. The address is `32*Q7 + 16*Q6 + 8*Q5`, kit rows 0, 8, 16, 24, 32, 40, 48, and 56. Those rows run from black to white. Rows 0 through 7 are all dark, which is why those bits land on A5, A4, and A3.
