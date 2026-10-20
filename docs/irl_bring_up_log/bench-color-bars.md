@@ -10,7 +10,7 @@ The +5 V rail on every board is CH340 5V and CH340 VCC. The GND rail on every bo
 
 Notch up. Pin 1 is the top pin on the left. A pin with no wire and no passive is open.
 
-Headers are single-row pins soldered on the boards. The first name in a header list is the top pin with the notch up. A header is out, in, or mixed. GND is the return. The Kycon KMDGX-9S-AS is absent from this bench. A single-row header on the RGBS board carries the CRT wires.
+Headers are single-row pins soldered on the boards. The first name in a header list is the top pin with the notch up. Names in [brackets] are inputs. Names in (parentheses) are outputs. A name in both is written [(name)]. GND is the return. This bench has no pin that is both. The Kycon KMDGX-9S-AS is absent from this bench. A single-row header on the RGBS board carries the CRT wires.
 
 ```text
 1. Clock
@@ -39,9 +39,9 @@ U74, SN74HC74
    GND | 7     8 | 2/Q
        +----+----+
 
-header, out
+header
 
-DOT - GND
+(DOT) - GND
 
 wires
 
@@ -92,9 +92,9 @@ Beam X, ATF22V10C          Beam Y, ATF22V10C
   GND | 12   13 | low         GND | 12   13 | low
       +----+----+                 +----+----+
 
-header, mixed. DOT in. Counters and sync out.
+header
 
-DOT - GND - XQ0 - XQ1 - XQ2 - XQ3 - XQ4 - XQ5 - XQ6 - XQ7 - XQ8 - HSYNC - YQ0 - YQ1 - YQ2 - YQ3 - YQ4 - YQ5 - YQ6 - YQ7 - YQ8 - VSYNC
+[DOT] - GND - (XQ0) - (XQ1) - (XQ2) - (XQ3) - (XQ4) - (XQ5) - (XQ6) - (XQ7) - (XQ8) - (HSYNC) - (YQ0) - (YQ1) - (YQ2) - (YQ3) - (YQ4) - (YQ5) - (YQ6) - (YQ7) - (YQ8) - (VSYNC)
 
 wires
 
@@ -161,9 +161,9 @@ HSYNC is the same net as Beam Y CLK. The color-bar cable uses XQ7, XQ6, XQ5, HSY
   GND | 14   15 | O3
       +----+----+
 
-header, mixed. A5, A4, A3, and OE# in. O7 through O0 out.
+header
 
-A5 - A4 - A3 - OE# - GND - O7 - O6 - O5 - O4 - O3 - O2 - O1 - O0
+[A5] - [A4] - [A3] - [OE#] - GND - (O7) - (O6) - (O5) - (O4) - (O3) - (O2) - (O1) - (O0)
 
 wires
 
@@ -208,13 +208,13 @@ NOR, 74HC02
   GND | 7     8 | 3A
       +----+----+
 
-header, mixed. O7 through O0, HSYNC, and VSYNC in. OE# out.
+header
 
-O7 - O6 - O5 - O4 - O3 - O2 - O1 - O0 - HSYNC - VSYNC - OE# - GND
+[O7] - [O6] - [O5] - [O4] - [O3] - [O2] - [O1] - [O0] - [HSYNC] - [VSYNC] - (OE#) - GND
 
-CRT header, out
+CRT header
 
-Red - Green - Blue - CSYNC - GND
+(Red) - (Green) - (Blue) - (CSYNC) - GND
 
 wires
 
