@@ -1,98 +1,84 @@
 # Beam X and Beam Y
 
-This bench passes. Red LEDs show the Beam X count and green LEDs show the Beam Y count. Q0 is pin 14 through Q8 on pin 22. Pin 23 is HSYNC on Beam X and VSYNC on Beam Y. The GND and 5 V cables at the top-right of the photo are swapped (convenience hack related to LED states).
+This bench passes. Red LEDs show the Beam X count and green LEDs show the Beam Y count. Q0 is pin 14 through Q8 on pin 22. Pin 23 is HSYNC on Beam X and VSYNC on Beam Y. In the photo, the GND and 5 V cables at the top-right are swapped.
 
 <img src="img/ATF22V10C-bench-passed-both-x-and-y-beam-counters.jpg" alt="ATF22V10C breadboard, Beam X and Beam Y">
 
-Two ATF22V10C parts, already burned, on a breadboard. Beam X counts dots 0 through 340. Beam Y counts lines 0 through 261. One frame is 262 of those lines. The images are [`beam_x.jed`](../../../apps/flasher_tool/firmware/a/beam_x.jed) and [`beam_y.jed`](../../../apps/flasher_tool/firmware/a/beam_y.jed).
+Two ATF22V10C parts, already burned. Beam X counts dots 0 through 340. Beam Y counts lines 0 through 261. One frame is 262 lines. The images are [`beam_x.jed`](../../../apps/flasher_tool/firmware/a/beam_x.jed) and [`beam_y.jed`](../../../apps/flasher_tool/firmware/a/beam_y.jed).
 
-The package is 300 mil. Each chip sits in a 24-pin socket of that width. The notch is pin 1. Power is off while a chip goes in or comes out. Both chips are in the sockets for a frame.
+The package is 300 mil, in a 24-pin socket. Power is off while a chip goes in or comes out. Only the CH340 feeds 5 V.
 
-One HiLetgo CH340 module clocks the counters and feeds 5 V. It is a 6-pin USB serial header: 5V, VCC, 3V3, TXD, RXD, GND. The 5V pin is USB power. The VCC pin powers the CH340, and TXD swings at whatever voltage reaches VCC. The yellow jumper stays off. The 5V pin and the VCC pin each get a wire to the +5 V rail. The 3V3 pin and RXD stay open.
-
-Twenty LEDs. Along each chip, from pin 14 up to pin 23: Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, then the sync pin. Beam X bits are red and HSYNC is yellow. Beam Y bits are green and VSYNC is blue. The pin drives the LED anode through 2 kohm or 2.2 kohm. The cathode goes to ground. A lit LED is 1. A dark LED is 0. Q0 is the least significant bit.
-
-## Parts
-
-| Part | Qty | Role |
-| --- | --- | --- |
-| ATF22V10C, PDIP-24, Beam X image | 1 | Dot counter. HSYNC high on counts 264 through 288 |
-| ATF22V10C, PDIP-24, Beam Y image | 1 | Line counter. VSYNC high on counts 243 through 245 |
-| 24-pin socket, 300 mil | 2 | One per PLD |
-| 100 nF | 2 | One per chip, from V+ to the ground rail |
-| 10 kohm | 2 | One on the shared RES wire. One on Beam X pin 1 |
-| Switch | 1 | One switch on the shared RES wire. Closed holds both counters at 0 |
-| HiLetgo CH340 module | 1 | Clock and 5 V. TXD drives Beam X pin 1. RXD stays open |
-| LED | 20 | One yellow, one blue, nine red, nine green, in that left-to-right order |
-| 2 kohm or 2.2 kohm | 20 | One from each pin to the LED anode. Cathode to ground. Both values suit yellow, blue, red, and green |
-
-## Place
-
-| Mark | Pins | Where |
-| --- | --- | --- |
-| V+ | pin 24, one on each chip | The two pin 24s share the +5 V rail. The CH340 5V pin and the CH340 VCC pin both land on that rail |
-| C | one cap on each chip | From that chip's V+ to the ground rail |
-| GD | pins 3 through 13 on each chip | These pins share the ground rail |
-| RS | pin 2, one on each chip | The two pin 2s share one wire. One 10 kohm from that wire to +5 V. One switch from that wire to ground |
-| CK | Beam X pin 1 only | One 10 kohm from this pin to +5 V. CH340 TXD on this pin |
-| HS | Beam X pin 23 and Beam Y pin 1 | Yellow. These two pins share one wire. Resistor from that wire to the anode. Cathode to ground |
-| Q0 | pin 14, one on each chip | Red on Beam X, green on Beam Y, bit 0 |
-| Q1 | pin 15, one on each chip | Bit 1 |
-| Q2 | pin 16, one on each chip | Bit 2 |
-| Q3 | pin 17, one on each chip | Bit 3 |
-| Q4 | pin 18, one on each chip | Bit 4 |
-| Q5 | pin 19, one on each chip | Bit 5 |
-| Q6 | pin 20, one on each chip | Bit 6 |
-| Q7 | pin 21, one on each chip | Bit 7 |
-| Q8 | pin 22, one on each chip | Bit 8 |
-| VS | Beam Y pin 23 only | Blue. Resistor from this pin to the anode. Cathode to ground |
+Notch up. Pin 1 is the top pin on the left. A pin with no wire and no passive is open.
 
 ```text
- Clock
-  yellow jumper off
-  5V ---- +5V rail
-  VCC ---- +5V rail
-  GND ---- GND rail
-  RXD open
-  3V3 open
+ICs
 
- CK is Beam X pin 1 only
-  10 kohm ---- +5 V
-  TXD ---- this pin
+Beam X, ATF22V10C          Beam Y, ATF22V10C
 
- RS is one shared wire
-  Beam X pin 2 ---- Beam Y pin 2
-  10 kohm ---- +5 V
-  switch ---- ground
+      +---\_/---+                 +---\_/---+
+  CLK | 1    24 | VCC         CLK | 1    24 | VCC
+  RES | 2    23 | HSYNC       RES | 2    23 | VSYNC
+  low | 3    22 | Q8          low | 3    22 | Q8
+  low | 4    21 | Q7          low | 4    21 | Q7
+  low | 5    20 | Q6          low | 5    20 | Q6
+  low | 6    19 | Q5          low | 6    19 | Q5
+  low | 7    18 | Q4          low | 7    18 | Q4
+  low | 8    17 | Q3          low | 8    17 | Q3
+  low | 9    16 | Q2          low | 9    16 | Q2
+  low | 10   15 | Q1          low | 10   15 | Q1
+  low | 11   14 | Q0          low | 11   14 | Q0
+  GND | 12   13 | low         GND | 12   13 | low
+      +----+----+                 +----+----+
 
- HS is one shared wire
-  Beam X pin 23 ---- Beam Y pin 1
-  HSYNC LED: resistor from this wire to the anode, cathode to ground
+wires
 
- VSYNC LED: resistor from Beam Y pin 23 to the anode, cathode to ground
+23 (Beam X) <--> 1 (Beam Y)
+ 2 (Beam X) <--> 2 (Beam Y)
+TXD (CH340) <--> 1 (Beam X)
 
- +5V ---- CH340 5V, CH340 VCC
-              Beam X                              Beam Y
-               notch                               notch
-            +----U-----+                        +----U-----+
-         CK |  1    24 | V+                  HS |  1    24 | V+
-         RS |  2    23 | HS                  RS |  2    23 | VS
-         GD |  3    22 | Q8                  GD |  3    22 | Q8
-         GD |  4    21 | Q7                  GD |  4    21 | Q7
-         GD |  5    20 | Q6                  GD |  5    20 | Q6
-         GD |  6    19 | Q5                  GD |  6    19 | Q5
-         GD |  7    18 | Q4                  GD |  7    18 | Q4
-         GD |  8    17 | Q3                  GD |  8    17 | Q3
-         GD |  9    16 | Q2                  GD |  9    16 | Q2
-         GD | 10    15 | Q1                  GD | 10    15 | Q1
-         GD | 11    14 | Q0                  GD | 11    14 | Q0
-         GD | 12    13 | GD                  GD | 12    13 | GD
-            +----------+                        +----------+
-         C is one 100 nF on each chip, from V+ to the ground rail
- GND ---- CH340 GND
+The LED wire lands on the anode.
+Left to right in each color. Bit 0 is the rightmost LED.
+22 (Beam X) <--> red bit 8
+21 (Beam X) <--> red bit 7
+20 (Beam X) <--> red bit 6
+19 (Beam X) <--> red bit 5
+18 (Beam X) <--> red bit 4
+17 (Beam X) <--> red bit 3
+16 (Beam X) <--> red bit 2
+15 (Beam X) <--> red bit 1
+14 (Beam X) <--> red bit 0
+22 (Beam Y) <--> green bit 8
+21 (Beam Y) <--> green bit 7
+20 (Beam Y) <--> green bit 6
+19 (Beam Y) <--> green bit 5
+18 (Beam Y) <--> green bit 4
+17 (Beam Y) <--> green bit 3
+16 (Beam Y) <--> green bit 2
+15 (Beam Y) <--> green bit 1
+14 (Beam Y) <--> green bit 0
+23 (Beam X) <--> yellow HSYNC
+23 (Beam Y) <--> blue VSYNC
+
+passives, rails, connectors
+
++5 V
+  24 (Beam X), 24 (Beam Y), CH340 5V, CH340 VCC
+GND
+  12 (Beam X), 12 (Beam Y)
+  3 through 11 and 13, both chips
+  CH340 GND
+
+100 nF from 24 to 12 on each chip.
+
+10 kohm   2 (Beam X) <--> +5 V
+switch    that RES wire <--> GND. Closed holds both counters at 0.
+10 kohm   1 (Beam X) <--> +5 V
+
+2.0 or 2.2 kohm in series on each LED wire. Cathode to GND. A lit LED is 1.
+The yellow HSYNC LED shares the wire that already joins 23 (Beam X) and 1 (Beam Y).
+
+CH340. Yellow jumper off. RXD and 3V3 open.
 ```
-
-Only the CH340 feeds 5 V. On that module, RXD and 3V3 stay open.
 
 ## Check
 

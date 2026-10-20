@@ -1,215 +1,187 @@
 # Color bars on a CRT
 
-This bench is not passed yet.
+This bench is not passed yet. Eight vertical bars on an RGBS CRT. Beam X, Beam Y, and the PROM are the burned chips from the passing notes. This bench has no LEDs. The compositor, the VRAM, the CPU, and the CXA2075M stay off this board. Power is off while a chip goes in.
 
-It puts eight vertical bars on an RGBS CRT. The [Beam X / Beam Y](bench-beam-xy.md) note and the [color PROM](bench-at27c256r.md) note are the pin list for those chips. The sim pin netlist is the pin list for the dot clock, the DAC resistors, and **J2**. A pass updates the sim, the SKiDL netlist, and `v_07`. See [After a bench passes](README.md#after-a-bench-passes).
-
-The compositor, the VRAM, the CPU, and the CXA2075M stay off this board.
-
-## Already on the board
-
-This bench has no LEDs. The chips and the rails come from the two passing benches. A wire in those notes that is not in a table below is absent here.
-
-### Beam X and Beam Y
-
-Both burned ATF22V10C chips stay in their sockets. The +5 V rail is the CH340 5V pin and the CH340 VCC pin. CH340 GND is the ground rail. RXD, 3V3, and TXD stay open. The yellow jumper stays off.
-
-| Net | Pins | Where |
-| --- | --- | --- |
-| V+ | pin 24, both chips | +5 V rail. One 100 nF from each pin 24 to ground |
-| GND | pin 12, both chips | Ground rail |
-| Tied low | pins 3 through 11, and pin 13, both chips | Ground rail |
-| RES | pin 2, both chips | One wire. 10 kohm to +5 V. Switch to ground |
-| CLK pull-up | Beam X pin 1 | 10 kohm to +5 V. DOT arrives on this same pin through R13 |
-| HSYNC | Beam X pin 23 and Beam Y pin 1 | One wire. That wire also meets 74HC02 pin 2 |
-
-These Beam pins are open:
-
-| Chip | Open pins | Bits |
-| --- | --- | --- |
-| Beam X | 14, 15, 16, 17, 18, 22 | Q0, Q1, Q2, Q3, Q4, Q8 |
-| Beam Y | 14 through 22 | Q0 through Q8 |
-
-Beam Y pin 23 is VSYNC. It meets 74HC02 pin 3 and nothing else.
-
-### Color PROM
-
-The burned AT27C256R stays in the 28-pin socket.
-
-| Net | Pins | Name |
-| --- | --- | --- |
-| V+ | 1 and 28 | VPP and VCC. One 100 nF from V+ to ground |
-| GND | 2, 3, 4, 14 | A12, A7, A6, GND |
-| GND | 20, 21, 23, 24, 25, 26, 27 | CE#, A10, A11, A9, A8, A13, A14 |
-
-Pin 22 (OE#) is not on that ground list. It meets 74HC02 pin 4.
-
-### Wires from Beam X into the PROM
-
-| From | To |
-| --- | --- |
-| Beam X pin 21 (Q7) | PROM pin 5 (A5), index weight 32 |
-| Beam X pin 20 (Q6) | PROM pin 6 (A4), index weight 16 |
-| Beam X pin 19 (Q5) | PROM pin 7 (A3), index weight 8 |
-| Ground rail | PROM pin 8 (A2) |
-| Ground rail | PROM pin 9 (A1) |
-| Ground rail | PROM pin 10 (A0) |
-
-PROM pins 19, 18, 17, 16, 15, 13, 12, and 11 are O7 through O0. Each one meets one DAC resistor in the DAC section. A5, A4, and A3 are the three Beam X wires. A2, A1, and A0 are the three ground wires.
-
-## What the bars are
-
-Visible dots are Beam X counts 0 through 255. Q7, Q6, and Q5 split that into eight bars of 32 dots. The open Q pins above stay open.
-
-The address is `32*Q7 + 16*Q6 + 8*Q5`, so the eight bars are kit rows 0, 8, 16, 24, 32, 40, 48, and 56. Those rows run from black to white. Rows 0 through 7 are all dark, so Q7, Q6, and Q5 land on A5, A4, and A3 for this test.
-
-These three jumpers are this bench. They are not compositor pins, and they do not go onto `v_07` as the color-index wiring.
-
-## Parts to add
-
-| Mark | Part | Role |
-| --- | --- | --- |
-| Y2 | 21.47727 MHz crystal, HC-49 | Dot-clock crystal |
-| U04 | 74HCU04 | Pierce gate and buffer |
-| U74 | SN74HC74 | Divide by 4 |
-| R24 | 1 M ohm | Feedback across the Pierce gate |
-| R13 | 33 ohm | Series from DOT into Beam X pin 1 |
-| C21, C22 | 22 pF | One on each crystal leg |
-| C04, C74, CNOR | 100 nF | One across each new chip |
-| NOR | 74HC02 | CSYNC and PROM blanking |
-| R1 | 1.00 k ohm | Red MSB, PROM O7 |
-| R2 | 2.00 k ohm | Red, PROM O6 |
-| R3 | 4.00 k ohm | Red LSB, PROM O5 |
-| R4 | 1.00 k ohm | Green MSB, PROM O4 |
-| R5 | 2.00 k ohm | Green, PROM O3 |
-| R6 | 4.00 k ohm | Green LSB, PROM O2 |
-| R7 | 1.00 k ohm | Blue MSB, PROM O1 |
-| R8 | 2.00 k ohm | Blue LSB, PROM O0 |
-| R9, R10, R11 | 75.0 ohm | One from each gun node to ground |
-| Rs | 470 ohm | Series into the cable sync wire. Breadboard only |
-
-R1 through R8 and R9 through R11 are the DAC in `docs/hardware.md`. The sim ties PROM O7 through O0 to R1 through R8. R9, R10, and R11 sit from the gun nodes to ground.
-
-## Dot clock
-
-Y2 and U04 pins 1 and 2 oscillate at 21.47727 MHz. U04 pin 4 is that clock buffered. U74 divides it by 4. U74 pin 9 is DOT, 5.369318 MHz. R13, 33 ohm, runs from that pin to Beam X pin 1. Beam Y clocks from Beam X pin 23.
-
-The notch is at the top. Pin 1 is the top pin on the left. The note beside a pin is the wire on that pin. A note like "pin 6" means another pin on the same chip.
+Notch up. Pin 1 is the top pin on the left. A pin with no wire and no passive is open.
 
 ```text
-74HCU04 (U04)
-               notch
-            +----U----+
- Y2 and R24 |  1   14 | +5 V
- Y2 and R24 |  2   13 | GND
- pin 2      |  3   12 | open
- U74 pin 3  |  4   11 | GND
- GND        |  5   10 | open
- open       |  6    9 | GND
- GND        |  7    8 | open
-            +---------+
+ICs
 
-C21, 22 pF, from pin 1 to GND.
-C22, 22 pF, from pin 2 to GND.
-R24 is 1 M ohm, across pins 1 and 2, in parallel with Y2.
-Gates 3 through 6 are unused. Inputs are pins 5, 9, 11, and 13.
+Beam X, ATF22V10C
+
+      +---\_/---+
+  CLK | 1    24 | VCC
+  RES | 2    23 | HSYNC
+  low | 3    22 | Q8
+  low | 4    21 | Q7
+  low | 5    20 | Q6
+  low | 6    19 | Q5
+  low | 7    18 | Q4
+  low | 8    17 | Q3
+  low | 9    16 | Q2
+  low | 10   15 | Q1
+  low | 11   14 | Q0
+  GND | 12   13 | low
+      +----+----+
+
+Beam Y, ATF22V10C
+
+      +---\_/---+
+  CLK | 1    24 | VCC
+  RES | 2    23 | VSYNC
+  low | 3    22 | Q8
+  low | 4    21 | Q7
+  low | 5    20 | Q6
+  low | 6    19 | Q5
+  low | 7    18 | Q4
+  low | 8    17 | Q3
+  low | 9    16 | Q2
+  low | 10   15 | Q1
+  low | 11   14 | Q0
+  GND | 12   13 | low
+      +----+----+
+
+PROM, AT27C256R
+
+      +---\_/---+
+  VPP | 1    28 | VCC
+  A12 | 2    27 | A14
+   A7 | 3    26 | A13
+   A6 | 4    25 | A8
+   A5 | 5    24 | A9
+   A4 | 6    23 | A11
+   A3 | 7    22 | OE#
+   A2 | 8    21 | A10
+   A1 | 9    20 | CE#
+   A0 | 10   19 | O7
+   O0 | 11   18 | O6
+   O1 | 12   17 | O5
+   O2 | 13   16 | O4
+  GND | 14   15 | O3
+      +----+----+
+
+U04, 74HCU04
+
+      +---\_/---+
+   1A | 1    14 | VCC
+   1Y | 2    13 | 6A
+   2A | 3    12 | 6Y
+   2Y | 4    11 | 5A
+   3A | 5    10 | 5Y
+   3Y | 6     9 | 4A
+  GND | 7     8 | 4Y
+      +----+----+
+
+U74, SN74HC74
+
+       +---\_/---+
+ 1CLR# | 1    14 | VCC
+    1D | 2    13 | 2CLR#
+  1CLK | 3    12 | 2D
+ 1PRE# | 4    11 | 2CLK
+    1Q | 5    10 | 2PRE#
+   1/Q | 6     9 | 2Q
+   GND | 7     8 | 2/Q
+       +----+----+
+
+NOR, 74HC02
+
+      +---\_/---+
+   1Y | 1    14 | VCC
+   1A | 2    13 | 4Y
+   1B | 3    12 | 4B
+   2Y | 4    11 | 4A
+   2A | 5    10 | 3Y
+   2B | 6     9 | 3B
+  GND | 7     8 | 3A
+      +----+----+
+
+wires
+
+23 (Beam X) <--> 1 (Beam Y)
+23 (Beam X) <--> 2 (NOR)
+23 (Beam Y) <--> 3 (NOR)
+21 (Beam X) <--> 5 (PROM)
+20 (Beam X) <--> 6 (PROM)
+19 (Beam X) <--> 7 (PROM)
+ 4 (NOR) <--> 22 (PROM)
+ 1 (NOR) <--> 5 (NOR)
+ 2 (U04) <--> 3 (U04)
+ 4 (U04) <--> 3 (U74)
+ 2 (U74) <--> 6 (U74)
+ 5 (U74) <--> 11 (U74)
+ 8 (U74) <--> 12 (U74)
+ 2 (Beam X) <--> 2 (Beam Y)
+
+passives, rails, connectors
+
++5 V
+  24 (Beam X), 24 (Beam Y), 1 (PROM), 28 (PROM)
+  14 (U04), 14 (U74), 14 (NOR)
+  1 (U74), 4 (U74), 10 (U74), 13 (U74)
+  CH340 5V, CH340 VCC
+
+GND
+  12 (Beam X), 12 (Beam Y)
+  3 (Beam X) through 11 (Beam X), 13 (Beam X)
+  3 (Beam Y) through 11 (Beam Y), 13 (Beam Y)
+  2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM)
+  8 (PROM), 9 (PROM), 10 (PROM)
+  20 (PROM), 21 (PROM), 23 (PROM), 24 (PROM), 25 (PROM), 26 (PROM), 27 (PROM)
+  7 (U04), 5 (U04), 9 (U04), 11 (U04), 13 (U04)
+  7 (U74)
+  7 (NOR), 6 (NOR), 8 (NOR), 9 (NOR), 11 (NOR), 12 (NOR)
+  CH340 GND
+  J2 shell
+
+100 nF from VCC to GND on Beam X, Beam Y, PROM, U04, U74, and NOR.
+
+10 kohm   2 (Beam X) <--> +5 V
+switch    that RES wire <--> GND. Closed holds both counters at 0.
+10 kohm   1 (Beam X) <--> +5 V
+
+Y2    21.47727 MHz   1 (U04) <--> 2 (U04)
+R24   1 Mohm         1 (U04) <--> 2 (U04)
+C21   22 pF          1 (U04) <--> GND
+C22   22 pF          2 (U04) <--> GND
+R13   33 ohm         9 (U74) <--> 1 (Beam X)
+
+R1    1.00 kohm      19 (PROM) <--> Red
+R2    2.00 kohm      18 (PROM) <--> Red
+R3    4.00 kohm      17 (PROM) <--> Red
+R9    75 ohm         Red <--> GND
+R4    1.00 kohm      16 (PROM) <--> Green
+R5    2.00 kohm      15 (PROM) <--> Green
+R6    4.00 kohm      13 (PROM) <--> Green
+R10   75 ohm         Green <--> GND
+R7    1.00 kohm      12 (PROM) <--> Blue
+R8    2.00 kohm      11 (PROM) <--> Blue
+R11   75 ohm         Blue <--> GND
+
+Rs    470 ohm        1 (NOR) <--> 5 (J2)
+
+J2, Kycon KMDGX-9S-AS. A Mega Drive 2 cable uses these numbers.
+  7   Red
+  3   Green
+  1   Blue
+  5   Rs
+  S   GND
+  2, 4, 6, 8, 9 open
+
+CH340. Yellow jumper off. RXD, 3V3, and TXD open.
 ```
 
-```text
-SN74HC74 (U74)
-               notch
-            +----U----+
- +5 V       |  1   14 | +5 V
- pin 6      |  2   13 | +5 V
- U04 pin 4  |  3   12 | pin 8
- +5 V       |  4   11 | pin 5
- pin 11     |  5   10 | +5 V
- pin 2      |  6    9 | R13, then Beam X pin 1
- GND        |  7    8 | pin 12
-            +---------+
-```
+Visible counts are Beam X 0 through 255. Q7, Q6, and Q5 make eight bars of 32 dots. The address is `32*Q7 + 16*Q6 + 8*Q5`, kit rows 0, 8, 16, 24, 32, 40, 48, and 56. Those rows run from black to white. Rows 0 through 7 are all dark, which is why those bits land on A5, A4, and A3.
 
-## Sync and blanking
+OE# is high only while HSYNC or VSYNC is high. Counts 256 through 263 still show a color, and so do Beam Y counts 240 through 242. Full-border blanking belongs to the compositor.
 
-Beam X pin 23 is high on counts 264 through 288. Beam Y pin 23 is high on counts 243 through 245. Both pulses are active high.
+A 75 ohm TV input sits in parallel with R9, R10, and R11, so the bars are about half of the 0.7 Vpp in the motherboard note.
 
-**J2** pin 5 is CSYNC, the same net as the CXA2075M SYNCIN pin. On this bench that net is Beam X pin 23 NOR Beam Y pin 23, so the pulse is low while either sync pin is high. A second NOR turns that over and drives PROM OE#. The outputs are off for the same interval. R9, R10, and R11 then hold the gun nodes at ground.
-
-The notch is at the top. Pin 1 is the top pin on the left. Rs, 470 ohm, is in series between pin 1 and the cable sync wire.
-
-```text
-74HC02
-             notch
-          +----U----+
- CSYNC    |  1   14 | +5 V
- HSYNC    |  2   13 | open
- VSYNC    |  3   12 | GND
- PROM 22  |  4   11 | GND
- pin 1    |  5   10 | open
- GND      |  6    9 | GND
- GND      |  7    8 | GND
-          +---------+
-```
-
-HSYNC is Beam X pin 23. VSYNC is Beam Y pin 23. Pin 5 ties to pin 1, on the chip side of Rs.
-
-OE# is high only while HSYNC or VSYNC is high. Counts 256 through 263 still show a color, and so do Beam Y counts 240 through 242. That strip is this bench. Full-border blanking belongs to the compositor, which is not on this board.
-
-Rs is breadboard only. `v_07` has no series resistor on CSYNC. The NOR pin is not a 75 ohm driver, and the TV sync input is about 75 ohm.
-
-## DAC
-
-Three nodes: Red, Green, and Blue. R1 through R8 each have one leg on a PROM pin and the other leg on a node. The three legs on a node are twisted together. R9, R10, and R11 each have one leg on that same twist and the other leg on the ground rail. The CRT wire is a third wire on that same twist. R1 through R8 do not reach the cable.
-
-| One leg | Resistor | Other leg |
-| --- | --- | --- |
-| PROM pin 19 (O7) | R1, 1.00 kohm | Red node |
-| PROM pin 18 (O6) | R2, 2.00 kohm | Red node |
-| PROM pin 17 (O5) | R3, 4.00 kohm | Red node |
-| Red node | R9, 75 ohm | Ground rail |
-| Red node | CRT red | J2 pin 7 |
-| PROM pin 16 (O4) | R4, 1.00 kohm | Green node |
-| PROM pin 15 (O3) | R5, 2.00 kohm | Green node |
-| PROM pin 13 (O2) | R6, 4.00 kohm | Green node |
-| Green node | R10, 75 ohm | Ground rail |
-| Green node | CRT green | J2 pin 3 |
-| PROM pin 12 (O1) | R7, 1.00 kohm | Blue node |
-| PROM pin 11 (O0) | R8, 2.00 kohm | Blue node |
-| Blue node | R11, 75 ohm | Ground rail |
-| Blue node | CRT blue | J2 pin 1 |
-
-**J2** is the Kycon KMDGX-9S-AS pinout. A Mega Drive 2 cable uses the same numbers. The CRT sees four wires plus the shell:
-
-| J2 pin | Cable | Bench |
-| --- | --- | --- |
-| 1 | Blue | Blue node |
-| 3 | Green | Green node |
-| 5 | CSYNC | Rs, from 74HC02 pin 1 |
-| 7 | Red | Red node |
-| S | Shell | Ground rail |
-
-Pin 2 (+5 V), pin 4 (composite), and pins 6, 8, and 9 (audio) stay open.
-
-A 75 ohm TV input sits in parallel with R9, R10, and R11, so the bars come out about half as tall as the 0.7 Vpp the motherboard note quotes. That is still this bench.
-
-## Place
-
-Power is off while a chip goes in. The notch is pin 1 on every DIP.
-
-1. CH340 TXD is off Beam X pin 1. The 10 kohm from that pin to +5 V stays.
-2. Beam X pins 14, 15, 16, 17, 18, and 22 are open. Beam Y pins 14 through 22 are open.
-3. PROM pins 8, 9, and 10 are at ground. Pin 22 meets 74HC02 pin 4.
-4. U04, U74, and the 74HC02 each have +5 V on pin 14, ground on pin 7, and a 100 nF from pin 14 to pin 7.
-5. The crystal, R24, C21, and C22 follow the dot-clock drawing. U04 pins 5, 9, 11, and 13 are at ground.
-6. The 74HC74 follows that same drawing. R13 runs from pin 9 to Beam X pin 1.
-7. Beam X pin 21 meets PROM pin 5. Pin 20 meets pin 6. Pin 19 meets pin 7.
-8. The 74HC02 follows the sync drawing. Rs runs from pin 1 to the cable sync wire.
-9. R1, R2, and R3 meet at the Red node. R4, R5, and R6 meet at the Green node. R7 and R8 meet at the Blue node. R9, R10, and R11 run from those nodes to ground.
-10. The CRT cable lands on those same nodes: J2 pin 7 on Red, pin 3 on Green, pin 1 on Blue, pin 5 on Rs, shell on ground.
+The three address wires, the NOR, and Rs are this bench. They are not motherboard color-index wiring. `v_07` has no series resistor on CSYNC.
 
 ## Check
 
-Power is on. RES, pin 2 of both PLDs, is high.
+Power is on. RES, pin 2 of both PLDs, is high. CH340 TXD is open.
 
 | Check | Passes when |
 | --- | --- |
@@ -220,11 +192,3 @@ Power is on. RES, pin 2 of both PLDs, is high.
 | Sync interval | Guns dark while pin 23 of either PLD is high. |
 
 The white bar is the seventh, kit row 48. The black bar is the first, kit row 0.
-
-A locked picture has Rs at 470 ohm and shell ground on bench ground. The CH340 wire is off pin 1 for that check.
-
-## Scope
-
-- The three address jumpers are this bench. They are not the motherboard color-index wiring.
-- CSYNC on this bench is the 74HC02 NOR.
-- Rs is this bench. It has no motherboard refdes.

@@ -4311,7 +4311,7 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "18ed2293-b10d-4911-a341-e02837a88ae2")
-		(at 177.96 114.5)
+		(at 175.46 115)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R15"
@@ -5435,11 +5435,11 @@
 	(footprint "Retr01_Lib:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "1d0f66dd-d94b-4074-b921-3e0e390c7d97")
-		(at 196 113)
+		(at 212.46 112)
 		(descr "Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R13"
-			(at 5.152184 -0.819794 0)
+			(at 1.003097 -3.935885 0)
 			(layer "F.SilkS")
 			(uuid "c2848608-aae1-4558-94e7-04404d865b4c")
 			(effects
@@ -5450,7 +5450,7 @@
 			)
 		)
 		(property "Value" "33R"
-			(at 5.152184 0.790514 0)
+			(at 1.003097 -2.325577 0)
 			(layer "F.SilkS")
 			(uuid "effc1c75-7968-4a47-9e93-2cd54c373494")
 			(effects
@@ -5931,11 +5931,11 @@
 	(footprint "Retr01_Lib:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 		(layer "F.Cu")
 		(uuid "34095206-d1ab-49bf-b28d-dadcde266d82")
-		(at 186 111.5)
+		(at 186 111.5 180)
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C16"
-			(at -2.759037 -0.799097 0)
+			(at 7.713856 -0.845816 0)
 			(layer "F.SilkS")
 			(uuid "0c494975-e2ae-4491-ade3-5c7073202652")
 			(effects
@@ -5946,7 +5946,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at -3.544578 0.673793 0)
+			(at 8.578463 0.748409 0)
 			(layer "F.SilkS")
 			(uuid "616cc8cd-c373-456f-bb64-437fafd9e5e5")
 			(effects
@@ -5991,7 +5991,7 @@
 			)
 		)
 		(property "SKiDL Tag" "XtzxgyEjU1"
-			(at 0 0 0)
+			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -6004,7 +6004,7 @@
 			)
 		)
 		(property "SKiDL Line" "../apps/sim/skidl/retr01_kicad/parts.py:114"
-			(at 0 0 0)
+			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -6021,44 +6021,14 @@
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
-			(start -0.12 -1.37)
-			(end 5.12 -1.37)
+			(start 5.12 1.37)
+			(end -0.12 1.37)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "96077977-e7ab-40f3-b06f-261e89556cf7")
-		)
-		(fp_line
-			(start -0.12 -1.033)
-			(end -0.12 -1.37)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "be67585e-dbe8-41ee-b959-13b43b448f5c")
-		)
-		(fp_line
-			(start -0.12 1.37)
-			(end -0.12 1.033)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "95cbe38b-fd69-4475-97ea-fdb7e871a967")
-		)
-		(fp_line
-			(start 5.12 -1.37)
-			(end 5.12 -1.033)
-			(stroke
-				(width 0.12)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "4f97e842-f689-4491-babb-c6f68879b0d7")
+			(uuid "cca88817-ab8e-47b7-9bc5-3e4269e843c6")
 		)
 		(fp_line
 			(start 5.12 1.033)
@@ -6071,14 +6041,44 @@
 			(uuid "637e146e-928d-4026-851b-dc6a9e55b047")
 		)
 		(fp_line
-			(start 5.12 1.37)
-			(end -0.12 1.37)
+			(start 5.12 -1.37)
+			(end 5.12 -1.033)
 			(stroke
 				(width 0.12)
 				(type solid)
 			)
 			(layer "F.SilkS")
-			(uuid "cca88817-ab8e-47b7-9bc5-3e4269e843c6")
+			(uuid "4f97e842-f689-4491-babb-c6f68879b0d7")
+		)
+		(fp_line
+			(start -0.12 1.37)
+			(end -0.12 1.033)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "95cbe38b-fd69-4475-97ea-fdb7e871a967")
+		)
+		(fp_line
+			(start -0.12 -1.033)
+			(end -0.12 -1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "be67585e-dbe8-41ee-b959-13b43b448f5c")
+		)
+		(fp_line
+			(start -0.12 -1.37)
+			(end 5.12 -1.37)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "96077977-e7ab-40f3-b06f-261e89556cf7")
 		)
 		(fp_rect
 			(start -1.05 -1.5)
@@ -6103,7 +6103,7 @@
 			(uuid "d14054dc-6a31-41dc-a437-55e2e4aaa3ef")
 		)
 		(pad "1" thru_hole circle
-			(at 0 0)
+			(at 0 0 180)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")
@@ -6114,7 +6114,7 @@
 			(uuid "b2ca0648-0b0d-4687-8d2d-017c3c3893a4")
 		)
 		(pad "2" thru_hole circle
-			(at 5 0)
+			(at 5 0 180)
 			(size 1.6 1.6)
 			(drill 0.8)
 			(layers "*.Cu" "*.Mask")

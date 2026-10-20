@@ -1,6 +1,0 @@
-Retr01 todos:
-
-1. Remove default netlist ratsnest in the sim. --- DONE
-2. Name that app simply "Sim", we won't have Sim tiers, at lest not in Software --- DONE
-3. Check why the CXA2075M footprint doesn't look like copper in KiCad 3D view   --- DONE
-4. Start defining the video lab bench. --- doc at docs/irl_bring_up_log/bench-color-bars.md, not run yet
