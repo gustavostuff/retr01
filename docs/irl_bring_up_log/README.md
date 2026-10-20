@@ -41,7 +41,7 @@ The SKiDL export wires the same pins. UPLDX pin 1 is the DOT clock after R13. Bo
 
 ## Color bars
 
-[bench-color-bars.md](bench-color-bars.md). Not passed yet. Dot clock, three Beam X bits into the PROM, the resistor DAC, and one sync wire into an RGBS CRT. The compositor stays off that board.
+[bench-color-bars.md](bench-color-bars.md). Not passed yet. Four perma-proto boards carry the dot clock, Beam X and Beam Y, the color PROM, and the resistor DAC. Three Beam X bits reach the PROM. One sync wire reaches an RGBS CRT. The compositor stays off these boards.
 
 ## After a bench passes
 
