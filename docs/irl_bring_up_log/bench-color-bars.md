@@ -2,7 +2,7 @@
 
 This bench is not passed yet. Eight vertical bars on an RGBS CRT. Four perma-proto boards. Beam X, Beam Y, and the PROM are the burned chips from the passing notes. These boards have no LEDs. The compositor, the VRAM, the CPU, and the CXA2075M stay off these boards. Power is off while a chip goes in.
 
-<img src="img/perma-proto.png" alt="Perma-proto board, top and bottom">
+<img src="img/perma-proto.jpg" alt="Perma-proto board, top and bottom">
 
 Each module is one board like the photo. 30 rows, columns A through J, power rails along both edges.
 
@@ -10,7 +10,7 @@ The +5 V rail on every board is CH340 5V and CH340 VCC. The GND rail on every bo
 
 Notch up. Pin 1 is the top pin on the left. A pin with no wire and no passive is open.
 
-Headers are single-row pins soldered on the boards. The first name in a header list is the top pin with the notch up. The Kycon KMDGX-9S-AS is absent from this bench. A single-row header on the RGBS board carries the CRT wires.
+Headers are single-row pins soldered on the boards. The first name in a header list is the top pin with the notch up. A header is out, in, or mixed. GND is the return. The Kycon KMDGX-9S-AS is absent from this bench. A single-row header on the RGBS board carries the CRT wires.
 
 ```text
 1. Clock
@@ -39,10 +39,9 @@ U74, SN74HC74
    GND | 7     8 | 2/Q
        +----+----+
 
-header
+header, out
 
-DOT
-GND
+DOT - GND
 
 wires
 
@@ -93,30 +92,9 @@ Beam X, ATF22V10C          Beam Y, ATF22V10C
   GND | 12   13 | low         GND | 12   13 | low
       +----+----+                 +----+----+
 
-header
+header, mixed. DOT in. Counters and sync out.
 
-DOT
-GND
-XQ0
-XQ1
-XQ2
-XQ3
-XQ4
-XQ5
-XQ6
-XQ7
-XQ8
-HSYNC
-YQ0
-YQ1
-YQ2
-YQ3
-YQ4
-YQ5
-YQ6
-YQ7
-YQ8
-VSYNC
+DOT - GND - XQ0 - XQ1 - XQ2 - XQ3 - XQ4 - XQ5 - XQ6 - XQ7 - XQ8 - HSYNC - YQ0 - YQ1 - YQ2 - YQ3 - YQ4 - YQ5 - YQ6 - YQ7 - YQ8 - VSYNC
 
 wires
 
@@ -183,21 +161,9 @@ HSYNC is the same net as Beam Y CLK. The color-bar cable uses XQ7, XQ6, XQ5, HSY
   GND | 14   15 | O3
       +----+----+
 
-header
+header, mixed. A5, A4, A3, and OE# in. O7 through O0 out.
 
-A5
-A4
-A3
-OE#
-GND
-O7
-O6
-O5
-O4
-O3
-O2
-O1
-O0
+A5 - A4 - A3 - OE# - GND - O7 - O6 - O5 - O4 - O3 - O2 - O1 - O0
 
 wires
 
@@ -242,28 +208,13 @@ NOR, 74HC02
   GND | 7     8 | 3A
       +----+----+
 
-header
+header, mixed. O7 through O0, HSYNC, and VSYNC in. OE# out.
 
-O7
-O6
-O5
-O4
-O3
-O2
-O1
-O0
-HSYNC
-VSYNC
-OE#
-GND
+O7 - O6 - O5 - O4 - O3 - O2 - O1 - O0 - HSYNC - VSYNC - OE# - GND
 
-CRT header
+CRT header, out
 
-Red
-Green
-Blue
-CSYNC
-GND
+Red - Green - Blue - CSYNC - GND
 
 wires
 
