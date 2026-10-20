@@ -2015,7 +2015,7 @@
 		(property "Reference" "J10"
 			(at -0.725 -2.725 0)
 			(layer "F.SilkS")
-			(uuid "82ceea88-ac4d-4ee0-893d-20b57d8109cc")
+			(uuid "821d7210-e209-40da-a6cf-468949d8fcce")
 			(effects
 				(font
 					(size 1 1)
@@ -2026,7 +2026,7 @@
 		(property "Value" "CART_PROG_HDR"
 			(at 5.566787 3.329183 90)
 			(layer "F.SilkS")
-			(uuid "6f027133-3997-4558-b276-2519d5fd5b2c")
+			(uuid "b1e7dd01-0a8d-477c-9ecf-130120ae93e9")
 			(effects
 				(font
 					(size 1 1)
@@ -2038,7 +2038,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f29f6bc9-0413-4d62-a322-fa34548ac12d")
+			(uuid "92fe4f87-4b12-4192-9c1b-d90f89da7381")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2049,7 +2049,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f2374bc8-f0f0-4495-aba9-2d5402119e69")
+			(uuid "6e39323c-f5f1-479a-b38f-01ef99b9bc61")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6871,8 +6871,8 @@
 				)
 			)
 		)
-		(property "Value" "JAMMA"
-			(at 2.54 -25 270)
+		(property "Value" "JAMMA - JST GEC-561"
+			(at -1 -25.5 270)
 			(layer "F.SilkS")
 			(uuid "68a3ff45-0b66-4f15-a459-26efead06e8e")
 			(effects
