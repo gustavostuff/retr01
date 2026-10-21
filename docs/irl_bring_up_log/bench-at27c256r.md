@@ -34,32 +34,28 @@ wires
 
 The data wire lands on the LED cathode.
 Left to right on the board. Bit 0 is the rightmost LED.
-19 (PROM) <--> red bit 7
-18 (PROM) <--> red bit 6
-17 (PROM) <--> red bit 5
-16 (PROM) <--> green bit 4
-15 (PROM) <--> green bit 3
-13 (PROM) <--> green bit 2
-12 (PROM) <--> blue bit 1
-11 (PROM) <--> blue bit 0
+19 (PROM) goes to red LED bit 7
+18 (PROM) goes to red LED bit 6
+17 (PROM) goes to red LED bit 5
+16 (PROM) goes to green LED bit 4
+15 (PROM) goes to green LED bit 3
+13 (PROM) goes to green LED bit 2
+12 (PROM) goes to blue LED bit 1
+11 (PROM) goes to blue LED bit 0
 
 Address switches. Switch 0 is the rightmost.
-5 (PROM) <--> Switch 5
-6 (PROM) <--> Switch 4
-7 (PROM) <--> Switch 3
-8 (PROM) <--> Switch 2
-9 (PROM) <--> Switch 1
-10 (PROM) <--> Switch 0
+5 (PROM) goes to Switch 5
+6 (PROM) goes to Switch 4
+7 (PROM) goes to Switch 3
+8 (PROM) goes to Switch 2
+9 (PROM) goes to Switch 1
+10 (PROM) goes to Switch 0
 
 passives, rails, connectors
 
-+5 V
-  1 (PROM), 28 (PROM)
-GND
-  2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM)
-  20 (PROM) through 27 (PROM)
-
-100 nF from VCC to GND.
++5 V goes to 1 (PROM), 28 (PROM)
+GND goes to 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 20 (PROM) through 27 (PROM)
+(100 nF) goes to 28 (PROM), 14 (PROM)
 
 Address switch. Closed is 1. Open is held at 0 by 10 kohm to GND. The other side of the switch is +5 V.
 

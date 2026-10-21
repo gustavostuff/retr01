@@ -18,67 +18,63 @@ Beam X, ATF22V10C          Beam Y, ATF22V10C
       +---\_/---+                 +---\_/---+
   CLK | 1    24 | VCC         CLK | 1    24 | VCC
   RES | 2    23 | HSYNC       RES | 2    23 | VSYNC
-  low | 3    22 | Q8          low | 3    22 | Q8
-  low | 4    21 | Q7          low | 4    21 | Q7
-  low | 5    20 | Q6          low | 5    20 | Q6
-  low | 6    19 | Q5          low | 6    19 | Q5
-  low | 7    18 | Q4          low | 7    18 | Q4
-  low | 8    17 | Q3          low | 8    17 | Q3
-  low | 9    16 | Q2          low | 9    16 | Q2
-  low | 10   15 | Q1          low | 10   15 | Q1
-  low | 11   14 | Q0          low | 11   14 | Q0
-  GND | 12   13 | low         GND | 12   13 | low
+  GND | 3    22 | Q8          GND | 3    22 | Q8
+  GND | 4    21 | Q7          GND | 4    21 | Q7
+  GND | 5    20 | Q6          GND | 5    20 | Q6
+  GND | 6    19 | Q5          GND | 6    19 | Q5
+  GND | 7    18 | Q4          GND | 7    18 | Q4
+  GND | 8    17 | Q3          GND | 8    17 | Q3
+  GND | 9    16 | Q2          GND | 9    16 | Q2
+  GND | 10   15 | Q1          GND | 10   15 | Q1
+  GND | 11   14 | Q0          GND | 11   14 | Q0
+  GND | 12   13 | GND         GND | 12   13 | GND
       +----+----+                 +----+----+
 
 wires
 
-23 (Beam X) <--> 1 (Beam Y)
- 2 (Beam X) <--> 2 (Beam Y)
-TXD (CH340) <--> 1 (Beam X)
+23 (Beam X) goes to 1 (Beam Y)
+2 (Beam X) goes to 2 (Beam Y)
+TXD (CH340) goes to 1 (Beam X)
 
 The LED wire lands on the anode.
 Left to right in each color. Bit 0 is the rightmost LED.
-22 (Beam X) <--> red bit 8
-21 (Beam X) <--> red bit 7
-20 (Beam X) <--> red bit 6
-19 (Beam X) <--> red bit 5
-18 (Beam X) <--> red bit 4
-17 (Beam X) <--> red bit 3
-16 (Beam X) <--> red bit 2
-15 (Beam X) <--> red bit 1
-14 (Beam X) <--> red bit 0
-22 (Beam Y) <--> green bit 8
-21 (Beam Y) <--> green bit 7
-20 (Beam Y) <--> green bit 6
-19 (Beam Y) <--> green bit 5
-18 (Beam Y) <--> green bit 4
-17 (Beam Y) <--> green bit 3
-16 (Beam Y) <--> green bit 2
-15 (Beam Y) <--> green bit 1
-14 (Beam Y) <--> green bit 0
-23 (Beam X) <--> yellow HSYNC
-23 (Beam Y) <--> blue VSYNC
+22 (Beam X) goes to red LED bit 8
+21 (Beam X) goes to red LED bit 7
+20 (Beam X) goes to red LED bit 6
+19 (Beam X) goes to red LED bit 5
+18 (Beam X) goes to red LED bit 4
+17 (Beam X) goes to red LED bit 3
+16 (Beam X) goes to red LED bit 2
+15 (Beam X) goes to red LED bit 1
+14 (Beam X) goes to red LED bit 0
+22 (Beam Y) goes to green LED bit 8
+21 (Beam Y) goes to green LED bit 7
+20 (Beam Y) goes to green LED bit 6
+19 (Beam Y) goes to green LED bit 5
+18 (Beam Y) goes to green LED bit 4
+17 (Beam Y) goes to green LED bit 3
+16 (Beam Y) goes to green LED bit 2
+15 (Beam Y) goes to green LED bit 1
+14 (Beam Y) goes to green LED bit 0
+23 (Beam X) goes to yellow HSYNC LED
+23 (Beam Y) goes to blue VSYNC LED
 
 passives, rails, connectors
 
-+5 V
-  24 (Beam X), 24 (Beam Y), CH340 5V, CH340 VCC
-GND
-  12 (Beam X), 12 (Beam Y)
-  3 through 11 and 13, both chips
-  CH340 GND
-
-100 nF from 24 to 12 on each chip.
-
-10 kohm   2 (Beam X) <--> +5 V
-switch    that RES wire <--> GND. Closed holds both counters at 0.
-10 kohm   1 (Beam X) <--> +5 V
-
-2.0 or 2.2 kohm in series on each LED wire. Cathode to GND. A lit LED is 1.
++5 V goes to 24 (Beam X), 24 (Beam Y), CH340 5V, CH340 VCC
+GND goes to 12 (Beam X), 12 (Beam Y), 3 (Beam X) through 11 (Beam X), 13 (Beam X), 3 (Beam Y) through 11 (Beam Y), 13 (Beam Y), CH340 GND
+(100 nF) goes to 24 (Beam X), 12 (Beam X)
+(100 nF) goes to 24 (Beam Y), 12 (Beam Y)
+(10 kohm) goes to 2 (Beam X), +5 V
+switch goes to 2 (Beam X), GND. Closed holds both counters at 0.
+(10 kohm) goes to 1 (Beam X), +5 V
+(2.0 or 2.2 kohm) goes to each LED wire, GND. Cathode to GND. A lit LED is 1.
 The yellow HSYNC LED shares the wire that already joins 23 (Beam X) and 1 (Beam Y).
 
 CH340. Yellow jumper off. RXD and 3V3 open.
 ```
+
+Pins 3 through 11 and pin 13 are unused inputs on each chip. They sit on GND.
 
 ## Check
 
