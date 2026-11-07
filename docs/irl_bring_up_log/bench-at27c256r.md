@@ -8,6 +8,8 @@ One kit chip in the socket at a time. The package is 600 mil, in a 28-pin socket
 
 Notch up. Pin 1 is the top pin on the left.
 
+Connection lines use the chains in [bench-color-bars.md](bench-color-bars.md).
+
 ```text
 ICs
 
@@ -30,36 +32,25 @@ PROM, AT27C256R
   GND | 14   15 | O3
       +----+----+
 
-wires
++5 V <--> Switch 5 <--> 5 (PROM) <--> (10 kohm) <--> GND
++5 V <--> Switch 4 <--> 6 (PROM) <--> (10 kohm) <--> GND
++5 V <--> Switch 3 <--> 7 (PROM) <--> (10 kohm) <--> GND
++5 V <--> Switch 2 <--> 8 (PROM) <--> (10 kohm) <--> GND
++5 V <--> Switch 1 <--> 9 (PROM) <--> (10 kohm) <--> GND
++5 V <--> Switch 0 <--> 10 (PROM) <--> (10 kohm) <--> GND
++5 V <--> (2.2 kohm) <--> red LED bit 7 <--> 19 (PROM)
++5 V <--> (2.2 kohm) <--> red LED bit 6 <--> 18 (PROM)
++5 V <--> (2.2 kohm) <--> red LED bit 5 <--> 17 (PROM)
++5 V <--> (2.2 kohm) <--> green LED bit 4 <--> 16 (PROM)
++5 V <--> (2.2 kohm) <--> green LED bit 3 <--> 15 (PROM)
++5 V <--> (2.2 kohm) <--> green LED bit 2 <--> 13 (PROM)
++5 V <--> (2.2 kohm) <--> blue LED bit 1 <--> 12 (PROM)
++5 V <--> (2.2 kohm) <--> blue LED bit 0 <--> 11 (PROM)
++5 V <--> 1 (PROM), 28 (PROM)
+GND <--> 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 20 (PROM) through 27 (PROM)
+28 (PROM) <--> (100 nF) <--> 14 (PROM)
 
-The data wire lands on the LED cathode.
-Left to right on the board. Bit 0 is the rightmost LED.
-19 (PROM) goes to red LED bit 7
-18 (PROM) goes to red LED bit 6
-17 (PROM) goes to red LED bit 5
-16 (PROM) goes to green LED bit 4
-15 (PROM) goes to green LED bit 3
-13 (PROM) goes to green LED bit 2
-12 (PROM) goes to blue LED bit 1
-11 (PROM) goes to blue LED bit 0
-
-Address switches. Switch 0 is the rightmost.
-5 (PROM) goes to Switch 5
-6 (PROM) goes to Switch 4
-7 (PROM) goes to Switch 3
-8 (PROM) goes to Switch 2
-9 (PROM) goes to Switch 1
-10 (PROM) goes to Switch 0
-
-passives, rails, connectors
-
-+5 V goes to 1 (PROM), 28 (PROM)
-GND goes to 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 20 (PROM) through 27 (PROM)
-(100 nF) goes to 28 (PROM), 14 (PROM)
-
-Address switch. Closed is 1. Open is held at 0 by 10 kohm to GND. The other side of the switch is +5 V.
-
-LED. +5 V, then 2.2 kohm, then the anode. A lit LED is a 0. A dark LED is a 1.
+Switch 0 is the rightmost. Closed is 1. Left to right on the board, bit 0 is the rightmost LED. The LED anode faces the resistor. A lit LED is a 0. A dark LED is a 1.
 ```
 
 A high on A14 selects the upper 16 KB. Those bytes are `0xFF`. CE# or OE# high turns the data pins off.

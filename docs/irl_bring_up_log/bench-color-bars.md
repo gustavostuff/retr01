@@ -12,6 +12,16 @@ Notch up. Pin 1 is the top pin on the left. A pin with no wire and no passive is
 
 Headers are single-row pins soldered on the boards. The first name in a header list is the top pin with the notch up. Names in [brackets] are inputs. Names in (parentheses) are outputs. A name in both is written [(name)]. GND is the return. This bench has no pin that is both. The Kycon KMDGX-9S-AS is absent from this bench. A single-row header on the RGBS board carries the CRT wires.
 
+Connection lines use `A <--> B <--> C`.
+
+`A <--> B` joins A and B.
+
+Each name with a neighbor on both sides is read against those two neighbors. A 2-leg part sits in series. One leg lands on the left neighbor and the other leg lands on the right neighbor. A resistor, a capacitor, a crystal, a switch, and an LED are 2-leg parts. A pin or a header pin is one tie. Both neighbors land on that pin.
+
+A comma list is a fanout onto the first name, not a chain through the listed names. `+5 V <--> 14 (U04), 14 (U74)` ties each listed name to +5 V. `3 (Beam X) through 11 (Beam X)` means pins 3, 4, 5, 6, 7, 8, 9, 10, and 11.
+
+One pin name, header name, or rail name is one net on every line. A 2-leg part with a designator, such as R13 or C1, is that same part on every line. A 2-leg part written only as a value is a new part on each line.
+
 ```text
 1. Clock
 
@@ -43,29 +53,23 @@ header
 
 (DOT) - GND
 
-wires
-
-2 (U04) goes to 3 (U04)
-4 (U04) goes to 3 (U74)
-2 (U74) goes to 6 (U74)
-5 (U74) goes to 11 (U74)
-8 (U74) goes to 12 (U74)
-GND goes to 7 (U74)
-
-passives, rails
-
-+5 V goes to 14 (U04), 14 (U74), 1 (U74), 4 (U74), 10 (U74), 13 (U74)
-GND goes to 7 (U04), 5 (U04), 9 (U04), 11 (U04), 13 (U04), 7 (U74)
-C1 (100 nF) goes to 14 (U04), 7 (U04)
-C2 (100 nF) goes to 14 (U74), 7 (U74)
-Y2 (21.47727 MHz) goes to 1 (U04), 2 (U04)
-R24 (1 Mohm) goes to 1 (U04), 2 (U04)
-C21 (22 pF) goes to 1 (U04), GND
-C22 (22 pF) goes to 2 (U04), GND
-R13 (33 ohm) goes to 9 (U74), DOT
+1 (U04) <--> Y2 (21.47727 MHz) <--> 2 (U04)
+1 (U04) <--> R24 (1 Mohm) <--> 2 (U04)
+1 (U04) <--> C21 (22 pF) <--> GND
+2 (U04) <--> C22 (22 pF) <--> GND
+2 (U04) <--> 3 (U04)
+4 (U04) <--> 3 (U74)
+2 (U74) <--> 6 (U74)
+5 (U74) <--> 11 (U74)
+8 (U74) <--> 12 (U74)
+9 (U74) <--> R13 (33 ohm) <--> (DOT)
++5 V <--> 14 (U04), 14 (U74), 1 (U74), 4 (U74), 10 (U74), 13 (U74)
+GND <--> 7 (U04), 5 (U04), 9 (U04), 11 (U04), 13 (U04), 7 (U74)
+14 (U04) <--> C1 (100 nF) <--> 7 (U04)
+14 (U74) <--> C2 (100 nF) <--> 7 (U74)
 ```
 
-DOT is 2Q after R13. That pin is Beam X CLK.
+U04, U74, Y2, R13, and the (DOT) header share this one board. Pins 5, 9, 11, and 13 of U04 are unused inputs.
 
 ```text
 2. Beams
@@ -91,45 +95,36 @@ header
 
 [DOT] - GND - (XQ0) - (XQ1) - (XQ2) - (XQ3) - (XQ4) - (XQ5) - (XQ6) - (XQ7) - (XQ8) - (HSYNC) - (YQ0) - (YQ1) - (YQ2) - (YQ3) - (YQ4) - (YQ5) - (YQ6) - (YQ7) - (YQ8) - (VSYNC)
 
-wires
-
-23 (Beam X) goes to 1 (Beam Y)
-2 (Beam X) goes to 2 (Beam Y)
-DOT goes to 1 (Beam X)
-GND goes to 12 (Beam X)
-XQ0 goes to 14 (Beam X)
-XQ1 goes to 15 (Beam X)
-XQ2 goes to 16 (Beam X)
-XQ3 goes to 17 (Beam X)
-XQ4 goes to 18 (Beam X)
-XQ5 goes to 19 (Beam X)
-XQ6 goes to 20 (Beam X)
-XQ7 goes to 21 (Beam X)
-XQ8 goes to 22 (Beam X)
-HSYNC goes to 23 (Beam X)
-YQ0 goes to 14 (Beam Y)
-YQ1 goes to 15 (Beam Y)
-YQ2 goes to 16 (Beam Y)
-YQ3 goes to 17 (Beam Y)
-YQ4 goes to 18 (Beam Y)
-YQ5 goes to 19 (Beam Y)
-YQ6 goes to 20 (Beam Y)
-YQ7 goes to 21 (Beam Y)
-YQ8 goes to 22 (Beam Y)
-VSYNC goes to 23 (Beam Y)
-
-passives, rails
-
-+5 V goes to 24 (Beam X), 24 (Beam Y)
-GND goes to 12 (Beam X), 12 (Beam Y), 3 (Beam X) through 11 (Beam X), 13 (Beam X), 3 (Beam Y) through 11 (Beam Y), 13 (Beam Y)
-C3 (100 nF) goes to 24 (Beam X), 12 (Beam X)
-C4 (100 nF) goes to 24 (Beam Y), 12 (Beam Y)
-(10 kohm) goes to 2 (Beam X), +5 V
-switch goes to 2 (Beam X), GND. Closed holds both counters at 0.
-(10 kohm) goes to 1 (Beam X), +5 V
+1 (Beam Y) <--> 23 (Beam X) <--> (HSYNC)
+2 (Beam Y) <--> 2 (Beam X) <--> switch <--> GND
++5 V <--> (10 kohm) <--> 2 (Beam X)
++5 V <--> (10 kohm) <--> 1 (Beam X) <--> [DOT]
+14 (Beam X) <--> (XQ0)
+15 (Beam X) <--> (XQ1)
+16 (Beam X) <--> (XQ2)
+17 (Beam X) <--> (XQ3)
+18 (Beam X) <--> (XQ4)
+19 (Beam X) <--> (XQ5)
+20 (Beam X) <--> (XQ6)
+21 (Beam X) <--> (XQ7)
+22 (Beam X) <--> (XQ8)
+14 (Beam Y) <--> (YQ0)
+15 (Beam Y) <--> (YQ1)
+16 (Beam Y) <--> (YQ2)
+17 (Beam Y) <--> (YQ3)
+18 (Beam Y) <--> (YQ4)
+19 (Beam Y) <--> (YQ5)
+20 (Beam Y) <--> (YQ6)
+21 (Beam Y) <--> (YQ7)
+22 (Beam Y) <--> (YQ8)
+23 (Beam Y) <--> (VSYNC)
++5 V <--> 24 (Beam X), 24 (Beam Y)
+GND <--> 12 (Beam X), 12 (Beam Y), 3 (Beam X) through 11 (Beam X), 13 (Beam X), 3 (Beam Y) through 11 (Beam Y), 13 (Beam Y)
+24 (Beam X) <--> C3 (100 nF) <--> 12 (Beam X)
+24 (Beam Y) <--> C4 (100 nF) <--> 12 (Beam Y)
 ```
 
-Pins 3 through 11 and pin 13 are unused inputs on each chip. They sit on GND. HSYNC is the same net as Beam Y CLK. The color-bar cable uses XQ7, XQ6, XQ5, HSYNC, and VSYNC.
+The switch, closed, holds both counters at 0. Pins 3 through 11 and pin 13 are unused inputs on each chip. The color-bar cable uses XQ7, XQ6, XQ5, HSYNC, and VSYNC.
 
 ```text
 3. PROM, AT27C256R
@@ -155,27 +150,21 @@ header
 
 [A5] - [A4] - [A3] - [OE#] - GND - (O7) - (O6) - (O5) - (O4) - (O3) - (O2) - (O1) - (O0)
 
-wires
-
-A5 goes to 5 (PROM)
-A4 goes to 6 (PROM)
-A3 goes to 7 (PROM)
-OE# goes to 22 (PROM)
-GND goes to 14 (PROM)
-O7 goes to 19 (PROM)
-O6 goes to 18 (PROM)
-O5 goes to 17 (PROM)
-O4 goes to 16 (PROM)
-O3 goes to 15 (PROM)
-O2 goes to 13 (PROM)
-O1 goes to 12 (PROM)
-O0 goes to 11 (PROM)
-
-passives, rails
-
-+5 V goes to 1 (PROM), 28 (PROM)
-GND goes to 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 8 (PROM), 9 (PROM), 10 (PROM), 20 (PROM), 21 (PROM), 23 (PROM), 24 (PROM), 25 (PROM), 26 (PROM), 27 (PROM)
-C5 (100 nF) goes to 28 (PROM), 14 (PROM)
+[A5] <--> 5 (PROM)
+[A4] <--> 6 (PROM)
+[A3] <--> 7 (PROM)
+[OE#] <--> 22 (PROM)
+19 (PROM) <--> (O7)
+18 (PROM) <--> (O6)
+17 (PROM) <--> (O5)
+16 (PROM) <--> (O4)
+15 (PROM) <--> (O3)
+13 (PROM) <--> (O2)
+12 (PROM) <--> (O1)
+11 (PROM) <--> (O0)
++5 V <--> 1 (PROM), 28 (PROM)
+GND <--> 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 8 (PROM), 9 (PROM), 10 (PROM), 20 (PROM), 21 (PROM), 23 (PROM) through 27 (PROM)
+28 (PROM) <--> C5 (100 nF) <--> 14 (PROM)
 ```
 
 ```text
@@ -201,32 +190,24 @@ CRT header
 
 (red gun) - (green gun) - (blue gun) - (CSYNC) - GND
 
-wires
-
-HSYNC goes to 2 (NOR)
-VSYNC goes to 3 (NOR)
-1 (NOR) goes to 5 (NOR)
-4 (NOR) goes to OE#
-GND goes to 7 (NOR)
-CRT GND goes to 7 (NOR)
-
-passives, rails
-
-+5 V goes to 14 (NOR)
-GND goes to 7 (NOR), 6 (NOR), 8 (NOR), 9 (NOR), 11 (NOR), 12 (NOR)
-C6 (100 nF) goes to 14 (NOR), 7 (NOR)
-R1 (1.00 kohm) goes to O7, red gun
-R2 (2.00 kohm) goes to O6, red gun
-R3 (4.00 kohm) goes to O5, red gun
-R9 (75 ohm) goes to red gun, GND
-R4 (1.00 kohm) goes to O4, green gun
-R5 (2.00 kohm) goes to O3, green gun
-R6 (4.00 kohm) goes to O2, green gun
-R10 (75 ohm) goes to green gun, GND
-R7 (1.00 kohm) goes to O1, blue gun
-R8 (2.00 kohm) goes to O0, blue gun
-R11 (75 ohm) goes to blue gun, GND
-Rs (470 ohm) goes to 1 (NOR), CSYNC
+[HSYNC] <--> 2 (NOR)
+[VSYNC] <--> 3 (NOR)
+5 (NOR) <--> 1 (NOR) <--> Rs (470 ohm) <--> (CSYNC)
+4 (NOR) <--> (OE#)
+[O7] <--> R1 (1.00 kohm) <--> (red gun)
+[O6] <--> R2 (2.00 kohm) <--> (red gun)
+[O5] <--> R3 (4.00 kohm) <--> (red gun)
+(red gun) <--> R9 (75 ohm) <--> GND
+[O4] <--> R4 (1.00 kohm) <--> (green gun)
+[O3] <--> R5 (2.00 kohm) <--> (green gun)
+[O2] <--> R6 (4.00 kohm) <--> (green gun)
+(green gun) <--> R10 (75 ohm) <--> GND
+[O1] <--> R7 (1.00 kohm) <--> (blue gun)
+[O0] <--> R8 (2.00 kohm) <--> (blue gun)
+(blue gun) <--> R11 (75 ohm) <--> GND
++5 V <--> 14 (NOR)
+GND <--> 7 (NOR), 6 (NOR), 8 (NOR), 9 (NOR), 11 (NOR), 12 (NOR), CRT GND
+14 (NOR) <--> C6 (100 nF) <--> 7 (NOR)
 ```
 
 The red gun, the green gun, the blue gun, CSYNC, and GND are pins 7, 3, 1, 5, and the shell of a Mega Drive 2 cable on the Kycon KMDGX-9S-AS. Pins 2, 4, 6, 8, and 9 of that connector have no wire on this bench.
@@ -234,23 +215,29 @@ The red gun, the green gun, the blue gun, CSYNC, and GND are pins 7, 3, 1, 5, an
 ```text
 cables
 
-DOT (Clock) goes to DOT (Beam). 9 (U74) through R13, and 1 (Beam X).
-XQ7 (Beam) goes to A5 (PROM). 21 (Beam X) and 5 (PROM).
-XQ6 (Beam) goes to A4 (PROM). 20 (Beam X) and 6 (PROM).
-XQ5 (Beam) goes to A3 (PROM). 19 (Beam X) and 7 (PROM).
-HSYNC (Beam) goes to HSYNC (RGBS). 23 (Beam X) and 2 (NOR).
-VSYNC (Beam) goes to VSYNC (RGBS). 23 (Beam Y) and 3 (NOR).
-O7 (PROM) goes to O7 (RGBS). 19 (PROM).
-O6 (PROM) goes to O6 (RGBS). 18 (PROM).
-O5 (PROM) goes to O5 (RGBS). 17 (PROM).
-O4 (PROM) goes to O4 (RGBS). 16 (PROM).
-O3 (PROM) goes to O3 (RGBS). 15 (PROM).
-O2 (PROM) goes to O2 (RGBS). 13 (PROM).
-O1 (PROM) goes to O1 (RGBS). 12 (PROM).
-O0 (PROM) goes to O0 (RGBS). 11 (PROM).
-OE# (RGBS) goes to OE# (PROM). 4 (NOR) and 22 (PROM).
-GND on each header goes to CH340 GND
+Each line is one jumper between header pins. The solder on each board is in that module.
+
+(DOT) <--> [DOT]
+(XQ7) <--> [A5]
+(XQ6) <--> [A4]
+(XQ5) <--> [A3]
+(HSYNC) <--> [HSYNC]
+(VSYNC) <--> [VSYNC]
+(O7) <--> [O7]
+(O6) <--> [O6]
+(O5) <--> [O5]
+(O4) <--> [O4]
+(O3) <--> [O3]
+(O2) <--> [O2]
+(O1) <--> [O1]
+(O0) <--> [O0]
+(OE#) <--> [OE#]
+CH340 5V <--> +5 V
+CH340 VCC <--> +5 V
+CH340 GND <--> GND
 ```
+
+The three supply lines land on every board.
 
 Visible counts are Beam X 0 through 255. Q7, Q6, and Q5 make eight bars of 32 dots. The address is `32*Q7 + 16*Q6 + 8*Q5`, kit rows 0, 8, 16, 24, 32, 40, 48, and 56. Those rows run from black to white. Rows 0 through 7 are all dark, which is why those bits land on A5, A4, and A3.
 

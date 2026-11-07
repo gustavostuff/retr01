@@ -10,7 +10,7 @@ Hardware remains in active development/design. Software, tooling, and documentat
 
 1. **NES: readable limits and bold color.** Retr01 uses a 64-color global palette, with up to 25 colors visible on screen at once. Those limits are on purpose. They keep the graphics simple and give every color choice more weight.
 2. **SNES: depth without unnecessary complexity.** Two true background planes and pixel-level transparency enable real parallax, layered scenery, and richer scene composition while keeping the graphics pipeline understandable and close to the hardware.
-3. **[GameTank](https://gametank.zone/): Open source retro console** The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA.
+3. **[GameTank](https://gametank.zone/): Open source retro console.** The primary modern inspiration. Retr01 takes the same core ideas of a modest resolution, physical (small) cartridges and a readable multi-chip design that stays explicit instead of hiding behind an FPGA.
 
 ## Graphics
 
