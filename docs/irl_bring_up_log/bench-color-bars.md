@@ -18,7 +18,9 @@ Connection lines use `A <--> B <--> C`.
 
 Each name with a neighbor on both sides is read against those two neighbors. A 2-leg part sits in series. One leg lands on the left neighbor and the other leg lands on the right neighbor. A resistor, a capacitor, a crystal, a switch, and an LED are 2-leg parts. A pin or a header pin is one tie. Both neighbors land on that pin.
 
-A comma list is a fanout onto the first name, not a chain through the listed names. `+5 V <--> 14 (U04), 14 (U74)` ties each listed name to +5 V. `3 (Beam X) through 11 (Beam X)` means pins 3, 4, 5, 6, 7, 8, 9, 10, and 11.
+A comma list is a fanout onto the first name, not a chain through the listed names. `+5 V <--> 14 (U04), 14 (U74)` ties each listed name to +5 V.
+
+A number is an IC pin. `5, 6, 7` are pins 5, 6, and 7. The `(part)` after a number, a comma list, or a range names the chip. `5 (PROM)` is pin 5 of the PROM. `2, 3, 4 (PROM)` is pins 2, 3, and 4 of the PROM. `3 through 11 (Beam X)` is pins 3 through 11 of Beam X. Pin lists run from the low pin to the high pin.
 
 One pin name, header name, or rail name is one net on every line. A 2-leg part with a designator, such as R13 or C1, is that same part on every line. A 2-leg part written only as a value is a new part on each line.
 
@@ -63,8 +65,8 @@ header
 5 (U74) <--> 11 (U74)
 8 (U74) <--> 12 (U74)
 9 (U74) <--> R13 (33 ohm) <--> (DOT)
-+5 V <--> 14 (U04), 14 (U74), 1 (U74), 4 (U74), 10 (U74), 13 (U74)
-GND <--> 7 (U04), 5 (U04), 9 (U04), 11 (U04), 13 (U04), 7 (U74)
++5 V <--> 14 (U04), 1, 4, 10, 13, 14 (U74)
+GND <--> 5, 7, 9, 11, 13 (U04), 7 (U74)
 14 (U04) <--> C1 (100 nF) <--> 7 (U04)
 14 (U74) <--> C2 (100 nF) <--> 7 (U74)
 ```
@@ -91,9 +93,13 @@ Beam X, ATF22V10C          Beam Y, ATF22V10C
   GND | 12   13 | GND         GND | 12   13 | GND
       +----+----+                 +----+----+
 
-header
+Beam X header
 
-[DOT] - GND - (XQ0) - (XQ1) - (XQ2) - (XQ3) - (XQ4) - (XQ5) - (XQ6) - (XQ7) - (XQ8) - (HSYNC) - (YQ0) - (YQ1) - (YQ2) - (YQ3) - (YQ4) - (YQ5) - (YQ6) - (YQ7) - (YQ8) - (VSYNC)
+[DOT] - GND - (XQ0) - (XQ1) - (XQ2) - (XQ3) - (XQ4) - (XQ5) - (XQ6) - (XQ7) - (XQ8) - (HSYNC)
+
+Beam Y header
+
+GND - (YQ0) - (YQ1) - (YQ2) - (YQ3) - (YQ4) - (YQ5) - (YQ6) - (YQ7) - (YQ8) - (VSYNC)
 
 1 (Beam Y) <--> 23 (Beam X) <--> (HSYNC)
 2 (Beam Y) <--> 2 (Beam X) <--> switch <--> GND
@@ -119,7 +125,7 @@ header
 22 (Beam Y) <--> (YQ8)
 23 (Beam Y) <--> (VSYNC)
 +5 V <--> 24 (Beam X), 24 (Beam Y)
-GND <--> 12 (Beam X), 12 (Beam Y), 3 (Beam X) through 11 (Beam X), 13 (Beam X), 3 (Beam Y) through 11 (Beam Y), 13 (Beam Y)
+GND <--> 3 through 13 (Beam X), 3 through 13 (Beam Y)
 24 (Beam X) <--> C3 (100 nF) <--> 12 (Beam X)
 24 (Beam Y) <--> C4 (100 nF) <--> 12 (Beam Y)
 ```
@@ -153,17 +159,17 @@ header
 [A5] <--> 5 (PROM)
 [A4] <--> 6 (PROM)
 [A3] <--> 7 (PROM)
+11 (PROM) <--> (O0). B, low bit.
+12 (PROM) <--> (O1). B, high bit.
+13 (PROM) <--> (O2). G, low bit.
+15 (PROM) <--> (O3). G, middle bit.
+16 (PROM) <--> (O4). G, high bit.
+17 (PROM) <--> (O5). R, low bit.
+18 (PROM) <--> (O6). R, middle bit.
+19 (PROM) <--> (O7). R, high bit.
 [OE#] <--> 22 (PROM)
-19 (PROM) <--> (O7)
-18 (PROM) <--> (O6)
-17 (PROM) <--> (O5)
-16 (PROM) <--> (O4)
-15 (PROM) <--> (O3)
-13 (PROM) <--> (O2)
-12 (PROM) <--> (O1)
-11 (PROM) <--> (O0)
-+5 V <--> 1 (PROM), 28 (PROM)
-GND <--> 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 8 (PROM), 9 (PROM), 10 (PROM), 20 (PROM), 21 (PROM), 23 (PROM) through 27 (PROM)
++5 V <--> 1, 28 (PROM)
+GND <--> 2, 3, 4, 8 through 10, 14, 20, 21, 23 through 27 (PROM)
 28 (PROM) <--> C5 (100 nF) <--> 14 (PROM)
 ```
 
@@ -206,7 +212,7 @@ CRT header
 [O0] <--> R8 (2.00 kohm) <--> (blue gun)
 (blue gun) <--> R11 (75 ohm) <--> GND
 +5 V <--> 14 (NOR)
-GND <--> 7 (NOR), 6 (NOR), 8 (NOR), 9 (NOR), 11 (NOR), 12 (NOR), CRT GND
+GND <--> 6, 7, 8, 9, 11, 12 (NOR), CRT GND
 14 (NOR) <--> C6 (100 nF) <--> 7 (NOR)
 ```
 

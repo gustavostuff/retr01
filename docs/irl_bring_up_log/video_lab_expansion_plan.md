@@ -8,7 +8,7 @@ Priority and the two background layers are in [video-graphics.md](../video-graph
 
 The clock board stays. Y2, U04, U74, and R13 stay. DOT still enters Beam X pin 1.
 
-The beam board stays. Beam X pin 23 still clocks Beam Y pin 1. Both RES pins stay tied. Unused inputs stay at GND. The reset switch stays. The header already carries both counters and both sync pins, so the compositor cable adds no solder there.
+The beam board stays. Beam X pin 23 still clocks Beam Y pin 1. Both RES pins stay tied. Unused inputs stay at GND. The reset switch stays. The two headers already carry both counters and both sync pins, so the compositor cable adds no solder there.
 
 Three cables leave the PROM. Those are XQ7, XQ6, and XQ5, Beam X pins 21, 20, and 19. HSYNC and VSYNC stay on the RGBS NOR. The same header pins also feed the compositor. One header pin is one net, shared by Beam Y CLK, the NOR, and the new board.
 
@@ -38,7 +38,7 @@ Putting XQ7, XQ6, and XQ5 back on A5, A4, and A3, and returning A2, A1, and A0 t
 
 ## Compositor board
 
-One new perma-proto. One ATF22V10C. Inputs are the beam header, both counters plus HSYNC and VSYNC, and the pixel inputs below. Outputs are the six index bits on PROM pins 5 through 10.
+One new perma-proto. One ATF22V10C. Inputs are the two beam headers, both counters plus HSYNC and VSYNC, and the pixel inputs below. Outputs are the six index bits on PROM pins 5 through 10.
 
 Each dot picks one kit index:
 

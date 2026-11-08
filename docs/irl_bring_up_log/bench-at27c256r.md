@@ -38,16 +38,16 @@ PROM, AT27C256R
 +5 V <--> Switch 2 <--> 8 (PROM) <--> (10 kohm) <--> GND
 +5 V <--> Switch 1 <--> 9 (PROM) <--> (10 kohm) <--> GND
 +5 V <--> Switch 0 <--> 10 (PROM) <--> (10 kohm) <--> GND
-+5 V <--> (2.2 kohm) <--> red LED bit 7 <--> 19 (PROM)
-+5 V <--> (2.2 kohm) <--> red LED bit 6 <--> 18 (PROM)
-+5 V <--> (2.2 kohm) <--> red LED bit 5 <--> 17 (PROM)
-+5 V <--> (2.2 kohm) <--> green LED bit 4 <--> 16 (PROM)
-+5 V <--> (2.2 kohm) <--> green LED bit 3 <--> 15 (PROM)
-+5 V <--> (2.2 kohm) <--> green LED bit 2 <--> 13 (PROM)
-+5 V <--> (2.2 kohm) <--> blue LED bit 1 <--> 12 (PROM)
 +5 V <--> (2.2 kohm) <--> blue LED bit 0 <--> 11 (PROM)
-+5 V <--> 1 (PROM), 28 (PROM)
-GND <--> 2 (PROM), 3 (PROM), 4 (PROM), 14 (PROM), 20 (PROM) through 27 (PROM)
++5 V <--> (2.2 kohm) <--> blue LED bit 1 <--> 12 (PROM)
++5 V <--> (2.2 kohm) <--> green LED bit 2 <--> 13 (PROM)
++5 V <--> (2.2 kohm) <--> green LED bit 3 <--> 15 (PROM)
++5 V <--> (2.2 kohm) <--> green LED bit 4 <--> 16 (PROM)
++5 V <--> (2.2 kohm) <--> red LED bit 5 <--> 17 (PROM)
++5 V <--> (2.2 kohm) <--> red LED bit 6 <--> 18 (PROM)
++5 V <--> (2.2 kohm) <--> red LED bit 7 <--> 19 (PROM)
++5 V <--> 1, 28 (PROM)
+GND <--> 2, 3, 4, 14, 20 through 27 (PROM)
 28 (PROM) <--> (100 nF) <--> 14 (PROM)
 
 Switch 0 is the rightmost. Closed is 1. Left to right on the board, bit 0 is the rightmost LED. The LED anode faces the resistor. A lit LED is a 0. A dark LED is a 1.

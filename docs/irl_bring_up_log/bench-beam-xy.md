@@ -38,26 +38,26 @@ TXD (CH340) <--> 1 (Beam X)
 +5 V <--> (10 kohm) <--> 2 (Beam X)
 1 (Beam Y) <--> 23 (Beam X) <--> yellow HSYNC LED <--> (2.0 or 2.2 kohm) <--> GND
 23 (Beam Y) <--> blue VSYNC LED <--> (2.0 or 2.2 kohm) <--> GND
-22 (Beam X) <--> red LED bit 8 <--> (2.0 or 2.2 kohm) <--> GND
-21 (Beam X) <--> red LED bit 7 <--> (2.0 or 2.2 kohm) <--> GND
-20 (Beam X) <--> red LED bit 6 <--> (2.0 or 2.2 kohm) <--> GND
-19 (Beam X) <--> red LED bit 5 <--> (2.0 or 2.2 kohm) <--> GND
-18 (Beam X) <--> red LED bit 4 <--> (2.0 or 2.2 kohm) <--> GND
-17 (Beam X) <--> red LED bit 3 <--> (2.0 or 2.2 kohm) <--> GND
-16 (Beam X) <--> red LED bit 2 <--> (2.0 or 2.2 kohm) <--> GND
-15 (Beam X) <--> red LED bit 1 <--> (2.0 or 2.2 kohm) <--> GND
 14 (Beam X) <--> red LED bit 0 <--> (2.0 or 2.2 kohm) <--> GND
-22 (Beam Y) <--> green LED bit 8 <--> (2.0 or 2.2 kohm) <--> GND
-21 (Beam Y) <--> green LED bit 7 <--> (2.0 or 2.2 kohm) <--> GND
-20 (Beam Y) <--> green LED bit 6 <--> (2.0 or 2.2 kohm) <--> GND
-19 (Beam Y) <--> green LED bit 5 <--> (2.0 or 2.2 kohm) <--> GND
-18 (Beam Y) <--> green LED bit 4 <--> (2.0 or 2.2 kohm) <--> GND
-17 (Beam Y) <--> green LED bit 3 <--> (2.0 or 2.2 kohm) <--> GND
-16 (Beam Y) <--> green LED bit 2 <--> (2.0 or 2.2 kohm) <--> GND
-15 (Beam Y) <--> green LED bit 1 <--> (2.0 or 2.2 kohm) <--> GND
+15 (Beam X) <--> red LED bit 1 <--> (2.0 or 2.2 kohm) <--> GND
+16 (Beam X) <--> red LED bit 2 <--> (2.0 or 2.2 kohm) <--> GND
+17 (Beam X) <--> red LED bit 3 <--> (2.0 or 2.2 kohm) <--> GND
+18 (Beam X) <--> red LED bit 4 <--> (2.0 or 2.2 kohm) <--> GND
+19 (Beam X) <--> red LED bit 5 <--> (2.0 or 2.2 kohm) <--> GND
+20 (Beam X) <--> red LED bit 6 <--> (2.0 or 2.2 kohm) <--> GND
+21 (Beam X) <--> red LED bit 7 <--> (2.0 or 2.2 kohm) <--> GND
+22 (Beam X) <--> red LED bit 8 <--> (2.0 or 2.2 kohm) <--> GND
 14 (Beam Y) <--> green LED bit 0 <--> (2.0 or 2.2 kohm) <--> GND
+15 (Beam Y) <--> green LED bit 1 <--> (2.0 or 2.2 kohm) <--> GND
+16 (Beam Y) <--> green LED bit 2 <--> (2.0 or 2.2 kohm) <--> GND
+17 (Beam Y) <--> green LED bit 3 <--> (2.0 or 2.2 kohm) <--> GND
+18 (Beam Y) <--> green LED bit 4 <--> (2.0 or 2.2 kohm) <--> GND
+19 (Beam Y) <--> green LED bit 5 <--> (2.0 or 2.2 kohm) <--> GND
+20 (Beam Y) <--> green LED bit 6 <--> (2.0 or 2.2 kohm) <--> GND
+21 (Beam Y) <--> green LED bit 7 <--> (2.0 or 2.2 kohm) <--> GND
+22 (Beam Y) <--> green LED bit 8 <--> (2.0 or 2.2 kohm) <--> GND
 +5 V <--> 24 (Beam X), 24 (Beam Y), CH340 5V, CH340 VCC
-GND <--> 12 (Beam X), 12 (Beam Y), 3 (Beam X) through 11 (Beam X), 13 (Beam X), 3 (Beam Y) through 11 (Beam Y), 13 (Beam Y), CH340 GND
+GND <--> 3 through 13 (Beam X), 3 through 13 (Beam Y), CH340 GND
 24 (Beam X) <--> (100 nF) <--> 12 (Beam X)
 24 (Beam Y) <--> (100 nF) <--> 12 (Beam Y)
 
